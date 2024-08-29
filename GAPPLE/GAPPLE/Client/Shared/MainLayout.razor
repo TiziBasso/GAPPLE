@@ -17,7 +17,7 @@
             </RadzenProfileMenu>
         </RadzenStack>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;overflow: hidden;">
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;">
         <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
             <RadzenStack>
                 <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => sidebarExpanded = false)" />
@@ -31,8 +31,10 @@
             @Body
         </div>
     </RadzenBody>
-    <RadzenFooter>
-    </RadzenFooter>
+    @if (sidebarExpanded)
+    {
+        <div @onclick="@(() => sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
+    }
 </RadzenLayout>
 
 <RadzenComponents />

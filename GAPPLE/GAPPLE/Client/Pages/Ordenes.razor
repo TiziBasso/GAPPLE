@@ -1,0 +1,133 @@
+﻿@page "/ordenes"
+
+<RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Pedidos" class="mb-3" />
+
+<RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1">
+    <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Medium Click="NuevaOrden" />
+    <RadzenButton Text="Refrescar" ButtonStyle="ButtonStyle.Info" Size=ButtonSize.Medium />
+</RadzenStack>
+
+<RadzenDataGrid Data="sampleData.Orders" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="InectoOrder" Title="ID" Property="@nameof(InectoOrder.Id)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Código" Property="@nameof(InectoOrder.Codigo)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Presupuesto" Property="@nameof(InectoOrder.Presup)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Cliente" Property="@nameof(InectoOrder.Cliente)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Línea" Property="@nameof(InectoOrder.Linea)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Creación" Property="@nameof(InectoOrder.Creacion)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Zona" Property="@nameof(InectoOrder.Zona)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Pendiente" Property="@nameof(InectoOrder.Pend)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Estado" Property="@nameof(InectoOrder.Estado)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Tango" Property="@nameof(InectoOrder.Tango)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Factura" Property="@nameof(InectoOrder.Factura)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Fecha" Property="@nameof(InectoOrder.Fecha)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Unidad" Property="@nameof(InectoOrder.Unid)" />
+        <RadzenDataGridColumn TItem="InectoOrder" Title="Entrega" Property="@nameof(InectoOrder.Entrega)" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    InectoOrderSet sampleData = new();
+    List<string> estados = new();
+    string filterEstado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sampleData = InectoOrderDataSet.GetSampleData();
+        estados.Clear();
+        estados.AddRange(sampleData.Orders.Select(x => x.Estado).ToList().Distinct());
+    }
+
+    async Task NuevaOrden()
+    {
+        
+    }
+
+
+    public class InectoOrder
+    {
+        public int Id { get; set; }
+        public string Codigo { get; set; }
+        public string Presup { get; set; }
+        public string Cliente { get; set; }
+        public string Linea { get; set; }
+        public DateTime Creacion { get; set; }
+        public string Zona { get; set; }
+        public string Pend { get; set; }
+        public string Estado { get; set; }
+        public string Tango { get; set; }
+        public string Factura { get; set; }
+        public DateTime? Fecha { get; set; } // Nullable as the date might be empty
+        public int Unid { get; set; }
+        public string Entrega { get; set; }
+        public bool Aprob { get; set; }
+    }
+
+    public class InectoOrderSet
+    {
+        public List<InectoOrder> Orders { get; set; }
+
+        public InectoOrderSet()
+        {
+            Orders = new List<InectoOrder>();
+        }
+
+        public void AddOrder(InectoOrder order)
+        {
+            Orders.Add(order);
+        }
+
+        public InectoOrder GetOrderById(int id)
+        {
+            return Orders.FirstOrDefault(o => o.Id == id);
+        }
+
+        public void RemoveOrderById(int id)
+        {
+            var order = GetOrderById(id);
+            if (order != null)
+            {
+                Orders.Remove(order);
+            }
+        }
+    }
+
+    public class InectoOrderDataSet
+    {
+        public static InectoOrderSet GetSampleData(int numberOfOrders = 25)
+        {
+            var orderSet = new InectoOrderSet();
+            var random = new Random();
+
+            for (int i = 1; i <= numberOfOrders; i++)
+            {
+                orderSet.AddOrder(new InectoOrder
+                    {
+                        Id = i,
+                        Codigo = $"C{i:00000}",
+                        Presup = $"PR{i:0000}",
+                        Cliente = $"Cliente {i}",
+                        Linea = $"Línea {random.Next(1, 4)}",
+                        Creacion = DateTime.Now.AddDays(-random.Next(1, 30)),
+                        Zona = $"Zona {GetRandomZona(random)}",
+                        Pend = random.Next(0, 5).ToString(),
+                        Estado = random.Next(0, 2) == 0 ? "Pendiente" : "Completado",
+                        Tango = $"T{random.Next(100, 999)}",
+                        Factura = $"F{i:0000}",
+                        Fecha = DateTime.Now.AddDays(random.Next(1, 15)),
+                        Unid = random.Next(1, 20),
+                        Entrega = $"Entrega {GetRandomZona(random)}",
+                        Aprob = random.Next(0, 2) == 0
+                    });
+            }
+
+            return orderSet;
+        }
+
+        private static string GetRandomZona(Random random)
+        {
+            var zonas = new[] { "Norte", "Sur", "Este", "Oeste" };
+            return zonas[random.Next(zonas.Length)];
+        }
+    }
+}
