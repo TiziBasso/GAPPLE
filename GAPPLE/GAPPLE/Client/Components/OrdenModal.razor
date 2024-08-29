@@ -1,4 +1,131 @@
-﻿
-@code {
+﻿<div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
+    <RadzenStack>
+        <RadzenLabel Text="Línea:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Cliente:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Zona:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Lista de precios:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+        <RadzenLabel Text="F:" />
+        <RadzenCheckBox @bind-Value="@F" />
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+        <RadzenLabel Text="P:" />
+        <RadzenCheckBox @bind-Value="@P" />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Transporte:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Cód.Trans:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Cond.Venta:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Entregar en:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+            <RadzenLabel Text="Probadores:" />
+            <RadzenCheckBox @bind-Value="@probadores" />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+            <RadzenLabel Text="Obsequios/CartasColores/Desc.Extra:" />
+            <RadzenCheckBox @bind-Value="@obsequios" />
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+            <RadzenLabel Text="Multitester/Exhibidor:" />
+            <RadzenCheckBox @bind-Value="@exhibidor" />
+        </RadzenStack>
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Notas:" />
+        <RadzenTextArea />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="Ofertas:" />
+        <RadzenTextBox />
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenLabel Text="F.Entrega:" />
+        <RadzenTextBox />
+    </RadzenStack>
+</div>
 
+@* codigo que me paso chatGPT *@
+<div class="OrdenProductos" style="display: grid; gap: 10px; grid-template-columns: repeat(4, 1fr);">
+    @for (int i = 0; i < 10; i++)
+    {
+        int columnaActual = i;
+        <RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-4">
+                Familia
+            </RadzenStack>
+            @for (int j = 0; j < random.Next(3, 9); j++)
+            {
+                bool check = false;
+                string inputId = $"input_{columnaActual}_{j}";
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <span>@random.Next(1000000, 10000000)</span>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
+                        <RadzenTextBox id="@inputId" />
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                            <RadzenCheckBox @bind-Value="check" />
+                            <RadzenLabel />
+                        </RadzenStack>
+                    </RadzenStack>
+                    <span>%</span>
+                </RadzenStack>
+            }
+        </RadzenCard>
+    }
+</div>
+@* fin chatGPT*@
+
+@* <div class="OrdenProductos" style="display: grid;gap: 10px;grid-template-columns: repeat(4, 1fr);">
+    @for (int i = 1; i < 11; i++)
+    {
+        <RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-4">
+                Familia
+            </RadzenStack>
+            @for (int j = 1; j < random.Next(3, 9); j++)
+            {
+                bool check = false;
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <span>@random.Next(1000000, 10000000)</span>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
+                        <RadzenTextBox />
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                            <RadzenCheckBox @bind-Value="check" />
+                            <RadzenLabel />
+                        </RadzenStack>
+                    </RadzenStack>
+                    <span>%</span>
+                </RadzenStack>
+            }
+        </RadzenCard>
+    }
+</div> *@
+
+@code {
+    Random random = new Random();
+    bool F, P, probadores, obsequios, exhibidor;
+    private int fila = 0, columna = 0;
 }

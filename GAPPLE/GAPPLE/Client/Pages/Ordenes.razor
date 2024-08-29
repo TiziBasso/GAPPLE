@@ -1,5 +1,7 @@
 ﻿@page "/ordenes"
 
+@inject DialogService DialogService
+
 <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Pedidos" class="mb-3" />
 
 <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1">
@@ -40,7 +42,7 @@
 
     async Task NuevaOrden()
     {
-        
+        await DialogService.OpenAsync<OrdenModal>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
     }
 
     public class InectoOrder
