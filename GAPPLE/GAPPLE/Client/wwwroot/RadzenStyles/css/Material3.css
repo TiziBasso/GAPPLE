@@ -7,6 +7,42 @@ Any questions concerning the use or status of this file should be directed to in
     overflow: hidden
 }
 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Para Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.inputTable {
+    height: var(--rz-input-height);
+    line-height: var(--rz-input-line-height);
+    color: var(--rz-input-value-color);
+    font-family: inherit;
+    font-size: var(--rz-input-font-size);
+    transition: var(--rz-input-transition);
+    outline: none;
+    padding: .2rem;
+    width: 4rem;
+    box-sizing: border-box;
+    border: var(--rz-input-border);
+    border-radius: var(--rz-input-border-radius);
+    box-shadow: var(--rz-input-shadow);
+    background-color: var(--rz-input-background-color);
+    height: 1.5rem;
+}
+
+    .inputTable:focus {
+        box-shadow: var(--rz-input-focus-shadow);
+        border: var(--rz-input-focus-border);
+        outline: var(--rz-input-focus-outline);
+        outline-offset: var(--rz-input-focus-outline-offset);
+    }
+
 .rz-button:not(.rz-state-disabled):before {
     content: "";
     position: absolute;

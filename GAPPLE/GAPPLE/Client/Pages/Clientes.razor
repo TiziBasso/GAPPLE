@@ -1,0 +1,24 @@
+﻿@page "/clientes"
+
+
+<RadzenRow>
+    <RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4"/>
+</RadzenRow>
+
+<RadzenDataGrid Data="clientes" AllowFiltering="true" AllowVirtualization="true" >
+    <RadzenDataGridColumn Title="DNI/CUIT">
+        
+    </RadzenDataGridColumn>
+    
+    <RadzenDataGridColumn Title="Razon Social">
+
+    </RadzenDataGridColumn>
+</RadzenDataGrid>
+
+
+
+@code 
+{
+    List<object> clientes;
+
+}
