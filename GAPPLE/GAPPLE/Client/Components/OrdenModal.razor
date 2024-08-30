@@ -73,7 +73,7 @@
     {
         int columnaActual = i;
         <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-4">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-1">
                 Familia
             </RadzenStack>
             @for (int j = 0; j < random.Next(3, 9); j++)
@@ -81,10 +81,10 @@
                 bool check = false;
                 string inputId = $"input_{columnaActual}_{j}";
 
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenStack Style="font-size:smaller;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <span>@random.Next(1000000, 10000000)</span>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
-                        <RadzenTextBox id="@inputId" />
+                        <input type="number" id="@inputId" class="inputTable" />
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
                             <RadzenCheckBox @bind-Value="check" />
                             <RadzenLabel />

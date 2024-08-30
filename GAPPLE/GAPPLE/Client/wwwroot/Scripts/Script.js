@@ -70,7 +70,7 @@
 
         if (nextInput) {
             nextInput.focus();
-            //event.preventDefault(); // Previene la acción por defecto de la tecla
+            event.preventDefault(); // Previene la acción por defecto de la tecla
         }
     }
 });
