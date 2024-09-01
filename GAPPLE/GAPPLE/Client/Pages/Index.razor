@@ -23,10 +23,10 @@
                     <RadzenStack Gap="0">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
                             <RadzenText TextStyle="TextStyle.H6">Ordenes abiertas</RadzenText>
-                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-success rz-m-0">@openIssues?.Count()</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-danger rz-m-0">@openIssues?.Count()</RadzenText>
                         </RadzenStack>
                         <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-success)" />
+                            <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-danger)" />
                             <RadzenColumnOptions Margin="0" />
                             <RadzenCategoryAxis Padding="20" Visible="false" />
                         </RadzenSparkline>
@@ -38,10 +38,10 @@
                     <RadzenStack Gap="0">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
                             <RadzenText TextStyle="TextStyle.H6">Ordenes cerradas</RadzenText>
-                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-danger rz-m-0">@closedIssues?.Count()</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-success rz-m-0">@closedIssues?.Count()</RadzenText>
                         </RadzenStack>
                         <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-danger)" />
+                            <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-success)" />
                             <RadzenColumnOptions Margin="0" Width="30" />
                             <RadzenCategoryAxis Padding="20" Visible="false" />
                         </RadzenSparkline>

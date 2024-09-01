@@ -16605,7 +16605,7 @@ a:focus-visible .rz-fieldset-toggler {
     min-height: 150px;
     z-index: var(--rz-dialog-zindex);
     opacity: 1;
-    background-color: var(--rz-dialog-background-color);
+    background-color: var(--rz-layout-body-background-color);
     box-shadow: var(--rz-dialog-shadow);
     border-radius: var(--rz-dialog-border-radius)
 }
@@ -16628,7 +16628,7 @@ a:focus-visible .rz-fieldset-toggler {
     padding-inline: var(--rz-dialog-title-padding-inline);
     font-size: var(--rz-dialog-title-font-size);
     line-height: var(--rz-dialog-title-line-height);
-    background-color: var(--rz-dialog-title-background-color);
+    background-color: var(--rz-layout-body-background-color);
     border-block-end: var(--rz-dialog-title-border)
 }
 
@@ -22600,12 +22600,12 @@ button.rz-colorpicker-trigger {
     --rz-primary-lighter: rgba(148, 193, 255, 0.24);
     --rz-primary-dark: #37598b;
     --rz-primary-darker: #001f5d;
-    --rz-secondary: #c2cbdc;
+    --rz-secondary: #f197b7; /*#c2cbdc*/
     --rz-secondary-light: #c2cbdc;
     --rz-secondary-lighter: rgba(144, 181, 255, 0.28);
     --rz-secondary-dark: #444b58;
     --rz-secondary-darker: #191f2b;
-    --rz-info: #085786;
+    --rz-info: #62a5a1; /*#085786*/
     --rz-info-light: #aadaff;
     --rz-info-lighter: rgba(170, 218, 255, 0.24);
     --rz-info-dark: #086791;

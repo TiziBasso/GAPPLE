@@ -67,62 +67,36 @@
     </RadzenStack>
 </div>
 
-@* codigo que me paso chatGPT *@
-<div class="OrdenProductos" style="display: grid; gap: 10px; grid-template-columns: repeat(6, 1fr);">
-    @for (int i = 0; i < 10; i++)
+<div class="OrdenProductos" style="margin-top: 15px;display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr))">
+    @for (int i = 0; i < 25; i++)
     {
         int columnaActual = i;
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-1">
+        <RadzenCard Style="border-radius:0;padding:0;">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Style="border-bottom: 1px solid rgba(0, 0, 0, .2);padding-top: .5rem;">
                 Familia
             </RadzenStack>
-            @for (int j = 0; j < random.Next(3, 9); j++)
-            {
-                bool check = false;
-                string inputId = $"input_{columnaActual}_{j}";
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="padding:1rem;">
+                @for (int j = 0; j < random.Next(3, 9); j++)
+                {
+                    bool check = false;
+                    string inputId = $"input_{columnaActual}_{j}";
 
-                <RadzenStack Style="font-size:smaller;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                    <span>@random.Next(1000000, 10000000)</span>
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
-                        <input type="number" id="@inputId" class="inputTable" />
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenCheckBox @bind-Value="check" />
-                            <RadzenLabel />
+                    <RadzenStack Style="font-size:smaller;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <span>@random.Next(1000000, 10000000)</span>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
+                            <input type="number" id="@inputId" class="inputTable" />
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                                <RadzenCheckBox @bind-Value="check" />
+                                <RadzenLabel />
+                            </RadzenStack>
                         </RadzenStack>
+                        <span>%</span>
                     </RadzenStack>
-                    <span>%</span>
-                </RadzenStack>
-            }
+                }
+            </RadzenStack>
         </RadzenCard>
     }
 </div>
-@* fin chatGPT*@
-
-@* <div class="OrdenProductos" style="display: grid;gap: 10px;grid-template-columns: repeat(4, 1fr);">
-    @for (int i = 1; i < 11; i++)
-    {
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-p-4">
-                Familia
-            </RadzenStack>
-            @for (int j = 1; j < random.Next(3, 9); j++)
-            {
-                bool check = false;
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                    <span>@random.Next(1000000, 10000000)</span>
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Center">
-                        <RadzenTextBox />
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenCheckBox @bind-Value="check" />
-                            <RadzenLabel />
-                        </RadzenStack>
-                    </RadzenStack>
-                    <span>%</span>
-                </RadzenStack>
-            }
-        </RadzenCard>
-    }
-</div> *@
 
 @code {
     Random random = new Random();
