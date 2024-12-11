@@ -1,4 +1,5 @@
 using GAPPLE.Client;
+using GAPPLE.Client.Tools;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Radzen;
@@ -9,6 +10,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
+Services(builder.Services);
+
 builder.Services.AddRadzenComponents();
 //builder.Services.AddBlazoredSessionStorage();
 //builder.Services.AddAuthorizationCore();
@@ -17,3 +20,8 @@ builder.Services.AddRadzenComponents();
 //builder.Services.AddScoped<UsuariosService>();
 
 await builder.Build().RunAsync();
+
+static void Services(IServiceCollection services)
+{
+    services.AddSingleton<ParametrosDeConsulta>();
+}

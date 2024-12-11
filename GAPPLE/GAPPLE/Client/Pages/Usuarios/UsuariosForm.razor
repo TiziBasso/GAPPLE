@@ -1,0 +1,261 @@
+﻿@page "/usuario/{operacion}"
+@page "/usuario/{operacion}/{idusuario:int}"
+
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+
+@if (showForm)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH5" TextAlign="TextAlign.Center" Text="Datos del usuario" Style="margin-bottom:1rem" />
+    <RadzenTemplateForm EditContext="editContext" TItem="Usuario" Data="Usuario" Submit="@Guardar">
+
+        @* <DataAnnotationsValidator /> *@
+        @* <CustomValidation @ref="customValidation" /> *@
+
+        <RadzenRow Style="height:5rem" AlignItems="AlignItems.Center">
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem" OffsetMD="2" OffsetLG="3">
+                <RadzenLabel Style="margin-bottom:5px" Text="Nombre de Usuario:" />
+                <RadzenTextBox @bind-Value=@Usuario.NombreUsuario Disabled=disableEdit @ref="refNombreUsuario"
+                               Style="width:100%" MaxLength="50" Change="@(()=>Usuario.NombreUsuario = Usuario.NombreUsuario.ToUpper())" />
+                <ValidationMessage For=@(() => Usuario.NombreUsuario ) />
+            </RadzenColumn>
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem">
+                <RadzenLabel Style="margin-bottom:5px" Text="Apellido y nombre:" />
+                <RadzenTextBox @bind-Value=@Usuario.ApellidoYNombre Disabled=disableEdit Style="width:100%" Change="@(()=>Usuario.ApellidoYNombre = Usuario.ApellidoYNombre.ToUpper())" />
+                <ValidationMessage For=@(() => Usuario.ApellidoYNombre) />
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        <RadzenRow Style="height:5rem">
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem" OffsetMD="2" OffsetLG="3">
+                <RadzenLabel Style="margin-bottom:5px" Text="Email:" />
+                <RadzenTextBox @bind-Value=@Usuario.Email Disabled=disableEdit Style="width:100%" MaxLength="50" />
+                <ValidationMessage For=@(() => Usuario.Email) />
+            </RadzenColumn>
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem">
+                <RadzenLabel Style="margin-bottom:5px" Text="Teléfono:" />
+                <RadzenTextBox @bind-Value=@Usuario.Telefono Disabled=disableEdit Style="width:100%" MaxLength="24" />
+            </RadzenColumn>
+
+        </RadzenRow>
+
+
+        <RadzenRow Style="height:5rem">
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem" OffsetMD="2" OffsetLG="3">
+                <RadzenLabel Style="margin-bottom:5px" Text="Provincia:" />
+                <RadzenDropDown Data="lstProvincias" @bind-Value=@Usuario.Provincia
+                                ValueProperty="@nameof(Provincia.Descripcion)" TextProperty="@nameof(Provincia.Descripcion)"
+                                Disabled=disableEdit Style="width:100%" />
+                <ValidationMessage For=@(() => Usuario.Provincia) />
+            </RadzenColumn>
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem">
+                <RadzenLabel Style="margin-bottom:5px" Text="Localidad:" />
+                <RadzenTextBox @bind-Value=@Usuario.Localidad Disabled=disableEdit Style="width:100%" MaxLength="50" />
+            </RadzenColumn>
+
+        </RadzenRow>
+
+
+        <RadzenRow Style="height:5rem">
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" Style="margin-bottom:1rem" OffsetMD="2" OffsetLG="3">
+                <RadzenLabel Style="margin-bottom:5px" Text="Domicilio:" />
+                <RadzenTextBox @bind-Value=@Usuario.Domicilio Disabled=disableEdit Style="width:100%" MaxLength="50" />
+            </RadzenColumn>
+
+            <RadzenColumn Size="4" SizeMD="3" SizeLG="2" Style="margin-bottom:1rem">
+                <RadzenLabel Style="margin-bottom:5px" Text="Código Postal:" />
+                <RadzenTextBox @bind-Value=@Usuario.CodigoPostal Disabled=disableEdit MaxLength="8" Style="width:100%" />
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        <RadzenRow>
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3" OffsetMD="2" OffsetLG="3">
+                <RadzenLabel Text="Perfil integra Web:" Style="margin-bottom:5px" />
+                <RadzenListBox Data="perfiles" @bind-Value=@Usuario.Perfiles TextProperty="@nameof(PerfilUsuario.DescripcionPerfil)"
+                               ValueProperty="@nameof(PerfilUsuario.IdPerfil)" Disabled="@disableEdit" Multiple=true AllowSelectAll=false
+                               AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="height:15rem; width:100%" />
+                <ValidationMessage For=@(() => Usuario.Perfiles) />
+            </RadzenColumn>
+
+            <RadzenColumn Size="5" SizeMD="4" SizeLG="3">
+                <RadzenLabel Text="Perfil integra:" Style="margin-bottom:5px" />
+                <RadzenDropDown Data="perfiles" @bind-Value=@Usuario.IdPerfilIntegra TextProperty="@nameof(PerfilUsuario.DescripcionPerfil)"
+                                ValueProperty="@nameof(PerfilUsuario.IdPerfil)" Disabled="@disableEdit" AllowSelectAll=false AllowClear=true
+                                AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width:100%" />
+                <ValidationMessage For=@(() => Usuario.IdPerfilIntegra) />
+
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="margin-top:3rem">
+                    <RadzenLabel Text="Pasivo:" />
+                    <RadzenCheckBox @bind-Value=@Usuario.Pasivo Disabled=disableEdit />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" class="rz-mt-3">
+                    <RadzenLabel Text="Habilitado en POS:" />
+                    <RadzenCheckBox @bind-Value="Usuario.HabilitadoPOS" Disabled=disableEdit />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" class="rz-mt-3">
+                    <RadzenLabel Text="ID de usuario POS:" />
+                    <RadzenTextBox @bind-Value="Usuario.IdUsuarioPOS" MaxLength="4" Disabled="@(disableEdit || Usuario.HabilitadoPOS == false)" />
+                    <ValidationMessage For=@(() => Usuario.IdUsuarioPOS) />
+
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" class="rz-mt-3">
+                    <RadzenLabel Text="Fecha de expiración:" />
+                    <RadzenDatePicker @bind-Value="Usuario.FechaExpiracion" DateFormat="dd/MM/yyyy" Disabled="@(disableEdit || Usuario.HabilitadoPOS == false)" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.End" Gap="1rem" class="rz-mt-8 rz-mb-4">
+            @if (disableEdit)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="arrow_back" Text="Volver" Click="Cancelar" />
+            }
+            else
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" ButtonType="Radzen.ButtonType.Button" Icon="highlight_off" Text="Cancelar" Click="Cancelar" />
+                <RadzenButton ButtonType="Radzen.ButtonType.Submit" ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Disabled=disableEdit />
+            }
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public string Operacion { get; set; }
+    [Parameter] public int? IdUsuario { get; set; }
+    EditContext editContext;
+    //CustomValidation customValidation;
+    Operaciones operacion;
+    List<PerfilUsuario> perfiles = Enumerable.Empty<PerfilUsuario>().ToList();
+    List<Provincia> lstProvincias;
+
+    RadzenTextBox refNombreUsuario;
+    Usuario Usuario { get; set; }
+
+    int render = 0;
+    bool disableEdit, showForm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Operacion = Operacion.ToLower();
+        if (((Operacion == "lectura" || Operacion == "edicion") && IdUsuario == null) || Operacion == "alta" && IdUsuario != null)
+            NavigationManager.NavigateTo("errorpage");
+
+        //var permisos = await SeguridadService.ValidatePageAccess("usuarios");
+        //if (!permisos.Exists(x => x == Operacion.ToLower()))
+        //NavigationManager.NavigateTo("errorpage");
+
+        switch (Operacion)
+        {
+            case "lectura":
+                operacion = Operaciones.Lectura;
+                disableEdit = true;
+                break;
+            case "edicion":
+                operacion = Operaciones.Edicion;
+                disableEdit = false;
+                break;
+            case "alta":
+                operacion = Operaciones.Alta;
+                disableEdit = false;
+                break;
+        }
+
+        if (operacion == Operaciones.Alta)
+            Usuario = new();
+        else
+            //Usuario = await SeguridadService.GetUsuario(IdUsuario);
+            Usuario = new() { IdUsuario = 5, ApellidoYNombre = "prueba prueba" };
+
+        //perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
+        perfiles = new();
+        perfiles.Add(new() { DescripcionPerfil = "Admin", IdPerfil = 0, IdPerfilIntegra = 0 });
+        perfiles.Add(new() { DescripcionPerfil = "Operador", IdPerfil = 1, IdPerfilIntegra = 0 });
+        //lstProvincias = await ToolsService.GetProvincias(AuthenticationService.AuthorizedUser.Pais);
+        lstProvincias = new();
+        lstProvincias.Add(new() { Descripcion = "Bs. As.", Id = 0 });
+        lstProvincias.Add(new() { Descripcion = "Resto de negros", Id = 1 });
+
+        editContext = new(Usuario);
+        showForm = true;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render % 2 == 0)
+            await refNombreUsuario.FocusAsync();
+    }
+
+    private async Task Guardar()
+    {
+        var result = await DialogService.Confirm("¿Confirma guardar datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        if (result != null && (bool)result)
+        {
+            //customValidation?.ClearErrors();
+            Response response = new(true);
+            //DialogCustom.OpenBusyWithLoader();
+
+            //if (operacion == Operaciones.Alta)
+            //response = await SeguridadService.PostUsuario(Usuario);
+            //else
+            //response = await SeguridadService.PutUsuario(Usuario);
+
+            //DialogCustom.CloseDialog();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                //if (response.Errors != null && response.Errors.Any())
+                //customValidation?.DisplayErrors(response.Errors);
+                //else
+                ShowNotification(NotificationSeverity.Error, 3500, "Ha ocurrido un error inesperado!", "Por favor contacte a sistemas!");
+            }
+            else
+            {
+                ShowNotification(NotificationSeverity.Success, 3500, "Los datos se guardaron correctamente");
+                NavigationManager.NavigateTo("/usuarios");
+            }
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        if (editContext.IsModified())
+        {
+            var result = await DialogService.Confirm("¿Confirma cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            if (result != null && (bool)result)
+                NavigationManager.NavigateTo("/usuarios");
+        }
+        else
+            NavigationManager.NavigateTo("/usuarios");
+    }
+
+    private void ShowNotification(NotificationSeverity severity, int duration, string summary, string detail = null)
+    {
+        NotificationMessage message = new();
+        message.Severity = severity;
+        message.Duration = duration;
+        message.Summary = summary;
+        if (detail != null)
+            message.Detail = detail;
+        NotificationService.Notify(message);
+    }
+}
