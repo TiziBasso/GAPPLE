@@ -1,0 +1,211 @@
+﻿@page "/usuarios"
+
+@inject ParametrosDeConsulta ParametrosDeConsulta
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+@if (showForm)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Usuarios" Style="margin-bottom:1rem" />
+
+    <RadzenRow AlignItems="AlignItems.End" Style="margin-bottom:1rem">
+
+        <RadzenColumn Size="4" SizeMD="3" SizeLG="2">
+            <RadzenLabel Text="Nombre de usuario:" Style="margin-bottom:5px" />
+            <RadzenTextBox @ref="refNombreUsuario" Style="width:100%" @bind-Value="nombreUsuario" Change="@(()=>nombreUsuario = nombreUsuario.ToUpper())" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))" />
+        </RadzenColumn>
+
+        <RadzenColumn Size="3" SizeMD="3">
+            <RadzenLabel Text="Apellido y nombre:" Style="margin-bottom:5px" />
+            <RadzenTextBox Style="width:100%" @bind-Value=apeYNom @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))" />
+        </RadzenColumn>
+
+        <RadzenColumn Size="5" SizeMD="4" SizeLG="3">
+            <RadzenLabel Text="Perfil:" Style="margin-bottom:5px" />
+            <RadzenDropDown Data=perfiles @bind-Value=perfil TextProperty="DescripcionPerfil" ValueProperty="DescripcionPerfil"
+                            AllowClear=true AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            FilterOperator="Radzen.StringFilterOperator.Contains" Style="width:100%" />
+        </RadzenColumn>
+
+        <RadzenColumn Size="2">
+            <RadzenLabel Text="Estado:" Style="margin-bottom:5px" />
+            <RadzenDropDown TValue="int" @bind-Value=estado Data=@Variables.EstadosNum ValueProperty="@nameof(Opcion.Id)" TextProperty="@nameof(Opcion.Descripcion)" Style="width:100%" />
+        </RadzenColumn>
+        <RadzenColumn Size="1">
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Buscar" Icon="search" Click="ObtenerUsuarios" IsBusy=@buscandoUsuarios />
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow>
+        <RadzenColumn Size="12">
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar usuario" Icon="add" Click="@(()=>Navegar("alta", null))"
+                          Size="ButtonSize.Small" Disabled=@(!permisos.Exists(x => x == "alta")) />
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow class="rz-mt-2">
+        <RadzenColumn Size="12">
+            <RadzenDataGrid TItem="Usuario" Data="lstUsuarios" @ref="grid" IsLoading=@buscandoUsuarios
+                            AllowVirtualization=true AllowSorting=true Style="Height:62vh" AllowFiltering=true
+                            FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.NombreUsuario)" Title="Usuario" TextAlign="TextAlign.Left" Width="200px" />
+                    <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.ApellidoYNombre)" Title="Apellido y nombre" TextAlign="TextAlign.Left" Width="400px" />
+                    <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.Pasivo)" Title="Pasivo" TextAlign="TextAlign.Center" Width="85px" Filterable=false>
+                        <Template>
+                            <RadzenCheckBox Value="@context.Pasivo" ReadOnly=true />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    @* <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.Telefono)" Title="Teléfono" TextAlign="TextAlign.Right" Width="120px" /> *@
+                    <RadzenDataGridColumn TItem="Usuario" Filterable=false Sortable=false Width="60px">
+                        <Template>
+                            <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="info" Click="@(()=>Navegar("lectura", context.IdUsuario))" Size="ButtonSize.ExtraSmall" Disabled=@(!permisos.Exists(x => x == "ver")) title="Ver datos" />
+                            <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click=@(()=>Navegar("edicion", context.IdUsuario)) Size="ButtonSize.ExtraSmall" Disabled=@(!permisos.Exists(x => x == "edicion")) title="Editar usuario" />
+                            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="key" Click="@(() => ResetPasswords(context))" Size="ButtonSize.ExtraSmall" title="Restablecer contraseña" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                </Columns>
+                <Template Context="usuario">
+                    <RadzenDataGrid Data="usuario.PerfilesCompleto" TItem="PerfilUsuario" Style="width:25%;">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="PerfilUsuario" Property="@nameof(PerfilUsuario.DescripcionPerfil)" />
+                        </Columns>
+                    </RadzenDataGrid>
+                </Template>
+                <EmptyTemplate>
+                    <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No hay registros para mostrar.</p>
+                </EmptyTemplate>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    List<PerfilUsuario> perfiles;
+    RadzenDataGrid<Usuario> grid;
+    List<Usuario> lstUsuarios = new();
+    List<string> permisos = new() { "ver", "alta", "edicion" };
+    RadzenTextBox refNombreUsuario;
+    bool showForm, buscandoUsuarios;
+    string apeYNom = null, nombreUsuario = null, perfil;
+    int estado = 2, render = 0;
+    List<string> estados = new List<string> { "Ambos", "Activo", "Pasivo" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        showForm = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+        {
+            await refNombreUsuario.FocusAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.Usuarios && ParametrosDeConsulta.Parametros != null && ParametrosDeConsulta.Parametros.Any())
+        {
+            if (ParametrosDeConsulta.Parametros.ContainsKey("nombreDeUsuario"))
+                nombreUsuario = (string)ParametrosDeConsulta.Parametros["nombreDeUsuario"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("apellidoYNombre"))
+                apeYNom = (string)ParametrosDeConsulta.Parametros["apellidoYNombre"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("perfil"))
+                perfil = (string)ParametrosDeConsulta.Parametros["perfil"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("estado"))
+                estado = (int)ParametrosDeConsulta.Parametros["estado"];
+
+            await ObtenerUsuarios();
+            ParametrosDeConsulta.Clear();
+        }
+    }
+
+    private async Task ObtenerUsuarios()
+    {
+        buscandoUsuarios = true;
+        await Task.Delay(1);
+
+        bool? pasivo = null;
+        if (estado == 2)
+            pasivo = false;
+        else if (estado == 3)
+            pasivo = true;
+
+        //lstUsuarios = await SeguridadService.GetUsuarios(nombreUsuario, apeYNom, perfil, pasivo);
+
+        if (lstUsuarios.Count == 0)
+            ShowNotification(NotificationSeverity.Info, 3500, "La búsqueda no ha devuelto resultados");
+
+        buscandoUsuarios = false;
+
+    }
+
+    private void GuardarParametros()
+    {
+        if (lstUsuarios != null && lstUsuarios.Any())
+        {
+            Dictionary<string, object> parametros = new();
+
+            if (!string.IsNullOrEmpty(nombreUsuario)) parametros.Add("nombreDeUsuario", nombreUsuario);
+            if (!string.IsNullOrEmpty(apeYNom)) parametros.Add("apellidoYNombre", apeYNom);
+            if (perfil != null) parametros.Add("perfil", perfil);
+            parametros.Add("estado", estado);
+
+            ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.Usuarios, parametros);
+        }
+    }
+
+    private void Navegar(string operacion, int? id)
+    {
+        GuardarParametros();
+        NavigationManager.NavigateTo($"/usuario/{operacion}/{id}");
+    }
+
+    private async void ResetPasswords(Usuario usuario)
+    {
+        if ((bool)await DialogService.Confirm($"Esta operación restablecerá la contraseña del usuario {usuario.NombreUsuario} para todas las aplicaciones excepto puntos de venta. ¿ Desea continuar ?", "GAPPLE", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+        {
+            //DialogCustom.OpenBusyWithLoader("Restableciendo...");
+
+            //var response = await SeguridadService.RestablecerContrasena(usuario.IdUsuario);
+
+            //if (response.IsSuccessStatusCode)
+            NotificationService.Notify(NotificationSeverity.Success, "La contraseña ha sido restablecida. Los cambios se verán reflejados en las sucursales en algunos minutos.");
+            // else if (response.Message != null)
+            //     NotificationService.Notify(NotificationSeverity.Error, response.Message);
+            // else
+            //     NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            //DialogCustom.CloseDialog();
+        }
+    }
+
+    private async Task KeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await ObtenerUsuarios();
+    }
+
+    private void ShowNotification(NotificationSeverity severity, int duration, string summary, string detail = null)
+    {
+        NotificationMessage message = new();
+        message.Severity = severity;
+        message.Duration = duration;
+        message.Summary = summary;
+        if (detail != null)
+            message.Detail = detail;
+        NotificationService.Notify(message);
+    }
+}
