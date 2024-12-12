@@ -21,8 +21,6 @@ namespace GAPPLE.Shared.Model
         /// Perfil de Integra WinForms
         /// Se usa para los reportes y otras cosas
         /// </summary>
-        public int IdPerfilIntegra { get; set; }
-
         public PerfilUsuario() { }
         public PerfilUsuario(int idPerfil, string descripcionPerfil) => (IdPerfil, DescripcionPerfil) = (idPerfil, descripcionPerfil);
     }
