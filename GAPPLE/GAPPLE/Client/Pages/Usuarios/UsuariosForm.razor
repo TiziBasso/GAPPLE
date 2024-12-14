@@ -89,32 +89,14 @@
             </RadzenColumn>
 
             <RadzenColumn Size="5" SizeMD="4" SizeLG="3">
-                <RadzenLabel Text="Perfil integra:" Style="margin-bottom:5px" />
-                <RadzenDropDown Data="perfiles" @bind-Value=@Usuario.IdPerfilIntegra TextProperty="@nameof(PerfilUsuario.DescripcionPerfil)"
-                                ValueProperty="@nameof(PerfilUsuario.IdPerfil)" Disabled="@disableEdit" AllowSelectAll=false AllowClear=true
-                                AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width:100%" />
-                <ValidationMessage For=@(() => Usuario.IdPerfilIntegra) />
-
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="margin-top:3rem">
                     <RadzenLabel Text="Pasivo:" />
                     <RadzenCheckBox @bind-Value=@Usuario.Pasivo Disabled=disableEdit />
                 </RadzenStack>
 
-                <RadzenStack Orientation="Orientation.Horizontal" class="rz-mt-3">
-                    <RadzenLabel Text="Habilitado en POS:" />
-                    <RadzenCheckBox @bind-Value="Usuario.HabilitadoPOS" Disabled=disableEdit />
-                </RadzenStack>
-
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" class="rz-mt-3">
-                    <RadzenLabel Text="ID de usuario POS:" />
-                    <RadzenTextBox @bind-Value="Usuario.IdUsuarioPOS" MaxLength="4" Disabled="@(disableEdit || Usuario.HabilitadoPOS == false)" />
-                    <ValidationMessage For=@(() => Usuario.IdUsuarioPOS) />
-
-                </RadzenStack>
-
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" class="rz-mt-3">
                     <RadzenLabel Text="Fecha de expiración:" />
-                    <RadzenDatePicker @bind-Value="Usuario.FechaExpiracion" DateFormat="dd/MM/yyyy" Disabled="@(disableEdit || Usuario.HabilitadoPOS == false)" />
+                    <RadzenDatePicker @bind-Value="Usuario.FechaExpiracion" DateFormat="dd/MM/yyyy" Disabled="@(disableEdit)" />
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -186,8 +168,8 @@ else
 
         //perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
         perfiles = new();
-        perfiles.Add(new() { DescripcionPerfil = "Admin", IdPerfil = 0, IdPerfilIntegra = 0 });
-        perfiles.Add(new() { DescripcionPerfil = "Operador", IdPerfil = 1, IdPerfilIntegra = 0 });
+        perfiles.Add(new() { DescripcionPerfil = "Admin", IdPerfil = 0 });
+        perfiles.Add(new() { DescripcionPerfil = "Operador", IdPerfil = 1 });
         //lstProvincias = await ToolsService.GetProvincias(AuthenticationService.AuthorizedUser.Pais);
         lstProvincias = new();
         lstProvincias.Add(new() { Descripcion = "Bs. As.", Id = 0 });

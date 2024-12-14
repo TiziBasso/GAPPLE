@@ -17,12 +17,9 @@ namespace GAPPLE.Shared.Model
             StringLength(50, ErrorMessage = "Maximo de caracteres 50")]
         public string ApellidoYNombre { get; set; }
 
-        public bool HabilitadoPOS { get; set; }
-
-        public string IdUsuarioPOS { get; set; }
-
         [Required(ErrorMessage = "Debe seleccionar al menos un perfil")]
         public List<int> Perfiles { get; set; }
+
         public List<PerfilUsuario> PerfilesCompleto { get; set; } = new List<PerfilUsuario>();
 
         public string Domicilio { get; set; }
@@ -35,6 +32,8 @@ namespace GAPPLE.Shared.Model
         public string Provincia { get; set; }
 
         public string Telefono { get; set; }
+
+        public string Contraseña { get; set; }
 
         [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Email invalido"),
             StringLength(50, ErrorMessage = "Maximo de caracteres 50")]
@@ -52,15 +51,8 @@ namespace GAPPLE.Shared.Model
                     return string.Empty;
             }
         }
-        //TODO: borrar?
-        public int IdTerminal { get; set; }
-
+        
         public bool Pasivo { get; set; }
-
-        public string Pais { get; set; }
-
-        [Required(ErrorMessage = "Debe seleccionar un perfil")]
-        public int? IdPerfilIntegra { get; set; }
 
         public object Clone()
         {
