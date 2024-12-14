@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GAPPLE.Client", "GAPPLE\Cli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GAPPLE.Shared", "GAPPLE\Shared\GAPPLE.Shared.csproj", "{A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationService", "IntegrationService\IntegrationService.csproj", "{19DF93C0-09F8-4A75-AAC4-2378F987CB03}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB} = {A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +32,10 @@ Global
 		{A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A490BA5C-9ADF-46C5-9B17-82A2E4B9F3CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19DF93C0-09F8-4A75-AAC4-2378F987CB03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19DF93C0-09F8-4A75-AAC4-2378F987CB03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19DF93C0-09F8-4A75-AAC4-2378F987CB03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19DF93C0-09F8-4A75-AAC4-2378F987CB03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
