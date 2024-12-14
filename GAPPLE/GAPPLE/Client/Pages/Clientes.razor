@@ -1,0 +1,44 @@
+﻿@page "/clientes"
+@using GAPPLE.Shared.Model
+
+
+<RadzenRow>
+    <RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" />
+</RadzenRow>
+
+<RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
+
+    <HeaderTemplate>
+        <RadzenButton ButtonStyle="ButtonStyle.Primary" />
+    </HeaderTemplate>
+    <Columns>
+     @*    <RadzenDataGridColumn Title="DNI/CUIT" Property="@nameof(Cliente.DNICuit)" >
+            <EditTemplate>
+                <RadzenTextBox @bind-Value=newDNICuit />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn Title="Razon Social" Property="@nameof(Cliente.RazoSocial)">
+            <EditTemplate>
+                <RadzenTextBox @bind-Value=newRazonSocial />
+            </EditTemplate>
+        </RadzenDataGridColumn> *@
+
+    </Columns>
+</RadzenDataGrid>
+
+
+
+@code
+{
+
+    List<Cliente> clientes;
+    RadzenDataGrid<Cliente> grilla;
+    Cliente clienteToInsert;
+    Cliente clienteToUpdate;
+
+    string newDNICuit;
+    string newRazonSocial;
+
+     
+}
