@@ -12,11 +12,8 @@ namespace GAPPLE.Server.Controllers
     public class ClientesController : ControllerBase
     {
         private IConfiguration Configuration { get; }
-        private IHttpContextAccessor HttpContextAccessor { get; }
-        private Usuario Usuario { get; }
-        private readonly string connectionString;
 
-        public ClientesController(IConfiguration configuration, IHttpContextAccessor contextAccessor)
+        public ClientesController(IConfiguration configuration)
         {
             Configuration = configuration;
 
