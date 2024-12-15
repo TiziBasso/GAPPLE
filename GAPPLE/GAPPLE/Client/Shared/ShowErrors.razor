@@ -1,0 +1,71 @@
+﻿@inject DialogService dialogService
+
+@if (lstErrores != null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" ShowIcon="false"
+                 Style="margin-top:0; margin-top:15px;">
+        <RadzenText Text="Errores:" TextStyle="TextStyle.Subtitle1" class="rz-color-danger" />
+        <RadzenStack Style="height:25vh; overflow:scroll; width:100%;">
+            <dl>
+                @foreach (var key in lstErrores.Keys)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Style="width:100%">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                            <dt style="margin-left:5px;">
+                                @key:
+                            </dt>
+                            @foreach (var error in lstErrores[key])
+                            {
+                                <dd style="margin-left:15px;">
+                                    @error
+                                </dd>
+                            }
+                        </RadzenStack>
+                        @if (ShowDeleteError)
+                        {
+                            <RadzenIcon Icon="clear" @onclick=@(()=>DeleteError(key)) class="ClearButton" />
+                        }
+                    </RadzenStack>
+                }
+            </dl>
+        </RadzenStack>
+    </RadzenAlert>
+}
+else if (Errors != null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" ShowIcon="false">
+        <ul>
+            @foreach (var item in Errors)
+            {
+                <li>
+                    @item
+                </li>
+            }
+        </ul>
+    </RadzenAlert>
+}
+else
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" ShowIcon="false">
+        <ul>
+            @MensajesHelper.ErrorSummary500
+        </ul>
+    </RadzenAlert>
+}
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Normal" JustifyContent="JustifyContent.Center">
+    <RadzenButton Click="@(() => dialogService.Close())">Cerrar</RadzenButton>
+</RadzenStack>
+
+@code {
+    [Parameter] public List<string> Errors { get; set; } = null;
+    [Parameter] public Dictionary<string, List<string>> lstErrores { get; set; } = null;
+    [Parameter] public bool ShowDeleteError { get; set; } = false;
+
+    private void DeleteError(string key)
+    {
+        lstErrores.Remove(key);
+        StateHasChanged();
+    }
+}
+

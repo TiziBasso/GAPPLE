@@ -1,0 +1,356 @@
+﻿@page "/productos"
+
+@using System.Threading
+@implements IDisposable
+
+@inject ProductosService ProductosService
+@inject SeguridadService SeguridadService
+@inject ParametrosDeConsulta ParametrosDeConsulta
+@inject NavigationManager navigationManager
+@inject DialogCustom DialogCustom
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Maestro de producto" class="rz-mb-3" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" class="rz-mb-3">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="codigo" />
+            <input @ref="refCodigoInterno" type="number" id="codigo" @bind-value="@codigoInterno" @bind-value:event="oninput" @onkeypress="KeyPress"
+                   class="rz-textbox" style="width: 5rem; text-align: right;" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="EAN:" Component="ean" />
+            <input type="number" @bind-value="@ean" id="ean" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 8rem;" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Descripción:" Component="desc" />
+            <input type="text" id="desc" @bind-value="@descripcion" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 20rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Proveedor:" Component="proveedor" />
+            <input type="text" id="proveedor" @bind-value="@proveedor" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 13rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Familia:" Component="familia" />
+            <input type="text" id="familia" @bind-value="@familia" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 13rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Marca:" Component="marca" />
+            <input type="text" id="marca" @bind-value="@marca" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 13rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cód.s/prov:" Component="codProv" />
+            <input type="text" id="codProv" @bind-value="@codSegunProveedor" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 6rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="SKU Web:" Component="skuWeb" />
+            <input type="number" id="skuWeb" @bind-value="@skuWeb" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 5rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="estado" />
+            <RadzenDropDown Data=@Variables.EstadosNum @bind-Value=@estado Name="estado"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            Change="HandleEstadosChange" Disabled="@isLoading" Style="width: 8rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Máx. regs.:" Component="maxRegs" />
+            <input type="number" id="maxRegs" @bind-value="@cantRegs" @bind-value:event="oninput" @onkeypress="KeyPress" class="rz-textbox" style="width: 5rem" disabled="@(isLoading)" autocomplete="off" />
+        </RadzenStack>
+    </RadzenStack>
+
+    <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1">
+        <RadzenButton Text="Agregar producto" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevoProducto" Disabled="@(isLoading || !listPermisos.Contains("alta"))" />
+        @* <RadzenButton Text="Exportar a Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" Disabled="@(!productos.Any() || isLoading)" /> *@
+    </RadzenStack>
+
+    <RadzenDataGrid @ref="@refGrid" Data="productos" AllowSorting="true" AllowGrouping="true" AllowFiltering="true" Density="Density.Compact"
+                    IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
+                    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
+                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args)=> RowExpand(args))" Style="height: 65vh;" EmptyText="">
+        <Columns>
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.CodigoInterno))" Title="Código" TextAlign="TextAlign.Right"
+                                  Width="90px" FilterValue="@codigoInternoFilter" Groupable="false" Resizable="false">
+                <FilterTemplate>
+                    <input type="text" @bind-value="@codigoInternoFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Descripcion))" Title="Descripción" FilterValue="@descripcionFilter"
+                                  Groupable="false" Width="300px">
+                <FilterTemplate>
+                    <input type="text" @bind-value="@descripcionFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Familia))" Title="Familia" Width="150px" FilterValue="@familiasFilter">
+        <FilterTemplate>
+        <input type="text" @bind-value="@familiasFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
+        </FilterTemplate>
+        </RadzenDataGridColumn> *@
+            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Proveedor))" Title="Proveedor" Width="150px" FilterValue="@proveedorFilter">
+        <FilterTemplate>
+        <input type="text" @bind-value="@proveedorFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
+        </FilterTemplate>
+        </RadzenDataGridColumn> *@
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Pasivo))" Title="Pasivo" TextAlign="TextAlign.Center" Width="75px"
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false">
+                <Template Context="producto">
+                    <RadzenCheckBox @bind-Value=@producto.Pasivo Disabled=true />
+                </Template>
+            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.PrecioCosto))" Title="Precio costo" TextAlign="TextAlign.Right" Width="120px"
+        Filterable="false" Groupable="false" Resizable="false" FormatString="{0:C2}" Visible=@(listPermisos.Contains("mostrarprecioscostos")) /> *@
+
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.AltaRegistro))" Title="Act. de precio" FormatString="{0:dd/MM/yyyy}"
+                                  TextAlign="TextAlign.Center" Width="105px" Filterable="false" Groupable="false" Resizable="false" />
+
+            <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
+                                  Frozen="true" FrozenPosition="FrozenColumnPosition.Left" Visible="@(listPermisos.Contains("ver"))">
+                <Template Context="producto">
+                    <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => VerProducto(producto))" @onclick:stopPropagation="true" title="Ver producto" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
+                                  Frozen="true" FrozenPosition="FrozenColumnPosition.Left" Visible="@listPermisos.Contains("edicion")">
+                <Template Context="producto">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => ModificarProducto(producto))" @onclick:stopPropagation="true" title="Editar producto" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+        @* <Template Context="prod">
+    <RadzenStack Orientation="Orientation.Horizontal">
+    <RadzenDataGrid Data="prod.Precios" Style="width: 700px" Density="Density.Compact" EmptyText="">
+    <Columns>
+    <RadzenDataGridColumn TItem="ProductoPrecio" Property="TipoListaPrecios.Descripcion" Title="Lista" Width="150px" />
+    <RadzenDataGridColumn TItem="ProductoPrecio" Property="@nameof(ProductoPrecio.Fecha)" Title="Vigencia" FormatString="{0:dd/MM/yyyy}"
+    TextAlign="TextAlign.Center" Width="110px" />
+    <RadzenDataGridColumn TItem="ProductoPrecio" Property="@nameof(ProductoPrecio.PrecioCosto)" Title="Precio costo" FormatString="{0:C2}"
+    TextAlign="TextAlign.Right" Width="110px" Visible=@(listPermisos.Contains("mostrarprecioscostos")) />
+    <RadzenDataGridColumn TItem="ProductoPrecio" Property="@nameof(ProductoPrecio.PorcentajeMargen)" Title="Margen"
+    TextAlign="TextAlign.Right" Width="90px" Visible=@(listPermisos.Contains("mostrarprecioscostos")) />
+    <RadzenDataGridColumn TItem="ProductoPrecio" Property="@nameof(ProductoPrecio.PrecioFinal)" Title="Precio final" FormatString="{0:C2}"
+    TextAlign="TextAlign.Right" Width="100px" />
+    </Columns>
+    </RadzenDataGrid>
+    </RadzenStack>
+    </Template> *@
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    CancellationTokenSource cancellationToken = new CancellationTokenSource();
+    ElementReference refCodigoInterno;
+
+    int? codigoInterno, skuWeb, cantRegs = 200;
+    string ean, descripcion, proveedor, familia, codSegunProveedor, marca;
+    int estado, index, render;
+
+    RadzenDataGrid<Producto> refGrid;
+    List<Producto> productos { get; set; } = new();
+    IList<Producto> selectedProduct;
+
+    //Variables para filtros sobre la grilla
+    string codigoInternoFilter, descripcionFilter, familiasFilter, marcasFilter, proveedorFilter;
+    bool isLoading, showPage;
+
+    List<string> listPermisos = new();
+    Dictionary<string, object> parametros = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await SeguridadService.ValidatePageAccess();
+        //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
+        listPermisos = new()
+        {
+            "ver"
+        };
+
+        estado = 2;
+
+        if (this.ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.ProductosIndex && this.ParametrosDeConsulta.Parametros.Any())
+        {
+            if (ParametrosDeConsulta.Parametros.ContainsKey("codigo"))
+                codigoInterno = (int)ParametrosDeConsulta.Parametros["codigo"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("ean"))
+                ean = (string)ParametrosDeConsulta.Parametros["ean"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("descripcion"))
+                descripcion = (string)ParametrosDeConsulta.Parametros["descripcion"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("proveedor"))
+                proveedor = (string)ParametrosDeConsulta.Parametros["proveedor"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("familia"))
+                familia = (string)ParametrosDeConsulta.Parametros["familia"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("marca"))
+                marca = (string)ParametrosDeConsulta.Parametros["marca"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("codsegunproveedor"))
+                codSegunProveedor = (string)ParametrosDeConsulta.Parametros["codsegunproveedor"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("skuweb"))
+                skuWeb = (int)ParametrosDeConsulta.Parametros["skuweb"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("cantregs"))
+                cantRegs = (int)ParametrosDeConsulta.Parametros["cantregs"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("estado"))
+                estado = (int)ParametrosDeConsulta.Parametros["estado"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("index"))
+                index = (int)ParametrosDeConsulta.Parametros["index"];
+
+            await FillProductos();
+        }
+        else
+            ParametrosDeConsulta.Clear();
+
+        showPage = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+        {
+            await refCodigoInterno.FocusAsync();
+            if (this.ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.ProductosIndex && this.ParametrosDeConsulta.Parametros.Any())
+            {
+                await refGrid.SelectRow(productos[index]);
+                // await JSFunction.ScrollGridToIndex(refGrid.UniqueID, index);
+            }
+        }
+    }
+
+    private async Task KeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await FillProductos();
+        }
+    }
+
+    private void ImportarProducto()
+    {
+        navigationManager.NavigateTo("productos/importar");
+    }
+
+    private async Task FillProductos()
+    {
+        isLoading = true;
+        parametros.Clear();
+
+        if (codigoInterno != null && codigoInterno != 0) parametros.Add("codigo", codigoInterno);
+        if (!string.IsNullOrWhiteSpace(ean)) parametros.Add("ean", ean.Trim());
+        if (!string.IsNullOrWhiteSpace(descripcion)) parametros.Add("descripcion", descripcion.Trim());
+        if (!string.IsNullOrWhiteSpace(proveedor)) parametros.Add("proveedor", proveedor.Trim());
+        if (!string.IsNullOrWhiteSpace(familia)) parametros.Add("familia", familia.Trim());
+        if (!string.IsNullOrWhiteSpace(marca)) parametros.Add("marca", marca.Trim());
+        if (!string.IsNullOrWhiteSpace(codSegunProveedor)) parametros.Add("codsegunproveedor", codSegunProveedor.Trim());
+        if (skuWeb != null) parametros.Add("skuweb", skuWeb);
+        parametros.Add("estado", estado);
+        if (cantRegs != null && cantRegs != 0) parametros.Add("cantregs", cantRegs);
+
+        bool? pasivo = null;
+        if (estado == 2)
+            pasivo = false;
+        else if (estado == 3)
+            pasivo = true;
+
+        productos = await ProductosService.GetProductos(null, codigoInterno, ean, descripcion, proveedor, null, familia, marca,
+            codSegunProveedor, null, skuWeb, pasivo, cantRegs, false, cancellationToken);
+
+        isLoading = false;
+
+        if (!productos.Any())
+        {
+            NotificationService.Notify(summary: "La búsqueda no ha devuelto resultados");
+            if (render > 2)
+                await refCodigoInterno.FocusAsync();
+        }
+    }
+
+    private void NuevoProducto()
+    {
+        navigationManager.NavigateTo("producto/alta");
+    }
+
+    private async Task VerProducto(Producto producto)
+    {
+        DialogCustom.OpenBusy("Cargando...");
+        await refGrid.SelectRow(producto);
+        GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
+        navigationManager.NavigateTo($"producto/ver/{producto.IdProducto}");
+    }
+
+    private async Task ModificarProducto(Producto producto)
+    {
+        DialogCustom.OpenBusy("Cargando...");
+        await refGrid.SelectRow(producto);
+        GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
+        navigationManager.NavigateTo($"producto/edicion/{producto.IdProducto}");
+    }
+
+    private async Task VerProductoSku(Producto producto)
+    {
+        DialogCustom.OpenBusy("Cargando...");
+        await refGrid.SelectRow(producto);
+        GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
+        navigationManager.NavigateTo($"skus/{producto.IdProducto}");
+    }
+
+    private async Task RowExpand(Producto producto)
+    {
+        await refGrid.SelectRow(producto);
+    }
+
+    private void GuardarParametrosDeConsulta(int index)
+    {
+        parametros.Add("index", index);
+        ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.ProductosIndex, parametros);
+    }
+
+    private async Task HandleEstadosChange()
+    {
+        await FillProductos();
+    }
+
+    // public async Task Export()
+    // {
+    //     DialogCustom.OpenBusy("Exportando...");
+    //     await ExcelService.ExportProductos(productos, new Query()
+    //         {
+    //             OrderBy = refGrid.Query.OrderBy,
+    //             Filter = refGrid.Query.Filter,
+    //             Select = string.Join(",", refGrid.ColumnsCollection.Where(c => c.GetVisible() && !string.IsNullOrEmpty(c.Property)).Select(c => c.Property.Contains(".") ? $"{c.Property} as {c.Property.Replace(".", "_")}" : c.Property))
+    //         });
+    //     DialogCustom.CloseDialog();
+    // }
+
+    public void Dispose()
+    {
+        cancellationToken?.Cancel();
+        cancellationToken?.Dispose();
+    }
+}
