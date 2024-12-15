@@ -26,7 +26,7 @@
 
                     <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
                         <RadzenLabel Text="Código interno:" />
-                        <RadzenNumeric @bind-Value="Producto.CodigoInterno" TextAlign="TextAlign.Right" ShowUpDown="false" ReadOnly="true" Disabled="disabledInput" Style="width: 8rem;" />
+                        <RadzenNumeric @bind-Value="Producto.CodigoProducto" TextAlign="TextAlign.Right" ShowUpDown="false" ReadOnly="true" Disabled="disabledInput" Style="width: 8rem;" />
                     </RadzenStack>
 
                     <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
@@ -299,11 +299,11 @@ else
                     if (operacion == Operaciones.Alta)
                     {
                         Dictionary<string, object> parametros = new();
-                        parametros.Add("codigo", Producto.CodigoInterno);
+                        parametros.Add("codigo", Producto.CodigoProducto);
                         ParametrosDeConsulta.Clear();
                         ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.ProductosIndex, parametros);
 
-                        string message = $"Código interno: <strong>{Producto.CodigoInterno}</strong>";
+                        string message = $"Código interno: <strong>{Producto.CodigoProducto}</strong>";
 
                         await DialogService.Alert(message, "Producto creado",
                                                     new AlertOptions()
@@ -330,7 +330,7 @@ else
 
     private void InvalidSubmit()
     {
-        invalidFamilia = editContext.GetValidationMessages(editContext.Field(nameof(Producto.IdFamilia))).Any();
+        invalidFamilia = editContext.GetValidationMessages(editContext.Field(nameof(Producto.Clasificacion))).Any();
         editContext.Validate();
         var errors = editContext.GetValidationMessages().ToList();
         DialogCustom.ShowErrors(errors);

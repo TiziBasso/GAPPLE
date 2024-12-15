@@ -6,7 +6,7 @@ namespace GAPPLE.Shared.Model
     {
         public int IdProducto { get; set; }
 
-        public string CodigoInterno { get; set; }
+        public string CodigoProducto { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar una descripción"),
             StringLength(50, ErrorMessage = "Máximo de caracteres 50")]
@@ -26,8 +26,10 @@ namespace GAPPLE.Shared.Model
             Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una marca")]
         public int IdMarca { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar una familia")]
-        public string IdFamilia { get; set; }
+        [Required(ErrorMessage = "Debe seleccionar una clasificación")]
+        public string Clasificacion { get; set; }
+
+        public string Linea { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar un valor"),
             DisplayFormat(DataFormatString = "{0:N2}"),

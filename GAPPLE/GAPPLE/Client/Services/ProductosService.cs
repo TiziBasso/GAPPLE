@@ -15,36 +15,19 @@ namespace GAPPLE.Client.Services
 
         public ProductosService(HttpClient httpClient, ILogger<ProductosService> logger) => (HttpClient, Logger) = (httpClient, logger);
 
-        public async ValueTask<List<Producto>> GetProductos(int? idProducto = null, int? codigoInterno = null,
-            string? ean = null, string? descripcion = null, string? razonSocialProveedor = null, string? idFamilia = null, string? descripcionFamilia = null, string? descripcionMarca = null,
-            string? codSegunProveedor = null, int? idProveedor = null, int? idSitioWeb = null, bool? pasivo = null, int? cantRecs = null, bool? conSku = false,
-            CancellationTokenSource cancellationToken = null)
+        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado,
+            CancellationTokenSource? cancellationToken = null)
         {
             Dictionary<string, object> query = new();
-            if (idProducto != null && idProducto != 0) query["idProducto"] = idProducto;
-            if (codigoInterno != null && codigoInterno != 0) query["codigoInterno"] = codigoInterno;
-            if (ean != null) query["ean"] = WebUtility.UrlEncode(ean.Trim());
+            if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codigoProducto"] = codigoProducto;
             if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
-            if (razonSocialProveedor != null) query["razonSocialProveedor"] = WebUtility.UrlEncode(razonSocialProveedor.Trim());
-            if (idFamilia != null) query["idFamilia"] = idFamilia.Trim();
-            if (descripcionFamilia != null) query["descripcionFamilia"] = WebUtility.UrlEncode(descripcionFamilia.Trim());
-            if (descripcionMarca != null) query["descripcionMarca"] = WebUtility.UrlEncode(descripcionMarca.Trim());
-            if (codSegunProveedor != null) query["codSegunProveedor"] = WebUtility.UrlEncode(codSegunProveedor.Trim());
-            if (idProveedor != null) query["idProveedor"] = idProveedor;
-            if (idSitioWeb != null) query["idSitioWeb"] = idSitioWeb;
-            if (pasivo != null) query["pasivo"] = pasivo;
-            if (cantRecs != null && cantRecs != 0) query["cantRecs"] = cantRecs;
-            if (conSku != null) query["conSku"] = conSku;
+            if (clasificado != null) query["clasificado"] = clasificado;
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
             if (cancellationToken == null)
-            {
-                return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}/dto?{stringJoin}");
-            }
+                return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}?{stringJoin}");
             else
-            {
-                return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}/dto?{stringJoin}", cancellationToken.Token);
-            }
+                return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}?{stringJoin}", cancellationToken.Token);
         }
 
         public async ValueTask<Producto> GetProducto(int? codigoInterno, int? idProducto = null)
@@ -71,7 +54,7 @@ namespace GAPPLE.Client.Services
                 {
                     var prod = await response.Content.ReadFromJsonAsync<Producto>();
                     producto.IdProducto = prod!.IdProducto;
-                    producto.CodigoInterno = prod.CodigoInterno;
+                    producto.CodigoProducto = prod.CodigoProducto;
                     return new(true);
                 }
                 else
@@ -95,7 +78,7 @@ namespace GAPPLE.Client.Services
             {
                 var prod = await response.Content.ReadFromJsonAsync<Producto>();
                 producto.IdProducto = prod!.IdProducto;
-                producto.CodigoInterno = prod.CodigoInterno;
+                producto.CodigoProducto = prod.CodigoProducto;
                 return new(true);
             }
             else

@@ -43,6 +43,19 @@ namespace GAPPLE.Client.Tools
             }
         }
 
+        internal static IEnumerable<Opcion> Clasificaciones
+        {
+            get
+            {
+                return new List<Opcion>
+                {
+                    new Opcion((object)null, "Todos"),
+                    new Opcion(true, "Sí"),
+                    new Opcion(false, "No")
+                };
+            }
+        }
+
         internal static class ErrorPages
         {
             internal const string Invalido = "errorpage/invalid";
