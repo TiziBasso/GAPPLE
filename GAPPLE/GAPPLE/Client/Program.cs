@@ -1,4 +1,5 @@
 using GAPPLE.Client;
+using GAPPLE.Client.Helpers;
 using GAPPLE.Client.Services;
 using GAPPLE.Client.Tools;
 using Microsoft.AspNetCore.Components.Web;
@@ -9,7 +10,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), Timeout = TimeSpan.FromDays(2) });
 
 Services(builder.Services);
 
@@ -27,4 +28,8 @@ static void Services(IServiceCollection services)
     services.AddSingleton<ParametrosDeConsulta>();
     services.AddScoped<OfertasService>();
     services.AddScoped<SeguridadService>();
+    services.AddScoped<DialogCustom>();
+    services.AddScoped<DialogService>();
+    services.AddScoped<ProductosService>();
+    services.AddScoped<ToolsHelpers>();
 }
