@@ -20,7 +20,15 @@
 <body>
     <div id="app">Loading...</div>
 
-    <script src="./Scripts/Script.js"></script>
+    <!--<script src="./Scripts/Script.js"></script>-->
+    <script id="scriptVersionado"></script>
+    <script>
+        var currentDate = new Date();
+        var timestamp = currentDate.getTime();
+        var scriptUrl2 = './Scripts/Script.js?v=' + timestamp;
+        var scriptElement2 = document.getElementById('scriptVersionado');
+        scriptElement2.src = scriptUrl2;
+    </script>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

@@ -25,6 +25,6 @@ await builder.Build().RunAsync();
 static void Services(IServiceCollection services)
 {
     services.AddSingleton<ParametrosDeConsulta>();
-    services.AddSingleton<OfertasService>();
-    services.AddSingleton<SeguridadService>();
+    services.AddScoped<OfertasService>();
+    services.AddScoped<SeguridadService>();
 }

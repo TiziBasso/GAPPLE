@@ -11,7 +11,7 @@ namespace GAPPLE.Shared.Model
         public int IdOferta { get; set; }
         public string Nombre { get; set; }
         public string Linea { get; set; }
-        public float Descuento { get; set; }
+        public decimal Descuento { get; set; }
         public DateTime Desde { get; set; }
         public DateTime Hasta {  get; set; }
         public bool Activa { get; set; }
