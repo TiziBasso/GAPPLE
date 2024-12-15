@@ -20,20 +20,20 @@ namespace GAPPLE.Server.Controllers
         {
             Configuration = configuration;
 
-            HttpContextAccessor = contextAccessor;
+            //HttpContextAccessor = contextAccessor;
 
-            connectionString = Configuration.GetConnectionString("DefaultConnection");
+            //connectionString = Configuration.GetConnectionString("DefaultConnection");
 
-            string nombreUsuario = HttpContextAccessor.HttpContext.User.Identity.Name[(HttpContextAccessor.HttpContext.User.Identity.Name.LastIndexOf(@"\") + 1)..].ToUpper();
+            //string nombreUsuario = HttpContextAccessor.HttpContext.User.Identity.Name[(HttpContextAccessor.HttpContext.User.Identity.Name.LastIndexOf(@"\") + 1)..].ToUpper();
             //Usuario = new SeguridadController(configuration, parametros).ObtenerUsuario(nombreUsuario);
         }
 
-        [HttpGet("clientes")]
-        public List<Cliente> GetClientes(int? codCliente = null, string? razonSocial = null, int? cuit = null, bool? clienteEspecial = null)
+        [HttpGet]
+        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Cliente> lst = new();
-            foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial, cuit, clienteEspecial, null).Rows)
+            foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, null).Rows)
             {
                 lst.Add(new(row["CodigoCliente"].ToString()!,
                             (string)row["RazonSocial"],

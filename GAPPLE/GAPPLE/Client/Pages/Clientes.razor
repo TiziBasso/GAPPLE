@@ -1,30 +1,31 @@
 ﻿@page "/clientes"
 @using GAPPLE.Shared.Model
 
+@inject ClientesService ClientesService
 
 <RadzenRow>
-    <RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" />
+	<RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" />
 </RadzenRow>
 
 <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
 
-    <HeaderTemplate>
-        <RadzenButton ButtonStyle="ButtonStyle.Primary" />
-    </HeaderTemplate>
-    <Columns>
-     @*    <RadzenDataGridColumn Title="DNI/CUIT" Property="@nameof(Cliente.DNICuit)" >
-            <EditTemplate>
-                <RadzenTextBox @bind-Value=newDNICuit />
-            </EditTemplate>
-        </RadzenDataGridColumn>
+	<HeaderTemplate>
+		<RadzenButton ButtonStyle="ButtonStyle.Primary" />
+	</HeaderTemplate>
+	<Columns>
+		<RadzenDataGridColumn Title="DNI/CUIT" Property="@nameof(Cliente.CUIT)">
+			<EditTemplate>
+				<RadzenTextBox @bind-Value=newDNICuit />
+			</EditTemplate>
+		</RadzenDataGridColumn>
 
-        <RadzenDataGridColumn Title="Razon Social" Property="@nameof(Cliente.RazoSocial)">
-            <EditTemplate>
-                <RadzenTextBox @bind-Value=newRazonSocial />
-            </EditTemplate>
-        </RadzenDataGridColumn> *@
+		<RadzenDataGridColumn Title="Razon Social" Property="@nameof(Cliente.RazonSocial)">
+			<EditTemplate>
+				<RadzenTextBox @bind-Value=newRazonSocial />
+			</EditTemplate>
+		</RadzenDataGridColumn>
 
-    </Columns>
+	</Columns>
 </RadzenDataGrid>
 
 
@@ -32,13 +33,16 @@
 @code
 {
 
-    List<Cliente> clientes;
-    RadzenDataGrid<Cliente> grilla;
-    Cliente clienteToInsert;
-    Cliente clienteToUpdate;
+	List<Cliente> clientes = new();
+	RadzenDataGrid<Cliente> grilla;
+	Cliente clienteToInsert;
+	Cliente clienteToUpdate;
 
-    string newDNICuit;
-    string newRazonSocial;
+	string newDNICuit;
+	string newRazonSocial;
 
-     
+	protected override async Task OnInitializedAsync()
+	{
+		clientes = await ClientesService.GetClientes();
+	}
 }
