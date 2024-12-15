@@ -18,5 +18,6 @@ namespace GAPPLE.Shared.Model
         public string? Clasificacion { get; set; }
         public bool ClienteEspecial { get; set; }
         public string? Observaciones { get; set; }
+        public Cliente(int codCliente, string razonSocial, int cuit) => (CodigoCliente, RazonSocial, CUIT) = (codCliente, razonSocial, cuit);
     }
 }
