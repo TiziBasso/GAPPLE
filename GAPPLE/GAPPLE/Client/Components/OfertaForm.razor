@@ -1,0 +1,100 @@
+﻿@inject ProductosService ProductosService
+@inject OfertasService OfertasService
+
+@if (showForm)
+{
+    <RadzenTemplateForm EditContext="editContext" Data="Oferta" TItem="Oferta" Submit="Guardar">
+        <DataAnnotationsValidator />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Nombre:" />
+                <RadzenTextBox @bind-Value="Oferta.Nombre" />
+                <ValidationMessage For="@(() => Oferta.Nombre)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Detalle:" />
+                <RadzenTextArea @bind-Value="Oferta.Descripcion" />
+                <ValidationMessage For="@(() => Oferta.Descripcion)" />
+            </RadzenStack>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Linea:" />
+                <RadzenDropDown Data="lstLineas" @bind-Value="Oferta.Linea" Change="BuscarProductos" />
+                <ValidationMessage For="@(() => Oferta.Linea)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Descuento:" />
+                <RadzenNumeric @bind-Value="Oferta.Descuento" />
+                <ValidationMessage For="@(() => Oferta.Descuento)" />
+            </RadzenStack>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Desde:" />
+                <RadzenDatePicker @bind-Value="Oferta.Desde" />
+                <ValidationMessage For="@(() => Oferta.Desde)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                <RadzenLabel Text="Hasta:" />
+                <RadzenDatePicker @bind-Value="Oferta.Hasta" />
+                <ValidationMessage For="@(() => Oferta.Hasta)" />
+            </RadzenStack>
+        </RadzenStack>
+        <RadzenFieldset Text="Productos">
+            <PickList ProductosIzquierda="lstProductos" ProductosDerecha="lstProductosOferta" />
+            <ValidationMessage For="@(() => Oferta.Inclusiones)" />
+        </RadzenFieldset>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text="Guardar" ButtonStyle="ButtonStyle.Success" ButtonType="ButtonType.Submit"></RadzenButton>
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public Oferta Oferta { get; set; }
+    List<ProductoParaOfertas> lstProductos = new List<ProductoParaOfertas>();
+    List<ProductoParaOfertas> lstProductosOferta = new List<ProductoParaOfertas>();
+    List<string> lstLineas = new();
+    EditContext editContext;
+    bool showForm;
+
+    bool esNueva;
+
+    protected override async Task OnInitializedAsync()
+    {
+        lstLineas = await ProductosService.GetLineas();
+        if (Oferta.IdOferta > 0)
+        {
+            await BuscarProductos();
+            List<string> incluidos = Oferta.Inclusiones!.Split('|').ToList();
+            lstProductosOferta.AddRange(lstProductos.Where(x => incluidos.Exists(e => e == x.CodigoProducto)));
+            lstProductosOferta.ForEach(x => lstProductos.Remove(x));
+        }
+        else
+        {
+            esNueva = true;
+        }
+        editContext = new(Oferta);
+        showForm = true;
+    }
+
+    async Task BuscarProductos()
+    {
+        lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
+        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+    }
+
+    async Task Guardar()
+    {
+        Oferta.Inclusiones = string.Join('|', lstProductosOferta.Select(x => x.CodigoProducto));
+        if (esNueva)
+            await OfertasService.PostOferta(Oferta);
+        else
+            await OfertasService.PutOferta(Oferta);
+    }
+}

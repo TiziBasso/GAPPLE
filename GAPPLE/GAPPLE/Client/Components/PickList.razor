@@ -1,0 +1,138 @@
+﻿<div class="picklist-container">
+    <div class="list-box">
+        <input @bind-value="filtroIzquierda" @bind-value:event="oninput" />
+        <h4>Listado de Productos</h4>
+        <ul>
+            @foreach (var grupo in FiltrarListaIzquierda(filtroIzquierda))
+            {
+                <li>
+                    <label>
+                        <span class="familia-titulo" @onclick="@(e => MoverFamiliaCompleta(grupo.Key))">@grupo.Key</span>
+                    </label>
+                    <ul>
+                        @foreach (var producto in grupo)
+                        {
+                            <li>
+                                <label>
+                                    <span @onclick="@(e => MoverProductoDerecha(producto.CodigoProducto))">@producto.Descripcion (@producto.CodigoProducto)</span>
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="list-box">
+        <input @bind-value="filtroDerecha" @bind-value:event="oninput" />
+        <h4>Productos de la Oferta</h4>
+        <ul>
+            @foreach (var grupo in FiltrarListaDerecha(filtroDerecha))
+            {
+                <li>
+                    <label>
+                        <span class="familia-titulo" @onclick="@(e => MoverFamiliaCompletaIzquierda(grupo.Key))">@grupo.Key</span>
+                    </label>
+                    <ul>
+                        @foreach (var producto in grupo)
+                        {
+                            <li>
+                                <label>
+                                    <span @onclick="@(e => MoverProductoIzquierda(producto.CodigoProducto))">@producto.Descripcion (@producto.CodigoProducto)</span>
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ProductoParaOfertas> ProductosIzquierda { get; set; }
+    [Parameter] public List<ProductoParaOfertas> ProductosDerecha { get; set; }
+
+    string? filtroIzquierda, filtroDerecha;
+
+    private void MoverFamiliaCompleta(string familia)
+    {
+        var productosAMover = ProductosIzquierda.Where(p => p.Familia == familia).ToList();
+        foreach (var producto in productosAMover)
+        {
+            ProductosDerecha.Add(producto);
+            ProductosIzquierda.Remove(producto);
+        }
+    }
+    private void MoverProductoDerecha(string codigoProducto)
+    {
+        ProductosDerecha.Add(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
+        ProductosIzquierda.Remove(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
+    }
+
+    private void MoverFamiliaCompletaIzquierda(string familia)
+    {
+        var productosAMover = ProductosDerecha.Where(p => p.Familia == familia).ToList();
+        foreach (var producto in productosAMover)
+        {
+            ProductosIzquierda.Add(producto);
+            ProductosDerecha.Remove(producto);
+        }
+    }
+
+    private void MoverProductoIzquierda(string codigoProducto)
+    {
+        ProductosIzquierda.Add(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
+        ProductosDerecha.Remove(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
+    }
+
+    private IEnumerable<IGrouping<string, ProductoParaOfertas>> FiltrarListaIzquierda(string filtro)
+    {
+        if (!string.IsNullOrEmpty(filtro))
+            return ProductosIzquierda.Where(x => x.Descripcion.ToUpper().Contains(filtro!.ToUpper())).GroupBy(p => p.Familia).ToList();
+        return ProductosIzquierda.GroupBy(p => p.Familia);
+    }
+    private IEnumerable<IGrouping<string, ProductoParaOfertas>> FiltrarListaDerecha(string filtro)
+    {
+        if (!string.IsNullOrEmpty(filtro))
+            return ProductosDerecha.Where(x => x.Descripcion.ToUpper().Contains(filtro!.ToUpper())).GroupBy(p => p.Familia).ToList();
+        return ProductosDerecha.GroupBy(p => p.Familia);
+    }
+}
+
+
+<style>
+    .picklist-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .list-box {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        width: 45%;
+        height: 400px;
+        overflow-y: auto;
+        background-color: #f9f9f9;
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+    }
+
+    .familia-titulo {
+        color: blue;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+</style>
