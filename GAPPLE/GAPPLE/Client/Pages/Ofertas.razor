@@ -1,5 +1,46 @@
-﻿
+﻿@page "/Ofertas"
+
+@inject SeguridadService SeguridadService
+@inject OfertasService OfertasService
+
+@if (showPage)
+{
+    <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" />
+
+    <RadzenDataGrid Data="lstOfertas">
+        <Columns>
+            <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" />
+            <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" />
+            <RadzenDataGridColumn Title="Linea" Property="@nameof(Oferta.Linea)" />
+            <RadzenDataGridColumn Title="Descuento" Property="@nameof(Oferta.Descuento)" />
+            <RadzenDataGridColumn Title="Desde" Property="@nameof(Oferta.Desde)" />
+            <RadzenDataGridColumn Title="Hasta" Property="@nameof(Oferta.Hasta)" />
+            <RadzenDataGridColumn Title="Activa">
+                <Template>
+                    <RadzenCheckBox @bind-Value="context.Activa" ReadOnly="true" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn>
+                <Template>
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" title="Eliminar" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn>
+                <Template>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar producto" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
 
 @code {
+    List<Oferta> lstOfertas = new();
+    bool showPage;
 
+    protected override async Task OnInitializedAsync()
+    {
+        lstOfertas = await OfertasService.GetOfertas(null, null);
+        showPage = true;
+    }
 }

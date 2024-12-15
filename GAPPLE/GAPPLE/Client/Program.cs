@@ -1,4 +1,5 @@
 using GAPPLE.Client;
+using GAPPLE.Client.Services;
 using GAPPLE.Client.Tools;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -24,4 +25,6 @@ await builder.Build().RunAsync();
 static void Services(IServiceCollection services)
 {
     services.AddSingleton<ParametrosDeConsulta>();
+    services.AddSingleton<OfertasService>();
+    services.AddSingleton<SeguridadService>();
 }
