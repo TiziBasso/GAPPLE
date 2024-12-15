@@ -67,11 +67,11 @@
                     <RadzenCheckBox @bind-Value=@producto.Pasivo Disabled=true />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Clasificacion))" Title="Clasificación"
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Clasificacion))" Title="Clasificación" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea"
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones"
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
 
             @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Familia))" Title="Familia" Width="150px" FilterValue="@familiasFilter">
