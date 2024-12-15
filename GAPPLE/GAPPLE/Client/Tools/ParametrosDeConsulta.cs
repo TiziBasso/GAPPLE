@@ -30,6 +30,7 @@ namespace GAPPLE.Client.Tools
             Null,
             Ordenes,
             Usuarios,
+            ProductosIndex
         }
     }
 }

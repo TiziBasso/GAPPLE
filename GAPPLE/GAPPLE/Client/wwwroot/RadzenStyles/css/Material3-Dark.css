@@ -22577,6 +22577,13 @@ button.rz-colorpicker-trigger {
     outline-offset: var(--rz-input-focus-outline-offset);
 }
 
+.rz-column-title {
+    text-align: center;
+    justify-items: center;
+    align-items: center;
+    justify-content: center !important;
+}
+
 :root {
     --rz-white: #ffffff;
     --rz-black: #000000;

@@ -1,0 +1,361 @@
+﻿@page "/producto/{operacionurl}"
+@page "/producto/{operacionurl}/{idProducto:int}"
+
+
+@inject SeguridadService SeguridadService
+@inject ProductosService ProductosService
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
+@inject ParametrosDeConsulta ParametrosDeConsulta
+@inject ToolsHelpers ToolsHelpers
+@inject DialogCustom DialogCustom
+
+@if (editContext != null)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Datos del producto" />
+
+    <RadzenTemplateForm EditContext="editContext" TItem="Producto" Submit="Submit" InvalidSubmit="InvalidSubmit">
+        <DataAnnotationsValidator />
+
+        <RadzenRow>
+
+            <RadzenColumn Size="12">
+
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem">
+
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                        <RadzenLabel Text="Código interno:" />
+                        <RadzenNumeric @bind-Value="Producto.CodigoProducto" TextAlign="TextAlign.Right" ShowUpDown="false" ReadOnly="true" Disabled="disabledInput" Style="width: 8rem;" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                        <RadzenLabel Text="Descripción:" />
+                        <RadzenTextBox @ref="refDescripcion" @bind-Value="Producto.Descripcion" Disabled="disabledInput" Style="width: 25rem;" />
+                        <ValidationMessage For="@(() => Producto.Descripcion)" />
+                    </RadzenStack>
+
+                </RadzenStack>
+
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        <CascadingValue Value="@operacion" Name="Operacion" IsFixed="true">
+            <CascadingValue Value="@mostarPreciosCostos" Name="MostrarPreciosCostos" IsFixed="true">
+                <CascadingValue Value="@disabledInput" Name="DisabledInput" IsFixed="true">
+                    <CascadingValue Value="@Producto.Descripcion" Name="DescripcionProducto">
+
+                        <RadzenRow class="rz-mt-2">
+                            <RadzenColumn Size="12">
+                                <RadzenTabs RenderMode="TabRenderMode.Client" SelectedIndex="tabIndex" SelectedIndexChanged="HandleTabChange" Style="height: 540px;">
+                                    <Tabs>
+                                        <RadzenTabsItem Text="Datos generales">
+                                            @* <RadzenRow>
+                                        <RadzenColumn Size="12" SizeMD="6">
+                                        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                                        <RadzenLabel Text="Familia:" />
+                                        <div class="input-group-left">
+                                        <RadzenTextBox Name="sub-familia" Value="@descripcionFamilia" ReadOnly="true" Disabled="disabledInput" Style="width: calc(100% - 50px); height:auto"
+                                        class="@(invalidFamilia ? "invalid" : null)" />
+                                        <span class="input-group-btn">
+                                        <RadzenButton ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Style="width: 50px;" Click="HandleClickFamilia" Disabled="disabledInput">
+                                        <i class="bi bi-file-medical me-2 fs-5"></i>
+                                        </RadzenButton>
+                                        </span>
+                                        </div>
+                                        <ValidationMessage For="@(() => Producto.IdFamilia)" />
+                                        </RadzenStack>
+                                        </RadzenColumn>
+                                        </RadzenRow> *@
+
+                                            <RadzenRow class="rz-mt-3">
+                                                <RadzenColumn Size="12" SizeMD="8">
+                                                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="5px" Style="height: 100%; margin-top:5px;">
+                                                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5px">
+                                                            <RadzenLabel Text="Pasivo:" Component="pasivo" />
+                                                            <RadzenCheckBox @bind-Value="@Producto.Pasivo" Name="pasivo" Disabled="disabledInput" />
+                                                        </RadzenStack>
+                                                    </RadzenStack>
+                                                </RadzenColumn>
+                                            </RadzenRow>
+
+
+                                            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" class="rz-mt-3">
+                                                <RadzenColumn Size="12" SizeSM="2">
+                                                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                                                        <RadzenLabel Text="% de IVA:" />
+                                                        <RadzenNumeric @bind-Value="Producto.PorcentajeIVA" TValue="decimal?" Format="#0.00" TextAlign="TextAlign.Right" ShowUpDown="false" Disabled="disabledInput" />
+                                                        <ValidationMessage For="@(() => Producto.PorcentajeIVA)" />
+                                                    </RadzenStack>
+                                                </RadzenColumn>
+
+                                                <RadzenColumn Size="12" SizeSM="2">
+                                                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                                                        <RadzenLabel Text="Precio:" />
+                                                        <RadzenNumeric @bind-Value="Producto.Precio" TValue="decimal?" Format="#0.00" TextAlign="TextAlign.Right" ShowUpDown="false" Disabled="disabledInput" />
+                                                        <ValidationMessage For="@(() => Producto.PorcentajeIVA)" />
+                                                    </RadzenStack>
+                                                </RadzenColumn>
+                                            </RadzenRow>
+
+                                            <RadzenRow class="rz-mt-3">
+                                                <RadzenColumn Size="12">
+                                                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                                                        <RadzenLabel Text="Observaciones:" />
+                                                        <RadzenTextArea @bind-Value="Producto.Observaciones" Style="height: 5rem; min-height: 5rem; max-height: 10rem;" Disabled="disabledInput" />
+                                                        <ValidationMessage For="@(() => Producto.Observaciones)" />
+                                                    </RadzenStack>
+                                                </RadzenColumn>
+                                            </RadzenRow>
+
+                                        </RadzenTabsItem>
+
+                                        @*                                         <RadzenTabsItem Text="Precio de venta">
+                                    <ProductoPreciosListado Precios="@Producto.Precios" PreciosHistoricos="preciosHistoricos" />
+                                    <ValidationMessage For="@(()=>Producto.Precios)" />
+                                    </RadzenTabsItem>*@
+
+                                        @* <RadzenTabsItem Text="Atributos">
+                                    <ProductoAtributoListado Atributos="@Producto.Atributos" />
+                                    </RadzenTabsItem> *@
+
+                                    </Tabs>
+                                </RadzenTabs>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                    </CascadingValue>
+                </CascadingValue>
+            </CascadingValue>
+        </CascadingValue>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-8">
+            @if (operacion == Operaciones.Lectura)
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="arrow_back" Text="Volver" Click="Cancelar" />
+            }
+            else
+            {
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" Disabled=onEdit />
+                <RadzenButton ButtonType="Radzen.ButtonType.Submit" ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Disabled=onEdit />
+            }
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public string OperacionUrl { get; set; }
+    [Parameter] public int? IdProducto { get; set; }
+    [Parameter] public string PaisOrigen { get; set; }
+
+    Producto Producto { get; set; }
+    EditContext editContext;
+
+    //List<ProductoProveedor> precioCostoHistoricos = new();
+    //List<ProductoPrecio> preciosHistoricos = new();
+
+    Operaciones operacion;
+    bool disabledInput, mostarPreciosCostos, invalidFamilia, onEdit;
+    int tabIndex, render;
+    string descripcionFamilia = string.Empty;
+
+    RadzenTextBox refDescripcion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bool error = false;
+        error = ToolsHelpers.Validate(OperacionUrl, IdProducto);
+
+        operacion = ToolsHelpers.ObtenerOperacion(OperacionUrl);
+
+        if (operacion == Operaciones.Lectura)
+            disabledInput = true;
+        else if (operacion == Operaciones.Importar && PaisOrigen == null)
+        {
+            NavigationManager.NavigateTo(Variables.ErrorPages.Invalido);
+            error = true;
+        }
+
+        //var listPermisos = await SeguridadService.ValidatePageAccess("maestroProductos");
+        List<string> listPermisos = new() { "lectura", "ver" };
+        if (!listPermisos.Exists(x => x == OperacionUrl))
+        {
+            NavigationManager.NavigateTo(Tools.Variables.ErrorPages.Desautorizado);
+            error = true;
+        }
+
+        if (!error)
+        {
+            //familias = await ProductosService.GetFamilias();
+
+            if (IdProducto == null)
+            {
+                Producto = new();
+                //Producto.Precios = await ProductosService.GetProductosPrecioVentaAlta();
+                //Producto.PorcentajeIVA = await ParametrosService.TasaIVA_1();
+                Producto.PorcentajeIVA = 21;
+            }
+            else
+            {
+                Producto? p = null;
+                p = await ProductosService.GetProducto(null, IdProducto);
+
+                if (p == null)
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "El producto no existe");
+                    NavigationManager.NavigateTo("productos");
+                }
+                else
+                {
+                    Producto = p;
+                    //precioCostoHistoricos = await ProductosService.GetProductoPreciosCostoHistorico(Producto.IdProducto);
+                    //preciosHistoricos = await ProductosService.GetProductoPreciosVentaHistorico(Producto.IdProducto);
+                    // if (!Producto.Precios.Any())
+                    // {
+                    //     Producto.Precios = await ProductosService.GetProductosPrecioVentaAlta();
+                    //     Producto.Precios.ForEach(x => x.IdProducto = Producto.IdProducto);
+                    // }
+                }
+            }
+
+            mostarPreciosCostos = listPermisos.Exists(x => x == "mostrarprecioscostos");
+
+            editContext = new(Producto);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+
+        if (render == 2)
+            await refDescripcion.FocusAsync();
+    }
+
+    private void HandleTabChange(int index)
+    {
+        if (index == 3)
+        {
+            //   if (!Producto.Proveedores.Any())
+            tabIndex = 1;
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        if (operacion == Operaciones.Lectura)
+            NavigationManager.NavigateTo("productos");
+        else if ((bool)await DialogService.Confirm("¿Desea cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+            NavigationManager.NavigateTo("productos");
+    }
+
+    private async Task Submit()
+    {
+        var errors = new Dictionary<string, List<string>>();
+
+        // if (Producto.Precios.FindAll(x => x.PrecioNeto == 0).Any())
+        //     errors.Add(nameof(Producto.Precios), new() { "Hay precios de venta en 0" });
+
+        // if (!errors.ContainsKey(nameof(Producto.Precios)))
+        //     if (Producto.Precios.FindAll(x => x.PrecioFinal <= 0).Any())
+        //         errors.Add(nameof(Producto.Precios), new() { "El precio final no puede ser menor o igual a 0" });
+
+        // if (Producto.Proveedores.FindAll(x => x.PrecioCosto == 0).Any())
+        //     errors.Add(nameof(Producto.Proveedores), new() { "Hay proveedores con precios de costo en 0" });
+
+        if (errors.Any())
+            NotificationService.Notify(NotificationSeverity.Error, "No se puede completar la operación, compruebe que todos los datos ingresados sean correctos!");
+        else
+        {
+            if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+            {
+                DialogCustom.OpenBusyWithLoader("Guardando...");
+                Response response;
+                if (operacion == Operaciones.Alta)
+                    response = await ProductosService.PostProducto(Producto);
+                else
+                    response = await ProductosService.PutProducto(Producto);
+
+                DialogCustom.CloseDialog();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.Errors != null && response.Errors.Any())
+                    {
+                        NotificationService.Notify(NotificationSeverity.Error, "No se puede completar la operación, compruebe que todos los datos ingresados sean correctos!");
+                        HandleTabChange(1);
+                    }
+                    else
+                        NotificationService.Notify(NotificationSeverity.Error, "Ha ocurrido un error inesperado!", "Por favor contacte a sistemas!");
+                }
+                else if (operacion == Operaciones.Alta)
+                {
+                    await Task.Delay(1);
+                    if (operacion == Operaciones.Alta)
+                    {
+                        Dictionary<string, object> parametros = new();
+                        parametros.Add("codigo", Producto.CodigoProducto);
+                        ParametrosDeConsulta.Clear();
+                        ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.ProductosIndex, parametros);
+
+                        string message = $"Código interno: <strong>{Producto.CodigoProducto}</strong>";
+
+                        await DialogService.Alert(message, "Producto creado",
+                                                    new AlertOptions()
+                                                        {
+                                                            OkButtonText = "Ok",
+                                                            Height = "fit-content",
+                                                            Width = "fit-content",
+                                                            ShowClose = false,
+                                                            Style = "max-height:25rem; max-width:30rem"
+                                                        });
+                    }
+
+                    NotificationService.Notify(NotificationSeverity.Success, "Datos guardados correctamente!");
+                    NavigationManager.NavigateTo("productos");
+                }
+                else
+                {
+                    NotificationService.Notify(NotificationSeverity.Success, "Datos guardados correctamente!");
+                    NavigationManager.NavigateTo("productos");
+                }
+            }
+        }
+    }
+
+    private void InvalidSubmit()
+    {
+        invalidFamilia = editContext.GetValidationMessages(editContext.Field(nameof(Producto.Clasificacion))).Any();
+        editContext.Validate();
+        var errors = editContext.GetValidationMessages().ToList();
+        DialogCustom.ShowErrors(errors);
+    }
+
+    // private void AddProveedor(ProductoProveedor proveedor)
+    // {
+    //     foreach (var s in Producto.SKUs)
+    //     {
+    //         ProductoSKUPorProveedor productoSKUPorProveedor = new();
+    //         productoSKUPorProveedor.IdProducto = s.IdProducto;
+    //         productoSKUPorProveedor.Sku = s.Sku;
+    //         productoSKUPorProveedor.IdProveedor = proveedor.IdProveedor;
+    //         productoSKUPorProveedor.CodigoInternoProveedor = (int)proveedor.CodigoInterno;
+    //         productoSKUPorProveedor.RazonSocialProveedor = proveedor.RazonSocial;
+
+    //         s.SkuPorProveedor.Add(productoSKUPorProveedor);
+    //     }
+    // }
+
+    // private void DeleteProveedor(ProductoProveedor proveedor)
+    // {
+    //     foreach (var s in Producto.SKUs)
+    //     {
+    //         s.SkuPorProveedor.RemoveAll(x => x.IdProveedor == proveedor.IdProveedor);
+    //     }
+    // }
+}

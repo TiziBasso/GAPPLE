@@ -1,5 +1,58 @@
-﻿
+﻿@page "/Ofertas"
+
+@inject SeguridadService SeguridadService
+@inject OfertasService OfertasService
+
+@if (showPage)
+{
+    <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" />
+
+    <RadzenDataGrid Data="lstOfertas">
+        <Columns>
+            <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
+            <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" TextAlign="TextAlign.Left" Width="300px" />
+            <RadzenDataGridColumn Title="Linea" Property="@nameof(Oferta.Linea)" TextAlign="TextAlign.Center" Width="100px" />
+            <RadzenDataGridColumn Title="Descuento" Property="@nameof(Oferta.Descuento)" TextAlign="TextAlign.Right" Width="100px" />
+            <RadzenDataGridColumn Title="Desde" Property="@nameof(Oferta.Desde)" TextAlign="TextAlign.Center" Width="100px">
+                <Template>
+                    <span>@context.Desde.ToString("dd/MM/yyyy")</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Hasta" Property="@nameof(Oferta.Hasta)" TextAlign="TextAlign.Center" Width="100px">
+                <Template>
+                    <span>@context.Hasta.ToString("dd/MM/yyyy")</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Activa" TextAlign="TextAlign.Center" Width="50px">
+                <Template>
+                    <RadzenCheckBox @bind-Value="context.Activa" ReadOnly="true" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px">
+                <Template>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar producto" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px">
+                <Template>
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" title="Eliminar" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
 
 @code {
+    List<Oferta> lstOfertas = new();
+    bool showPage;
 
+    protected override async Task OnInitializedAsync()
+    {
+        lstOfertas = await OfertasService.GetOfertas(null, null, null, null);
+        showPage = true;
+    }
 }
