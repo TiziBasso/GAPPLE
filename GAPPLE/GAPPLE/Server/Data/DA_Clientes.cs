@@ -12,13 +12,13 @@ namespace GAPPLE.Server.Data
         public DA_Clientes(string connectionString) => ConnectionString = connectionString;
 
 
-        public DataTable ObtenerClientes(int? codCliente, string razonSocial, int? cuit, bool? clienteEspecial, SqlTransaction transaction = null)
+        public DataTable ObtenerClientes(int? codCliente, string? razonSocial, int? cuit, bool? clienteEspecial, SqlTransaction? transaction = null)
         {
 
             SqlConnection cnn;
             SqlCommand cmd = new();
 
-            if (transaction == null) 
+            if (transaction == null)
             {
                 cnn = new(ConnectionString);
             }

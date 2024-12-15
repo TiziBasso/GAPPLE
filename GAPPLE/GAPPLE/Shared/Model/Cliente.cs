@@ -5,6 +5,7 @@ namespace GAPPLE.Shared.Model
 {
     public class Cliente
     {
+        public Cliente(string codCliente, string razonSocial, string cuit) => (CodigoCliente, RazonSocial, CUIT) = (codCliente, razonSocial, cuit);
         public int? IdCliente { get; set; }
         [JsonProperty("COD_GVA14")]
         public string CodigoCliente { get; set; }
@@ -18,6 +19,5 @@ namespace GAPPLE.Shared.Model
         public string? Clasificacion { get; set; }
         public bool ClienteEspecial { get; set; }
         public string? Observaciones { get; set; }
-        public Cliente(int codCliente, string razonSocial, int cuit) => (CodigoCliente, RazonSocial, CUIT) = (codCliente, razonSocial, cuit);
     }
 }
