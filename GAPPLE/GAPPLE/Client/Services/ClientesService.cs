@@ -15,10 +15,11 @@ namespace GAPPLE.Client.Services
 
         public ClientesService(HttpClient httpClient) => HttpClient = httpClient;
 
-        public async ValueTask<List<Cliente>> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null)
+        public async ValueTask<List<Cliente>> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
+            if (clienteEspecial != null) query["clienteEspecial"] = clienteEspecial;
             if (codCliente != null) query["codCliente"] = codCliente;
             if (razonSocial != null) query["razonSocial"] = razonSocial.Trim();
             if (cuit != null) query["cuit"] = cuit;

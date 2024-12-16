@@ -1,0 +1,38 @@
+﻿@inject ClientesService ClientesService
+
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Cliente:" />
+        <RadzenDropDownDataGrid Data="clientes" @bind-Value="idCliente" AllowFiltering="true" AllowVirtualization="true" ValueProperty="@nameof(Cliente.IdCliente)">
+            <Columns>
+                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" />
+                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CUIT)" Title="CUIT" TextAlign="TextAlign.Center" />
+                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" />
+            </Columns>
+        </RadzenDropDownDataGrid>
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Nota:" />
+        <RadzenTextArea @bind-Value="observaciones" />
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Style="margin-top:10px">
+    <RadzenButton Text="Guardar" Click="Guardar"></RadzenButton>
+</RadzenStack>
+
+@code {
+    List<Cliente> clientes = new();
+    int idCliente;
+    string observaciones;
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClientesService.GetClientes(clienteEspecial: false);
+    }
+
+    async Task Guardar()
+    {
+        
+    }
+}

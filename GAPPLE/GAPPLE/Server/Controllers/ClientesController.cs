@@ -1,7 +1,5 @@
 ﻿using System.Data;
-using System.Reflection.Metadata;
 using GAPPLE.Server.Data;
-using GAPPLE.Shared;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,9 +30,14 @@ namespace GAPPLE.Server.Controllers
             List<Cliente> lst = new();
             foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, null).Rows)
             {
-                lst.Add(new(row["CodigoCliente"].ToString()!,
-                            (string)row["RazonSocial"],
-                            row["CUIT"].ToString()!));
+                Cliente c = new Cliente();
+                c.IdCliente = int.Parse(row["IdCliente"].ToString()!);
+                c.CodigoCliente = row["CodigoCliente"].ToString()!;
+                c.RazonSocial = row["RazonSocial"].ToString()!;
+                c.Observaciones = row["Observaciones"].ToString()!;
+                c.ClienteEspecial = bool.Parse(row["ClienteEspecial"].ToString()!);
+                c.CUIT = row["CUIT"].ToString()!;
+                lst.Add(c);
             }
             return lst;
         }

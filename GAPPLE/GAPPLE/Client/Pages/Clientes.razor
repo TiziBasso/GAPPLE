@@ -2,47 +2,44 @@
 @using GAPPLE.Shared.Model
 
 @inject ClientesService ClientesService
+@inject DialogService DialogService
 
-<RadzenRow>
-	<RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" />
-</RadzenRow>
+@if (showForm)
+{
+    <RadzenRow>
+        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" />
+    </RadzenRow>
 
-<RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
-
-	<HeaderTemplate>
-		<RadzenButton ButtonStyle="ButtonStyle.Primary" />
-	</HeaderTemplate>
-	<Columns>
-		<RadzenDataGridColumn Title="DNI/CUIT" Property="@nameof(Cliente.CUIT)">
-			<EditTemplate>
-				<RadzenTextBox @bind-Value=newDNICuit />
-			</EditTemplate>
-		</RadzenDataGridColumn>
-
-		<RadzenDataGridColumn Title="Razon Social" Property="@nameof(Cliente.RazonSocial)">
-			<EditTemplate>
-				<RadzenTextBox @bind-Value=newRazonSocial />
-			</EditTemplate>
-		</RadzenDataGridColumn>
-
-	</Columns>
-</RadzenDataGrid>
-
-
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
+        <HeaderTemplate>
+            <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="AgregarCliente" />
+        </HeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" />
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
 
 @code
 {
+    List<Cliente> clientes = new();
+    RadzenDataGrid<Cliente> grilla;
+    bool showForm;
 
-	List<Cliente> clientes = new();
-	RadzenDataGrid<Cliente> grilla;
-	Cliente clienteToInsert;
-	Cliente clienteToUpdate;
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClientesService.GetClientes(clienteEspecial:true);
+        showForm = true;
+    }
 
-	string newDNICuit;
-	string newRazonSocial;
-
-	protected override async Task OnInitializedAsync()
-	{
-		clientes = await ClientesService.GetClientes();
-	}
+    async Task AgregarCliente()
+    {
+        var response = await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "80vw", Height = "90vh" });
+    }
 }
