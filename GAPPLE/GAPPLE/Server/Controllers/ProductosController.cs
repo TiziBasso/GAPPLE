@@ -1,6 +1,5 @@
 ﻿using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
-using Integra.Web.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 
@@ -38,6 +37,42 @@ namespace GAPPLE.Server.Controllers
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
 
                     productos.Add(producto);
+                }
+            }
+            return productos;
+        }
+
+        [HttpGet("lineas")]
+        public List<string> GetLineas()
+        {
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<string> lineas = new();
+            using (DataTable dt = daP.GetLineas())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    lineas.Add(row["Linea"].ToString()!);
+                }
+            }
+            return lineas;
+        }
+
+        [HttpGet("productosparaofertas")]
+        public List<ProductoParaOfertas> GetProductosParaOfertas(string linea)
+        {
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<ProductoParaOfertas> productos = new();
+            using (DataTable dt = daP.GetProductosParaOfertas(linea))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    ProductoParaOfertas p = new()
+                    {
+                        CodigoProducto = row["CodigoProducto"].ToString()!,
+                        Descripcion = row["Descripcion"].ToString()!,
+                        Familia = row["Familia"].ToString()!
+                    };
+                    productos.Add(p);
                 }
             }
             return productos;

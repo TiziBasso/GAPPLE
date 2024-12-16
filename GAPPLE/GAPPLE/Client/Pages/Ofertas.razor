@@ -2,11 +2,13 @@
 
 @inject SeguridadService SeguridadService
 @inject OfertasService OfertasService
+@inject DialogService DialogService
 
 @if (showPage)
 {
     <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" />
 
+    <RadzenButton Style="margin-bottom:10px;" Text="Agregar oferta" Click="Agregar" />
     <RadzenDataGrid Data="lstOfertas">
         <Columns>
             <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
@@ -30,12 +32,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px">
                 <Template>
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar producto" />
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px">
-                <Template>
-                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" title="Eliminar" />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar producto" Click="@(() => Editar(context))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -54,5 +51,15 @@ else
     {
         lstOfertas = await OfertasService.GetOfertas(null, null, null, null);
         showPage = true;
+    }
+
+    async Task Agregar()
+    {
+        await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new(){Width="80vw",Height="90vh"});
+    }
+
+    async Task Editar(Oferta oferta)
+    {
+        await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
     }
 }

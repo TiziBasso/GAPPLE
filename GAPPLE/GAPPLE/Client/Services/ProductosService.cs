@@ -60,7 +60,7 @@ namespace GAPPLE.Client.Services
                 else
                 {
                     return response.StatusCode == HttpStatusCode.BadRequest
-                        ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>())
+                        ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
                         : new(false, "Ha ocurrido un error inesperado!");
                 }
             }
@@ -84,9 +84,30 @@ namespace GAPPLE.Client.Services
             else
             {
                 return response.StatusCode == HttpStatusCode.BadRequest
-                    ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>())
+                    ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
                     : new(false, "Ha ocurrido un error inesperado!");
             }
+        }
+
+        public async ValueTask<List<string>> GetLineas()
+        {
+            Dictionary<string, object> query = new();
+            var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
+
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/lineas");
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<string>>()!;
+            else
+                return null;
+        }
+
+        public async ValueTask<List<ProductoParaOfertas>> GetProductosParaOfertas(string linea)
+        {
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/productosparaofertas?linea={linea}");
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<ProductoParaOfertas>>()!;
+            else
+                return null;
         }
     }
 }
