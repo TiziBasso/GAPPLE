@@ -32,4 +32,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<DialogService>();
     services.AddScoped<ProductosService>();
     services.AddScoped<ToolsHelpers>();
+    services.AddScoped<ClientesService>();
 }

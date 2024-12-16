@@ -1,0 +1,56 @@
+﻿@inject ClientesService ClientesService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Cliente:" />
+        <RadzenDropDownDataGrid Disabled="!Esnuevo" IsLoading="isBusy" Data="clientes" @bind-Value="idCliente" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowVirtualization="true" ValueProperty="@nameof(Cliente.IdCliente)" TextProperty="@nameof(Cliente.RazonSocial)">
+            <Columns>
+                <RadzenDropDownDataGridColumn Width="90px" Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" />
+                <RadzenDropDownDataGridColumn Width="100px" Property="@nameof(Cliente.CUIT)" Title="CUIT" TextAlign="TextAlign.Center" />
+                <RadzenDropDownDataGridColumn Width="200px" Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" />
+            </Columns>
+        </RadzenDropDownDataGrid>
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Nota:" />
+        <RadzenTextArea @bind-Value="observaciones" />
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Style="margin-top:10px">
+    <RadzenButton Text="Guardar" Click="Guardar"></RadzenButton>
+</RadzenStack>
+
+@code {
+    [Parameter] public Cliente cliente { get; set; } = new();
+    List<Cliente> clientes = new();
+    int idCliente;
+    string? observaciones;
+    bool isBusy = true, Esnuevo;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (cliente.IdCliente == null)
+        {
+            Esnuevo = true;
+            clientes = await ClientesService.GetClientes(clienteEspecial: false);
+        }
+        else
+        {
+            clientes = await ClientesService.GetClientes(clienteEspecial: true);
+            idCliente = (int)cliente.IdCliente;
+            observaciones = cliente.Observaciones;
+        }
+        isBusy = false;
+    }
+
+    async Task Guardar()
+    {
+        await ClientesService.PostCLiente(new Cliente() { IdCliente = idCliente, Observaciones = observaciones });
+        NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+        DialogService.Close();
+    }
+}

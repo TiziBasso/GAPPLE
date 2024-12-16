@@ -1,44 +1,63 @@
 ﻿@page "/clientes"
 @using GAPPLE.Shared.Model
 
+@inject ClientesService ClientesService
+@inject DialogService DialogService
 
-<RadzenRow>
-    <RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" />
-</RadzenRow>
+@if (showForm)
+{
+    <RadzenRow>
+        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" />
+    </RadzenRow>
 
-<RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
-
-    <HeaderTemplate>
-        <RadzenButton ButtonStyle="ButtonStyle.Primary" />
-    </HeaderTemplate>
-    <Columns>
-     @*    <RadzenDataGridColumn Title="DNI/CUIT" Property="@nameof(Cliente.DNICuit)" >
-            <EditTemplate>
-                <RadzenTextBox @bind-Value=newDNICuit />
-            </EditTemplate>
-        </RadzenDataGridColumn>
-
-        <RadzenDataGridColumn Title="Razon Social" Property="@nameof(Cliente.RazoSocial)">
-            <EditTemplate>
-                <RadzenTextBox @bind-Value=newRazonSocial />
-            </EditTemplate>
-        </RadzenDataGridColumn> *@
-
-    </Columns>
-</RadzenDataGrid>
-
-
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
+        <HeaderTemplate>
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
+        </HeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" Width="200px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
+                <Template>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
 
 @code
 {
-
-    List<Cliente> clientes;
+    List<Cliente> clientes = new();
     RadzenDataGrid<Cliente> grilla;
-    Cliente clienteToInsert;
-    Cliente clienteToUpdate;
+    bool showForm, isBusy;
 
-    string newDNICuit;
-    string newRazonSocial;
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClientesService.GetClientes(clienteEspecial:true);
+        showForm = true;
+    }
 
-     
+    async Task AgregarCliente()
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "40vw", Height = "40vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
+    }
+
+    async Task Editar(Cliente cliente)
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new(){ { "Cliente",cliente} } , new() { Width = "40vw", Height = "40vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
+    }
 }
