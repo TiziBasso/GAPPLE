@@ -25,7 +25,7 @@
             <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
                 <RadzenLabel Text="Descuento:" />
                 <RadzenNumeric TValue="decimal" @bind-Value="Oferta.Descuento" TextAlign="TextAlign.Right" Min="0" Max="100"
-                               ShowUpDown="false" Disabled=DisabledInputs Format="N0" Style="width:10rem" />
+                               ShowUpDown="false" Disabled=DisabledInputs Format="N1" Style="width:10rem" />
                 <ValidationMessage For="@(() => Oferta.Descuento)" />
             </RadzenStack>
 
@@ -114,9 +114,7 @@ else
                 lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
             }
             else
-            {
                 valorAux = Oferta.Linea;
-            }
         }
         else
         {
@@ -134,7 +132,7 @@ else
         return true;
     }
 
-        async Task Cancelar()
+    async Task Cancelar()
     {
         if (!editContext.IsModified() || await DialogService.Confirm(MensajesHelper.Confirm("cancelar"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             DialogService.Close();
