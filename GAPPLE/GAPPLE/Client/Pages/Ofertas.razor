@@ -9,7 +9,7 @@
     <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" />
 
     <RadzenButton Style="margin-bottom:10px;" Text="Agregar oferta" Click="Agregar" />
-    <RadzenDataGrid Data="lstOfertas">
+    <RadzenDataGrid Data="lstOfertas" @ref="refGrid" IsLoading="isBusy">
         <Columns>
             <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
             <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" TextAlign="TextAlign.Left" Width="300px" />
@@ -44,8 +44,9 @@ else
 }
 
 @code {
+    RadzenDataGrid<Oferta> refGrid;
     List<Oferta> lstOfertas = new();
-    bool showPage;
+    bool showPage, isBusy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,11 +56,26 @@ else
 
     async Task Agregar()
     {
-        await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new(){Width="80vw",Height="90vh"});
+        isBusy = true;
+        var response = await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
+        if (response != null)
+        {
+            lstOfertas.Add(response);
+            await refGrid.Reload();
+        }
+        isBusy = false;
     }
 
     async Task Editar(Oferta oferta)
     {
-        await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
+        isBusy = true;
+        var response = await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
+        if (response != null)
+        {
+            lstOfertas.Remove(oferta);
+            lstOfertas.Add(response);
+            await refGrid.Reload();
+        }
+        isBusy = false;
     }
 }
