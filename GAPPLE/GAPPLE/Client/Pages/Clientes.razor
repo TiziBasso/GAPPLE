@@ -46,7 +46,7 @@ else
     async Task AgregarCliente()
     {
         isBusy = true;
-        await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "40vw", Height = "40vh" });
+        await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "60vw", Height = "50vh" });
         clientes = await ClientesService.GetClientes(clienteEspecial: true);
         await grilla.Reload();
         isBusy = false;
