@@ -1,53 +1,69 @@
 ﻿<div class="picklist-container">
-    <div class="list-box">
-        <input @bind-value="filtroIzquierda" @bind-value:event="oninput" />
-        <h4>Listado de Productos</h4>
-        <ul>
-            @foreach (var grupo in FiltrarListaIzquierda(filtroIzquierda))
-            {
-                <li>
-                    <label>
-                        <span class="familia-titulo" @onclick="@(e => MoverFamiliaCompleta(grupo.Key))">@grupo.Key</span>
-                    </label>
-                    <ul>
-                        @foreach (var producto in grupo)
-                        {
-                            <li>
-                                <label>
-                                    <span @onclick="@(e => MoverProductoDerecha(producto.CodigoProducto))">@producto.Descripcion (@producto.CodigoProducto)</span>
-                                </label>
-                            </li>
-                        }
-                    </ul>
-                </li>
-            }
-        </ul>
-    </div>
+    <RadzenStack Gap="5" Orientation="Orientation.Vertical" Style="width:45%">
+        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroIzquierda" @bind-value:event="oninput" />
+        <div class="list-box">
+            <h5>Listado de Productos</h5>
+            <ul class="Lista-ul">
+                @foreach (var grupo in FiltrarListaIzquierda(filtroIzquierda))
+                {
+                    <li class="li-familia">
+                        <label @onclick="@(e => MoverFamiliaCompleta(grupo.Key))">
+                            <span class="familia-titulo">@grupo.Key</span>
+                        </label>
+                        <ul class="lista-ul-producto">
+                            @foreach (var producto in grupo)
+                            {
+                                <li class="li-producto" @onclick="@(e => MoverProductoDerecha(producto.CodigoProducto))">
+                                    <label>
+                                        <span >@producto.Descripcion</span>
+                                    </label>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+                @if (!FiltrarListaIzquierda(filtroIzquierda).Any())
+                {
+                    <span>No hay datos para mostrar</span>
+                }
+            </ul>
+        </div>
+    </RadzenStack>
 
-    <div class="list-box">
-        <input @bind-value="filtroDerecha" @bind-value:event="oninput" />
-        <h4>Productos de la Oferta</h4>
-        <ul>
-            @foreach (var grupo in FiltrarListaDerecha(filtroDerecha))
-            {
-                <li>
-                    <label>
-                        <span class="familia-titulo" @onclick="@(e => MoverFamiliaCompletaIzquierda(grupo.Key))">@grupo.Key</span>
-                    </label>
-                    <ul>
-                        @foreach (var producto in grupo)
-                        {
-                            <li>
-                                <label>
-                                    <span @onclick="@(e => MoverProductoIzquierda(producto.CodigoProducto))">@producto.Descripcion (@producto.CodigoProducto)</span>
-                                </label>
-                            </li>
-                        }
-                    </ul>
-                </li>
-            }
-        </ul>
-    </div>
+    <RadzenStack>
+        <RadzenIcon Icon="sync_alt" />
+    </RadzenStack>
+
+    <RadzenStack Gap="5" Orientation="Orientation.Vertical" Style="width:45%">
+        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroDerecha" @bind-value:event="oninput" />
+        <div class="list-box">
+            <h5>Productos de la Oferta</h5>
+            <ul class="Lista-ul">
+                @foreach (var grupo in FiltrarListaDerecha(filtroDerecha))
+                {
+                    <li class="li-familia">
+                        <label @onclick="@(e => MoverFamiliaCompletaIzquierda(grupo.Key))">
+                            <span class="familia-titulo">@grupo.Key</span>
+                        </label>
+                        <ul class="lista-ul-producto">
+                            @foreach (var producto in grupo)
+                            {
+                                <li class="li-producto" @onclick="@(e => MoverProductoIzquierda(producto.CodigoProducto))">
+                                    <label>
+                                        <span>@producto.Descripcion</span>
+                                    </label>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+                @if (!FiltrarListaDerecha(filtroDerecha).Any())
+                {
+                    <span>No hay datos para mostrar</span>
+                }
+            </ul>
+        </div>
+    </RadzenStack>
 </div>
 
 @code {
@@ -100,39 +116,3 @@
         return ProductosDerecha.GroupBy(p => p.Familia);
     }
 }
-
-
-<style>
-    .picklist-container {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .list-box {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        width: 45%;
-        height: 400px;
-        overflow-y: auto;
-        background-color: #f9f9f9;
-    }
-
-    .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    button {
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-    }
-
-    .familia-titulo {
-        color: blue;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-</style>

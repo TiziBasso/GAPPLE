@@ -34,7 +34,6 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", oferta);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var clienteResponse = await response.Content.ReadFromJsonAsync<Oferta>();
                 return new(true);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -48,7 +47,6 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", oferta);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var clienteResponse = await response.Content.ReadFromJsonAsync<Oferta>();
                 return new(true);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
