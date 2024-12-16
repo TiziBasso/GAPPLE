@@ -22577,13 +22577,72 @@ button.rz-colorpicker-trigger {
     transform: rotate(90deg)
 }
 
-.rz-column-title
-{
-    text-align:center;
-    justify-items:center;
-    align-items:center;
-    justify-content:center !important;
+.rz-column-title {
+    text-align: center;
+    justify-items: center;
+    align-items: center;
+    justify-content: center !important;
 }
+
+.picklist-container {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.list-box {
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: .5rem;
+}
+
+    .list-box > h5 {
+        padding: 5px;
+        border-bottom: 1px solid rgba(0, 0, 0, .1);
+    }
+
+.Lista-ul {
+    margin: 0;
+    padding: 5px;
+    list-style: none;
+    overflow: auto;
+    height: 40vh;
+}
+
+.li-familia > label {
+    cursor: pointer;
+    font-weight: 800;
+    width: 100%;
+    color: var(--rz-info);
+}
+
+    .li-familia > label:hover {
+        background: var(--rz-danger-lighter);
+    }
+
+.lista-ul-producto {
+    list-style: none;
+    padding: 0 0 0 10px;
+}
+
+.li-producto {
+    cursor: pointer;
+}
+
+
+    .li-producto > label {
+        cursor: pointer;
+    }
+
+    .li-producto:nth-child(even) {
+    }
+
+    .li-producto:nth-child(odd) {
+        background: var(--rz-grid-header-background-color);
+    }
+
+    .li-producto:hover {
+        background: var(--rz-danger-lighter);
+    }
 
 :root {
     --rz-white: #ffffff;
