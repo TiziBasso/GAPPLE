@@ -22588,6 +22588,7 @@ button.rz-colorpicker-trigger {
     display: flex;
     gap: 25px;
     align-items: center;
+    justify-content: center;
 }
 
 .list-box {

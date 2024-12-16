@@ -10,7 +10,7 @@
 
         public static string ErrorDetailModel => "Compruebe todos los datos ingresados!";
 
-        public static string Title => "Integra";
+        public static string Title => "Zentra";
 
         public static string EmptyResponse => "La búsqueda no ha devuelto resultados!";
 

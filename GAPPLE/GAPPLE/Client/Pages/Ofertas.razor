@@ -6,10 +6,14 @@
 
 @if (showPage)
 {
-    <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" />
+    <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" class="rz-mb-3" />
 
-    <RadzenButton Style="margin-bottom:10px;" Text="Agregar oferta" Click="Agregar" />
-    <RadzenDataGrid Data="lstOfertas" @ref="refGrid" IsLoading="isBusy">
+    <RadzenButton Icon="add" Size=ButtonSize.Small Text="Agregar oferta" Click="Agregar"
+                  class="rz-mb-2" Disabled="@(isLoading || !listPermisos.Contains("alta"))" />
+
+    <RadzenDataGrid @ref=refGrid Data="lstOfertas" AllowSorting="true" IsLoading="@isLoading" Density="Density.Compact" AllowColumnResize="true" FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
+                    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selected" AllowVirtualization=true Style="height: 65vh;" EmptyText="">
         <Columns>
             <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
             <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" TextAlign="TextAlign.Left" Width="300px" />
@@ -30,9 +34,14 @@
                     <RadzenCheckBox @bind-Value="context.Activa" ReadOnly="true" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px">
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px">
                 <Template>
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar producto" Click="@(() => Editar(context))" />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar oferta" Click="@(() => Editar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px">
+                <Template>
+                    <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Ver oferta" Click="@(() => Ver(context))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -46,7 +55,9 @@ else
 @code {
     RadzenDataGrid<Oferta> refGrid;
     List<Oferta> lstOfertas = new();
-    bool showPage, isBusy;
+    bool showPage, isLoading;
+    IList<Oferta> selected;
+    List<string> listPermisos = new() { "alta" };
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,19 +67,19 @@ else
 
     async Task Agregar()
     {
-        isBusy = true;
+        isLoading = true;
         var response = await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
             lstOfertas.Add(response);
             await refGrid.Reload();
         }
-        isBusy = false;
+        isLoading = false;
     }
 
     async Task Editar(Oferta oferta)
     {
-        isBusy = true;
+        isLoading = true;
         var response = await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
@@ -76,6 +87,13 @@ else
             lstOfertas.Add(response);
             await refGrid.Reload();
         }
-        isBusy = false;
+        isLoading = false;
+    }
+
+    async Task Ver(Oferta oferta)
+    {
+        isLoading = true;
+        await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta }, { "DisabledInputs", true } }, new() { Width = "80vw", Height = "90vh" });
+        isLoading = false;
     }
 }

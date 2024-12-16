@@ -24,7 +24,6 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage = "Debe ingresar una fecha hasta")]
         public DateTime Hasta {  get; set; } = DateTime.Today;
         public bool Activa { get; set; }
-        [Required(ErrorMessage = "Debe ingresar al menos un producto")]
         public string? Inclusiones { get; set; }
         public string? Exclusiones { get; set; }
     }

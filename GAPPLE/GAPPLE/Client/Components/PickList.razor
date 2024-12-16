@@ -1,6 +1,6 @@
 ﻿<div class="picklist-container">
     <RadzenStack Gap="5" Orientation="Orientation.Vertical" Style="width:45%">
-        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroIzquierda" @bind-value:event="oninput" />
+        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroIzquierda" @bind-value:event="oninput" disabled="@DisabledInputs" />
         <div class="list-box">
             <h5>Listado de Productos</h5>
             <ul class="Lista-ul">
@@ -35,7 +35,7 @@
     </RadzenStack>
 
     <RadzenStack Gap="5" Orientation="Orientation.Vertical" Style="width:45%">
-        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroDerecha" @bind-value:event="oninput" />
+        <input class="rz-textbox" placeholder="Buscar..." @bind-value="filtroDerecha" @bind-value:event="oninput" disabled="@DisabledInputs" />
         <div class="list-box">
             <h5>Productos de la Oferta</h5>
             <ul class="Lista-ul">
@@ -69,38 +69,51 @@
 @code {
     [Parameter] public List<ProductoParaOfertas> ProductosIzquierda { get; set; }
     [Parameter] public List<ProductoParaOfertas> ProductosDerecha { get; set; }
+    [Parameter] public bool DisabledInputs { get; set; } = false;
 
     string? filtroIzquierda, filtroDerecha;
 
     private void MoverFamiliaCompleta(string familia)
     {
-        var productosAMover = ProductosIzquierda.Where(p => p.Familia == familia).ToList();
-        foreach (var producto in productosAMover)
+        if (!DisabledInputs)
         {
-            ProductosDerecha.Add(producto);
-            ProductosIzquierda.Remove(producto);
+            var productosAMover = ProductosIzquierda.Where(p => p.Familia == familia).ToList();
+            foreach (var producto in productosAMover)
+            {
+                ProductosDerecha.Add(producto);
+                ProductosIzquierda.Remove(producto);
+            }
         }
     }
     private void MoverProductoDerecha(string codigoProducto)
     {
-        ProductosDerecha.Add(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
-        ProductosIzquierda.Remove(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
+        if (!DisabledInputs)
+        {
+            ProductosDerecha.Add(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
+            ProductosIzquierda.Remove(ProductosIzquierda.Find(x => x.CodigoProducto == codigoProducto)!);
+        }
     }
 
     private void MoverFamiliaCompletaIzquierda(string familia)
     {
-        var productosAMover = ProductosDerecha.Where(p => p.Familia == familia).ToList();
-        foreach (var producto in productosAMover)
+        if (!DisabledInputs)
         {
-            ProductosIzquierda.Add(producto);
-            ProductosDerecha.Remove(producto);
+            var productosAMover = ProductosDerecha.Where(p => p.Familia == familia).ToList();
+            foreach (var producto in productosAMover)
+            {
+                ProductosIzquierda.Add(producto);
+                ProductosDerecha.Remove(producto);
+            }
         }
     }
 
     private void MoverProductoIzquierda(string codigoProducto)
     {
-        ProductosIzquierda.Add(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
-        ProductosDerecha.Remove(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
+        if (!DisabledInputs)
+        {
+            ProductosIzquierda.Add(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
+            ProductosDerecha.Remove(ProductosDerecha.Find(x => x.CodigoProducto == codigoProducto)!);
+        }
     }
 
     private IEnumerable<IGrouping<string, ProductoParaOfertas>> FiltrarListaIzquierda(string filtro)
