@@ -1,5 +1,7 @@
 ﻿@inject ProductosService ProductosService
 @inject OfertasService OfertasService
+@inject DialogService DialogService
+@inject NotificationService NotificationService
 
 @if (showForm)
 {
@@ -20,7 +22,7 @@
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                 <RadzenLabel Text="Linea:" />
-                <RadzenDropDown Data="lstLineas" @bind-Value="Oferta.Linea" Change="BuscarProductos" />
+                <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
                 <ValidationMessage For="@(() => Oferta.Linea)" />
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Vertical" Gap="0">
@@ -63,6 +65,8 @@ else
     EditContext editContext;
     bool showForm;
 
+    string valorAux;
+
     bool esNueva;
 
     protected override async Task OnInitializedAsync()
@@ -70,6 +74,7 @@ else
         lstLineas = await ProductosService.GetLineas();
         if (Oferta.IdOferta > 0)
         {
+            valorAux = Oferta.Linea;
             await BuscarProductos();
             List<string> incluidos = Oferta.Inclusiones!.Split('|').ToList();
             lstProductosOferta.AddRange(lstProductos.Where(x => incluidos.Exists(e => e == x.CodigoProducto)));
@@ -85,16 +90,40 @@ else
 
     async Task BuscarProductos()
     {
-        lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
-        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        if (lstProductosOferta.Any())
+        {
+            if (await DialogService.Confirm("Si cambia de linea se eliminaran los productos ingresados ¿desea continuar?", "ATENCIÓN", new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            {
+                Oferta.Linea = valorAux;
+                lstProductosOferta = new();
+                lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
+                lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+            }
+            else
+            {
+                valorAux = Oferta.Linea;
+            }
+        }
+        else
+        {
+            Oferta.Linea = valorAux;
+            lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
+            lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        }
     }
 
     async Task Guardar()
     {
         Oferta.Inclusiones = string.Join('|', lstProductosOferta.Select(x => x.CodigoProducto));
         if (esNueva)
+        {
             await OfertasService.PostOferta(Oferta);
+            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+        }
         else
+        {
             await OfertasService.PutOferta(Oferta);
+            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+        }
     }
 }
