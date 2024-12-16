@@ -27,19 +27,19 @@
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                 <RadzenLabel Text="Descuento:" />
-                <RadzenNumeric @bind-Value="Oferta.Descuento" />
+                <RadzenNumeric @bind-Value="Oferta.Descuento" ShowUpDown="false" />
                 <ValidationMessage For="@(() => Oferta.Descuento)" />
             </RadzenStack>
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                 <RadzenLabel Text="Desde:" />
-                <RadzenDatePicker @bind-Value="Oferta.Desde" />
+                <RadzenDatePicker @bind-Value="Oferta.Desde" DateFormat="dd/MM/yyyy" />
                 <ValidationMessage For="@(() => Oferta.Desde)" />
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                 <RadzenLabel Text="Hasta:" />
-                <RadzenDatePicker @bind-Value="Oferta.Hasta" />
+                <RadzenDatePicker @bind-Value="Oferta.Hasta" DateFormat="dd/MM/yyyy" />
                 <ValidationMessage For="@(() => Oferta.Hasta)" />
             </RadzenStack>
         </RadzenStack>
@@ -125,5 +125,6 @@ else
             await OfertasService.PutOferta(Oferta);
             NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
         }
+        DialogService.Close(Oferta);
     }
 }
