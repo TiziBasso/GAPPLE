@@ -6,9 +6,7 @@
 
 @if (showForm)
 {
-    <RadzenRow>
-        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" />
-    </RadzenRow>
+        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center"/>
 
     <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
         <HeaderTemplate>
