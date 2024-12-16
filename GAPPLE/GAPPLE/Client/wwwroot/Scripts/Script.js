@@ -10,87 +10,40 @@ function getCookie(name) {
     return null;
 };
 
-window.onload = function iconoTema() {
-    var link1 = document.createElement('link');
-    var head = document.head;
+//window.onload = function iconoTema() {
+//    var link1 = document.createElement('link');
+//    var head = document.head;
 
-    var currentDate = new Date();
-    var timestamp = currentDate.getTime();
+//    var currentDate = new Date();
+//    var timestamp = currentDate.getTime();
 
-    if (getCookie('tema') == null || getCookie('tema') == 'light') {
-        if (getCookie('tema') == null) {
-            document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-        }
+//    if (getCookie('tema') == null || getCookie('tema') == 'light') {
+//        if (getCookie('tema') == null) {
+//            document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
+//        }
 
-        link1.rel = 'stylesheet';
-        //link1.href = './css/component-light.css';
-        link1.href = 'RadzenStyles/css/Material3.css?v=' + timestamp;
-        head.insertBefore(link1, head.firstChild);
-    } else {
-        document.body.className = 'dark-theme';
+//        link1.rel = 'stylesheet';
+//        //link1.href = './css/component-light.css';
+//        link1.href = 'RadzenStyles/css/Material3.css?v=' + timestamp;
+//        head.insertBefore(link1, head.firstChild);
+//    } else {
+//        document.body.className = 'dark-theme';
 
-        link1.rel = 'stylesheet';
-        //link1.href = './_content/Radzen.Blazor/css/dark.css';
-        link1.href = 'RadzenStyles/css/Material3-Dark.css?v=' + timestamp;
-        head.insertBefore(link1, head.firstChild);
-    }
-}
+//        link1.rel = 'stylesheet';
+//        //link1.href = './_content/Radzen.Blazor/css/dark.css';
+//        link1.href = 'RadzenStyles/css/Material3-Dark.css?v=' + timestamp;
+//        head.insertBefore(link1, head.firstChild);
+//    }
+//}
 
-function changetheme(modoOscuro) {
-    if (modoOscuro) {
-        document.cookie = "tema=dark;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-    } else {
-        document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-    }
-    location.reload();
-}
-
-function getCookie(name) {
-    let nameEQ = name + "=";
-    let ca = document.cookie.split(";");
-    for (var i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === " ") c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,
-            c.length);
-    }
-    return null;
-};
-
-window.onload = function iconoTema() {
-    var link1 = document.createElement('link');
-    var head = document.head;
-
-    var currentDate = new Date();
-    var timestamp = currentDate.getTime();
-
-    if (getCookie('tema') == null || getCookie('tema') == 'light') {
-        if (getCookie('tema') == null) {
-            document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-        }
-       
-        link1.rel = 'stylesheet';
-        //link1.href = './css/component-light.css';
-        link1.href = 'RadzenStyles/css/Material3.css?v=' + timestamp;
-        head.insertBefore(link1, head.firstChild);
-    } else {
-        document.body.className = 'dark-theme';
-        
-        link1.rel = 'stylesheet';
-        //link1.href = './_content/Radzen.Blazor/css/dark.css';
-        link1.href = 'RadzenStyles/css/Material3-Dark.css?v=' + timestamp;
-        head.insertBefore(link1, head.firstChild);
-    }
-}
-
-function changetheme(modoOscuro) {
-    if (modoOscuro) {
-        document.cookie = "tema=dark;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-    } else {
-        document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
-    }
-    location.reload();
-}
+//function changetheme(modoOscuro) {
+//    if (modoOscuro) {
+//        document.cookie = "tema=dark;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
+//    } else {
+//        document.cookie = "tema=light;path=/;SameSite=lax;expires=Thu, 12 Aug 2049 20:47:11 UTC;";
+//    }
+//    location.reload();
+//}
 
 //document.addEventListener('keydown', function (event) {
 //    // Selecciona el elemento que contiene el grid
