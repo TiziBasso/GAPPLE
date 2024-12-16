@@ -18,7 +18,11 @@
             <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
             <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" TextAlign="TextAlign.Left" Width="300px" />
             <RadzenDataGridColumn Title="Linea" Property="@nameof(Oferta.Linea)" TextAlign="TextAlign.Center" Width="100px" />
-            <RadzenDataGridColumn Title="Descuento" Property="@nameof(Oferta.Descuento)" TextAlign="TextAlign.Right" Width="100px" />
+            <RadzenDataGridColumn Title="Descuento" Property="@nameof(Oferta.Descuento)" TextAlign="TextAlign.Right" Width="100px">
+                <Template>
+                    @context.Descuento.ToString("N1") %
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn Title="Desde" Property="@nameof(Oferta.Desde)" TextAlign="TextAlign.Center" Width="100px">
                 <Template>
                     <span>@context.Desde.ToString("dd/MM/yyyy")</span>
