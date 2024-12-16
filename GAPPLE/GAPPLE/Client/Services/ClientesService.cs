@@ -30,7 +30,18 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<Cliente>>(uri);
         }
 
-
+        public async ValueTask<Response> PostCLiente(Cliente cliente)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", cliente);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return new(true);
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+            else
+                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+        }
 
     }
 

@@ -44,42 +44,20 @@ namespace GAPPLE.Server.Data
 
         }
 
-        public int PersistirEdicionCliente(string codigoCliente, bool clienteEspecial, string observaciones,SqlTransaction trans)
+        public void PersistirEdicionCliente(int idCliente, bool clienteEspecial, string observaciones)
         {
-            int result = 0;
             SqlConnection cnn;
             SqlCommand cmd = new();
-            if (trans == null)
-                cnn = new(ConnectionString);
-            else
-            {
-                cnn = trans.Connection;
-                cmd.Transaction = trans;
-            }
+            cnn = new(ConnectionString);
             cmd.Connection = cnn;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_upd_Clientes";
-            cmd.Parameters.AddWithValue("@pCodCliente", codigoCliente);
+            cmd.Parameters.AddWithValue("@pIdCliente", idCliente);
             cmd.Parameters.AddWithValue("@pCLienteEspecial", clienteEspecial);
-            cmd.Parameters.AddWithValue("@pObeservaciones", observaciones);
-            SqlParameter returnValue = new("@Return", result)
-            {
-                Direction = ParameterDirection.ReturnValue
-            };
-            cmd.Parameters.Add(returnValue);
-            if (trans == null)
-            {
-                cnn.Open();
-                cmd.ExecuteNonQuery();
-                result = (int)returnValue.Value;
-                cnn.Close();
-            }
-            else
-            {
-                cmd.ExecuteNonQuery();
-                result = (int)returnValue.Value;
-            }
-            return result;
+            if(observaciones != null)cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
+            cnn.Open();
+            cmd.ExecuteNonQuery();
+            cnn.Close();
         }
     }
 }

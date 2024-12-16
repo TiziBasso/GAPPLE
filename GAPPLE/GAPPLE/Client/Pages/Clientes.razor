@@ -10,14 +10,19 @@
         <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" />
     </RadzenRow>
 
-    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true">
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
         <HeaderTemplate>
-            <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="AgregarCliente" />
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
         </HeaderTemplate>
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" />
-            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" />
-            <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" Width="200px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
+                <Template>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 }
@@ -30,7 +35,7 @@ else
 {
     List<Cliente> clientes = new();
     RadzenDataGrid<Cliente> grilla;
-    bool showForm;
+    bool showForm, isBusy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,6 +45,19 @@ else
 
     async Task AgregarCliente()
     {
-        var response = await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "80vw", Height = "90vh" });
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "40vw", Height = "40vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
+    }
+
+    async Task Editar(Cliente cliente)
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new(){ { "Cliente",cliente} } , new() { Width = "40vw", Height = "40vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
     }
 }

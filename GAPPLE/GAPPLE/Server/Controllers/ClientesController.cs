@@ -14,13 +14,6 @@ namespace GAPPLE.Server.Controllers
         public ClientesController(IConfiguration configuration)
         {
             Configuration = configuration;
-
-            //HttpContextAccessor = contextAccessor;
-
-            //connectionString = Configuration.GetConnectionString("DefaultConnection");
-
-            //string nombreUsuario = HttpContextAccessor.HttpContext.User.Identity.Name[(HttpContextAccessor.HttpContext.User.Identity.Name.LastIndexOf(@"\") + 1)..].ToUpper();
-            //Usuario = new SeguridadController(configuration, parametros).ObtenerUsuario(nombreUsuario);
         }
 
         [HttpGet]
@@ -40,6 +33,14 @@ namespace GAPPLE.Server.Controllers
                 lst.Add(c);
             }
             return lst;
+        }
+
+        [HttpPost]
+        public IActionResult PostClienteEspecial(Cliente cliente)
+        {
+            DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            daC.PersistirEdicionCliente((int)cliente.IdCliente!,true,cliente.Observaciones!);
+            return Ok();
         }
 
     }
