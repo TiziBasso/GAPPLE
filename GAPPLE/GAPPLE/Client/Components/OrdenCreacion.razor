@@ -1,7 +1,7 @@
 ﻿<div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
     <RadzenStack>
         <RadzenLabel Text="Línea:" />
-        <RadzenTextBox />
+        <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" Disabled=DisabledInputs Style="width:15rem" />
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Cliente:" />
@@ -99,7 +99,18 @@
 </div>
 
 @code {
+    [Parameter] public bool DisabledInputs { get; set; }
     Random random = new Random();
     bool F, P, probadores, obsequios, exhibidor;
     private int fila = 0, columna = 0;
+    List<string> lstLineas = new();
+    string valorAux;
+
+    async Task BuscarProductos()
+    {
+        Oferta.Linea = valorAux;
+        lstProductosOferta = new();
+        lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
+        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+    }
 }
