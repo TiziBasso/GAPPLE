@@ -76,7 +76,7 @@ else
         var response = await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
-            lstOfertas.Add(response);
+            lstOfertas = await OfertasService.GetOfertas(null, null, null, null);
             await refGrid.Reload();
         }
         isLoading = false;
