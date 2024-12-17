@@ -2,100 +2,132 @@
 @using GAPPLE.Client.Components.Ordenes
 
 @inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject OrdenesService OrdenesService
+@inject NotificationService NotificationService
 
 <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Ordenes" class="mb-3" />
 
-<RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px">
+<RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End">
     <RadzenStack Orientation="Orientation.Vertical">
-        ID:
+        <RadzenLabel Text="ID:" Component="id" />
         <input @ref="refIdOrden" type="number" @bind-value="@idOrden" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
-               class="rz-textbox" style="width: 5rem; text-align:right" disabled="@(isLoading)" />
+               class="rz-textbox" style="width: 5rem; text-align:right" disabled="@(isLoading)" id="id" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
-        Código:
-        <input type="number" @bind-value="@codigo" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
-               class="rz-textbox" style="width: 8rem" disabled="@(isLoading)" />
-    </RadzenStack>
-
-    <RadzenStack Orientation="Orientation.Vertical">
-        Cliente:
+        <RadzenLabel Text="Cliente:" Component="cliente" />
         <input type="text" @bind-value="@cliente" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
-               class="rz-textbox" style="width: 20rem" disabled="@(isLoading)" />
+               class="rz-textbox" style="width: 20rem" disabled="@(isLoading)" id="cliente" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
-        Desde:
-        <RadzenDatePicker @bind-Value="desde" DateFormat="dd/MM/yyyy" />
+        <RadzenLabel Text="Desde:" Component="desde" />
+        <RadzenDatePicker @bind-Value="desde" DateFormat="dd/MM/yyyy" Name="desde" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
-        Hasta:
-        <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" />
+        <RadzenLabel Text="Hasta:" Component="hasta" />
+        <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
-        Estado:
-        <RadzenDropDown Data=@Variables.EstadosNum @bind-Value=@estado
+        <RadzenLabel Text="Estado:" Component="estado" />
+        <RadzenDropDown Data=@Variables.EstadosNum @bind-Value=@estado Name="estado"
                         ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
                         Disabled="@isLoading" Style="width: 7rem;" />
     </RadzenStack>
 
+    <RadzenButton Click="FillOrdenes" IsBusy=isLoading ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />
+
     @* <RadzenStack Orientation="Orientation.Vertical">
-        Máx. regs.:
-        <input type="number" @bind-value="@cantRegs" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
-               class="rz-textbox" style="width: 5rem" disabled="@(isLoading)" />
+    Máx. regs.:
+    <input type="number" @bind-value="@cantRegs" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+    class="rz-textbox" style="width: 5rem" disabled="@(isLoading)" />
     </RadzenStack> *@
 </RadzenStack>
 
 <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
-    <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Primary" Size=ButtonSize.Medium Click="NuevaOrden" />
+    <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Medium Click="NuevaOrden" />
     @* <RadzenButton Text="Exportar Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" /> *@
 </RadzenStack>
 
 <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
-                EmptyText="" Style="height:60vh">
+                EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" >
     <Columns>
-        <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="50px" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn TItem="Orden" Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="80px" TextAlign="TextAlign.Center">
-            <Template>
+        <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="50px" TextAlign="TextAlign.Right" FilterValue="idFilter">
+            <FilterTemplate>
+                <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
 
+        <RadzenDataGridColumn TItem="Orden" Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="80px" TextAlign="TextAlign.Center" Filterable=false>
+            <Template>
+                <RadzenCheckBox Value="context.Presupuesto" ReadOnly=true />
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="120px" />
-        <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="80px" />
-        <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="100px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" />
-        <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.Zona)" Width="70px" TextAlign="TextAlign.Right" />
+
+        <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="120px" FilterOperator="FilterOperator.Contains"/>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="80px" FilterOperator="FilterOperator.Contains" />
+
+        <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="100px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter">
+            <FilterTemplate>
+                <RadzenDatePicker @bind-Value=creacionFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.Zona)" Width="70px" TextAlign="TextAlign.Right" FilterOperator="FilterOperator.Contains" />
+
         <RadzenDataGridColumn TItem="Orden" Title="Estado" Property="@nameof(Orden.IdEstado)" Width="80px" TextAlign="TextAlign.Center">
+            <FilterTemplate>
+                @* <RadzenDropDown /> *@
+            </FilterTemplate>
             <Template>
                 @* first idEstado . descripcion *@
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.IdTango)" Width="80px">
+
+        <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.IdTango)" Width="80px" FilterOperator="FilterOperator.Contains">
             <Template>
                 @(context.IdTango != null ? context.IdTango : "NO")
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Orden" Title="Factura" Property="@nameof(Orden.Factura)" Width="80px" />
-        <RadzenDataGridColumn TItem="Orden" Title="Unidad" Property="@nameof(Orden.Unidades)" Width="70px" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn TItem="Orden" Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="80px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" />
-        <RadzenDataGridColumn TItem="Orden" Title="Aprobado" Property="@nameof(Orden.FechaEntrega)" Width="50px" TextAlign="TextAlign.Center">
+
+        <RadzenDataGridColumn TItem="Orden" Title="Factura" Property="@nameof(Orden.NumeroFactura)" Width="80px" FilterOperator="FilterOperator.Contains" />
+
+        <RadzenDataGridColumn TItem="Orden" Title="Unidad" Property="@nameof(Orden.Unidades)" Width="70px" TextAlign="TextAlign.Right" FilterValue="unidadesFilter">
+            <FilterTemplate>
+                <RadzenNumeric @bind-Value=unidadesFilter  Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="80px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" FilterValue="entregaFilter">
+            <FilterTemplate>
+                <RadzenDatePicker @bind-Value=entregaFilter AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Aprobado" Property="@nameof(Orden.Aprobado)" Width="80px" TextAlign="TextAlign.Center" Filterable=false>
             <Template>
                 <RadzenCheckBox Value="context.Aprobado" ReadOnly=true />
             </Template>
         </RadzenDataGridColumn>
+
         <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
             <Template Context="orden">
                 <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                               Click="@(() => VerOrden(orden))" @onclick:stopPropagation="true" />
             </Template>
         </RadzenDataGridColumn>
+
         <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
             <Template Context="orden">
                 <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                               @onclick:stopPropagation="true" />
             </Template>
         </RadzenDataGridColumn>
+
         <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
             <Template Context="orden">
                 <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
@@ -118,6 +150,10 @@
     int? idOrden, codigo;
     DateTime? desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
 
+    //filters variables
+    int? idFilter, unidadesFilter;
+    DateTime? creacionFilter, entregaFilter;
+
     protected override async Task OnInitializedAsync()
     {
 
@@ -139,7 +175,13 @@
 
     private async Task FillOrdenes()
     {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        lstOrdenes = await OrdenesService.GetOrdenes(idOrden, cliente, desde, hasta, estado);
+        DialogCustom.CloseDialog();
+        await grid.Reload();
 
+        if (!lstOrdenes.Any())
+            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.EmptyResponse);
     }
 
     async Task Delete(Orden order)
@@ -153,6 +195,7 @@
 
     async Task NuevaOrden()
     {
+        //va a ser pagina aparte
         var response = await DialogService.OpenAsync<OrdenCreacion>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
         if (response != null)
         {
