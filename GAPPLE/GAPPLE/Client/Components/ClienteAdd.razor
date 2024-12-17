@@ -5,7 +5,7 @@
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenStack Orientation="Orientation.Vertical">
         <RadzenLabel Text="Cliente:" />
-        <RadzenDropDownDataGrid Disabled="!Esnuevo" IsLoading="isBusy" Data="clientes" @bind-Value="idCliente" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowVirtualization="true" ValueProperty="@nameof(Cliente.IdCliente)" TextProperty="@nameof(Cliente.RazonSocial)">
+        <RadzenDropDownDataGrid Disabled="@(!Esnuevo || DisabledInputs)" IsLoading="isBusy" Data="clientes" @bind-Value="idCliente" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowVirtualization="true" ValueProperty="@nameof(Cliente.IdCliente)" TextProperty="@nameof(Cliente.RazonSocial)">
             <Columns>
                 <RadzenDropDownDataGridColumn Width="90px" Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" />
                 <RadzenDropDownDataGridColumn Width="100px" Property="@nameof(Cliente.CUIT)" Title="CUIT" TextAlign="TextAlign.Center" />
@@ -15,16 +15,17 @@
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Vertical">
         <RadzenLabel Text="Nota:" />
-        <RadzenTextArea @bind-Value="observaciones" />
+        <RadzenTextArea @bind-Value="observaciones" Disabled="DisabledInputs"/>
     </RadzenStack>
 </RadzenStack>
 
 <RadzenStack Style="margin-top:10px" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-    <RadzenButton Style="width:fit-content;" ButtonStyle="ButtonStyle.Success" Text="Guardar" Icon="save" Click="Guardar"></RadzenButton>
+    <RadzenButton Style="width:fit-content;" ButtonStyle="ButtonStyle.Success" Text="Guardar" Icon="save" Click="Guardar" Disabled="DisabledInputs"></RadzenButton>
 </RadzenStack>
 
 @code {
     [Parameter] public Cliente cliente { get; set; } = new();
+    [Parameter] public bool DisabledInputs { get; set; }
     List<Cliente> clientes = new();
     int idCliente;
     string? observaciones;

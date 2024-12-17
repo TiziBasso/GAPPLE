@@ -6,7 +6,7 @@
 
 @if (showForm)
 {
-        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center"/>
+    <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center"/>
 
     <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
         <HeaderTemplate>
@@ -18,6 +18,8 @@
             <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
             <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
                 <Template>
+                    <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => Ver(context))" @onclick:stopPropagation="true" />
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
                 </Template>
             </RadzenDataGridColumn>
@@ -53,9 +55,16 @@ else
     async Task Editar(Cliente cliente)
     {
         isBusy = true;
-        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new(){ { "Cliente",cliente} } , new() { Width = "40vw", Height = "40vh" });
+        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new(){ { "Cliente",cliente} } , new() { Width = "40vw", Height = "46vh" });
         clientes = await ClientesService.GetClientes(clienteEspecial: true);
         await grilla.Reload();
+        isBusy = false;
+    }
+
+    async Task Ver(Cliente cliente)
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Ver cliente especial", new() { { "Cliente", cliente },{ "DisabledInputs", true} }, new() { Width = "40vw", Height = "46vh" });
         isBusy = false;
     }
 }

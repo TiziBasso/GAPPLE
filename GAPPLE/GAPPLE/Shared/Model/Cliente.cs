@@ -17,6 +17,7 @@ namespace GAPPLE.Shared.Model
         //[JsonProperty("CLASIFICACION")]
         public string? Clasificacion { get; set; }
         public bool ClienteEspecial { get; set; }
+        public bool Activa { get; set; }
         public string? Observaciones { get; set; }
     }
 }
