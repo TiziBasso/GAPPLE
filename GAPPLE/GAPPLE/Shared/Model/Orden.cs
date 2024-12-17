@@ -34,7 +34,7 @@ namespace GAPPLE.Shared.Model
 
         public int IdListaPrecio { get; set; }
 
-        public int Zona { get; set; }
+        public string? Zona { get; set; }
 
         public string? CondicionVenta { get; set; }
 
@@ -50,7 +50,11 @@ namespace GAPPLE.Shared.Model
 
         public int? IdEstado { get; set; }
 
+        public string? DescripcionEstado { get; set; }
+
         public string? IdTango { get; set; }
+
+        public string? NumeroFactura { get; set; }
 
         public int Unidades { get; set; }
 
