@@ -1,4 +1,5 @@
 ﻿@page "/ordenes"
+@using GAPPLE.Client.Components.Ordenes
 
 @inject DialogService DialogService
 
@@ -25,63 +26,78 @@
 
     <RadzenStack Orientation="Orientation.Vertical">
         Desde:
-        <RadzenDatePicker @bind-Value="desde" AllowClear="true" DateFormat="dd/MM/yyyy" />
+        <RadzenDatePicker @bind-Value="desde" DateFormat="dd/MM/yyyy" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
         Hasta:
-        <RadzenDatePicker @bind-Value="hasta" AllowClear="true" DateFormat="dd/MM/yyyy" />
+        <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical">
         Estado:
         <RadzenDropDown Data=@Variables.EstadosNum @bind-Value=@estado
                         ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                        Change="HandleEstadosChange" Disabled="@isLoading" Style="width: 7rem;" />
+                        Disabled="@isLoading" Style="width: 7rem;" />
     </RadzenStack>
 
-    <RadzenStack Orientation="Orientation.Vertical">
+    @* <RadzenStack Orientation="Orientation.Vertical">
         Máx. regs.:
         <input type="number" @bind-value="@cantRegs" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
                class="rz-textbox" style="width: 5rem" disabled="@(isLoading)" />
-    </RadzenStack>
+    </RadzenStack> *@
 </RadzenStack>
 
 <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
     <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Primary" Size=ButtonSize.Medium Click="NuevaOrden" />
-    <RadzenButton Text="Exportar Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" />
+    @* <RadzenButton Text="Exportar Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" /> *@
 </RadzenStack>
 
-<RadzenDataGrid @ref="grid" Data="sampleData.Orders" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" EmptyText="No hay registros para mostrar">
+<RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
+                EmptyText="" Style="height:60vh">
     <Columns>
-        <RadzenDataGridColumn TItem="InectoOrder" Title="ID" Property="@nameof(InectoOrder.Id)" Width="50px" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Código" Property="@nameof(InectoOrder.Codigo)" Width="80px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Presupuesto" Property="@nameof(InectoOrder.Presup)" Width="80px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Cliente" Property="@nameof(InectoOrder.Cliente)" Width="120px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Línea" Property="@nameof(InectoOrder.Linea)" Width="120px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Creación" Property="@nameof(InectoOrder.Creacion)" Width="100px" TextAlign="TextAlign.Center">
+        <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="50px" TextAlign="TextAlign.Right" />
+        <RadzenDataGridColumn TItem="Orden" Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="80px" TextAlign="TextAlign.Center">
             <Template>
-                <span>@context.Creacion.ToString("dd/MM/yyyy")</span>
+
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Zona" Property="@nameof(InectoOrder.Zona)" Width="120px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Pendiente" Property="@nameof(InectoOrder.Pend)" Width="50px" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Estado" Property="@nameof(InectoOrder.Estado)" Width="80px" TextAlign="TextAlign.Center" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Tango" Property="@nameof(InectoOrder.Tango)" Width="80px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Factura" Property="@nameof(InectoOrder.Factura)" Width="80px" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Fecha" Property="@nameof(InectoOrder.Fecha)" Width="100px" TextAlign="TextAlign.Center">
+        <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="120px" />
+        <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="80px" />
+        <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="100px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" />
+        <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.Zona)" Width="70px" TextAlign="TextAlign.Right" />
+        <RadzenDataGridColumn TItem="Orden" Title="Estado" Property="@nameof(Orden.IdEstado)" Width="80px" TextAlign="TextAlign.Center">
             <Template>
-                <span>@context.Fecha!.Value.ToString("dd/MM/yyyy")</span>
+                @* first idEstado . descripcion *@
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Unidad" Property="@nameof(InectoOrder.Unid)" Width="70px" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn TItem="InectoOrder" Title="Entrega" Property="@nameof(InectoOrder.Entrega)" Width="80px" />
-        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="InectoOrder" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="110px">
+        <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.IdTango)" Width="80px">
+            <Template>
+                @(context.IdTango != null ? context.IdTango : "NO")
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Orden" Title="Factura" Property="@nameof(Orden.Factura)" Width="80px" />
+        <RadzenDataGridColumn TItem="Orden" Title="Unidad" Property="@nameof(Orden.Unidades)" Width="70px" TextAlign="TextAlign.Right" />
+        <RadzenDataGridColumn TItem="Orden" Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="80px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="Orden" Title="Aprobado" Property="@nameof(Orden.FechaEntrega)" Width="50px" TextAlign="TextAlign.Center">
+            <Template>
+                <RadzenCheckBox Value="context.Aprobado" ReadOnly=true />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
             <Template Context="orden">
                 <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                               Click="@(() => VerOrden(orden))" @onclick:stopPropagation="true" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
+            <Template Context="orden">
                 <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                               @onclick:stopPropagation="true" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
+            <Template Context="orden">
                 <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                               @onclick:stopPropagation="true" Click="@(() => Delete(orden))" />
             </Template>
@@ -91,9 +107,9 @@
 
 @code {
     ElementReference refIdOrden;
-    InectoOrderSet sampleData = new();
-    RadzenDataGrid<InectoOrder> grid;
+    RadzenDataGrid<Orden> grid;
     List<string> estados = new();
+    List<Orden> lstOrdenes = new();
     string filterEstado;
     string cliente;
     bool isLoading;
@@ -107,41 +123,42 @@
 
     }
 
-    async Task VerOrden(InectoOrder orden)
+    async Task VerOrden(Orden orden)
     {
-        await DialogService.OpenAsync<OrdenInfo>($"Orden {orden.Id} - TANGO {orden.Tango}", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
+        await DialogService.OpenAsync<OrdenInfo>($"Orden {orden.Id} - TANGO {orden.IdTango}", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
     }
 
     private async Task KeyPress(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            sampleData = InectoOrderDataSet.GetSampleData(cantRegs);
-            estados.Clear();
-            estados.AddRange(sampleData.Orders.Select(x => x.Estado).ToList().Distinct());
+            await Task.Delay(1);
+            await FillOrdenes();
         }
     }
 
-    async Task Delete(InectoOrder order)
+    private async Task FillOrdenes()
     {
-        if ((bool)await DialogService.Confirm($"¿Desea eliminar la orden {order.Id}?",
-                    "Confirmación", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose=false }))
+
+    }
+
+    async Task Delete(Orden order)
+    {
+        if (await DialogService.Confirm($"¿Desea eliminar la orden {order.Id}?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            sampleData.Orders.Remove(order);
+            lstOrdenes.Remove(order);
             await grid.Reload();
         }
     }
 
-    private async Task HandleEstadosChange()
-    {
-        sampleData = InectoOrderDataSet.GetSampleData(cantRegs);
-        estados.Clear();
-        estados.AddRange(sampleData.Orders.Select(x => x.Estado).ToList().Distinct());
-    }
-
     async Task NuevaOrden()
     {
-        await DialogService.OpenAsync<OrdenCreacion>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
+        var response = await DialogService.OpenAsync<OrdenCreacion>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
+        if (response != null)
+        {
+            lstOrdenes.Add((Orden)response);
+            await grid.Reload();
+        }
     }
 
     public async Task Export()
@@ -155,92 +172,5 @@
         //                                                                 .Select(c => c.Property.Contains(".") ? $"{c.Property} as {c.Property.Replace(".", "_")}" : c.Property))
         //     });
         // DialogCustom.CloseDialog();
-    }
-
-    public class InectoOrder
-    {
-        public int Id { get; set; }
-        public string Codigo { get; set; }
-        public string Presup { get; set; }
-        public string Cliente { get; set; }
-        public string Linea { get; set; }
-        public DateTime Creacion { get; set; }
-        public string Zona { get; set; }
-        public string Pend { get; set; }
-        public string Estado { get; set; }
-        public string Tango { get; set; }
-        public string Factura { get; set; }
-        public DateTime? Fecha { get; set; } // Nullable as the date might be empty
-        public int Unid { get; set; }
-        public string Entrega { get; set; }
-        public bool Aprob { get; set; }
-    }
-
-    public class InectoOrderSet
-    {
-        public List<InectoOrder> Orders { get; set; }
-
-        public InectoOrderSet()
-        {
-            Orders = new List<InectoOrder>();
-        }
-
-        public void AddOrder(InectoOrder order)
-        {
-            Orders.Add(order);
-        }
-
-        public InectoOrder GetOrderById(int id)
-        {
-            return Orders.FirstOrDefault(o => o.Id == id);
-        }
-
-        public void RemoveOrderById(int id)
-        {
-            var order = GetOrderById(id);
-            if (order != null)
-            {
-                Orders.Remove(order);
-            }
-        }
-    }
-
-    public class InectoOrderDataSet
-    {
-        public static InectoOrderSet GetSampleData(int numberOfOrders = 15)
-        {
-            var orderSet = new InectoOrderSet();
-            var random = new Random();
-
-            for (int i = 1; i <= numberOfOrders; i++)
-            {
-                orderSet.AddOrder(new InectoOrder
-                    {
-                        Id = i,
-                        Codigo = $"C{i:00000}",
-                        Presup = $"PR{i:0000}",
-                        Cliente = $"Cliente {i}",
-                        Linea = $"Línea {random.Next(1, 4)}",
-                        Creacion = DateTime.Now.AddDays(-random.Next(1, 30)),
-                        Zona = $"Zona {GetRandomZona(random)}",
-                        Pend = random.Next(0, 5).ToString(),
-                        Estado = random.Next(0, 2) == 0 ? "Pendiente" : "Completado",
-                        Tango = $"T{random.Next(100, 999)}",
-                        Factura = $"F{i:0000}",
-                        Fecha = DateTime.Now.AddDays(random.Next(1, 15)),
-                        Unid = random.Next(1, 20),
-                        Entrega = $"Entrega {GetRandomZona(random)}",
-                        Aprob = random.Next(0, 2) == 0
-                    });
-            }
-
-            return orderSet;
-        }
-
-        private static string GetRandomZona(Random random)
-        {
-            var zonas = new[] { "Norte", "Sur", "Este", "Oeste" };
-            return zonas[random.Next(zonas.Length)];
-        }
     }
 }

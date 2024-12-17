@@ -1,4 +1,6 @@
-﻿<div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
+﻿@inject ProductosService ProductosService
+
+<div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
     <RadzenStack>
         <RadzenLabel Text="Línea:" />
         <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" Disabled=DisabledInputs Style="width:15rem" />
@@ -17,11 +19,11 @@
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
         <RadzenLabel Text="F:" />
-        <RadzenCheckBox @bind-Value="@F" />
+        <RadzenCheckBox @bind-Value="@orden.Factura" />
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
         <RadzenLabel Text="P:" />
-        <RadzenCheckBox @bind-Value="@P" />
+        <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Transporte:" />
@@ -42,15 +44,15 @@
     <RadzenStack Orientation="Orientation.Vertical">
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
             <RadzenLabel Text="Probadores:" />
-            <RadzenCheckBox @bind-Value="@probadores" />
+            <RadzenCheckBox @bind-Value="@orden.Probadores" />
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
             <RadzenLabel Text="Obsequios/CartasColores/Desc.Extra:" />
-            <RadzenCheckBox @bind-Value="@obsequios" />
+            <RadzenCheckBox @bind-Value="@orden.Obsequios" />
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
             <RadzenLabel Text="Multitester/Exhibidor:" />
-            <RadzenCheckBox @bind-Value="@exhibidor" />
+            <RadzenCheckBox @bind-Value="@orden.Exhibidor" />
         </RadzenStack>
     </RadzenStack>
     <RadzenStack>
@@ -99,18 +101,21 @@
 </div>
 
 @code {
-    [Parameter] public bool DisabledInputs { get; set; }
+    [Parameter] public bool DisabledInputs { get; set; } = false;
+
+    List<ProductoParaOfertas> lstProductosOferta = null;
+    List<ProductoParaOfertas> lstProductos = null;
+    Orden orden = new();
     Random random = new Random();
-    bool F, P, probadores, obsequios, exhibidor;
     private int fila = 0, columna = 0;
     List<string> lstLineas = new();
-    string valorAux;
+    string? valorAux;
 
     async Task BuscarProductos()
     {
-        Oferta.Linea = valorAux;
+        orden.Linea = valorAux;
         lstProductosOferta = new();
-        lstProductos = await ProductosService.GetProductosParaOfertas(Oferta.Linea);
+        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
         lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
     }
 }
