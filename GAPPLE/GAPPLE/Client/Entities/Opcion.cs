@@ -11,7 +11,7 @@
 
         public Opcion(string id, string descripcion) => (Id, Descripcion) = (id, descripcion);
 
-        public Opcion(int id, string descripcion) => (Id, Descripcion) = (id, descripcion);
+        public Opcion(int? id, string descripcion) => (Id, Descripcion) = (id, descripcion);
 
         public Opcion() { }
     }

@@ -19,5 +19,8 @@ namespace GAPPLE.Shared.Model
         public bool ClienteEspecial { get; set; }
         public bool Activa { get; set; }
         public string? Observaciones { get; set; }
+        public string? CodListaPrecioDefault { get; set; }
+        public string? CondVentaDefault { get; set; }
+        public string? ZonaDefault { get; set; }
     }
 }

@@ -13,7 +13,7 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage = "Debe ingresar un nombre"), StringLength(50, ErrorMessage = "Máximo de caracteres 50")]
         public string Nombre { get; set; }
         [StringLength(250, ErrorMessage = "Máximo de caracteres 250")]
-        public string Descripcion { get; set; }
+        public string? Descripcion { get; set; }
         [Required(ErrorMessage = "Debe ingresar una linea")]
         public string Linea { get; set; }
         [Required(ErrorMessage = "Debe ingresar un valor"),

@@ -9,14 +9,16 @@
                 <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
                 <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
             </RadzenStack>
+            <RadzenAppearanceToggle />
             <RadzenProfileMenu>
                 <Template>
                     <RadzenLabel Text="ADMIN" />
                 </Template>
                 <ChildContent>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenLabel Text="Modo oscuro:" />
-                        <RadzenSwitch @bind-Value="modoOscuro" Change=@(args => CambiarTema(args)) />
+                        @* <RadzenLabel Text="Modo oscuro:" /> *@
+                        @* <RadzenSwitch @bind-Value="modoOscuro" Change=@(args => CambiarTema(args)) /> *@
+                        <RadzenTheme Theme="default" />
                     </RadzenStack>
                 </ChildContent>
             </RadzenProfileMenu>
@@ -50,14 +52,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            var tema = await JS.InvokeAsync<string>("getCookie", "tema");
-            if (tema == null || tema == "light")
-                modoOscuro = false;
-            else
-                modoOscuro = true;
-        }
+        
     }
 
     public async Task CambiarTema(bool? args)

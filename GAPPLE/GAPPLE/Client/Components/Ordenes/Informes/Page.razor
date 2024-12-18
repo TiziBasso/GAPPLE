@@ -1,0 +1,54 @@
+﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 29.7cm;">
+    <div>
+        <strong>@(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
+    </div>
+    <div style="display: grid;gap: 10px;margin-top: 10px;">
+        <div style="display: flex;justify-content: space-between;">
+            <strong style="width: fit-content;">Cliente: (@Pedido.CodCliente) @Pedido.Cliente</strong>
+            <strong style="width: fit-content;">CUIT: @Pedido.CUITCliente</strong>
+            <strong style="width: fit-content;">@Pedido.TipoIVADescripcion</strong>
+        </div>
+        <div style="display: flex;justify-content: space-between;">
+            <strong style="width: fit-content;">Entregar En: @Pedido.Entrega</strong>
+            <strong style="width: fit-content;">Observaciones: @Pedido.Notas</strong>
+        </div>
+        <strong style="width: fit-content;">Domicilio: @Pedido.DomicilioCliente</strong>
+    </div>
+    <div style="margin-top: 10px;height: 59rem;">
+        <PageData Detalle="Detalle" Pendientes="Pendientes" />
+    </div>
+    <div>
+        <div style="display: flex;justify-content: space-between;">
+            <strong>Presupuesto: @(Pedido.Presupuesto ? "Sí" : "No")</strong>
+            <strong>Lista de precios: @Pedido.CodListaPrecio</strong>
+            <strong>Transporte: @Pedido.Transporte</strong>
+        </div>
+        <div style="display: flex;justify-content: space-between;">
+            <strong>Vendedor: @Pedido.CodVendedor</strong>
+            <strong>Cond. Venta: @Pedido.CondicionVenta</strong>
+            <strong>Cod. Transporte: @Pedido.CodTransporte</strong>
+        </div>
+    </div>
+    <div style="width: 100%;margin-top: 10px;">
+        <span style="text-align: end;width: 100%;display: block;">Página @PageNum de @CantPages</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public EventCallback Imprimir { get; set; }
+    [Parameter, EditorRequired] public Orden Pedido { get; set; }
+    [Parameter, EditorRequired] public int CantPages { get; set; }
+    [Parameter, EditorRequired] public int PageNum { get; set; }
+    [Parameter] public bool ShouldPrint { get; set; } = true;
+    [Parameter, EditorRequired] public List<OrdenDetalle> Detalle { get; set; }
+    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (PageNum == CantPages && ShouldPrint)
+        {
+            await Task.Delay(100);
+            await Imprimir.InvokeAsync();
+        }
+    }
+}

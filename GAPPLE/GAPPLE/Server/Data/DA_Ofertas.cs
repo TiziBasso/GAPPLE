@@ -10,7 +10,7 @@ namespace GAPPLE.Server.Data
 
         public DA_Ofertas(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerOfertas(string? nombre, string? linea,DateTime? desde, DateTime? hasta)
+        public DataTable ObtenerOfertas(string? nombre, string? linea,DateTime? desde, DateTime? hasta, bool? activas)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -25,6 +25,7 @@ namespace GAPPLE.Server.Data
                 if (linea != null) cmd.Parameters.AddWithValue("@pLinea", linea);
                 if (desde != null) cmd.Parameters.AddWithValue("@pDesde", desde);
                 if (hasta != null) cmd.Parameters.AddWithValue("@pHasta", hasta);
+                if (activas != null) cmd.Parameters.AddWithValue("@pActivas", activas);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }

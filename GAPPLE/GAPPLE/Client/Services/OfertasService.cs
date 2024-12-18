@@ -14,7 +14,7 @@ namespace GAPPLE.Client.Services
 
         public OfertasService(HttpClient httpClient) => HttpClient = httpClient;
 
-        public async ValueTask<List<Oferta>> GetOfertas(string? nombre, string? linea, DateTime? desde, DateTime? hasta)
+        public async ValueTask<List<Oferta>> GetOfertas(string? nombre, string? linea, DateTime? desde, DateTime? hasta, bool? activas = null)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
@@ -22,6 +22,7 @@ namespace GAPPLE.Client.Services
             if (linea != null) query["linea"] = linea;
             if (desde != null) query["desde"] = desde;
             if (hasta != null) query["hasta"] = hasta;
+            if (activas != null) query["activas"] = activas;
 
             if (query.Any())
                 uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
