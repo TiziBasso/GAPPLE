@@ -1,0 +1,158 @@
+﻿@page "/pruebaComponente"
+
+@inject ProductosService ProductosService
+@using System.Linq
+
+<div class="cards-container">
+    @foreach (var card in Cards)
+    {
+        <div class="card">
+            <h3>@card.FamilyName</h3>
+            @foreach (var product in card.Products)
+            {
+                <div class="product">
+                    <label>@product.Descripcion</label>
+                    <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto" class="product-input" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    document.addEventListener('keydown', function (event) {
+        if (event.target.classList.contains('product-input')) {
+            const currentInput = event.target;
+            const inputs = Array.from(document.querySelectorAll('.product-input'));
+            const currentCard = currentInput.closest('.card');
+            const allCards = Array.from(document.querySelectorAll('.card'));
+            const inputsInCurrentCard = Array.from(currentCard.querySelectorAll('.product-input'));
+
+            const inputIndexInCard = inputsInCurrentCard.findIndex(input => input === currentInput);
+
+            // Obtener la posición de la tarjeta actual
+            const currentCardRect = currentCard.getBoundingClientRect();
+
+            // Manejo de teclas
+            if (event.key === 'ArrowUp') {
+                if (inputIndexInCard > 0) {
+                    // Mover al input anterior dentro de la misma tarjeta
+                    inputsInCurrentCard[inputIndexInCard - 1].focus();
+                } else {
+                    // Buscar la tarjeta en la fila superior
+                    const targetCard = findCardAbove(allCards, currentCardRect);
+                    if (targetCard) {
+                        const targetInputs = targetCard.querySelectorAll('.product-input');
+                        targetInputs[targetInputs.length - 1].focus(); // Último input
+                    }
+                }
+            } else if (event.key === 'ArrowDown') {
+                if (inputIndexInCard < inputsInCurrentCard.length - 1) {
+                    // Mover al siguiente input dentro de la misma tarjeta
+                    inputsInCurrentCard[inputIndexInCard + 1].focus();
+                } else {
+                    // Buscar la tarjeta en la fila inferior
+                    const targetCard = findCardBelow(allCards, currentCardRect);
+                    if (targetCard) {
+                        const targetInputs = targetCard.querySelectorAll('.product-input');
+                        targetInputs[0].focus(); // Primer input
+                    }
+                }
+            } else if (event.key === 'ArrowLeft') {
+                const currentCardIndex = allCards.findIndex(card => card === currentCard);
+                if (currentCardIndex > 0) {
+                    // Ir a la tarjeta anterior
+                    const previousCard = allCards[currentCardIndex - 1];
+                    const inputsInPreviousCard = previousCard.querySelectorAll('.product-input');
+                    const targetInput = inputsInPreviousCard[inputIndexInCard] || inputsInPreviousCard[inputsInPreviousCard.length - 1];
+                    targetInput.focus();
+                }
+            } else if (event.key === 'ArrowRight') {
+                const currentCardIndex = allCards.findIndex(card => card === currentCard);
+                if (currentCardIndex < allCards.length - 1) {
+                    // Ir a la tarjeta siguiente
+                    const nextCard = allCards[currentCardIndex + 1];
+                    const inputsInNextCard = nextCard.querySelectorAll('.product-input');
+                    const targetInput = inputsInNextCard[inputIndexInCard] || inputsInNextCard[inputsInNextCard.length - 1];
+                    targetInput.focus();
+                }
+            }
+        }
+    });
+
+    // Función para encontrar la tarjeta en la fila superior
+    function findCardAbove(cards, currentRect) {
+        return cards.reverse().find(card => {
+            const rect = card.getBoundingClientRect();
+            return rect.bottom <= currentRect.top && rect.left < currentRect.right && rect.right > currentRect.left;
+        });
+    }
+
+    // Función para encontrar la tarjeta en la fila inferior
+    function findCardBelow(cards, currentRect) {
+        return cards.find(card => {
+            const rect = card.getBoundingClientRect();
+            return rect.top >= currentRect.bottom && rect.left < currentRect.right && rect.right > currentRect.left;
+        });
+    }
+</script>
+
+@code {
+    private List<ProductoParaOfertas> Products = new();
+
+    private List<Card> Cards = new();
+
+    protected override async Task  OnInitializedAsync()
+    {
+        Products = await ProductosService.GetProductosParaOfertas("DOROTHY GRAY");
+        Products = Products.OrderBy(x => x.Familia).ToList();
+
+        var grouped = Products.GroupBy(p => p.Familia);
+        foreach (var group in grouped)
+        {
+            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+                                      .GroupBy(x => x.Index / 10)
+                                      .Select(g => g.Select(x => x.Product).ToList());
+            foreach (var chunk in productChunks)
+            {
+                Cards.Add(new Card(group.Key, chunk));
+            }
+        }
+    }
+
+    private class Card
+    {
+        public string FamilyName { get; }
+        public List<ProductoParaOfertas> Products { get; }
+
+        public Card(string familyName, List<ProductoParaOfertas> products)
+        {
+            FamilyName = familyName;
+            Products = products;
+        }
+    }
+}
+
+<style>
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .card {
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .product {
+        display: flex;
+        flex-direction: column;
+        align-items:  flex-start;
+    }
+</style>

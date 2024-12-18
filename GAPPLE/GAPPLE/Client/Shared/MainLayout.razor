@@ -52,14 +52,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            var tema = await JS.InvokeAsync<string>("getCookie", "tema");
-            if (tema == null || tema == "light")
-                modoOscuro = false;
-            else
-                modoOscuro = true;
-        }
+        
     }
 
     public async Task CambiarTema(bool? args)

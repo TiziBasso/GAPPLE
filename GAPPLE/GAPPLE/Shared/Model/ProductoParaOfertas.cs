@@ -12,5 +12,6 @@ namespace GAPPLE.Shared.Model
         public string CodigoProducto { get; set; }
         public string Descripcion { get; set; }
         public bool Selected { get; set; }
+        public int  CantidadSeleccionada { get; set; }
     }
 }
