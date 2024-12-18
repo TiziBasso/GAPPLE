@@ -57,5 +57,22 @@ namespace GAPPLE.Client.Services
             else
                 return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
+
+        public async ValueTask<List<Transporte>> GetTransportes()
+        {
+            return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");
+        }
+        public async ValueTask<List<CondicionDeVenta>> GetCondicionesDeVenta()
+        {
+            return await HttpClient.GetFromJsonAsync<List<CondicionDeVenta>>($"{URI_BASE}/condicionesdeventa");
+        }
+        public async ValueTask<List<ListaDePrecios>> GetListasDePrecio()
+        {
+            return await HttpClient.GetFromJsonAsync<List<ListaDePrecios>>($"{URI_BASE}/listasdeprecio");
+        }
+        public async ValueTask<List<Zonas>> GetZonas()
+        {
+            return await HttpClient.GetFromJsonAsync<List<Zonas>>($"{URI_BASE}/zonas");
+        }
     }
 }

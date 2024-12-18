@@ -1,4 +1,5 @@
 ﻿@inject ProductosService ProductosService
+@inject OrdenesService OrdenesService
 
 <div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
     <RadzenStack>
@@ -11,11 +12,11 @@
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Zona:" />
-        <RadzenTextBox />
+        <RadzenDropDown Data="zonas" @bind-Value="orden.Zona" />
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Lista de precios:" />
-        <RadzenTextBox />
+        <RadzenDropDown @bind-Value="orden.IdListaPrecio" />
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
         <RadzenLabel Text="F:" />
@@ -27,15 +28,11 @@
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Transporte:" />
-        <RadzenTextBox />
-    </RadzenStack>
-    <RadzenStack>
-        <RadzenLabel Text="Cód.Trans:" />
-        <RadzenTextBox />
+        <RadzenDropDown @bind-Value="orden.CodTransporte" />
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Cond.Venta:" />
-        <RadzenTextBox />
+        <RadzenDropDown @bind-Value="orden.CondicionVenta" />
     </RadzenStack>
     <RadzenStack>
         <RadzenLabel Text="Entregar en:" />
@@ -110,6 +107,20 @@
     private int fila = 0, columna = 0;
     List<string> lstLineas = new();
     string? valorAux;
+
+    List<Transporte> transportes = new();
+    List<ListaDePrecios> listasDePrecio = new();
+    List<CondicionDeVenta> condicionesDeVenta= new();
+    List<Zonas> zonas = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        transportes = await OrdenesService.GetTransportes();
+        listasDePrecio = await OrdenesService.GetListasDePrecio();
+        condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
+        zonas = await OrdenesService.GetZonas();
+    }
 
     async Task BuscarProductos()
     {

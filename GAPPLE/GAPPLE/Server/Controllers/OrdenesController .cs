@@ -65,5 +65,78 @@ namespace GAPPLE.Server.Controllers
             daO.EditarOferta(oferta.IdOferta, oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!);
             return Ok();
         }
+
+        [HttpGet("transportes")]
+        public List<Transporte> GetTransportes()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<Transporte> transportes = new List<Transporte>();
+            using (DataTable dt = daO.ObtenerTransportes())
+            {
+                foreach(DataRow row in dt.Rows)
+                {
+                    Transporte transporte = new Transporte();
+                    transporte.CodigoTango = row["CodigoTango"].ToString()!;
+                    transporte.Descripcion = row["Descripcion"].ToString()!;
+                    transporte.CUIT = row["CUIT"].ToString()!;
+                    transportes.Add(transporte);
+                }
+                return transportes;
+            }
+        }
+
+        [HttpGet("condicionesdeventa")]
+        public List<CondicionDeVenta> GetCondicionesDeVenta()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<CondicionDeVenta> Condiciones = new List<CondicionDeVenta>();
+            using (DataTable dt = daO.ObtenerCondicionesDeVenta())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    CondicionDeVenta condicion = new CondicionDeVenta();
+                    condicion.CodigoTango = row["CodigoTango"].ToString()!;
+                    condicion.Descripcion = row["Descripcion"].ToString()!;
+                    Condiciones.Add(condicion);
+                }
+                return Condiciones;
+            }
+        }
+
+        [HttpGet("listasdeprecio")]
+        public List<ListaDePrecios> GetListasDePrecio()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<ListaDePrecios> listas = new List<ListaDePrecios>();
+            using (DataTable dt = daO.ObtenerListasDePrecio())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    ListaDePrecios lista = new ListaDePrecios();
+                    lista.CodigoTango = row["CodLista"].ToString()!;
+                    lista.Descripcion = row["Descripcion"].ToString()!;
+                    listas.Add(lista);
+                }
+                return listas;
+            }
+        }
+
+        [HttpGet("zonas")]
+        public List<Zonas> GetZonas()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<Zonas> zonas = new List<Zonas>();
+            using (DataTable dt = daO.ObtenerZonas())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    Zonas zona = new Zonas();
+                    zona.CodigoTango = row["CodigoTango"].ToString()!;
+                    zona.Descripcion = row["Descripcion"].ToString()!;
+                    zonas.Add(zona);
+                }
+                return zonas;
+            }
+        }
     }
 }

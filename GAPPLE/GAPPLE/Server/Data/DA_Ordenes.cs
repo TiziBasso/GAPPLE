@@ -78,5 +78,72 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
             cnn.Close();
         }
+
+        public DataTable ObtenerTransportes()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_Transportes"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerCondicionesDeVenta()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_CondicionesDeVenta"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerListasDePrecio()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_ListaDePrecios"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+        public DataTable ObtenerZonas()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_Zonas"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
     }
 }
