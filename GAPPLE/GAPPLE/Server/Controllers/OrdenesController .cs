@@ -3,6 +3,7 @@ using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Data.SqlClient;
 using System.Net;
 
 namespace GAPPLE.Server.Controllers
@@ -121,6 +122,41 @@ namespace GAPPLE.Server.Controllers
                     zonas.Add(zona);
                 }
                 return zonas;
+            }
+        }
+
+        [HttpPost]
+        public IActionResult PostPedido(Orden pedido)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    pedido.Id = daO.PersistirPedidoCabecera(pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, (int)pedido.IdEstado!,
+                                                            pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, pedido.Presupuesto,
+                                                            pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!, pedido.Probadores,
+                                                            OCCD: pedido.Obsequios, MtEX: pedido.Exhibidor, pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
+                    int numLinea = 0;
+                    foreach (var item in pedido.Detalle)
+                    {
+                        numLinea++;
+                        daO.PersistirPedidoDetalle(pedido.Id, numLinea, item.CodProducto!, item.Cantidad, trans);
+                    }
+                    trans.Commit();
+                    cnn.Close();
+                }
+
+                return Ok(pedido);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
             }
         }
     }

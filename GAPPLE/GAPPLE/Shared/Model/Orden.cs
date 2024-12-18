@@ -28,6 +28,8 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? Cliente { get; set; }
 
+        public string? CodCliente { get; set; }
+
         public string? Transporte { get; set; }
 
         public string? CodTransporte { get; set; }
@@ -66,6 +68,8 @@ namespace GAPPLE.Shared.Model
         public int Id { get; set; }
 
         public string? IdProducto { get; set; }
+
+        public string? CodProducto { get; set; }
 
         public int Cantidad { get; set; }
 

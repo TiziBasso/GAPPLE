@@ -50,5 +50,28 @@ namespace GAPPLE.Client.Services
         {
             return await HttpClient.GetFromJsonAsync<List<Zonas>>($"{URI_BASE}/zonas");
         }
+
+        public async ValueTask<Response> PostPedido(Orden pedido)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
+                if (response.IsSuccessStatusCode)
+                {
+                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
+                    pedido.Id = p.Id;
+                    return new(true);
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new(false);
+            }
+        }
     }
 }

@@ -184,7 +184,7 @@ else
     bool? presupuesto;
     string? razonSocial, linea, codTango;
 
-    List<string> permisos = new() { "alta", "edicion", "eliminar" };
+    List<string> permisos = new() { "alta", "eliminar" };
 
 
     //filters variables
@@ -247,7 +247,7 @@ else
     async Task NuevaOrden()
     {
         //parametrosconsulta
-        NavigationManager.NavigateTo("/Orden/creacion");
+        NavigationManager.NavigateTo("/orden/creacion");
     }
 
     public async Task Export()

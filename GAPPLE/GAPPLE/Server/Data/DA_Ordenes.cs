@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Runtime.InteropServices;
+using System.Transactions;
 
 namespace GAPPLE.Server.Data
 {
@@ -36,53 +37,6 @@ namespace GAPPLE.Server.Data
                 da.Fill(dt);
             }
             return dt;
-        }
-
-        public void PersistirOferta(string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones)
-        {
-            SqlConnection cnn = new(ConnectionString);
-            SqlCommand cmd = new()
-            {
-                Connection = cnn,
-                CommandType = CommandType.StoredProcedure,
-                CommandText = "prc_ins_Ofertas"
-            };
-            cmd.Parameters.AddWithValue("@pNombre", nombre);
-            cmd.Parameters.AddWithValue("@pLinea", linea);
-            cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
-            cmd.Parameters.AddWithValue("@pDescuento", descuento);
-            cmd.Parameters.AddWithValue("@pDesde", desde);
-            cmd.Parameters.AddWithValue("@pHasta", hasta);
-            cmd.Parameters.AddWithValue("@pActiva", 1);
-            cmd.Parameters.AddWithValue("@pinclusiones", inclusiones);
-            cmd.Parameters.AddWithValue("@pAltaUsuario", "PRUEBAS");
-            cnn.Open();
-            cmd.ExecuteNonQuery();
-            cnn.Close();
-        }
-
-        public void EditarOferta(int idOferta, string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones)
-        {
-            SqlConnection cnn = new(ConnectionString);
-            SqlCommand cmd = new()
-            {
-                Connection = cnn,
-                CommandType = CommandType.StoredProcedure,
-                CommandText = "prc_upd_Ofertas"
-            };
-            cmd.Parameters.AddWithValue("@pIdOferta", idOferta);
-            cmd.Parameters.AddWithValue("@pNombre", nombre);
-            cmd.Parameters.AddWithValue("@pLinea", linea);
-            cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
-            cmd.Parameters.AddWithValue("@pDescuento", descuento);
-            cmd.Parameters.AddWithValue("@pDesde", desde);
-            cmd.Parameters.AddWithValue("@pHasta", hasta);
-            cmd.Parameters.AddWithValue("@pActiva", 1);
-            cmd.Parameters.AddWithValue("@pinclusiones", inclusiones);
-            cmd.Parameters.AddWithValue("@pAltaUsuario", "PRUEBAS");
-            cnn.Open();
-            cmd.ExecuteNonQuery();
-            cnn.Close();
         }
 
         public DataTable ObtenerTransportes()
@@ -150,6 +104,50 @@ namespace GAPPLE.Server.Data
                 da.Fill(dt);
             }
             return dt;
+        }
+
+        public int PersistirPedidoCabecera(string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
+                                            bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
+                                            bool probadores, bool OCCD, bool MtEX, string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
+        {
+            int id;
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pLinea", linea);
+            cmd.Parameters.AddWithValue("@pCodigoCliente", codigoCliente);
+            cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
+            cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+            cmd.Parameters.AddWithValue("@pZona", zona);
+            cmd.Parameters.AddWithValue("@pListaDePrecios", listaPrecio);
+            cmd.Parameters.AddWithValue("@pFactura", factura);
+            cmd.Parameters.AddWithValue("@pPresupuesto", presupuesto);
+            cmd.Parameters.AddWithValue("@pCodTransporte", codTransporte);
+            cmd.Parameters.AddWithValue("@pCondicionVenta", condicionVenta);
+            cmd.Parameters.AddWithValue("@pEntregarEn", entregarEn);
+            cmd.Parameters.AddWithValue("@pProbadores", probadores);
+            cmd.Parameters.AddWithValue("@pOCCD", OCCD);
+            cmd.Parameters.AddWithValue("@pMtEX", MtEX);
+            cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
+            cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
+            cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
+            id = (int)cmd.ExecuteScalar();
+            return id;
+        }
+
+        public void PersistirPedidoDetalle(int idPedido, int numLinea, string codProducto, int cantidad, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_PedidosDetalle";
+            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pNLinea", numLinea);
+            cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
+            cmd.Parameters.AddWithValue("@pCantidad", cantidad);
         }
     }
 }
