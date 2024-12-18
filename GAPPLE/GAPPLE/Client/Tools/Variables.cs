@@ -30,15 +30,28 @@ namespace GAPPLE.Client.Tools
             }
         }
 
-        internal static IEnumerable<Opcion> Estados
+        internal static IEnumerable<Opcion> EstadosBool
+        {
+            get
+            {
+                return new List<Opcion>
+                {
+                    new Opcion((object)null, "(Todos)"),
+                    new Opcion(false, "Activo"),
+                    new Opcion(true, "Pasivo")
+                };
+            }
+        }
+
+        internal static IEnumerable<Opcion> EstadosSiNo
         {
             get
             {
                 return new List<Opcion>
                 {
                     new Opcion((object)null, "Ambos"),
-                    new Opcion(false, "Activo"),
-                    new Opcion(true, "Pasivo")
+                    new Opcion(false, "Sí"),
+                    new Opcion(true, "No")
                 };
             }
         }

@@ -15,49 +15,25 @@ namespace GAPPLE.Client.Services
 
         public OrdenesService(HttpClient httpClient) => HttpClient = httpClient;
 
-        public async ValueTask<List<Orden>> GetOrdenes(int? idOrden, string? cliente, DateTime? desde, DateTime? hasta, int? idEstado)
+        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, bool? presupuesto, string? razonSocial,
+                                        string? linea, string? zona, int? idEstado, string? codTango)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
-            if (idOrden != null) query["idOrden"] = idOrden;
-            if (cliente != null) query["cliente"] = cliente;
-            if (desde != null) query["desde"] = WebUtility.UrlEncode(desde.ToString()!);
-            if (hasta != null) query["hasta"] = WebUtility.UrlEncode(hasta.ToString()!);
+            query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
+            query["hastaStr"] = WebUtility.UrlEncode(hasta.ToString()!);
+            if (idPedido != null) query["idPedido"] = idPedido;
+            if (presupuesto != null) query["presupuesto"] = presupuesto;
+            if (!string.IsNullOrWhiteSpace(razonSocial)) query["razonSocial"] = razonSocial;
+            if (!string.IsNullOrWhiteSpace(linea)) query["linea"] = linea;
+            if (!string.IsNullOrWhiteSpace(zona)) query["zona"] = zona;
             if (idEstado != null) query["idEstado"] = idEstado;
+            if (!string.IsNullOrWhiteSpace(codTango)) query["codTango"] = codTango;
 
-
-            if (query.Any())
-                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
             return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
         }
-
-        public async ValueTask<Response> PostOferta(Oferta oferta)
-        {
-            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", oferta);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return new(true);
-            }
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
-            else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
-        }
-
-        public async ValueTask<Response> PutOferta(Oferta oferta)
-        {
-            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", oferta);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return new(true);
-            }
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
-            else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
-        }
-
         public async ValueTask<List<Transporte>> GetTransportes()
         {
             return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");

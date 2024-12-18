@@ -20,14 +20,15 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Orden> GetOrdenes(int? idOrden, string? cliente, string? desdeStr, string? hastaStr, int? idEstado)
+        public List<Orden> GetOrdenes(string desdeStr, string hastaStr, int? idPedido, bool? presupuesto, string? razonSocial,
+                                        string? linea, string? zona, int? idEstado, string? codTango)
         {
-            DateTime? desde = null, hasta = null;
-            if (desdeStr != null) desde = DateTime.Parse(WebUtility.UrlDecode(desdeStr));
-            if (hastaStr != null) hasta = DateTime.Parse(WebUtility.UrlDecode(hastaStr));
+            DateTime desde, hasta;
+            desde = DateTime.Parse(WebUtility.UrlDecode(desdeStr));
+            hasta = DateTime.Parse(WebUtility.UrlDecode(hastaStr));
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Orden> lstOrdenes = new();
-            using (DataTable dt = daO.ObtenerOrdenes(idOrden, cliente, desde, hasta, idEstado))
+            using (DataTable dt = daO.ObtenerOrdenes(desde, hasta, idPedido, presupuesto, razonSocial, linea, zona, idEstado, codTango))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -38,7 +39,7 @@ namespace GAPPLE.Server.Controllers
                         Cliente = row["RazonSocial"].ToString(),
                         Linea = row["Linea"].ToString(),
                         Creacion = (DateTime)row["AltaRegistro"],
-                        Zona = row["Zona"].ToString(),
+                        Zona = row["DescripcionZona"].ToString(),
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString(),
                         Unidades = (int)row["CantidadLineas"]
@@ -50,22 +51,6 @@ namespace GAPPLE.Server.Controllers
             return lstOrdenes;
         }
 
-        [HttpPost]
-        public IActionResult PostOfertas(Oferta oferta)
-        {
-            DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            daO.PersistirOferta(oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!);
-            return Ok();
-        }
-
-        [HttpPut]
-        public IActionResult PutOfertas(Oferta oferta)
-        {
-            DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            daO.EditarOferta(oferta.IdOferta, oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!);
-            return Ok();
-        }
-
         [HttpGet("transportes")]
         public List<Transporte> GetTransportes()
         {
@@ -73,7 +58,7 @@ namespace GAPPLE.Server.Controllers
             List<Transporte> transportes = new List<Transporte>();
             using (DataTable dt = daO.ObtenerTransportes())
             {
-                foreach(DataRow row in dt.Rows)
+                foreach (DataRow row in dt.Rows)
                 {
                     Transporte transporte = new Transporte();
                     transporte.CodigoTango = row["CodigoTango"].ToString()!;

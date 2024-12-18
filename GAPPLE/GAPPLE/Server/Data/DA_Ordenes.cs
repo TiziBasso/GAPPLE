@@ -1,6 +1,7 @@
 ﻿using Radzen.Blazor.Rendering;
 using System.Data;
 using System.Data.SqlClient;
+using System.Runtime.InteropServices;
 
 namespace GAPPLE.Server.Data
 {
@@ -10,7 +11,8 @@ namespace GAPPLE.Server.Data
 
         public DA_Ordenes(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerOrdenes(int? idOrden, string? cliente, DateTime? desde, DateTime? hasta, int? idEstado)
+        public DataTable ObtenerOrdenes(DateTime desde, DateTime hasta, int? idPedido, bool? presupuesto, string? razonSocial,
+                                        string? linea, string? zona, int? idEstado, string? codTango)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -21,11 +23,15 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_PedidosCabecera"
                 };
-                //if (idOrden != null) cmd.Parameters.AddWithValue("@pIdOrden", idOrden);
-                //if (cliente != null) cmd.Parameters.AddWithValue("@pCliente", cliente);
-                //if (desde != null) cmd.Parameters.AddWithValue("@pDesde", desde);
-                //if (hasta != null) cmd.Parameters.AddWithValue("@pHasta", hasta);
-                //if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+                cmd.Parameters.AddWithValue("@pDesde", desde);
+                cmd.Parameters.AddWithValue("@pHasta", hasta);
+                if (idPedido != null) cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+                if (presupuesto != null) cmd.Parameters.AddWithValue("@pPresupuesto", presupuesto);
+                if (!string.IsNullOrEmpty(razonSocial)) cmd.Parameters.AddWithValue("@pRazonSocial", razonSocial);
+                if (!string.IsNullOrEmpty(linea)) cmd.Parameters.AddWithValue("@pLinea", linea);
+                if (!string.IsNullOrEmpty(zona)) cmd.Parameters.AddWithValue("@pCodZona", zona);
+                if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+                if (!string.IsNullOrEmpty(codTango)) cmd.Parameters.AddWithValue("@pCodTango", codTango);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
