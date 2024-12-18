@@ -30,6 +30,27 @@ namespace GAPPLE.Shared.Model
 
         public string? CodCliente { get; set; }
 
+        public string? DomicilioCliente { get; set; }
+
+        public string? CUITCliente { get; set; }
+
+        public string? TipoIVA { get; set; } = "RI";
+
+        public string? TipoIVADescripcion
+        {
+            get
+            {
+                return TipoIVA switch
+                {
+                    "RI" => "Responsable Inscripto",
+                    "EX" => "Exento",
+                    "CF" => "Consumidor Final",
+                    "MT" => "Monotributista",
+                    _ => null,
+                };
+            }
+        }
+
         public string? Transporte { get; set; }
 
         public string? CodTransporte { get; set; }
@@ -39,6 +60,8 @@ namespace GAPPLE.Shared.Model
         public string? Zona { get; set; }
 
         public string? CondicionVenta { get; set; }
+
+        public string? CodVendedor { get; set; }
 
         public List<int>? Ofertas { get; set; }
 
@@ -66,6 +89,10 @@ namespace GAPPLE.Shared.Model
     public class OrdenDetalle
     {
         public int Id { get; set; }
+
+        public int NumeroLinea { get; set; }
+
+        public string? Descripcion { get; set; }
 
         public string? IdProducto { get; set; }
 

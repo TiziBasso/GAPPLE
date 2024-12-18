@@ -1,0 +1,58 @@
+﻿@if (showModal)
+{
+    <div id="print">
+        @for (int i = 0; i < cantPages; i++)
+        {
+            GetData(i);
+            <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
+                  Detalle="detalle" Pendientes="pendientes" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Orden Pedido { get; set; }
+    [Parameter] public EventCallback Imprimir { get; set; }
+    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public bool ShouldPrint { get; set; } = true;
+
+    List<OrdenDetalle>? detalle = new(), pendientes = new();
+
+
+    bool showModal;
+    int cantPages = 0;
+
+    protected override void OnInitialized()
+    {
+        int sumLineas = Pedido.Detalle!.Count + 1;
+
+        if (Pendientes != null && Pendientes.Any())
+            sumLineas += Pendientes.Count + 3;
+
+        cantPages = sumLineas / 33;
+        if (cantPages == 0) cantPages = 1;
+
+        showModal = true;
+    }
+
+    private void GetData(int page)
+    {
+        int showed = page * 30, remaining = 30;
+
+        detalle = Pedido.Detalle!.Skip(showed)?.Take(remaining).ToList();
+        if (detalle != null)
+        {
+            remaining -= detalle.Count;
+            if (detalle.Count > 0) showed -= detalle.Count;
+            else showed -= Pedido.Detalle!.Count;
+        }
+
+        pendientes = Pendientes?.Skip(showed)?.Take(remaining).ToList();
+        if (pendientes != null)
+        {
+            remaining -= pendientes.Count;
+            if (pendientes.Count > 0) showed -= pendientes.Count;
+            else showed -= Pendientes!.Count;
+        }
+    }
+}
