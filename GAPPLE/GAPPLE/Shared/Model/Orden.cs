@@ -32,13 +32,13 @@ namespace GAPPLE.Shared.Model
 
         public string? CodTransporte { get; set; }
 
-        public int IdListaPrecio { get; set; }
+        public string CodListaPrecio { get; set; }
 
         public string? Zona { get; set; }
 
         public string? CondicionVenta { get; set; }
 
-        public int? IdOferta { get; set; }
+        public List<int>? Ofertas { get; set; }
 
         public string? Entrega { get; set; }
 

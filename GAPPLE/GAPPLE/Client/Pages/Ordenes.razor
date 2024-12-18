@@ -5,6 +5,7 @@
 @inject DialogCustom DialogCustom
 @inject OrdenesService OrdenesService
 @inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
 
 <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Ordenes" class="mb-3" />
 
@@ -195,13 +196,15 @@
 
     async Task NuevaOrden()
     {
-        //va a ser pagina aparte
-        var response = await DialogService.OpenAsync<OrdenCreacion>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
-        if (response != null)
-        {
-            lstOrdenes.Add((Orden)response);
-            await grid.Reload();
-        }
+        NavigationManager.NavigateTo("/Orden/creacion");
+        // //va a ser pagina aparte
+        // var response = await DialogService.OpenAsync<OrdenCreacion>("Nueva orden", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
+
+        // if (response != null)
+        // {
+        //     lstOrdenes.Add((Orden)response);
+        //     await grid.Reload();
+        // }
     }
 
     public async Task Export()

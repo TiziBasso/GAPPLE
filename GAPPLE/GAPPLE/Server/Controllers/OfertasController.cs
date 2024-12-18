@@ -19,11 +19,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Oferta> GetOfertas(string? nombre, string? linea, DateTime? desde, DateTime? hasta)
+        public List<Oferta> GetOfertas(string? nombre, string? linea, DateTime? desde, DateTime? hasta, bool? activas)
         {
             DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Oferta> lstOfertas = new List<Oferta>();
-            using (DataTable dt = daO.ObtenerOfertas(nombre,linea,desde,hasta))
+            using (DataTable dt = daO.ObtenerOfertas(nombre,linea,desde,hasta, activas))
             {
                 foreach(DataRow row in dt.Rows)
                 {

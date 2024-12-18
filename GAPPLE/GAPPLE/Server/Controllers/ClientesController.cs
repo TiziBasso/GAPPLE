@@ -30,6 +30,9 @@ namespace GAPPLE.Server.Controllers
                 c.Observaciones = row["Observaciones"].ToString()!;
                 c.ClienteEspecial = bool.Parse(row["ClienteEspecial"].ToString()!);
                 c.CUIT = row["CUIT"].ToString()!;
+                c.CodListaPrecioDefault = row["IdListaDePrecio"].ToString()!;
+                c.CondVentaDefault = row["CondVenta"].ToString()!;
+                c.ZonaDefault = row["Zona"].ToString()!;
                 lst.Add(c);
             }
             return lst;
