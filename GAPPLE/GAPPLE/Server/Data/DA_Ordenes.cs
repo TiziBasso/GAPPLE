@@ -1,5 +1,8 @@
-﻿using Radzen.Blazor.Rendering;
+﻿using GAPPLE.Shared.Model;
+using Microsoft.Extensions.Hosting;
+using Radzen.Blazor.Rendering;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Runtime.InteropServices;
 using System.Transactions;
@@ -33,6 +36,42 @@ namespace GAPPLE.Server.Data
                 if (!string.IsNullOrEmpty(zona)) cmd.Parameters.AddWithValue("@pCodZona", zona);
                 if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
                 if (!string.IsNullOrEmpty(codTango)) cmd.Parameters.AddWithValue("@pCodTango", codTango);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerOrden(int idPedido)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_PedidosCabecera"
+                };
+                cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerOrdenDetalle(int idPedido)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_PedidosDetalle"
+                };
+                cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
@@ -106,7 +145,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public int PersistirPedidoCabecera(string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
+        public int PersistirPedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
                                             bool probadores, bool OCCD, bool MtEX, string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
         {
@@ -116,6 +155,7 @@ namespace GAPPLE.Server.Data
             cmd.Transaction = transaction;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_ins_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
             cmd.Parameters.AddWithValue("@pLinea", linea);
             cmd.Parameters.AddWithValue("@pCodigoCliente", codigoCliente);
             cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
@@ -148,6 +188,21 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pNLinea", numLinea);
             cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
+        }
+
+        public int ObtenerCodigoOrden()
+        {
+            int cod;
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = cnn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_get_ProximoCodigoOrden";
+                cnn.Open();
+                cod = (int)cmd.ExecuteScalar();
+                cnn.Close();
+            }
+            return cod;
         }
     }
 }

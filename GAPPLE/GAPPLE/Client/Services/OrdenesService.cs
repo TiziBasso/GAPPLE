@@ -18,7 +18,7 @@ namespace GAPPLE.Client.Services
         public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango)
         {
-            string uri = $"{URI_BASE}";
+            string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
             query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
             query["hastaStr"] = WebUtility.UrlEncode(hasta.ToString()!);
@@ -34,6 +34,19 @@ namespace GAPPLE.Client.Services
 
             return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
         }
+
+        public async ValueTask<Orden?> GetOrden(int idPedido, bool conDetalle = true)
+        {
+            string uri = $"{URI_BASE}";
+            Dictionary<string, object> query = new();
+            query["idPedido"] = idPedido;
+            query["conDetalle"] = conDetalle;
+
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+
+            return await HttpClient.GetFromJsonAsync<Orden?>(uri);
+        }
+
         public async ValueTask<List<Transporte>> GetTransportes()
         {
             return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");

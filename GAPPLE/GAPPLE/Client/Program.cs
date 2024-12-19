@@ -34,4 +34,6 @@ static void Services(IServiceCollection services)
     services.AddScoped<ToolsHelpers>();
     services.AddScoped<ClientesService>();
     services.AddScoped<OrdenesService>();
+    services.AddScoped<JSFunction>();
+    services.AddScoped<IJSFunction, JSFunction>();
 }

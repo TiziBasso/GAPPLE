@@ -1,5 +1,6 @@
 ﻿@page "/ordenes"
 @using GAPPLE.Client.Components.Ordenes
+@using GAPPLE.Client.Components.Ordenes.Informes
 
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
@@ -7,6 +8,8 @@
 @inject ProductosService ProductosService
 @inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
+@inject DialogCustom DialogCustom
+@inject IJSFunction JSFunction
 
 @if (showPage)
 {
@@ -162,7 +165,13 @@
         </Columns>
     </RadzenDataGrid>
 
-    
+    @if (showResumen)
+    {
+        <ImpresiónOrden Pedido=Resumen
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0).ToList())"
+                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0) ? Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0).ToList() : null)
+                        Imprimir="@(async()=>await Imprimir())" />
+    }
 }
 else
 {
@@ -179,7 +188,8 @@ else
         new(1, "Pendiente")
     };
     List<Orden> lstOrdenes = new();
-    bool isLoading, showPage;
+    Orden? Resumen = null;
+    bool isLoading, showPage, showResumen;
 
     DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
     int? idPedido, idEstado = 1;
@@ -201,10 +211,6 @@ else
         showPage = true;
     }
 
-    async Task VerOrden(Orden orden)
-    {
-        await DialogService.OpenAsync<OrdenInfo>($"Orden {orden.Id} - TANGO {orden.IdTango}", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
-    }
 
     private async Task KeyPress(KeyboardEventArgs e)
     {
@@ -246,10 +252,32 @@ else
         }
     }
 
-    async Task NuevaOrden()
+    void NuevaOrden()
     {
         //parametrosconsulta
         NavigationManager.NavigateTo("/orden/creacion");
+    }
+
+    async Task VerOrden(Orden orden)
+    {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        Resumen = await OrdenesService.GetOrden(orden.Id);
+        DialogCustom.CloseDialog();
+        if (Resumen == null)
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        else
+        {
+            DialogCustom.OpenBusyWithLoader("Imprimiendo...");
+            showResumen = true;
+        }
+    }
+
+    public async Task Imprimir(string id = "print")
+    {
+        await JSFunction.Imprimir(id);
+        showResumen = false;
+        DialogCustom.CloseDialog();
+        Resumen = null;
     }
 
     public async Task Export()

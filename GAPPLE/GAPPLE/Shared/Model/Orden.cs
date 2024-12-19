@@ -11,6 +11,8 @@ namespace GAPPLE.Shared.Model
     {
         public int Id { get; set; }
 
+        public int CodigoOrden { get; set; }
+
         public string? Linea { get; set; }
 
         public bool Factura { get; set; }
@@ -94,11 +96,15 @@ namespace GAPPLE.Shared.Model
 
         public string? Descripcion { get; set; }
 
-        public string? IdProducto { get; set; }
+        public int IdProducto { get; set; }
 
         public string? CodProducto { get; set; }
 
         public int Cantidad { get; set; }
+
+        public int CantidadAprobada { get; set; }
+
+        public int CantidadPendiente => Cantidad - CantidadAprobada;
 
         public decimal Descuento1 { get; set; }
 
