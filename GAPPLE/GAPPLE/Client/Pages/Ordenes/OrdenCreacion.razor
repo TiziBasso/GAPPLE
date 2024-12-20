@@ -363,6 +363,8 @@ else
         }
         else
             valorAux = orden.Linea;
+
+        editContext.Validate();
     }
 
     async Task AsignarVariables()
@@ -373,6 +375,7 @@ else
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
         orden.CondicionVenta = clientes[index].CondVentaDefault;
         orden.Zona = clientes[index].ZonaDefault;
+        editContext.Validate();
         DialogCustom.CloseDialog();
     }
 
