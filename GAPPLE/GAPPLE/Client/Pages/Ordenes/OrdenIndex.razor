@@ -34,6 +34,12 @@
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="cod" />
+            <input type="text" @bind-value="@codOrden" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 9rem;" disabled="@(isLoading)" id="cod" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cliente:" Component="cliente" />
             <input type="text" @bind-value="@razonSocial" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
                    class="rz-textbox" style="width: 15rem" disabled="@(isLoading)" id="cliente" />
@@ -83,6 +89,12 @@
             <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="Orden" Title="Cód." Property="@nameof(Orden.CodigoOrden)" Width="150px" FilterValue="codOrdenFilter" Resizable=false>
+                <FilterTemplate>
+                    <RadzenNumeric @bind-Value=codOrdenFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
@@ -194,7 +206,7 @@ else
     DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
     int? idPedido, idEstado = 1;
     bool? presupuesto;
-    string? razonSocial, linea, codTango;
+    string? razonSocial, linea, codTango, codOrden;
 
     List<string> permisos = new() { "alta", "eliminar" };
 
@@ -203,11 +215,13 @@ else
     int? idFilter, unidadesFilter;
     DateTime? creacionFilter, entregaFilter;
     List<string> zonasFilter = new(), estadosFilter = new();
-    string? zonaFilter, estadoFilter;
+    string? zonaFilter, estadoFilter, codOrdenFilter;
 
     protected override async Task OnInitializedAsync()
     {
         lineas = await ProductosService.GetLineas();
+
+        //Parametros de consulta
         showPage = true;
     }
 
@@ -230,7 +244,7 @@ else
 
         DialogCustom.OpenBusyWithLoader("Cargando...");
         //parametrosconsulta
-        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, presupuesto, razonSocial, linea, null, idEstado, codTango);
+        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado, codTango);
         DialogCustom.CloseDialog();
         await grid.Reload();
 

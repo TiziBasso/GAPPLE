@@ -15,7 +15,7 @@ namespace GAPPLE.Client.Services
 
         public OrdenesService(HttpClient httpClient) => HttpClient = httpClient;
 
-        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, bool? presupuesto, string? razonSocial,
+        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango)
         {
             string uri = $"{URI_BASE}/lista";
@@ -27,6 +27,7 @@ namespace GAPPLE.Client.Services
             if (!string.IsNullOrWhiteSpace(razonSocial)) query["razonSocial"] = razonSocial;
             if (!string.IsNullOrWhiteSpace(linea)) query["linea"] = linea;
             if (!string.IsNullOrWhiteSpace(zona)) query["zona"] = zona;
+            if (!string.IsNullOrWhiteSpace(codOrden)) query["codOrden"] = codOrden;
             if (idEstado != null) query["idEstado"] = idEstado;
             if (!string.IsNullOrWhiteSpace(codTango)) query["codTango"] = codTango;
 

@@ -15,7 +15,7 @@ namespace GAPPLE.Server.Data
 
         public DA_Ordenes(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerOrdenes(DateTime desde, DateTime hasta, int? idPedido, bool? presupuesto, string? razonSocial,
+        public DataTable ObtenerOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango)
         {
             DataTable dt = new DataTable();
@@ -34,6 +34,7 @@ namespace GAPPLE.Server.Data
                 if (!string.IsNullOrEmpty(razonSocial)) cmd.Parameters.AddWithValue("@pRazonSocial", razonSocial);
                 if (!string.IsNullOrEmpty(linea)) cmd.Parameters.AddWithValue("@pLinea", linea);
                 if (!string.IsNullOrEmpty(zona)) cmd.Parameters.AddWithValue("@pCodZona", zona);
+                if (!string.IsNullOrEmpty(codOrden)) cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
                 if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
                 if (!string.IsNullOrEmpty(codTango)) cmd.Parameters.AddWithValue("@pCodTango", codTango);
                 SqlDataAdapter da = new(cmd);
@@ -177,17 +178,20 @@ namespace GAPPLE.Server.Data
             return id;
         }
 
-        public void PersistirPedidoDetalle(int idPedido, int numLinea, string codProducto, int cantidad, SqlTransaction transaction)
+        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, bool probador, decimal descuento, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
             cmd.Transaction = transaction;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_ins_PedidosDetalle";
-            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
             cmd.Parameters.AddWithValue("@pNLinea", numLinea);
             cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
+            cmd.Parameters.AddWithValue("@pProbador", probador);
+            cmd.Parameters.AddWithValue("@pDescuento", descuento);
+            cmd.ExecuteNonQuery();
         }
 
         public int ObtenerCodigoOrden()
