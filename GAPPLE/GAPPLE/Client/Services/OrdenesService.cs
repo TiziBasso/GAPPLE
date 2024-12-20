@@ -92,11 +92,11 @@ namespace GAPPLE.Client.Services
             }
         }
 
-        public async ValueTask<Response> CambiarEstadoPedidos(string ids, int idEstado)
+        public async ValueTask<Response> CambiarEstadoPedidos(string id, int idEstado)
         {
             try
             {
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{idEstado}", ids);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{idEstado}", id);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)

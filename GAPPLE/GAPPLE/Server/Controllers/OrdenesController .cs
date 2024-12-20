@@ -264,21 +264,17 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut("{idEstado:int}")]
-        public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string ids)
+        public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string id)
         {
             SqlTransaction? trans = null;
             try
             {
-                var lstId = ids.Split(',');
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                 {
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    foreach (var id in lstId)
-                    {
-                        daO.PersistirPedidoEstado(id, idEstado, trans);
-                    }
+                    daO.PersistirPedidoEstado(id, idEstado, trans);
                     trans.Commit();
                     cnn.Close();
                 }

@@ -267,23 +267,13 @@ else
 
     async Task CancelarOrden(Orden order)
     {
-        var aux = lstOrdenes.Where(x => x.CodigoOrden == order.CodigoOrden).Select(x => x.Id);
-        string message = string.Empty;
-        if (aux.Count() > 1)
-            message = $"las ordenes con ids: " + string.Join(", ", aux);
-        else
-            message = $"la orden con id: " + order.Id;
-
-        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar", message), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            var response = await OrdenesService.CambiarEstadoPedidos(string.Join(", ", aux), 2);
+            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 2);
             if (response.IsSuccessStatusCode)
             {
-                aux.ToList().ForEach(x =>
-                {
-                    lstOrdenes.First(y => y.Id == x).IdEstado = 2;
-                    lstOrdenes.First(y => y.Id == x).DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
-                });
+                order.IdEstado = 2;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
 
                 await grid.Reload();
             }
@@ -294,23 +284,13 @@ else
 
     async Task AprobarOrden(Orden order)
     {
-        var aux = lstOrdenes.Where(x => x.CodigoOrden == order.CodigoOrden).Select(x => x.Id);
-        string message = string.Empty;
-        if (aux.Count() > 1)
-            message = $"las ordenes con ids: " + string.Join(", ", aux);
-        else
-            message = $"la orden con id: " + order.Id;
-
-        if (await DialogService.Confirm(MensajesHelper.Confirm("aprobar", message), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (await DialogService.Confirm(MensajesHelper.Confirm("aprobar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            var response = await OrdenesService.CambiarEstadoPedidos(string.Join(", ", aux), 3);
+            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 3);
             if (response.IsSuccessStatusCode)
             {
-                aux.ToList().ForEach(x =>
-                {
-                    lstOrdenes.First(y => y.Id == x).IdEstado = 3;
-                    lstOrdenes.First(y => y.Id == x).DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 3).Descripcion;
-                });
+                order.IdEstado = 3;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 3).Descripcion;
 
                 await grid.Reload();
             }
