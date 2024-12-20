@@ -46,6 +46,21 @@ namespace GAPPLE.Server.Controllers
             return Ok();
         }
 
+        [HttpGet("articulos")]
+        public List<ArticulosPorCliente> GetArticulosPorCliente(string codCliente)
+        {
+            DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<ArticulosPorCliente> lst = new();
+            foreach (DataRow row in daC.GetArticulosPorCliente(codCliente).Rows)
+            {
+                ArticulosPorCliente c = new ArticulosPorCliente();
+                c.CodProducto = row["CodProducto"].ToString()!;
+                c.Descuento = decimal.Parse(row["Bonificacion"].ToString()!);
+                lst.Add(c);
+            }
+            return lst;
+        }
+
     }
 
 

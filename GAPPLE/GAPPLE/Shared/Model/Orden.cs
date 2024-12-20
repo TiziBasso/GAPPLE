@@ -11,11 +11,11 @@ namespace GAPPLE.Shared.Model
     {
         public int Id { get; set; }
 
-        public string CodigoOrden { get; set; }
+        public string? CodigoOrden { get; set; }
 
         public string? Linea { get; set; }
 
-        public bool Factura { get; set; }
+        public bool Factura { get; set; } = true;
 
         public bool Presupuesto { get; set; }
 
@@ -25,7 +25,7 @@ namespace GAPPLE.Shared.Model
 
         public bool Exhibidor { get; set; }
 
-        public List<OrdenDetalle>? Detalle { get; set; }
+        public List<OrdenDetalle>? Detalle { get; set; } = new();
 
         [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? Cliente { get; set; }
@@ -65,7 +65,7 @@ namespace GAPPLE.Shared.Model
 
         public string? CodVendedor { get; set; }
 
-        public List<int>? Ofertas { get; set; }
+        public List<int>? Ofertas { get; set; } = new();
 
         public string? Entrega { get; set; }
 

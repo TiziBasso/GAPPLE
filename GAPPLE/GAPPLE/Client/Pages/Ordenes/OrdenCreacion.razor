@@ -9,117 +9,198 @@
 
 @if (showForm)
 {
-    <div class="OrdenForm" style="display: grid;gap: 12px;grid-template-columns: repeat(4, 1fr);">
-        <RadzenStack>
-            <RadzenLabel Text="Línea:" />
-            <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" Style="width:15rem" />
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Cliente:" />
-            <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.Cliente" TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)" AllowVirtualization="true" Change="AsignarVariables">
-                <Columns>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código"></RadzenDropDownDataGridColumn>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social"></RadzenDropDownDataGridColumn>
-                </Columns>
-            </RadzenDropDownDataGrid>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Zona:" />
-            <RadzenDropDownDataGrid Data="zonas" @bind-Value="orden.Zona" TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
-                <Columns>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
-                </Columns>
-            </RadzenDropDownDataGrid>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Lista de precios:" />
-            <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
-                <Columns>
-                    <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
-                    <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
-                </Columns>
-            </RadzenDropDownDataGrid>
-        </RadzenStack>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-            <RadzenLabel Text="F:" />
-            <RadzenCheckBox @bind-Value="@orden.Factura" />
-        </RadzenStack>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-            <RadzenLabel Text="P:" />
-            <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Transporte:" />
-            <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
-                <Columns>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
-                    <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
-                </Columns>
-            </RadzenDropDownDataGrid>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Cond.Venta:" />
-            <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
-                <Columns>
-                    <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
-                    <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
-                </Columns>
-            </RadzenDropDownDataGrid>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Entregar en:" />
-            <RadzenTextBox @bind-Value="orden.Entrega" />
-        </RadzenStack>
-        <RadzenStack Orientation="Orientation.Vertical">
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                <RadzenLabel Text="Probadores:" />
-                <RadzenCheckBox @bind-Value="@orden.Probadores" />
+    <RadzenRow Style="margin-top:10px;">
+        <RadzenColumn Size="4">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenLabel Text="Línea:" />
+                <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                <RadzenLabel Text="Obsequios/CartasColores/Desc.Extra:" />
-                <RadzenCheckBox @bind-Value="@orden.Obsequios" />
+        </RadzenColumn>
+
+        <RadzenColumn Size="4">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenLabel Text="Cliente:" />
+                <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.Cliente" TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)" AllowVirtualization="true" Change="AsignarVariables">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código"></RadzenDropDownDataGridColumn>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social"></RadzenDropDownDataGridColumn>
+                    </Columns>
+                </RadzenDropDownDataGrid>
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                <RadzenLabel Text="Multitester/Exhibidor:" />
-                <RadzenCheckBox @bind-Value="@orden.Exhibidor" />
+        </RadzenColumn>
+        <RadzenColumn Size="4">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenLabel Text="Zona:" />
+                <RadzenDropDownDataGrid Data="zonas" @bind-Value="orden.Zona" TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                    </Columns>
+                </RadzenDropDownDataGrid>
             </RadzenStack>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Notas:" />
-            <RadzenTextArea @bind-Value="orden.Notas" />
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="Ofertas:" />
-            <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas"
-                            TextProperty="@nameof(Oferta.Descripcion)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
-                            Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenLabel Text="F.Entrega:" />
-            <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" />
-        </RadzenStack>
-    </div>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow Style="margin-top:10px;">
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Entregar en:" />
+                <RadzenTextBox @bind-Value="orden.Entrega" />
+            </RadzenStack>
+        </RadzenColumn>
+
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Lista de precios:" />
+                <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                        <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </RadzenStack>
+        </RadzenColumn>
+
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Cond.Venta:" />
+                <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                        <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow Style="margin-top:10px;">
+        <RadzenColumn Size="3">
+            <RadzenStack>
+                <RadzenLabel Text="F.Entrega:" />
+                <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" />
+            </RadzenStack>
+        </RadzenColumn>
+
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Transporte:" />
+                <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </RadzenStack>
+        </RadzenColumn>
+
+        <RadzenColumn Size="5">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="Probadores:" />
+                        <RadzenCheckBox @bind-Value="@orden.Probadores" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="Obsequios/CartasColores/Desc.Extra:" />
+                        <RadzenCheckBox @bind-Value="@orden.Obsequios" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="Multitester/Exhibidor:" />
+                        <RadzenCheckBox @bind-Value="@orden.Exhibidor" />
+                    </RadzenStack>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="F:" />
+                        <RadzenCheckBox @bind-Value="@orden.Factura" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="P:" />
+                        <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+
+    <RadzenRow Style="margin-top:10px;">
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Notas:" />
+                <RadzenTextArea @bind-Value="orden.Notas" />
+            </RadzenStack>
+        </RadzenColumn>
+
+        <RadzenColumn Size="4">
+            <RadzenStack>
+                <RadzenLabel Text="Ofertas:" />
+                <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas" Change="RecalcularOfertas"
+                                TextProperty="@nameof(Oferta.Descripcion)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                                Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
 
     @if (lstProductos != null && lstProductos.Any())
     {
-        <div class="cards-container">
-            @foreach (var card in Cards)
-            {
-                <div class="card">
-                    <h6 style="text-align:center;">@card.FamilyName</h6>
-                    @foreach (var product in card.Products)
-                    {
-                        <div class="product">
-                            <label>@product.CodigoProducto</label>
-                            <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto" class="product-input" />
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="12">
+                <RadzenFieldset Text="Selección de productos">
+                    <div class="cards-container">
+                        @foreach (var card in Cards)
+                        {
+                            <div class="card">
+                                <h6 style="text-align:center;">@card.FamilyName</h6>
+                                @foreach (var product in card.Products)
+                                {
+                                    <div class="product">
+                                        <label style="width:60px;">@product.CodigoProducto</label>
+                                        <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto" class="product-input" @bind-value="product.CantidadSeleccionada" />
+                                        @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                                        {
+                                            codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
+                                            var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                                            var descuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                                            product.DescuentoFinal = Math.Round(descuentoFinal, 2);
+                                            <div style="background:yellow;">
+                                                <span>@Math.Round(descuentoFinal, 2)</span>
+                                                <strong>%</strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                                            {
+                                                <span>@articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento</span>
+                                                product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+                                            }
+                                            else
+                                            {
+                                                <span>0</span>
+                                            }
+                                            <strong>%</strong>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
     }
+
+    <RadzenRow Style="margin-top:10px;">
+        <RadzenStack JustifyContent="JustifyContent.Center">
+            <RadzenButton ButtonStyle="ButtonStyle.Success" Text="Guardar" Style="width:fit-content;" Click="Guardar"></RadzenButton>
+        </RadzenStack>
+    </RadzenRow>
+}
+else
+{
+    <Loader />
 }
 
 <script>
@@ -132,56 +213,57 @@
             const inputsInCurrentCard = Array.from(currentCard.querySelectorAll('.product-input'));
 
             const inputIndexInCard = inputsInCurrentCard.findIndex(input => input === currentInput);
-
-            // Obtener la posición de la tarjeta actual
             const currentCardRect = currentCard.getBoundingClientRect();
 
             // Manejo de teclas
             if (event.key === 'ArrowUp') {
                 if (inputIndexInCard > 0) {
-                    // Mover al input anterior dentro de la misma tarjeta
                     inputsInCurrentCard[inputIndexInCard - 1].focus();
+                    setTimeout(() => inputsInCurrentCard[inputIndexInCard - 1].select(), 0);
                 } else {
-                    // Buscar la tarjeta en la fila superior
                     const targetCard = findCardAbove(allCards, currentCardRect);
                     if (targetCard) {
                         const targetInputs = targetCard.querySelectorAll('.product-input');
-                        targetInputs[targetInputs.length - 1].focus(); // Último input
+                        const targetInput = targetInputs[targetInputs.length - 1];
+                        targetInput.focus();
+                        setTimeout(() => targetInput.select(), 0);
                     }
                 }
             } else if (event.key === 'ArrowDown') {
                 if (inputIndexInCard < inputsInCurrentCard.length - 1) {
-                    // Mover al siguiente input dentro de la misma tarjeta
                     inputsInCurrentCard[inputIndexInCard + 1].focus();
+                    setTimeout(() => inputsInCurrentCard[inputIndexInCard + 1].select(), 0);
                 } else {
-                    // Buscar la tarjeta en la fila inferior
                     const targetCard = findCardBelow(allCards, currentCardRect);
                     if (targetCard) {
                         const targetInputs = targetCard.querySelectorAll('.product-input');
-                        targetInputs[0].focus(); // Primer input
+                        const targetInput = targetInputs[0];
+                        targetInput.focus();
+                        setTimeout(() => targetInput.select(), 0);
                     }
                 }
             } else if (event.key === 'ArrowLeft') {
                 const currentCardIndex = allCards.findIndex(card => card === currentCard);
                 if (currentCardIndex > 0) {
-                    // Ir a la tarjeta anterior
                     const previousCard = allCards[currentCardIndex - 1];
                     const inputsInPreviousCard = previousCard.querySelectorAll('.product-input');
                     const targetInput = inputsInPreviousCard[inputIndexInCard] || inputsInPreviousCard[inputsInPreviousCard.length - 1];
                     targetInput.focus();
+                    setTimeout(() => targetInput.select(), 0);
                 }
             } else if (event.key === 'ArrowRight') {
                 const currentCardIndex = allCards.findIndex(card => card === currentCard);
                 if (currentCardIndex < allCards.length - 1) {
-                    // Ir a la tarjeta siguiente
                     const nextCard = allCards[currentCardIndex + 1];
                     const inputsInNextCard = nextCard.querySelectorAll('.product-input');
                     const targetInput = inputsInNextCard[inputIndexInCard] || inputsInNextCard[inputsInNextCard.length - 1];
                     targetInput.focus();
+                    setTimeout(() => targetInput.select(), 0);
                 }
             }
         }
     });
+
 
     // Función para encontrar la tarjeta en la fila superior
     function findCardAbove(cards, currentRect) {
@@ -204,8 +286,6 @@
     List<ProductoParaOfertas> lstProductosOferta = null;
     List<ProductoParaOfertas> lstProductos = null;
     Orden orden = new();
-    Random random = new Random();
-    private int fila = 0, columna = 0;
     List<string> lstLineas = new();
     string? valorAux;
 
@@ -219,6 +299,9 @@
     List<Zonas> zonas = new();
     List<Cliente> clientes = new();
     List<Oferta> ofertas = new();
+    List<ArticulosPorCliente> articulosPorClientes = new();
+
+    Dictionary<string, List<Oferta>> codigosEnOfertas;
 
     protected override async Task OnInitializedAsync()
     {
@@ -228,35 +311,81 @@
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
         zonas = await OrdenesService.GetZonas();
-        ofertas = await OfertasService.GetOfertas(null, null, null, null, true);
         showForm = true;
     }
 
     async Task BuscarProductos()
     {
+        showForm = false;
         orden.Linea = valorAux;
         lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
         lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
         var grouped = lstProductos.GroupBy(p => p.Familia);
+        Cards.Clear();
         foreach (var group in grouped)
         {
             var productChunks = group.Select((p, i) => new { Product = p, Index = i })
-                                      .GroupBy(x => x.Index / 15)
+                                      .GroupBy(x => x.Index / 10)
                                       .Select(g => g.Select(x => x.Product).ToList());
             foreach (var chunk in productChunks)
             {
                 Cards.Add(new Card(group.Key, chunk));
             }
         }
+        StateHasChanged();
+        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        if (orden.Ofertas != null && orden.Ofertas.Any())
+        {
+            await RecalcularOfertas();
+        }
+        showForm = true;
     }
-
 
     async Task AsignarVariables()
     {
+        showForm = false;
+        articulosPorClientes = await ClientesService.GetArticulosPorCliente(orden.Cliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.Cliente);
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
         orden.CondicionVenta = clientes[index].CondVentaDefault;
         orden.Zona = clientes[index].ZonaDefault;
+        showForm = true;
+    }
+
+    async Task RecalcularOfertas()
+    {
+        if (orden.Ofertas != null && orden.Ofertas.Any())
+        {
+            var ofertasFiltradas = ofertas.Where(o => orden.Ofertas!.Contains(o.IdOferta));
+
+            codigosEnOfertas = ofertasFiltradas
+                .SelectMany(o => o.Inclusiones.Split('|').Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
+                .GroupBy(x => x.CodigoProducto)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
+        }
+        else
+        {
+            codigosEnOfertas.Clear();
+        }
+    }
+
+    async Task Guardar()
+    {
+        foreach (var card in Cards)
+        {
+            foreach (var product in card.Products)
+            {
+                if (product.CantidadSeleccionada > 0)
+                    orden.Detalle.Add(new OrdenDetalle()
+                        {
+                            Cantidad = product.CantidadSeleccionada,
+                            CodProducto = product.CodigoProducto,
+                            Descuento1 = product.DescuentoFinal
+                        });
+            }
+        }
+
+        await OrdenesService.PostPedido(orden);
     }
 
     private class Card
@@ -276,29 +405,32 @@
     .cards-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 20px;
+        gap: 2px;
+        max-height: 55vh;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .card {
         border: 1px solid #ccc;
-        padding: 10px;
+        padding: 5px;
         border-radius: 5px;
-        width: 180px; /*300*/
+        width: 180px;
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 1px;
     }
 
     .product {
         display: flex;
         flex-direction: row;
-        gap:10px;
-        font-size:smaller;
-        align-items:center;
+        gap: 5px;
+        font-size: smaller;
+        align-items: center;
     }
 
-    .product-input{
-        width:60px;
-        font-size:smaller;
+    .product-input {
+        width: 50px;
+        font-size: smaller;
     }
 </style>

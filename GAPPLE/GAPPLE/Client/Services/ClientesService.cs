@@ -43,6 +43,17 @@ namespace GAPPLE.Client.Services
                 return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
 
+        public async ValueTask<List<ArticulosPorCliente>> GetArticulosPorCliente(string? codCliente = null)
+        {
+            string uri = $"{URI_BASE}/articulos";
+            Dictionary<string, object> query = new();
+            if (codCliente != null) query["codCliente"] = codCliente;
+
+            if (query.Any())
+                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+
+            return await HttpClient.GetFromJsonAsync<List<ArticulosPorCliente>>(uri);
+        }
     }
 
 }

@@ -13,5 +13,6 @@ namespace GAPPLE.Shared.Model
         public string Descripcion { get; set; }
         public bool Selected { get; set; }
         public int  CantidadSeleccionada { get; set; }
+        public decimal DescuentoFinal {  get; set; }
     }
 }
