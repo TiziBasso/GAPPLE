@@ -159,21 +159,29 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("edicion"))
-                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
                 <Template Context="orden">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  @onclick:stopPropagation="true" />
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
-                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
-                <Template Context="orden">
-                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  @onclick:stopPropagation="true" Click="@(() => Delete(orden))" />
-                </Template>
-            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("edicion"))
+        Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+        <Template Context="orden">
+        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+        @onclick:stopPropagation="true" />
+        </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
+        Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+        <Template Context="orden">
+        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+        @onclick:stopPropagation="true" Click="@(() => Delete(orden))" />
+        </Template>
+        </RadzenDataGridColumn> *@
         </Columns>
     </RadzenDataGrid>
 
@@ -257,9 +265,15 @@ else
         }
     }
 
-    async Task Delete(Orden order)
+    async Task AprobarOrden(Orden order)
     {
-        if (await DialogService.Confirm($"¿Desea eliminar la orden {order.Id}?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        var aux = lstOrdenes.Where(x => x.CodigoOrden == order.CodigoOrden).Select(x => x.Id);
+        string message = string.Empty;
+        if (aux.Count() > 1)
+            message = $"las ordenes con ids " + string.Join(", ", aux);
+        else
+            message = $"la orden con id" + order.Id;
+        if (await DialogService.Confirm(MensajesHelper.Confirm("aprobar", message), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
             lstOrdenes.Remove(order);
             await grid.Reload();
@@ -275,7 +289,7 @@ else
     async Task VerOrden(Orden orden)
     {
         DialogCustom.OpenBusyWithLoader("Cargando...");
-        Resumen = await OrdenesService.GetOrden(orden.Id);
+        Resumen = await OrdenesService.GetOrden(orden.CodigoOrden);
         DialogCustom.CloseDialog();
         if (Resumen == null)
             NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);

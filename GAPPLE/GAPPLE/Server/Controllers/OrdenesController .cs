@@ -54,11 +54,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden? GetOrden(int idPedido, bool conDetalle)
+        public Orden? GetOrden(string codOrden, bool conDetalle)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;
-            using (DataTable dt = daO.ObtenerOrden(idPedido))
+            using (DataTable dt = daO.ObtenerOrden(codOrden))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -66,6 +66,7 @@ namespace GAPPLE.Server.Controllers
                     orden = new()
                     {
                         Id = (int)row["IdPedido"],
+                        CodigoOrden = row["CodigoOrden"].ToString()!,
                         Presupuesto = (bool)row["Presupuesto"],
                         Cliente = row["RazonSocial"].ToString(),
                         Linea = row["Linea"].ToString(),
@@ -81,7 +82,7 @@ namespace GAPPLE.Server.Controllers
 
             if (orden != null && conDetalle)
             {
-                using (DataTable dt = daO.ObtenerOrdenDetalle(idPedido))
+                using (DataTable dt = daO.ObtenerOrdenDetalle(codOrden))
                 {
                     if (dt.Rows.Count > 0) //siempre deberia tener pero por las dudas
                     {
@@ -90,7 +91,7 @@ namespace GAPPLE.Server.Controllers
                         {
                             OrdenDetalle detalle = new()
                             {
-                                Id = (int)dr["IdPedido"],
+                                Id = orden.Id,
                                 NumeroLinea = (int)dr["NLinea"],
                                 IdProducto = (int)dr["IdProducto"],
                                 CodProducto = dr["CodProducto"].ToString(),

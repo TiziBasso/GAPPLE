@@ -21,7 +21,7 @@ namespace GAPPLE.Client.Services
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
             query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
-            query["hastaStr"] = WebUtility.UrlEncode(hasta.ToString()!);
+            query["hastaStr"] = WebUtility.UrlEncode(hasta.AddHours(23).AddMinutes(59).AddSeconds(59).ToString()!);
             if (idPedido != null) query["idPedido"] = idPedido;
             if (presupuesto != null) query["presupuesto"] = presupuesto;
             if (!string.IsNullOrWhiteSpace(razonSocial)) query["razonSocial"] = razonSocial;
@@ -36,11 +36,11 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
         }
 
-        public async ValueTask<Orden?> GetOrden(int idPedido, bool conDetalle = true)
+        public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
-            query["idPedido"] = idPedido;
+            query["codOrden"] = codOrden;
             query["conDetalle"] = conDetalle;
 
             uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";

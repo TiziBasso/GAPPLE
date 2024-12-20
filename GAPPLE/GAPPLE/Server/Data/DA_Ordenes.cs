@@ -43,7 +43,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable ObtenerOrden(int idPedido)
+        public DataTable ObtenerOrden(string codOrden)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -54,14 +54,14 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_PedidosCabecera"
                 };
-                cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+                cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
             return dt;
         }
 
-        public DataTable ObtenerOrdenDetalle(int idPedido)
+        public DataTable ObtenerOrdenDetalle(string codOrden)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -72,7 +72,7 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_PedidosDetalle"
                 };
-                cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+                cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
