@@ -1,4 +1,5 @@
-﻿using GAPPLE.Client.Pages;
+﻿using GAPPLE.Client.Entities;
+using GAPPLE.Client.Pages;
 using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,7 @@ namespace GAPPLE.Server.Controllers
                         Linea = row["Linea"].ToString(),
                         Creacion = (DateTime)row["AltaRegistro"],
                         Zona = row["DescripcionZona"].ToString(),
+                        IdEstado = int.Parse(row["IdEstado"].ToString()!),
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString(),
                         Unidades = (int)row["CantidadLineas"]
@@ -127,6 +129,29 @@ namespace GAPPLE.Server.Controllers
                 }
                 return transportes;
             }
+        }
+
+        [HttpGet("estados")]
+        public List<Opcion> GetEstados()
+        {
+            List<Opcion> estados = new() { new((int?)null, "(Todos)") };
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+
+            using (DataTable dt = daO.ObtenerEstados("Pedidos"))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    Opcion estado = new Opcion()
+                    {
+                        Id = int.Parse(row["IdEstado"].ToString()!),
+                        Descripcion = row["Descripcion"].ToString()!
+                    };
+
+                    estados.Add(estado);
+                }
+            }
+
+            return estados;
         }
 
         [HttpGet("condicionesdeventa")]
@@ -229,6 +254,36 @@ namespace GAPPLE.Server.Controllers
                 }
 
                 return Ok(pedido);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("{idEstado:int}")]
+        public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string ids)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                var lstId = ids.Split(',');
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var id in lstId)
+                    {
+                        daO.PersistirPedidoEstado(id, idEstado, trans);
+                    }
+                    trans.Commit();
+                    cnn.Close();
+                }
+
+                return Ok();
             }
             catch (Exception ex)
             {

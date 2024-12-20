@@ -58,6 +58,24 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
+        public DataTable ObtenerEstados(string? entidad = null)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_Estados"
+                };
+                if (!string.IsNullOrEmpty(entidad)) cmd.Parameters.AddWithValue("@pEntidad", entidad);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
         public DataTable ObtenerOrdenDetalle(string codOrden)
         {
             DataTable dt = new DataTable();
@@ -188,6 +206,18 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
             cmd.Parameters.AddWithValue("@pProbador", probador);
             cmd.Parameters.AddWithValue("@pDescuento", descuento);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void PersistirPedidoEstado(string idPedido, int estado, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pIdEstado", estado);
             cmd.ExecuteNonQuery();
         }
 
