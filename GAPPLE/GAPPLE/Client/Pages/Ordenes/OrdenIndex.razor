@@ -1,5 +1,6 @@
 ﻿@page "/ordenes"
 @using GAPPLE.Client.Components.Ordenes
+@using GAPPLE.Client.Components.Ordenes.Informes
 
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
@@ -7,6 +8,8 @@
 @inject ProductosService ProductosService
 @inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
+@inject DialogCustom DialogCustom
+@inject IJSFunction JSFunction
 
 @if (showPage)
 {
@@ -28,6 +31,12 @@
             <RadzenLabel Text="ID:" Component="id" />
             <input @ref="refIdOrden" type="number" @bind-value="@idPedido" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
                    class="rz-textbox" style="width: 5rem; text-align:right" disabled="@(isLoading)" id="id" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="cod" />
+            <input type="text" @bind-value="@codOrden" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 9rem;" disabled="@(isLoading)" id="cod" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -80,6 +89,12 @@
             <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="Orden" Title="Cód." Property="@nameof(Orden.CodigoOrden)" Width="150px" FilterValue="codOrdenFilter" Resizable=false>
+                <FilterTemplate>
+                    <RadzenNumeric @bind-Value=codOrdenFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
@@ -162,7 +177,13 @@
         </Columns>
     </RadzenDataGrid>
 
-    
+    @if (showResumen)
+    {
+        <ImpresiónOrden Pedido=Resumen
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0).ToList())"
+                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0) ? Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0).ToList() : null)
+                        Imprimir="@(async()=>await Imprimir())" />
+    }
 }
 else
 {
@@ -179,12 +200,13 @@ else
         new(1, "Pendiente")
     };
     List<Orden> lstOrdenes = new();
-    bool isLoading, showPage;
+    Orden? Resumen = null;
+    bool isLoading, showPage, showResumen;
 
     DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
     int? idPedido, idEstado = 1;
     bool? presupuesto;
-    string? razonSocial, linea, codTango;
+    string? razonSocial, linea, codTango, codOrden;
 
     List<string> permisos = new() { "alta", "eliminar" };
 
@@ -193,18 +215,16 @@ else
     int? idFilter, unidadesFilter;
     DateTime? creacionFilter, entregaFilter;
     List<string> zonasFilter = new(), estadosFilter = new();
-    string? zonaFilter, estadoFilter;
+    string? zonaFilter, estadoFilter, codOrdenFilter;
 
     protected override async Task OnInitializedAsync()
     {
         lineas = await ProductosService.GetLineas();
+
+        //Parametros de consulta
         showPage = true;
     }
 
-    async Task VerOrden(Orden orden)
-    {
-        await DialogService.OpenAsync<OrdenInfo>($"Orden {orden.Id} - TANGO {orden.IdTango}", null, new DialogOptions() { Width = "90vw", Height = "90vh", });
-    }
 
     private async Task KeyPress(KeyboardEventArgs e)
     {
@@ -224,7 +244,7 @@ else
 
         DialogCustom.OpenBusyWithLoader("Cargando...");
         //parametrosconsulta
-        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, presupuesto, razonSocial, linea, null, idEstado, codTango);
+        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado, codTango);
         DialogCustom.CloseDialog();
         await grid.Reload();
 
@@ -246,10 +266,33 @@ else
         }
     }
 
-    async Task NuevaOrden()
+    void NuevaOrden()
     {
         //parametrosconsulta
         NavigationManager.NavigateTo("/orden/creacion");
+    }
+
+    async Task VerOrden(Orden orden)
+    {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        Resumen = await OrdenesService.GetOrden(orden.Id);
+        DialogCustom.CloseDialog();
+        if (Resumen == null)
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        else
+        {
+            Resumen.Detalle!.RemoveAll(x => x.Cantidad == x.CantidadCancelada);
+            DialogCustom.OpenBusyWithLoader("Imprimiendo...");
+            showResumen = true;
+        }
+    }
+
+    public async Task Imprimir(string id = "print")
+    {
+        await JSFunction.Imprimir(id);
+        showResumen = false;
+        DialogCustom.CloseDialog();
+        Resumen = null;
     }
 
     public async Task Export()

@@ -1,6 +1,6 @@
 ﻿@if (showModal)
 {
-    <div id="print">
+    <div id="print" style="display:none">
         @for (int i = 0; i < cantPages; i++)
         {
             GetData(i);
@@ -13,6 +13,7 @@
 @code {
     [Parameter, EditorRequired] public Orden Pedido { get; set; }
     [Parameter] public EventCallback Imprimir { get; set; }
+    [Parameter] public List<OrdenDetalle> Detalle { get; set; }
     [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
@@ -24,7 +25,7 @@
 
     protected override void OnInitialized()
     {
-        int sumLineas = Pedido.Detalle!.Count + 1;
+        int sumLineas = Detalle!.Count + 1;
 
         if (Pendientes != null && Pendientes.Any())
             sumLineas += Pendientes.Count + 3;
@@ -39,13 +40,10 @@
     {
         int showed = page * 30, remaining = 30;
 
-        detalle = Pedido.Detalle!.Skip(showed)?.Take(remaining).ToList();
-        if (detalle != null)
-        {
-            remaining -= detalle.Count;
-            if (detalle.Count > 0) showed -= detalle.Count;
-            else showed -= Pedido.Detalle!.Count;
-        }
+        detalle = Detalle.Skip(showed)?.Take(remaining).ToList();
+        remaining -= detalle!.Count;
+        if (detalle.Count > 0) showed -= detalle.Count;
+        else showed -= Pedido.Detalle!.Count;
 
         pendientes = Pendientes?.Skip(showed)?.Take(remaining).ToList();
         if (pendientes != null)
