@@ -281,6 +281,7 @@ else
             NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
         else
         {
+            Resumen.Detalle!.RemoveAll(x => x.Cantidad == x.CantidadCancelada);
             DialogCustom.OpenBusyWithLoader("Imprimiendo...");
             showResumen = true;
         }

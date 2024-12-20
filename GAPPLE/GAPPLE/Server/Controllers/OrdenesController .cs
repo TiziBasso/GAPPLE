@@ -96,7 +96,8 @@ namespace GAPPLE.Server.Controllers
                                 CodProducto = dr["CodProducto"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 Cantidad = (int)dr["Cantidad"],
-                                CantidadAprobada = (int)dr["CantidadAprobada"]
+                                CantidadAprobada = (int)dr["CantidadAprobada"],
+                                CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
 
                             orden.Detalle.Add(detalle);
