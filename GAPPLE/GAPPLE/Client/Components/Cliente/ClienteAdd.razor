@@ -50,7 +50,7 @@
     async Task Guardar()
     {
         await ClientesService.PostCLiente(new Cliente() { IdCliente = idCliente, Observaciones = observaciones });
-        NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+        NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess());
         DialogService.Close();
     }
 }

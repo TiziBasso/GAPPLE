@@ -52,6 +52,10 @@ namespace GAPPLE.Client.Services
         {
             return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");
         }
+        public async ValueTask<List<OrdenDashboard>> GetOrdenDashboard()
+        {
+            return await HttpClient.GetFromJsonAsync<List<OrdenDashboard>>($"{URI_BASE}/ordenDashboard");
+        }
         public async ValueTask<List<CondicionDeVenta>> GetCondicionesDeVenta()
         {
             return await HttpClient.GetFromJsonAsync<List<CondicionDeVenta>>($"{URI_BASE}/condicionesdeventa");

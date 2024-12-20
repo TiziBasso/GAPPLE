@@ -245,23 +245,30 @@ else
 
     private async Task FillOrdenes()
     {
-        zonasFilter.Clear();
-        estadosFilter.Clear();
-        zonaFilter = null;
-        estadoFilter = null;
-
-        DialogCustom.OpenBusyWithLoader("Cargando...");
-        //parametrosconsulta
-        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango);
-        DialogCustom.CloseDialog();
-        await grid.Reload();
-
-        if (!lstOrdenes.Any())
-            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.EmptyResponse);
+        if (desde > hasta)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, "La fecha hasta no puede ser mayor a la fecha desde");
+        }
         else
         {
-            zonasFilter = lstOrdenes.Where(x => x.Zona != null).Select(x => x.Zona!).Distinct().ToList();
-            estadosFilter = lstOrdenes.Where(x => x.DescripcionEstado != null).Select(x => x.DescripcionEstado!).Distinct().ToList();
+            zonasFilter.Clear();
+            estadosFilter.Clear();
+            zonaFilter = null;
+            estadoFilter = null;
+
+            DialogCustom.OpenBusyWithLoader("Cargando...");
+            //parametrosconsulta
+            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango);
+            DialogCustom.CloseDialog();
+            await grid.Reload();
+
+            if (!lstOrdenes.Any())
+                NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, MensajesHelper.EmptyResponse);
+            else
+            {
+                zonasFilter = lstOrdenes.Where(x => x.Zona != null).Select(x => x.Zona!).Distinct().ToList();
+                estadosFilter = lstOrdenes.Where(x => x.DescripcionEstado != null).Select(x => x.DescripcionEstado!).Distinct().ToList();
+            }
         }
     }
 
@@ -288,7 +295,7 @@ else
                 await grid.Reload();
             }
             else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         }
     }
 
@@ -315,23 +322,22 @@ else
                 await grid.Reload();
             }
             else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         }
     }
 
     void NuevaOrden()
     {
-        //parametrosconsulta
         NavigationManager.NavigateTo("/orden/creacion");
     }
 
     async Task VerOrden(Orden orden)
     {
         DialogCustom.OpenBusyWithLoader("Cargando...");
-        Resumen = await OrdenesService.GetOrden(orden.CodigoOrden);
+        Resumen = await OrdenesService.GetOrden(orden.CodigoOrden!);
         DialogCustom.CloseDialog();
         if (Resumen == null)
-            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         else
         {
             Resumen.Detalle!.RemoveAll(x => x.Cantidad == x.CantidadCancelada);

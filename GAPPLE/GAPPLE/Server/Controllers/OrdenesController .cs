@@ -71,6 +71,13 @@ namespace GAPPLE.Server.Controllers
                         CodigoOrden = row["CodigoOrden"].ToString()!,
                         Presupuesto = (bool)row["Presupuesto"],
                         Cliente = row["RazonSocial"].ToString(),
+                        CodListaPrecio = row["IdListaDePrecio"].ToString()!,
+                        CodCliente = row["CodigoCliente"].ToString(),
+                        CUITCliente = row["CUIT"].ToString(),
+                        DomicilioCliente = row["DomicilioCliente"].ToString(),
+                        CondicionVenta = row["CondicionVenta"].ToString(),
+                        Entrega = row["EntregarEn"].ToString(),
+                        Notas = row["Observaciones"].ToString(),
                         Linea = row["Linea"].ToString(),
                         Creacion = DateTime.Parse(row["AltaRegistro"].ToString()!),
                         Zona = row["DescripcionZona"].ToString(),
@@ -79,6 +86,8 @@ namespace GAPPLE.Server.Controllers
                         IdTango = row["CodigoTango"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString(),
                     };
+                    if (row["CodTransporte"] != DBNull.Value) orden.CodTransporte = row["CodTransporte"].ToString();
+                    if (row["DescripcionTransporte"] != DBNull.Value) orden.Transporte = row["DescripcionTransporte"].ToString();
                 }
             }
 
@@ -152,6 +161,25 @@ namespace GAPPLE.Server.Controllers
             }
 
             return estados;
+        }
+
+        [HttpGet("ordenDashboard")]
+        public List<OrdenDashboard> GetOrdenesDashboard()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<OrdenDashboard> oDashs = new List<OrdenDashboard>();
+            using (DataTable dt = daO.ObtenerOrdenesDashboard())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    OrdenDashboard oDash = new OrdenDashboard();
+                    oDash.CodigoOrden = row["CodigoOrden"].ToString()!;
+                    if (row["AltaRegistro"] != DBNull.Value) oDash.AltaRegistro = DateTime.Parse(row["AltaRegistro"].ToString()!);
+                    if (row["FechaAprobacion"] != DBNull.Value) oDash.FechaAprobacion = DateTime.Parse(row["FechaAprobacion"].ToString()!);
+                    oDashs.Add(oDash);
+                }
+                return oDashs;
+            }
         }
 
         [HttpGet("condicionesdeventa")]
@@ -237,7 +265,7 @@ namespace GAPPLE.Server.Controllers
 
                     if (pedido.Presupuesto)
                     {
-                        pedido.Id = daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, (int)pedido.IdEstado!,
+                        pedido.Id = daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, 1,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                                 pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!, pedido.Probadores,
                                                                 OCCD: pedido.Obsequios, MtEX: pedido.Exhibidor, pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);

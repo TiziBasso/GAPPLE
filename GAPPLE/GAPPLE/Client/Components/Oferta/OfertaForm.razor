@@ -145,12 +145,12 @@ else
         if (esNueva)
         {
             await OfertasService.PostOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Descripcion));
         }
         else
         {
             await OfertasService.PutOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Descripcion));
         }
         DialogService.Close(Oferta);
     }

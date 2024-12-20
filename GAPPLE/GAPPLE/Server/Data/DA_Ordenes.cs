@@ -94,6 +94,23 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
+        public DataTable ObtenerOrdenesDashboard()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_OrdenesDashboard"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
         public DataTable ObtenerTransportes()
         {
             DataTable dt = new DataTable();
@@ -103,7 +120,7 @@ namespace GAPPLE.Server.Data
                 {
                     Connection = cnn,
                     CommandType = CommandType.StoredProcedure,
-                    CommandText = "prc_get_Transportes"
+                    CommandText = "prc_get_OrdenesDashboard"
                 };
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
