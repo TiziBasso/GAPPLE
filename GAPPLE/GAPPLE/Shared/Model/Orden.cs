@@ -17,7 +17,7 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage ="Debe ingresar una linea")]
         public string? Linea { get; set; }
 
-        public bool Factura { get; set; } = true;
+        public bool Factura { get; set; }
 
         public bool Presupuesto { get; set; }
 
@@ -71,6 +71,7 @@ namespace GAPPLE.Shared.Model
 
         public List<int>? Ofertas { get; set; } = new();
 
+        [Required(ErrorMessage = "Debe ingresar un lugar de entrega")]
         public string? Entrega { get; set; }
 
         public string? Notas { get; set; }
