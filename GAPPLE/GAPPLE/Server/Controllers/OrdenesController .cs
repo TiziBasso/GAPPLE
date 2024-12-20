@@ -198,7 +198,7 @@ namespace GAPPLE.Server.Controllers
 
                     if (pedido.Factura)
                     {
-                        pedido.Id = daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, (int)pedido.IdEstado!,
+                        pedido.Id = daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, 1,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!, pedido.Probadores,
                                                             OCCD: pedido.Obsequios, MtEX: pedido.Exhibidor, pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);

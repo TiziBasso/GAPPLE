@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace GAPPLE.Shared.Model
 
         public string? CodigoOrden { get; set; }
 
+        [Required(ErrorMessage ="Debe ingresar una linea")]
         public string? Linea { get; set; }
 
         public bool Factura { get; set; } = true;
@@ -24,12 +26,11 @@ namespace GAPPLE.Shared.Model
         public bool Obsequios { get; set; }
 
         public bool Exhibidor { get; set; }
-
         public List<OrdenDetalle>? Detalle { get; set; } = new();
 
-        [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? Cliente { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? CodCliente { get; set; }
 
         public string? DomicilioCliente { get; set; }
@@ -57,10 +58,13 @@ namespace GAPPLE.Shared.Model
 
         public string? CodTransporte { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una lista de precios")]
         public string CodListaPrecio { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una zona")]
         public string? Zona { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una condición de venta")]
         public string? CondicionVenta { get; set; }
 
         public string? CodVendedor { get; set; }
@@ -71,6 +75,7 @@ namespace GAPPLE.Shared.Model
 
         public string? Notas { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una fecha de entrega")]
         public DateTime? FechaEntrega { get; set; }
 
         public DateTime? Creacion { get; set; }
@@ -86,6 +91,22 @@ namespace GAPPLE.Shared.Model
         public int Unidades { get; set; }
 
         public bool Aprobado { get; set; }
+    }
+    public class NotEmptyAttribute : ValidationAttribute
+    {
+        public override bool IsValid(object value)
+        {
+            if (value is ICollection collection)
+            {
+                return collection.Count > 0;
+            }
+            return false; // No es una colección válida
+        }
+
+        public override string FormatErrorMessage(string name)
+        {
+            return ErrorMessage ?? $"{name} no debe estar vacía.";
+        }
     }
 
     public class OrdenDetalle

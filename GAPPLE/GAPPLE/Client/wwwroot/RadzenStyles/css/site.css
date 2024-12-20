@@ -636,3 +636,12 @@ svg.illustration {
     align-items: center;
     justify-content: center !important;
 }
+
+.valid{
+    outline:none !important;
+}
+
+.invalid {
+    outline: 1px solid red !important;
+    border-radius: 6px !important;
+}
