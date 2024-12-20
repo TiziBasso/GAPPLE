@@ -78,7 +78,7 @@ namespace GAPPLE.Client.Services
                 if (response.IsSuccessStatusCode)
                 {
                     Orden p = await response.Content.ReadFromJsonAsync<Orden>();
-                    pedido.Id = p.Id;
+                    pedido.CodigoOrden = p.CodigoOrden;
                     return new(true);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
