@@ -9,6 +9,7 @@
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
 @using System.Linq
+@using GAPPLE.Client.Components.Ordenes
 
 @if (showForm)
 {
@@ -98,7 +99,7 @@
             <RadzenColumn Size="3">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="F.Entrega:" />
-                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" />
+                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
                 </RadzenStack>
                 <ValidationMessage For="@(() => orden.FechaEntrega)" />
             </RadzenColumn>
@@ -192,7 +193,7 @@
                                                 }
                                                 <strong>%</strong>
                                             }
-                                            <input type="checkbox" @bind-value=product.Probador />
+                                            <RadzenCheckBox @bind-Value=product.Probador />
                                         </div>
                                     }
                                 </div>
@@ -314,7 +315,7 @@ else
     List<Oferta> ofertas = new();
     List<ArticulosPorCliente> articulosPorClientes = new();
 
-    Dictionary<string, List<Oferta>> codigosEnOfertas;
+    Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -332,9 +333,14 @@ else
     {
         foreach (var card in Cards)
         {
-            foreach (var product in card.Products)
+            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
             {
-                if (product.CantidadSeleccionada > 0)
+                if (lstProductosDifLinea.Exists(x => x.CodigoProducto == product.CodigoProducto))
+                {
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                }
+                else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
             }
         }
@@ -349,6 +355,11 @@ else
         orden.Linea = valorAux;
         lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
         lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
+        {
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+        }
         var grouped = lstProductos.GroupBy(p => p.Familia);
         Cards.Clear();
         foreach (var group in grouped)
@@ -363,8 +374,6 @@ else
         ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
         RecalcularOfertas();
 
-        foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
-            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
 
         showCards = true;
         DialogCustom.CloseDialog();
@@ -422,6 +431,7 @@ else
 
         if (!error)
         {
+            orden.Detalle!.Clear();
             foreach (var card in Cards)
             {
                 foreach (var product in card.Products)
@@ -438,13 +448,14 @@ else
             }
             foreach (var product in lstProductosDifLinea)
             {
-                orden.Detalle!.Add(new OrdenDetalle()
-                    {
-                        Cantidad = product.CantidadSeleccionada,
-                        CodProducto = product.CodigoProducto,
-                        Descuento = product.DescuentoFinal,
-                        Probador = product.Probador
-                    });
+                if (!orden.Detalle.Any(x => x.CodProducto == product.CodigoProducto))
+                    orden.Detalle!.Add(new OrdenDetalle()
+                        {
+                            Cantidad = product.CantidadSeleccionada,
+                            CodProducto = product.CodigoProducto,
+                            Descuento = product.DescuentoFinal,
+                            Probador = product.Probador
+                        });
             }
             if (!orden.Detalle.Any())
             {
@@ -463,8 +474,19 @@ else
             bool valid = false;
             if (orden.Detalle!.Any(x => x.Probador))
             {
-                //open modal seleccion cant probadores
-                valid = true;
+                valid = await DialogService.OpenAsync<ModalCantidadesProbadores>("Seleccionar cantidad de probadores", new()
+                {
+                    { "Detalle", orden.Detalle!.Where(x=>x.Probador).ToList()}
+                }, new()
+                {
+                    CloseDialogOnEsc = false,
+                    ShowClose = false,
+                    CloseDialogOnOverlayClick = false,
+                    Style = "max-height:90vh; max-width:60vw;",
+                    Height = "fit-content",
+                    Width = "fit-content"
+                });
+                if (!valid) return;
             }
 
             if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
