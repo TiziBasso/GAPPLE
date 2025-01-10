@@ -14,18 +14,13 @@ namespace GAPPLE.Shared.Model
 
         public string? CodigoOrden { get; set; }
 
-        [Required(ErrorMessage ="Debe ingresar una linea")]
+        [Required(ErrorMessage = "Debe ingresar una linea")]
         public string? Linea { get; set; }
 
         public bool Factura { get; set; }
 
         public bool Presupuesto { get; set; }
 
-        public bool Probadores { get; set; }
-
-        public bool Obsequios { get; set; }
-
-        public bool Exhibidor { get; set; }
         public List<OrdenDetalle>? Detalle { get; set; } = new();
 
         public string? Cliente { get; set; }
@@ -132,20 +127,24 @@ namespace GAPPLE.Shared.Model
 
         public bool Probador { get; set; }
 
-        public decimal Descuento1 { get; set; }
+        private int _cantProbador;
 
-        public decimal Descuento2 { get; set; }
-
-        public decimal TotalDescuento
+        public int CantidadProbador
         {
             get
             {
-                decimal factor1 = 1 - (Descuento1 / 100);
-                decimal factor2 = 1 - (Descuento2 / 100);
-                decimal descuentoFinal = 1 - (factor1 * factor2);
-                return descuentoFinal * 100;
+                if (Probador)
+                    return _cantProbador;
+                else
+                    return 0;
+            }
+            set
+            {
+                _cantProbador = value;
             }
         }
+
+        public decimal Descuento { get; set; }
 
     }
 }

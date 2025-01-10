@@ -9,6 +9,7 @@
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
 @using System.Linq
+@using GAPPLE.Client.Components.Ordenes
 
 @if (showForm)
 {
@@ -98,7 +99,7 @@
             <RadzenColumn Size="3">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="F.Entrega:" />
-                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" />
+                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
                 </RadzenStack>
                 <ValidationMessage For="@(() => orden.FechaEntrega)" />
             </RadzenColumn>
@@ -118,30 +119,15 @@
             </RadzenColumn>
 
             <RadzenColumn Size="5">
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                            <RadzenLabel Text="Probadores:" />
-                            <RadzenCheckBox @bind-Value="@orden.Probadores" />
-                        </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                            <RadzenLabel Text="Obsequios/CartasColores/Desc.Extra:" />
-                            <RadzenCheckBox @bind-Value="@orden.Obsequios" />
-                        </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                            <RadzenLabel Text="Multitester/Exhibidor:" />
-                            <RadzenCheckBox @bind-Value="@orden.Exhibidor" />
-                        </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="F:" />
+                        <RadzenCheckBox @bind-Value="@orden.Factura" />
                     </RadzenStack>
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                            <RadzenLabel Text="F:" />
-                            <RadzenCheckBox @bind-Value="@orden.Factura" />
-                        </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                            <RadzenLabel Text="P:" />
-                            <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
-                        </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="P:" />
+                        <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
                     </RadzenStack>
                 </RadzenStack>
             </RadzenColumn>
@@ -207,6 +193,7 @@
                                                 }
                                                 <strong>%</strong>
                                             }
+                                            <RadzenCheckBox @bind-Value=product.Probador />
                                         </div>
                                     }
                                 </div>
@@ -310,6 +297,7 @@ else
 @code {
     List<ProductoParaOfertas> lstProductosOferta = null;
     List<ProductoParaOfertas> lstProductos = null;
+    List<ProductoParaOfertas> lstProductosDifLinea = new();
     Orden orden = new() { IdEstado = 1 };
     List<string> lstLineas = new();
     string? valorAux;
@@ -327,7 +315,7 @@ else
     List<Oferta> ofertas = new();
     List<ArticulosPorCliente> articulosPorClientes = new();
 
-    Dictionary<string, List<Oferta>> codigosEnOfertas;
+    Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -341,36 +329,54 @@ else
         showForm = true;
     }
 
+    private void GuardarProductosDiferenteLinea()
+    {
+        foreach (var card in Cards)
+        {
+            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
+            {
+                if (lstProductosDifLinea.Exists(x => x.CodigoProducto == product.CodigoProducto))
+                {
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                }
+                else
+                    lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
+            }
+        }
+    }
+
     async Task BuscarProductos()
     {
-        if (!orden.Detalle.Any() || (await DialogService.Confirm("Si cambia de linea todos los productos seleccionados se eliminaran ¿desea continuar?", "ATENCIÓN", new() { OkButtonText = "Sí", CancelButtonText = "No" })) == true)
+        DialogCustom.OpenBusy("Cargando...");
+        showCards = false;
+        GuardarProductosDiferenteLinea();
+
+        orden.Linea = valorAux;
+        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
+        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
         {
-            DialogCustom.OpenBusy("Cargando...");
-            showCards = false;
-
-            orden.Linea = valorAux;
-            lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
-            lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
-            var grouped = lstProductos.GroupBy(p => p.Familia);
-            Cards.Clear();
-            foreach (var group in grouped)
-            {
-                var productChunks = group.Select((p, i) => new { Product = p, Index = i })
-                                          .GroupBy(x => x.Index / 10)
-                                          .Select(g => g.Select(x => x.Product).ToList());
-                foreach (var chunk in productChunks)
-                    Cards.Add(new Card(group.Key, chunk));
-            }
-
-            ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
-            if (orden.Ofertas != null && orden.Ofertas.Any())
-                await RecalcularOfertas();
-
-            showCards = true;
-            DialogCustom.CloseDialog();
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
         }
-        else
-            valorAux = orden.Linea;
+        var grouped = lstProductos.GroupBy(p => p.Familia);
+        Cards.Clear();
+        foreach (var group in grouped)
+        {
+            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+                                      .GroupBy(x => x.Index / 10)
+                                      .Select(g => g.Select(x => x.Product).ToList());
+            foreach (var chunk in productChunks)
+                Cards.Add(new Card(group.Key, chunk));
+        }
+
+        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        RecalcularOfertas();
+
+
+        showCards = true;
+        DialogCustom.CloseDialog();
     }
 
     async Task AsignarVariables()
@@ -388,7 +394,7 @@ else
         DialogCustom.CloseDialog();
     }
 
-    async Task RecalcularOfertas()
+    void RecalcularOfertas()
     {
         if (orden.Ofertas != null && orden.Ofertas.Any())
         {
@@ -425,6 +431,7 @@ else
 
         if (!error)
         {
+            orden.Detalle!.Clear();
             foreach (var card in Cards)
             {
                 foreach (var product in card.Products)
@@ -434,9 +441,21 @@ else
                             {
                                 Cantidad = product.CantidadSeleccionada,
                                 CodProducto = product.CodigoProducto,
-                                Descuento1 = product.DescuentoFinal
+                                Descuento = product.DescuentoFinal,
+                                Probador = product.Probador
                             });
                 }
+            }
+            foreach (var product in lstProductosDifLinea)
+            {
+                if (!orden.Detalle.Any(x => x.CodProducto == product.CodigoProducto))
+                    orden.Detalle!.Add(new OrdenDetalle()
+                        {
+                            Cantidad = product.CantidadSeleccionada,
+                            CodProducto = product.CodigoProducto,
+                            Descuento = product.DescuentoFinal,
+                            Probador = product.Probador
+                        });
             }
             if (!orden.Detalle.Any())
             {
@@ -450,17 +469,40 @@ else
 
     async Task Guardar()
     {
-        if (Validar() && await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (Validar())
         {
-            var result = await OrdenesService.PostPedido(orden);
-            if (result.IsSuccessStatusCode)
+            bool valid = false;
+            if (orden.Detalle!.Any(x => x.Probador))
             {
-                //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
-                NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
-                NavigationManager.NavigateTo("ordenes");
+                valid = await DialogService.OpenAsync<ModalCantidadesProbadores>("Seleccionar cantidad de probadores", new()
+                {
+                    { "Detalle", orden.Detalle!.Where(x=>x.Probador).ToList()}
+                }, new()
+                {
+                    CloseDialogOnEsc = false,
+                    ShowClose = false,
+                    CloseDialogOnOverlayClick = false,
+                    Style = "max-height:90vh; max-width:60vw;",
+                    Height = "fit-content",
+                    Width = "fit-content"
+                });
+                if (!valid) return;
             }
-            else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+
+            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            {
+                DialogCustom.OpenBusyWithLoader("Guardando...");
+                var result = await OrdenesService.PostPedido(orden);
+                DialogCustom.CloseDialog();
+                if (result.IsSuccessStatusCode)
+                {
+                    //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
+                    NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
+                    NavigationManager.NavigateTo("ordenes");
+                }
+                else
+                    NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            }
         }
     }
 

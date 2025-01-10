@@ -131,6 +131,7 @@ namespace GAPPLE.Server.Controllers
                 foreach (DataRow row in dt.Rows)
                 {
                     Transporte transporte = new Transporte();
+
                     transporte.CodigoTango = row["CodigoTango"].ToString()!;
                     transporte.Descripcion = row["Descripcion"].ToString()!;
                     transporte.CUIT = row["CUIT"].ToString()!;
@@ -253,13 +254,19 @@ namespace GAPPLE.Server.Controllers
                     {
                         daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
-                                                            pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!, pedido.Probadores,
-                                                            OCCD: pedido.Obsequios, MtEX: pedido.Exhibidor, pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
+                                                            pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
+                                                            pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador, item.TotalDescuento, trans);
+                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, false, item.Descuento, trans);
+                        }
+
+                        foreach (var item in pedido.Detalle!.Where(x => x.Probador))
+                        {
+                            numLinea++;
+                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.CantidadProbador, true, item.Descuento, trans);
                         }
                     }
 
@@ -267,13 +274,19 @@ namespace GAPPLE.Server.Controllers
                     {
                         pedido.Id = daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, 1,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
-                                                                pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!, pedido.Probadores,
-                                                                OCCD: pedido.Obsequios, MtEX: pedido.Exhibidor, pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
+                                                                pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
+                                                                pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador, item.TotalDescuento, trans);
+                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, false, item.Descuento, trans);
+                        }
+
+                        foreach (var item in pedido.Detalle!.Where(x => x.Probador))
+                        {
+                            numLinea++;
+                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.CantidadProbador, true, item.Descuento, trans);
                         }
                     }
 

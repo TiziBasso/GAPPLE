@@ -180,7 +180,7 @@ namespace GAPPLE.Server.Data
 
         public int PersistirPedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            bool probadores, bool OCCD, bool MtEX, string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
+                                            string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
         {
             int id;
             SqlConnection cnn = transaction.Connection;
@@ -200,9 +200,6 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodTransporte", codTransporte);
             cmd.Parameters.AddWithValue("@pCondicionVenta", condicionVenta);
             cmd.Parameters.AddWithValue("@pEntregarEn", entregarEn);
-            cmd.Parameters.AddWithValue("@pProbadores", probadores);
-            cmd.Parameters.AddWithValue("@pOCCD", OCCD);
-            cmd.Parameters.AddWithValue("@pMtEX", MtEX);
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
