@@ -9,7 +9,7 @@
 {
     <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" class="rz-mb-3" />
 
-    <RadzenButton Icon="add" Size=ButtonSize.Small Text="Agregar oferta" Click="Agregar"
+    <RadzenButton Icon="add" Size=ButtonSize.Small Text="Agregar oferta" Click="Agregar" ButtonStyle="ButtonStyle.Secondary"
                   class="rz-mb-2" Disabled="@(isLoading || !listPermisos.Contains("alta"))" />
 
     <RadzenDataGrid @ref=refGrid Data="lstOfertas" AllowSorting="true" IsLoading="@isLoading" Density="Density.Compact" AllowColumnResize="true" FilterMode="FilterMode.Simple"
