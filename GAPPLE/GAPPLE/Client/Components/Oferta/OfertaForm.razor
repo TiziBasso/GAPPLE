@@ -145,12 +145,12 @@ else
         if (esNueva)
         {
             await OfertasService.PostOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Descripcion));
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         else
         {
             await OfertasService.PutOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Descripcion));
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         DialogService.Close(Oferta);
     }
