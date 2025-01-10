@@ -120,7 +120,7 @@ namespace GAPPLE.Server.Data
                 {
                     Connection = cnn,
                     CommandType = CommandType.StoredProcedure,
-                    CommandText = "prc_get_OrdenesDashboard"
+                    CommandText = "prc_get_Transportes"
                 };
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);

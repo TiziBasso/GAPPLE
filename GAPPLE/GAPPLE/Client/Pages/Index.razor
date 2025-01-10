@@ -11,7 +11,7 @@
                 <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
                     <RadzenStack JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText TextStyle="TextStyle.H6">Progress</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H6">Progreso</RadzenText>
                             <RadzenText TextStyle="TextStyle.H2" class="rz-color-info rz-m-0">@($"{Math.Round(closeRatioPercentage)}%")</RadzenText>
                         </RadzenStack>
                         <RadzenProgressBar ProgressBarStyle="ProgressBarStyle.Info" @bind-Value=@closeRatioPercentage ShowValue="false" Style="--rz-progressbar-background-color: var(--rz-info-lighter); --rz-progressbar-height: 1rem;" />

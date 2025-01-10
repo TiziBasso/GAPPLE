@@ -9,7 +9,7 @@
                 <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
                 <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
             </RadzenStack>
-            <RadzenAppearanceToggle />
+            <RadzenAppearanceToggle @onclick="CambiarTema" />
             <RadzenProfileMenu>
                 <Template>
                     <RadzenLabel Text="ADMIN" />
@@ -50,11 +50,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        
+
     }
 
-    public async Task CambiarTema(bool? args)
+    public async Task CambiarTema()
     {
-        await JS.InvokeVoidAsync("changetheme", args);
+        Console.WriteLine("hola");
     }
 }

@@ -141,7 +141,7 @@ else
     async Task Guardar()
     {
         Oferta.Inclusiones = string.Join('|', lstProductosOferta.Select(x => x.CodigoProducto));
-
+        Oferta.Hasta = Oferta.Hasta.AddHours(23).AddMinutes(59).AddSeconds(59);
         if (esNueva)
         {
             await OfertasService.PostOferta(Oferta);
