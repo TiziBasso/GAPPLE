@@ -114,5 +114,15 @@ namespace GAPPLE.Client.Services
                 return new(false);
             }
         }
+
+        public async ValueTask<List<OrdenExpedicion>> GetOrdenesExpediciones()
+        {
+            return await HttpClient.GetFromJsonAsync<List<OrdenExpedicion>>($"{URI_BASE}/expediciones");
+        }
+
+        public async ValueTask<OrdenExpedicion> GetOrdenExpedicion(string idOrden)
+        {
+            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicion?idOrden={idOrden}");
+        }
     }
 }

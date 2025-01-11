@@ -5,6 +5,7 @@ using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Net;
 
 namespace GAPPLE.Server.Controllers
@@ -252,7 +253,7 @@ namespace GAPPLE.Server.Controllers
 
                     if (pedido.Factura)
                     {
-                        daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, (int)pedido.IdEstado!,
+                        daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
                                                             pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
@@ -260,19 +261,13 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, false, item.Descuento, trans);
-                        }
-
-                        foreach (var item in pedido.Detalle!.Where(x => x.Probador))
-                        {
-                            numLinea++;
-                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.CantidadProbador, true, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
                         }
                     }
 
                     if (pedido.Presupuesto)
                     {
-                        pedido.Id = daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Count, 1,
+                        daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), 1,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                                 pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
                                                                 pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
@@ -280,13 +275,7 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, false, item.Descuento, trans);
-                        }
-
-                        foreach (var item in pedido.Detalle!.Where(x => x.Probador))
-                        {
-                            numLinea++;
-                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.CantidadProbador, true, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
                         }
                     }
 
@@ -328,6 +317,92 @@ namespace GAPPLE.Server.Controllers
                     trans.Rollback();
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        [HttpGet("expediciones")]
+        public List<OrdenExpedicion> GetOrdenesExpediciones()
+        {
+            List<OrdenExpedicion> ordenes = new();
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+
+            using (DataTable dt = daO.ObtenerOrdenExpediciones())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    var orden = new OrdenExpedicion()
+                    {
+                        IdPedidos = row["IdPedidos"].ToString(),
+                        Orden = row["Orden"].ToString(),
+                        FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString()),
+                        Fecha = DateTime.Parse(row["AltaRegistro"].ToString()),
+                        Linea = row["Linea"].ToString(),
+                        CodCliente = row["CodigoCliente"].ToString(),
+                        RazonSocial = row["RazonSocial"].ToString(),
+                        Articulos = int.Parse(row["Articulos"].ToString())
+                    };
+
+                    ordenes.Add(orden);
+                }
+            }
+
+            return ordenes;
+        }
+
+        [HttpGet("expedicion")]
+        public OrdenExpedicion GetOrdenExpedicion(string idOrden)
+        {
+            OrdenExpedicion orden = new()
+            {
+                Detalle = new()
+            };
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daO.ObtenerOrdenExpediciones(idOrden))
+            {
+                DataRow row = dt.Rows[0];
+                orden.IdPedidos = row["IdPedidos"].ToString();
+                orden.Orden = idOrden;
+                if (row["CodigoTango"] != DBNull.Value) orden.CodTango = row["CodigoTango"].ToString();
+                orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
+                orden.Fecha = DateTime.Parse(row["AltaRegistro"].ToString());
+                orden.Linea = row["Linea"].ToString();
+                orden.CodCliente = row["CodigoCliente"].ToString();
+                orden.RazonSocial = row["RazonSocial"].ToString();
+                orden.CUIT = row["CUIT"].ToString();
+                orden.CondicionIVA = row["CondicionIVA"].ToString();
+                orden.Articulos = int.Parse(row["Articulos"].ToString());
+                orden.EntregarEn = row["EntregarEn"].ToString();
+                if (row["Transporte"] != DBNull.Value) orden.Transporte = row["Transporte"].ToString();
+                if (row["Zona"] != DBNull.Value) orden.Zona = row["Zona"].ToString();
+                if (row["Observaciones"] != DBNull.Value) orden.Observaciones = row["Observaciones"].ToString();
+                orden.Vendedor = row["Vendedor"].ToString();
+            }
+
+            using (DataTable dt = daO.ObtenerOrdenDetalleExpedicion(idOrden))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    OrdenExpedicionDetalle linea = new()
+                    {
+                        IdProducto = row["IdProducto"].ToString(),
+                        CodProducto = row["CodProducto"].ToString(),
+                        DescripcionProducto = row["Descripcion"].ToString(),
+                        NumLinea = int.Parse(row["NLinea"].ToString()),
+                        CantidadF = int.Parse(row["CantidadF"].ToString()),
+                        CantidadX = int.Parse(row["CantidadX"].ToString()),
+                        CantidadCanceladaF = int.Parse(row["CantidadCanceladaF"].ToString()),
+                        CantidadCanceladaX = int.Parse(row["CantidadCanceladaX"].ToString()),
+                        CantidadAprobadaF = int.Parse(row["CantidadAprobadaF"].ToString()),
+                        CantidadAprobadaX = int.Parse(row["CantidadAprobadaX"].ToString()),
+                        CantidadProbadorF = int.Parse(row["CantidadProbadorF"].ToString()),
+                        CantidadProbadorX = int.Parse(row["CantidadProbadorX"].ToString()),
+                        CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
+                        CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
+                    };
+
+                    orden.Detalle.Add(linea);
+                }
+            }
+            return orden;
         }
     }
 }

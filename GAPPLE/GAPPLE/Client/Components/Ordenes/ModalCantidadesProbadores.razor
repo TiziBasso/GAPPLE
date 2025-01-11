@@ -2,7 +2,7 @@
 
 @if (showComponent)
 {
-    <RadzenDataGrid TItem="OrdenDetalle" Data="Detalle" Density="Density.Compact">
+    <RadzenDataGrid TItem="OrdenDetalle" Data="Detalle!.Where(x=>x.Probador)" Density="Density.Compact">
         <Columns>
             <RadzenDataGridColumn TItem="OrdenDetalle" Property="@nameof(OrdenDetalle.CodProducto)" Title="Producto" />
             <RadzenDataGridColumn TItem="OrdenDetalle" Width="80px" Title="Cantidad">
@@ -32,9 +32,11 @@ else
 
     protected override void OnInitialized()
     {
-        foreach (var item in Detalle)
+        foreach (var item in Detalle!.Where(x => x.Probador))
+        {
             if (item.CantidadProbador == 0)
                 item.CantidadProbador = 1;
+        }
         showComponent = true;
     }
 

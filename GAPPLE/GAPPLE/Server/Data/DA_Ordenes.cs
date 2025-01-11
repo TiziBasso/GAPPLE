@@ -1,7 +1,7 @@
 ﻿using GAPPLE.Shared.Model;
 using Microsoft.Extensions.Hosting;
 using Radzen.Blazor.Rendering;
-﻿using System.Data;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace GAPPLE.Server.Data
@@ -207,7 +207,7 @@ namespace GAPPLE.Server.Data
             return id;
         }
 
-        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, bool probador, decimal descuento, SqlTransaction transaction)
+        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, decimal descuento, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -218,8 +218,8 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pNLinea", numLinea);
             cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
-            cmd.Parameters.AddWithValue("@pProbador", probador);
             cmd.Parameters.AddWithValue("@pDescuento", descuento);
+            if (probador != 0) cmd.Parameters.AddWithValue("@pProbador", probador);
             cmd.ExecuteNonQuery();
         }
 
@@ -249,5 +249,42 @@ namespace GAPPLE.Server.Data
             }
             return cod;
         }
+
+        public DataTable ObtenerOrdenExpediciones(string? idOrden = null)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_PedidosCabeceraExpedicion"
+                };
+                if (idOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", idOrden);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerOrdenDetalleExpedicion(string idOrden)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_PedidosDetalleExpedicion"
+                };
+                cmd.Parameters.AddWithValue("@pCodOrden", idOrden);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
     }
 }

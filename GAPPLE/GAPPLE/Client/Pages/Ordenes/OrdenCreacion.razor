@@ -175,7 +175,7 @@
                                                 var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
                                                 var descuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
                                                 product.DescuentoFinal = Math.Round(descuentoFinal, 2);
-                                                <div style="background:yellow;">
+                                                <div style="background:yellow; display:flex;">
                                                     <span>@Math.Round(descuentoFinal, 2)</span>
                                                     <strong>%</strong>
                                                 </div>
@@ -184,7 +184,9 @@
                                             {
                                                 @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
                                                 {
-                                                    <span>@articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento</span>
+                                                    <div style="display:flex;">
+                                                        <span>@articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento</span>
+                                                    </div>
                                                     product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
                                                 }
                                                 else
@@ -476,7 +478,7 @@ else
             {
                 valid = await DialogService.OpenAsync<ModalCantidadesProbadores>("Seleccionar cantidad de probadores", new()
                 {
-                    { "Detalle", orden.Detalle!.Where(x=>x.Probador).ToList()}
+                    { "Detalle", orden.Detalle}
                 }, new()
                 {
                     CloseDialogOnEsc = false,

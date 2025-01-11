@@ -1,0 +1,118 @@
+﻿@page "/expedicion"
+@using GAPPLE.Client.Components.Expedicion
+
+@inject OrdenesService OrdenesService
+@inject DialogService DialogService
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Expediciones a despachar" class="rz-mb-3" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent=JustifyContent.Right class="rz-mb-2">
+        @*Filtros?*@
+        <RadzenButton Text="Refrescar" Icon="refresh" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="FillOrdenes" Disabled=isLoading title="Refrescar ordenes" />
+    </RadzenStack>
+
+    <RadzenDataGrid @ref=grid TItem="OrdenExpedicion" Data="expediciones" @bind-Value=selected SelectionMode=DataGridSelectionMode.Multiple IsLoading=isLoading
+                    AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize=true Density=Density.Compact
+                    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
+        <HeaderTemplate>
+            <RadzenButton Size="ButtonSize.Small" Text="Imprimir seleccionados" Icon="print" Click="Imprimir" ButtonStyle="ButtonStyle.Info" Variant="Variant.Outlined" Disabled=@(!selected.Any()) />
+            <RadzenButton Size="ButtonSize.Small" Text="Despachar seleccionados" Icon="send" Click="Despachar" ButtonStyle="ButtonStyle.Success" Disabled=@(!selected.Any()) />
+        </HeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Orden)" Title="Cód. orden" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.IdPedidos)" Title="Id orden" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Fecha)" Title="Fecha" FormatString="{0:dd/MM/yyyy HH:mm}"
+                                  Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
+                                  Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" /> @*debería ir? ahora los pedidos contienen varias lineas*@
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.CodCliente)" Title="Cliente" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.RazonSocial)" Title="Razón social" MinWidth="10px" />
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Articulos)" Title="Artículos" FilterValue="articulosFilter" MinWidth="10px">
+                <FilterTemplate>
+                    <RadzenNumeric @bind-Value=articulosFilter TextAlign=TextAlign.Right Style="width:100%" ShowUpDown=false />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Title="Ver" Width="35px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="visibility" Click="@(()=>VerPedido(context))" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation=true />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Title="Impreso" Width="60px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenCheckBox Value="context.Impreso" ReadOnly=true @onclick:stopPropagation=true />
+                </Template>
+            </RadzenDataGridColumn>
+
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage, isLoading;
+    List<OrdenExpedicion> expediciones = new();
+    RadzenDataGrid<OrdenExpedicion> grid;
+    IList<OrdenExpedicion> selected = new List<OrdenExpedicion>();
+
+    int? articulosFilter;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await SeguridadService.ValidatePageAccess();
+        //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
+
+        await FillOrdenes();
+        showPage = true;
+    }
+
+    private async Task FillOrdenes()
+    {
+        isLoading = true;
+        expediciones = await OrdenesService.GetOrdenesExpediciones();
+        isLoading = false;
+    }
+
+    private async Task VerPedido(OrdenExpedicion orden)
+    {
+        await DialogService.OpenAsync<ExpedicionCantidades>("Seleccionar cantidades",
+            new() {
+                { "IdOrden", orden.Orden } },
+            new()
+                {
+                    CloseDialogOnEsc = false,
+                    ShowClose = false,
+                    CloseDialogOnOverlayClick = false,
+                    AutoFocusFirstElement = false,
+                    Width="fit-content",
+                    Height = "fit-content",
+                    Style="max-width:60vw; max-height:90vh"
+                });
+    }
+
+    private async Task Imprimir()
+    {
+
+    }
+
+    private async Task Despachar()
+    {
+
+    }
+
+
+}

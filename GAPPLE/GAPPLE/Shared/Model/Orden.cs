@@ -127,22 +127,10 @@ namespace GAPPLE.Shared.Model
 
         public bool Probador { get; set; }
 
-        private int _cantProbador;
+        public int CantidadProbador { get; set; }
+        
+        public int CantidadProbadorCancelada { get; set; }
 
-        public int CantidadProbador
-        {
-            get
-            {
-                if (Probador)
-                    return _cantProbador;
-                else
-                    return 0;
-            }
-            set
-            {
-                _cantProbador = value;
-            }
-        }
 
         public decimal Descuento { get; set; }
 

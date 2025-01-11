@@ -1,0 +1,22 @@
+﻿@page "/expedicion/despachados"
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Expediciones despachadas" class="rz-mb-3" />
+
+    
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        showPage = true;
+    }
+
+}

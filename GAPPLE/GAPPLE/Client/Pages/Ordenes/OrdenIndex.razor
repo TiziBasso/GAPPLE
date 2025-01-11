@@ -163,7 +163,7 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
                                   Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
