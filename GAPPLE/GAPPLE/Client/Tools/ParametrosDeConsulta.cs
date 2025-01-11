@@ -6,11 +6,18 @@ namespace GAPPLE.Client.Tools
     internal class ParametrosDeConsulta
     {
         internal Pages Page { get; set; }
+        internal string PageName { get; set; }
         internal Dictionary<string, object> Parametros { get; set; } = new();
 
         internal void Save(Pages page, Dictionary<string, object> parametros)
         {
             Page = page;
+            Parametros = parametros;
+        }
+
+        internal void Save(string pageName, Dictionary<string, object> parametros)
+        {
+            PageName = pageName;
             Parametros = parametros;
         }
 

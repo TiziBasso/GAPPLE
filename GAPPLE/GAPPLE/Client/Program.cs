@@ -1,7 +1,10 @@
+using Blazored.SessionStorage;
 using GAPPLE.Client;
+using GAPPLE.Client.Extensiones;
 using GAPPLE.Client.Helpers;
 using GAPPLE.Client.Services;
 using GAPPLE.Client.Tools;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Radzen;
@@ -15,24 +18,23 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 Services(builder.Services);
 
 builder.Services.AddRadzenComponents();
-//builder.Services.AddBlazoredSessionStorage();
-//builder.Services.AddAuthorizationCore();
-//builder.Services.AddScoped<AuthenticationService>();
-//builder.Services.AddScoped<AuthenticationStateProvider>(x => x.GetService<AuthenticationService>());
-//builder.Services.AddScoped<UsuariosService>();
 
 await builder.Build().RunAsync();
 
 static void Services(IServiceCollection services)
 {
+    services.AddBlazoredSessionStorage();
+    services.AddScoped<AuthenticationStateProvider, AutenticacionExtension>();
+    services.AddAuthorizationCore();
     services.AddSingleton<ParametrosDeConsulta>();
     services.AddScoped<OfertasService>();
     services.AddScoped<SeguridadService>();
-    services.AddScoped<DialogCustom>();
     services.AddScoped<DialogService>();
+    services.AddScoped<DialogCustom>();
     services.AddScoped<ProductosService>();
     services.AddScoped<ToolsHelpers>();
     services.AddScoped<ClientesService>();
+    services.AddScoped<RadzenCustom>();
     services.AddScoped<OrdenesService>();
     services.AddScoped<JSFunction>();
     services.AddScoped<IJSFunction, JSFunction>();

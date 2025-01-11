@@ -1,0 +1,286 @@
+﻿@page "/permisos/usuario"
+@inject SeguridadService SeguridadService
+@inject DialogCustom DialogCustom
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (showForm)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Permisos por usuario" />
+
+    <RadzenRow class="rz-mb-1">
+        <RadzenColumn Size="4" Offset="2">
+            <RadzenLabel Text="Usuario: " Component="Usuarios" />
+            <RadzenDropDown @bind-Value="idUsuario" Data="usuarios" ValueProperty="@nameof(Usuario.IdUsuario)" TextProperty="@nameof(Usuario.ApellidoYNombre)" ClearSearchAfterSelection="true"
+                            Change="@(() => SeleccionUsuario())" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="Perfiles" Style="width: 100%" />
+        </RadzenColumn>
+    </RadzenRow>
+
+
+    <RadzenRow JustifyContent="JustifyContent.Center" class="rz-mb-2">
+        <RadzenColumn Size="8">
+            <RadzenDataGrid @ref="grilla" Data="permisosPadre" TItem="Permiso" ColumnWidth="150px" RowClick="(args => OnClick(args))"
+                            LoadChildData="LoadChildData" RowRender="RowRender" Style="max-height: 480px; min-height: 480px">
+
+                <Columns>
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.HabilitadoPorPerfil)" Width="40px">
+                        <Template Context="permiso">
+                            <RadzenCheckBox Value="permiso.HabilitadoPorPerfil" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.Descripcion)" Width="150px">
+                        <Template>
+                            <RadzenLabel Style="width: fit-content; margin:0; display:flex; gap:10px">
+                                @{
+                                    @context.Descripcion
+                                    if (context.HabilitadoPorUsuario != null)
+                                    {
+                                        if (context.HabilitadoPorUsuario == true)
+                                        {
+                                            <RadzenIcon Icon="person_add" IconColor="@Colors.Success" />
+                                        }
+                                        else
+                                        {
+                                            <RadzenIcon Icon="person_off" IconColor="@Colors.Danger" />
+                                        }
+                                    }
+                                }
+                            </RadzenLabel>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.TipoPermiso)" Width="25px">
+                        <Template>
+                            <RadzenLabel Text=@GetTipo(context) />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+                <EmptyTemplate>
+                    <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem; height: 17rem">No hay registros para mostrar.</p>
+                </EmptyTemplate>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow JustifyContent="JustifyContent.Center">
+        <RadzenColumn Size="2" Offset="1">
+            <RadzenButton Click="Cancelar" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Icon="highlight_off" />
+        </RadzenColumn>
+        <RadzenColumn Size="2" Offset="1">
+            <RadzenButton Click="Guardar" ButtonStyle="ButtonStyle.Success" Text="Guardar" Icon="save" />
+        </RadzenColumn>
+    </RadzenRow>
+}
+else
+{
+    <Loader />
+}
+
+
+@code
+{
+    RadzenDataGrid<Permiso> grilla;
+    List<Usuario> usuarios = Enumerable.Empty<Usuario>().ToList();
+    List<Permiso> permisos = Enumerable.Empty<Permiso>().ToList();
+    List<Permiso> permisosPadre = new();
+    int? idUsuario = null;
+    bool showForm;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await SeguridadService.ValidatePageAccess();
+        usuarios = await SeguridadService.GetUsuarios(conDetalle: false);
+        usuarios = usuarios.OrderBy(x => x.ApellidoYNombre).ToList();
+        showForm = true;
+    }
+
+    private async Task SeleccionUsuario()
+    {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        permisos = await SeguridadService.GetPermisosTotal(idUsuario, null);
+        permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
+        await grilla.Reload();
+        await grilla.ExpandRows(permisosPadre);
+        DialogCustom.CloseDialog();
+    }
+
+    void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
+    {
+        args.Data = permisos.Where(x => x.IdPadre == args.Item.IdPermiso);
+    }
+
+    private void OnClick(DataGridRowMouseEventArgs<Permiso> args)
+    {
+        if (args.Button == 0)
+        {
+            if (args.Data.HabilitadoPorUsuario == null)
+            {
+                if (args.Data.HabilitadoPorPerfil == true)
+                {
+                    args.Data.HabilitadoPorUsuario = false;
+
+                }
+                else
+                {
+                    args.Data.HabilitadoPorUsuario = true;
+                }
+                args.Data.HuboCambios = true;
+                if (!args.Data.HabilitadoPorPerfil)
+                {
+                    AgregarPadres(permisos, args.Data);
+                }
+                AgregarHijos(permisos, args.Data);
+            }
+            else
+            {
+                args.Data.HabilitadoPorUsuario = null;
+                args.Data.HuboCambios = true;
+                EliminarHijos(permisos, args.Data);
+            }
+        }
+
+    }
+
+
+
+    void RowRender(RowRenderEventArgs<Permiso> args)
+    {
+        args.Expandable = permisos.Where(x => x.IdPadre == args.Data.IdPermiso).Any();
+    }
+
+    private async Task Cancelar()
+    {
+        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        idUsuario = null;
+        permisosPadre.Clear();
+        permisos.Clear();
+        await grilla.Reload();
+    }
+
+    private async Task Guardar()
+    {
+        if (idUsuario == null || !permisos.Where(x => x.HuboCambios).Any())
+        {
+            ShowNotification(NotificationSeverity.Warning, 3500, "No existen datos para guardar");
+        }
+        else
+        {
+            var result = await DialogService.Confirm("¿Confirma guardar los datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            Response response = null;
+            List<Permiso> lstCambios = permisos.Where(x => x.HuboCambios).ToList();
+
+            if (result != null && result == true)
+            {
+                DialogCustom.OpenBusyWithLoader();
+
+                foreach (var item in lstCambios)
+                {
+                    if (item.HabilitadoPorUsuario == null)
+                    {
+                        item.Eliminar = true;
+                    }
+                }
+                foreach (var item in lstCambios)
+                {
+                    item.IdPerfilOUsuario = idUsuario;
+                }
+
+                response = await SeguridadService.PostPermisosPorUsuario(lstCambios);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    ShowNotification(NotificationSeverity.Success, 3500, "Se han guardado los datos correctamente");
+                    idUsuario = null;
+                    permisosPadre.Clear();
+                    permisos.Clear();
+                    await grilla.Reload();
+                }
+                else
+                {
+                    ShowNotification(NotificationSeverity.Error, 3500, "Se ha producido un error inesperado!");
+                    idUsuario = null;
+                    permisosPadre.Clear();
+                    permisos.Clear();
+                    await grilla.Reload();
+                }
+                DialogCustom.CloseDialog();
+            }
+        }
+
+    }
+
+    private void AgregarPadres(List<Permiso> lst, Permiso permiso)
+    {
+        var p = lst.FindAll(x => x.IdPermiso == permiso.IdPadre);
+        if (!permiso.HabilitadoPorPerfil)
+        {
+            foreach (var item in p)
+            {
+                item.HabilitadoPorUsuario = permiso.HabilitadoPorUsuario;
+                if (item.HabilitadoPorPerfil == permiso.HabilitadoPorUsuario)
+                {
+                    item.HabilitadoPorUsuario = null;
+                }
+                item.HuboCambios = true;
+                AgregarPadres(lst, item);
+            }
+        }
+
+    }
+
+    private void AgregarHijos(List<Permiso> lst, Permiso permiso)
+    {
+        var h = lst.FindAll(x => x.IdPadre == permiso.IdPermiso);
+        foreach (var item in h)
+        {
+            item.HabilitadoPorUsuario = permiso.HabilitadoPorUsuario;
+            if (item.HabilitadoPorPerfil == permiso.HabilitadoPorUsuario)
+            {
+                item.HabilitadoPorUsuario = null;
+            }
+            item.HuboCambios = true;
+            AgregarHijos(lst, item);
+        }
+
+    }
+
+    private void EliminarHijos(List<Permiso> lst, Permiso permiso)
+    {
+        var h = lst.FindAll(x => x.IdPadre == permiso.IdPermiso);
+        foreach (var item in h)
+        {
+            item.HabilitadoPorUsuario = null;
+            item.HuboCambios = true;
+            EliminarHijos(lst, item);
+        }
+
+    }
+
+
+    private void ShowNotification(NotificationSeverity severity, int duration, string summary, string detail = null)
+    {
+        NotificationMessage message = new();
+        message.Severity = severity;
+        message.Duration = duration;
+        message.Summary = summary;
+        if (detail != null)
+            message.Detail = detail;
+        NotificationService.Notify(message);
+    }
+
+    string GetTipo(Permiso permiso)
+    {
+        if (permiso.TipoPermiso == "M")
+        {
+            return "Menú";
+        }
+        else if (permiso.TipoPermiso == "P")
+        {
+            return "Permiso";
+        }
+        else
+        {
+            return "Notificación";
+        }
+    }
+}

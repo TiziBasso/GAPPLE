@@ -1,0 +1,220 @@
+﻿@page "/seguridad/menu"
+@inject SeguridadService SeguridadService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject IJSRuntime JSRuntime
+
+@if (!loaderContainerVisible)
+{
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenDataGrid Data="DataPadre" @ref="grilla" TItem="Menu" Density="Density.Default" RowRender="RowRender" LoadChildData="LoadChildData" @bind-Value="selectedMenu" RowCollapse="RowCollapse"
+                                    SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true" AllowVirtualization="true" PageSize="30"
+                                    ExpandMode="DataGridExpandMode.Multiple" Style="height:80vh;">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="Menu" Title="Nombre" Property="@nameof(Menu.Nombre)" Width="160px">
+                                <EditTemplate>
+                                    <RadzenTextBox @bind-Value="@context.Nombre" Style="width:100%;" Name="Nombre" />
+                                    <RadzenLengthValidator Component="Nombre" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
+                                </EditTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Menu" Title="Tipo" Width="70px" Property="@nameof(Menu.Tipo)" Filterable="false">
+                                <Template>
+                                    @{
+                                        var menu = (Menu)context;
+                                        if (menu.Tipo == 'M')
+                                        {
+                                            <span>Menú</span>
+                                        }
+                                        else if (menu.Tipo == 'P')
+                                        {
+                                            <span>Permiso</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Notificación</span>
+                                        }
+                                    }
+                                </Template>
+                                <EditTemplate>
+                                    @{
+                                        var menu = (Menu)context;
+                                        <RadzenDropDown Data="@tipoMenu" @bind-Value="@menu.Tipo" ValueProperty="@nameof(Opcion.Id)" TextProperty="@nameof(Opcion.Descripcion)" Style="width:100%;" />
+                                    }
+                                </EditTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Menu" Title="Href" Property="@nameof(Menu.Url)" Width="180px">
+                                <EditTemplate>
+                                    <RadzenTextBox @bind-Value="@context.Url" Style="width:100%;" Name="url" />
+                                    <RadzenLengthValidator Component="url" Text="No puede superar los 200 caracteres" Max="200" Popup="true" />
+                                </EditTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Menu" Title="Icono" Property="@nameof(Menu.Icono)" Width="90px" Filterable="false" TextAlign="TextAlign.Center">
+                                <Template>
+                                    <RadzenIcon Icon="@context.Icono" Style="width:100%;" />
+                                </Template>
+                                <EditTemplate>
+                                    <RadzenTextBox @bind-Value="@context.Icono" Name="icono" />
+                                    <RadzenLengthValidator Component="icono" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
+                                </EditTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Menu" Title="Orden" Width="65px" Property="@nameof(Menu.Orden)" Filterable="false">
+                                <EditTemplate>
+                                    <RadzenNumeric @bind-Value="@context.Orden" Style="width:100%;" />
+                                </EditTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="Menu" Width="70px" Filterable="false">
+                                <Template>
+                                    @{
+                                        var menu = (Menu)context;
+
+                                        <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnAdd(context))" />
+
+                                        if (menu.IdPermiso > 2)
+                                        {
+                                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnEdit(context))" />
+
+                                            if (!menu.TieneHijos)
+                                            {
+                                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=>OnDelete(context))" />
+                                            }
+                                        }
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenColumn>
+            </RadzenRow>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    List<Menu> Data = new List<Menu>();
+    List<Menu> DataPadre = new List<Menu>();
+    RadzenDataGrid<Menu> grilla = new RadzenDataGrid<Menu>();
+    IEnumerable<Opcion> tipoMenu;
+    bool loaderContainerVisible = true;
+    IList<Menu> selectedMenu;
+    int render = 0;
+    Operaciones operacion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tipoMenu = new List<Opcion>()
+        {
+            new('M', "Menú"),
+            new('P', "Permiso"),
+            new('N', "Notificación")
+        };
+
+        Data = await SeguridadService.GetPermisos();
+        DataPadre = Data.Where(x => x.IdPadre == null).ToList();
+        loaderContainerVisible = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+            await grilla.ExpandRows(Data.Where(x => x.IdPadre == null).ToList());
+    }
+
+    void RowRender(RowRenderEventArgs<Menu> args)
+    {
+        args.Expandable = args.Data.TieneHijos;
+    }
+
+    void LoadChildData(DataGridLoadChildDataEventArgs<Menu> args)
+    {
+        args.Data = Data.Where(e => e.IdPadre == args.Item.IdPermiso);
+    }
+
+    async Task OnAdd(Menu nodo)
+    {
+        operacion = Operaciones.Alta;
+        Menu permiso = new Menu() { IdPadre = nodo.IdPermiso, Tipo = 'M', Orden = Data.FindAll(x => x.IdPadre == nodo.IdPermiso).Count + 1 };
+        permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
+        {
+            {"permiso", permiso},
+            {"SaveRow",EventCallback.Factory.Create<Menu>(this,SaveRow)}
+        });
+    }
+
+    async Task SaveRow(Menu nodo)
+    {
+        DialogService.Close();
+        if (nodo != null)
+        {
+            DialogCustom.OpenBusyWithLoader();
+            if (operacion == Operaciones.Alta)
+            {
+                nodo = await SeguridadService.PostPermiso(nodo);
+                Data.Add(nodo);
+            }
+            else
+            {
+                await SeguridadService.PutPermiso(nodo);
+                Data[Data.FindIndex(x => x.IdPermiso == nodo.IdPermiso)] = nodo;
+            }
+            var nodoPadre = Data.Find(x => x.IdPermiso == nodo.IdPadre);
+            if (!nodoPadre.TieneHijos)
+            {
+                nodoPadre.TieneHijos = true;
+            }
+            await grilla.Reload();
+
+            NotificationService.Notify(NotificationSeverity.Success, "El campo se guardo con exito");
+            DialogCustom.CloseDialog();
+        }
+    }
+
+    async Task OnEdit(Menu nodo)
+    {
+        operacion = Operaciones.Edicion;
+        var permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
+        {
+            {"permiso", nodo},
+            {"SaveRow",EventCallback.Factory.Create<Menu>(this,SaveRow)}
+        });
+    }
+
+    async Task OnDelete(Menu nodo)
+    {
+        if ((await DialogService.Confirm($"¿Desea eliminar el nodo \"{nodo.Nombre}\"?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" })).Value)
+        {
+            DialogCustom.OpenBusyWithLoader("Eliminando...");
+            await SeguridadService.DeletePermiso(nodo.IdPermiso);
+            Data.Remove(nodo);
+
+            if (Data.FindAll(x => x.IdPadre == nodo.IdPadre).Count == 0)
+                Data.Find(x => x.IdPermiso == nodo.IdPadre).TieneHijos = false;
+            NotificationService.Notify(NotificationSeverity.Success, "El campo se elimino con exito");
+            DialogCustom.CloseDialog();
+        }
+    }
+
+    void CancelRow(Menu nodo)
+    {
+        grilla.CancelEditRow(nodo);
+        grilla.Reload();
+    }
+
+    void RowCollapse(Menu nodo)
+    {
+    }
+}
+
+<style>
+    .rz-messages-error {
+        display: block;
+    }
+
+    /*.rz-data-row.rz-datatable-edit {
+                                                                        display: none;
+                                                                    }*/
+</style>

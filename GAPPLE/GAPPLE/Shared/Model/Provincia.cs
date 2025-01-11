@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace GAPPLE.Shared.Model
 {
-    public class Provincia
+    public static class Provincia
     {
-        public int Id { get; set; }
-
-        public string IdPais { get; set; }
-
-        public string Descripcion { get; set; }
+        public static readonly List<string> Lista = new List<string>
+    {
+        "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
+        "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza",
+        "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis",
+        "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego",
+        "Tucumán"
+    };
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Integra.Web.Shared.Model
+namespace GAPPLE.Shared.Model
 {
     public class Menu
     {
@@ -9,19 +9,15 @@ namespace Integra.Web.Shared.Model
         public int? IdPadre { get; set; }
 
         [StringLength(100, ErrorMessage = "No puede superar los 100 caracteres")]
-        public string Nombre { get; set; }
-
-        [Required(ErrorMessage = "Debe ingresar una descripción"),
-            StringLength(100, ErrorMessage = "No puede superar los 100 caracteres")]
-        public string Descripcion { get; set; }
+        public string? Nombre { get; set; }
 
         public char Tipo { get; set; }
 
         [StringLength(200, ErrorMessage = "No puede superar los 200 caracteres")]
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         [StringLength(200, ErrorMessage = "No puede superar los 200 caracteres")]
-        public string Icono { get; set; }
+        public string? Icono { get; set; }
 
         public int? Orden { get; set; }
 

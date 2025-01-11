@@ -1,0 +1,247 @@
+﻿@page "/permisos/perfil"
+
+@inject SeguridadService SeguridadService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+
+@using GAPPLE.Client.ComponentsUI
+
+@if (showForm)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Permisos por perfil" />
+
+    <RadzenRow class="rz-mb-1">
+        <RadzenColumn Size="4" Offset="2">
+            <RadzenLabel Text="Perfil: " Component="Perfiles" />
+            <RadzenDropDown @bind-Value="idPerfil" Data="perfiles"
+                            ValueProperty="@nameof(PerfilUsuario.IdPerfil)" TextProperty="@nameof(PerfilUsuario.DescripcionPerfil)"
+                            ClearSearchAfterSelection="true" Change="@(() => SeleccionPerfil())" AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="Perfiles" Style="width: 100%" />
+        </RadzenColumn>
+        <RadzenColumn Size="1" Style="display:flex; align-items:end; margin-bottom:4px;">
+            <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Icon="visibility" Click="MostrarUsuarios" Disabled=@(idPerfil == null) />
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow JustifyContent="JustifyContent.Center" class="rz-mb-2">
+        <RadzenColumn Size="8">
+            <RadzenDataGrid @ref="grilla" Data="permisosPadre" TItem="Permiso" ColumnWidth="150px" LoadChildData="LoadChildData" RowRender="RowRender" Style="max-height: 480px; min-height: 480px">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.HabilitadoPorPerfil)" Width="40px">
+                        <Template Context="permiso">
+                            <RadzenCheckBox @bind-Value="permiso.HabilitadoPorPerfil" Change="@(() => OnChange(permisos,permiso))" TValue="bool" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.Descripcion)" Width="150px" />
+                    <RadzenDataGridColumn TItem="Permiso" Property="@nameof(Permiso.TipoPermiso)" Width="25px">
+                        <Template>
+                            <RadzenLabel Text=@GetTipo(context) />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+                <EmptyTemplate>
+                    <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem; height: 17rem">No hay registros para mostrar.</p>
+                </EmptyTemplate>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow JustifyContent="JustifyContent.Center">
+        <RadzenColumn Size="2" Offset="1">
+            <RadzenButton Click="Cancelar" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Icon="highlight_off" />
+        </RadzenColumn>
+        <RadzenColumn Size="2" Offset="1">
+            <RadzenButton Click="Guardar" ButtonStyle="ButtonStyle.Success" Text="Guardar" Icon="save" />
+        </RadzenColumn>
+    </RadzenRow>
+}
+else
+{
+    <Loader />
+}
+
+@code
+{
+    List<PerfilUsuario> perfiles = Enumerable.Empty<PerfilUsuario>().ToList();
+    List<Permiso> permisos = Enumerable.Empty<Permiso>().ToList();
+    List<Permiso> permisosPadre = new();
+    List<string> usuarios;
+    RadzenDataGrid<Permiso> grilla;
+    bool showForm;
+    int? idPerfil = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await SeguridadService.ValidatePageAccess();
+        perfiles = await SeguridadService.GetPerfiles();
+        perfiles = perfiles.OrderBy(x => x.DescripcionPerfil).ToList();
+        showForm = true;
+    }
+
+    public async Task SeleccionPerfil()
+    {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        permisos = await SeguridadService.GetPermisosTotal(null, idPerfil);
+        permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
+        usuarios = await SeguridadService.GetUsuariosPorPerfil((int)idPerfil);
+        await grilla.Reload();
+        await grilla.ExpandRows(permisosPadre);
+        DialogCustom.CloseDialog();
+    }
+
+    void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
+    {
+        args.Data = permisos.Where(x => x.IdPadre == args.Item.IdPermiso);
+    }
+
+    void RowRender(RowRenderEventArgs<Permiso> args)
+    {
+        args.Expandable = permisos.Where(x => x.IdPadre == args.Data.IdPermiso).Any();
+    }
+
+    string GetTipo(Permiso permiso)
+    {
+        if (permiso.TipoPermiso == "M")
+        {
+            return "Menú";
+        }
+        else if (permiso.TipoPermiso == "P")
+        {
+            return "Permiso";
+        }
+        else
+        {
+            return "Notificación";
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (idPerfil == null || !permisos.Where(x => x.HuboCambios).Any())
+        {
+            ShowNotification(NotificationSeverity.Warning, 3500, "No existen datos para guardar");
+        }
+        else
+        {
+            var result = await DialogService.Confirm("¿Confirma guardar los datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            List<Permiso> lstCambios = permisos.Where(x => x.HuboCambios).ToList();
+            Response response = null;
+
+            if (result != null && result == true)
+            {
+                DialogCustom.OpenBusyWithLoader("Guardando...");
+
+                foreach (var item in lstCambios)
+                {
+                    item.IdPerfilOUsuario = idPerfil;
+                }
+
+                response = await SeguridadService.PostPermisosPorPerfil(lstCambios);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    ShowNotification(NotificationSeverity.Success, 3500, "Se han guardado los datos correctamente");
+                    await Reset();
+                }
+                else
+                {
+                    ShowNotification(NotificationSeverity.Error, 3500, "Se ha producido un error inesperado!");
+                }
+                DialogCustom.CloseDialog();
+            }
+        }
+    }
+
+    private async Task MostrarUsuarios()
+    {
+        string name = perfiles.First(x => x.IdPerfil == idPerfil).DescripcionPerfil;
+        await DialogService.OpenAsync<DataString>($"Usuarios del perfil: {name}",
+                                                new() { { "Data", usuarios } },
+                                                new()
+                                                    {
+                                                        Height = "fit-content",
+                                                        Width = "30rem",
+                                                        AutoFocusFirstElement = false,
+                                                        CloseDialogOnEsc = true,
+                                                        CloseDialogOnOverlayClick = true,
+                                                        Style = "max-height:35rem"
+                                                    }
+        );
+    }
+
+    private async Task Cancelar()
+    {
+        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        await Reset();
+    }
+
+
+    void OnChange(List<Permiso> lst, Permiso permiso)
+    {
+        permiso.HuboCambios = !permiso.HuboCambios;
+        if (permiso.IdPadre == null)
+        {
+            var p = permisosPadre.First();
+            p.HabilitadoPorPerfil = permiso.HabilitadoPorPerfil;
+            foreach (var item in permisos)
+            {
+                item.HabilitadoPorPerfil = permiso.HabilitadoPorPerfil;
+                item.HuboCambios = true;
+            }
+        }
+        else
+        {
+            FindHijos(lst, permiso);
+            FindPadre(lst, permiso);
+        }
+    }
+
+    private void FindHijos(List<Permiso> lst, Permiso permiso)
+    {
+        var h = lst.FindAll(x => x.IdPadre == permiso.IdPermiso);
+
+        foreach (var item in h)
+        {
+            item.HabilitadoPorPerfil = permiso.HabilitadoPorPerfil;
+            item.HuboCambios = true;
+            FindHijos(lst, item);
+        }
+
+    }
+
+    private void FindPadre(List<Permiso> lst, Permiso permiso)
+    {
+        var p = lst.FindAll(x => x.IdPermiso == permiso.IdPadre);
+        if (permiso.HabilitadoPorPerfil && permiso.IdPadre != null)
+        {
+            foreach (var item in p)
+            {
+                item.HabilitadoPorPerfil = true;
+                item.HuboCambios = true;
+                FindPadre(lst, item);
+            }
+        }
+    }
+
+    private async Task Reset()
+    {
+        idPerfil = null;
+        permisosPadre.Clear();
+        permisos.Clear();
+        await grilla.Reload();
+    }
+
+    private void ShowNotification(NotificationSeverity severity, int duration, string summary, string detail = null)
+    {
+        NotificationMessage message = new();
+        message.Severity = severity;
+        message.Duration = duration;
+        message.Summary = summary;
+        if (detail != null)
+            message.Detail = detail;
+        NotificationService.Notify(message);
+    }
+
+
+}
