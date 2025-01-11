@@ -7,9 +7,10 @@
 
 @if (showForm)
 {
-        <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center"/>
+    <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
 
-    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy">
         <HeaderTemplate>
             <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
         </HeaderTemplate>
@@ -38,7 +39,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        clientes = await ClientesService.GetClientes(clienteEspecial:true);
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
         showForm = true;
     }
 
@@ -54,7 +55,7 @@ else
     async Task Editar(Cliente cliente)
     {
         isBusy = true;
-        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new(){ { "Cliente",cliente} } , new() { Width = "40vw", Height = "40vh" });
+        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new() { { "Cliente", cliente } }, new() { Width = "40vw", Height = "40vh" });
         clientes = await ClientesService.GetClientes(clienteEspecial: true);
         await grilla.Reload();
         isBusy = false;

@@ -5,6 +5,7 @@ using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 
@@ -365,6 +366,7 @@ namespace GAPPLE.Server.Controllers
                 orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                 orden.Fecha = DateTime.Parse(row["AltaRegistro"].ToString());
                 orden.Linea = row["Linea"].ToString();
+                orden.LetrasOrden = row["LetrasOrdenes"].ToString();
                 orden.CodCliente = row["CodigoCliente"].ToString();
                 orden.RazonSocial = row["RazonSocial"].ToString();
                 orden.CUIT = row["CUIT"].ToString();
@@ -395,6 +397,8 @@ namespace GAPPLE.Server.Controllers
                         CantidadAprobadaX = int.Parse(row["CantidadAprobadaX"].ToString()),
                         CantidadProbadorF = int.Parse(row["CantidadProbadorF"].ToString()),
                         CantidadProbadorX = int.Parse(row["CantidadProbadorX"].ToString()),
+                        CantidadProbadorAprobadaF = int.Parse(row["CantidadProbadorAprobadaF"].ToString()),
+                        CantidadProbadorAprobadaX = int.Parse(row["CantidadProbadorAprobadaX"].ToString()),
                         CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
                         CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
                     };
@@ -403,6 +407,70 @@ namespace GAPPLE.Server.Controllers
                 }
             }
             return orden;
+        }
+
+        [HttpPost("expediciondetalle")]
+        public IActionResult PostExpedicionDetalle(OrdenExpedicion orden)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+
+                    foreach (var linea in orden.Detalle.Where(x => x.HuboCambios))
+                    {
+                        if (orden.LetrasOrden.Contains("F"))
+                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF != 0 ? linea.CantidadProbadorAprobadaF : null, trans);
+
+                        if (orden.LetrasOrden.Contains("X"))
+                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX != 0 ? linea.CantidadProbadorAprobadaX : null, trans);
+                    }
+                    trans.Commit();
+                    cnn.Close();
+                }
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                if (trans != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("despachar")]
+        public IActionResult DespacharOrdenes(List<OrdenExpedicion> ordenes)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var orden in ordenes)
+                    {
+                        var idPedidos = orden.IdPedidos.Split(",");
+                        foreach (var id in idPedidos)
+                            daO.PersistirPedidoEstado(id, 4, trans);
+                    }
+                    trans.Commit();
+                    cnn.Close();
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                if (trans != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

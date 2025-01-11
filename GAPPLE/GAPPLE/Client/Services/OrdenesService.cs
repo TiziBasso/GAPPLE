@@ -11,9 +11,11 @@ namespace GAPPLE.Client.Services
     {
         [Inject]
         private HttpClient HttpClient { get; set; }
+        private ILogger<OrdenesService> Logger { get; }
+
         private const string URI_BASE = "api/ordenes";
 
-        public OrdenesService(HttpClient httpClient) => HttpClient = httpClient;
+        public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger) => (HttpClient, Logger) = (httpClient, logger);
 
         public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango)
@@ -92,6 +94,7 @@ namespace GAPPLE.Client.Services
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "PostPedido");
                 return new(false);
             }
         }
@@ -110,7 +113,7 @@ namespace GAPPLE.Client.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Logger.LogError(ex, "CambioEstadoPedidos");
                 return new(false);
             }
         }
@@ -123,6 +126,44 @@ namespace GAPPLE.Client.Services
         public async ValueTask<OrdenExpedicion> GetOrdenExpedicion(string idOrden)
         {
             return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicion?idOrden={idOrden}");
+        }
+
+        public async ValueTask<Response> PostExpedicionDetalle(OrdenExpedicion orden)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/expediciondetalle", orden);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "PostExpedicionDetalle");
+                return new(false);
+            }
+        }
+
+        public async ValueTask<Response> DespacharOrdenes(List<OrdenExpedicion> ordenes)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/despachar", ordenes);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "DespacharOrden");
+                return new(false);
+            }
         }
     }
 }

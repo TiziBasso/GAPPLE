@@ -302,6 +302,7 @@ else
     List<ProductoParaOfertas> lstProductosDifLinea = new();
     Orden orden = new() { IdEstado = 1 };
     List<string> lstLineas = new();
+    List<string> lstLineasDif = new();
     string? valorAux;
     EditContext editContext;
     private List<Card> Cards = new();
@@ -345,6 +346,8 @@ else
                 else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
             }
+            lstLineasDif.Add(orden.Linea);
+
         }
     }
 
@@ -459,6 +462,7 @@ else
                             Probador = product.Probador
                         });
             }
+            orden.Linea = string.Join(',', lstLineasDif.Distinct());
             if (!orden.Detalle.Any())
             {
                 NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");

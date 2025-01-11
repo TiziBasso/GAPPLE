@@ -8,44 +8,46 @@ namespace GAPPLE.Shared.Model
 {
     public class OrdenExpedicion
     {
-        public string IdPedidos { get; set; }
+        public string? IdPedidos { get; set; }
 
-        public string Orden { get; set; }
+        public string? Orden { get; set; }
+
+        public string? LetrasOrden { get; set; }
 
         public DateTime FechaEntrega { get; set; }
 
         public DateTime Fecha { get; set; }
 
-        public string Linea { get; set; }
+        public string? Linea { get; set; }
 
-        public string CodCliente { get; set; }
+        public string? CodCliente { get; set; }
 
-        public string CodTango { get; set; }
+        public string? CodTango { get; set; }
 
-        public string RazonSocial { get; set; }
+        public string? RazonSocial { get; set; }
 
-        public string Vendedor { get; set; }
+        public string? Vendedor { get; set; }
 
-        public string CUIT { get; set; }
+        public string? CUIT { get; set; }
 
-        public string CondicionIVA { get; set; }
+        public string? CondicionIVA { get; set; }
 
-        public string EntregarEn { get; set; }
+        public string? EntregarEn { get; set; }
 
-        public string Transporte { get; set; }
+        public string? Transporte { get; set; }
 
-        public string Zona { get; set; }
+        public string? Zona { get; set; }
 
-        public string Observaciones { get; set; }
+        public string? Observaciones { get; set; }
 
         public int Articulos { get; set; }
 
         public bool Impreso { get; set; }
 
-        public List<OrdenExpedicionDetalle> Detalle { get; set; }
+        public List<OrdenExpedicionDetalle>? Detalle { get; set; }
     }
 
-    public class OrdenExpedicionDetalle
+    public class OrdenExpedicionDetalle : ICloneable
     {
         public int NumLinea { get; set; }
 
@@ -60,6 +62,12 @@ namespace GAPPLE.Shared.Model
         public int CantidadX { get; set; }
 
         public int Cantidad { get => CantidadF + CantidadX; }
+
+        public int CantidadPendienteX => CantidadX - CantidadAprobadaX - CantidadCanceladaX;
+
+        public int CantidadPendienteF => CantidadF - CantidadAprobadaF - CantidadCanceladaF;
+
+        public int CantidadPendiente { get => CantidadPendienteF + CantidadPendienteX; }
 
         public int CantidadAprobadaX { get; set; }
 
@@ -79,10 +87,26 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadProbador { get => CantidadProbadorF + CantidadProbadorX; }
 
+        public int CantidadProbadorAprobadaX { get; set; }
+
+        public int CantidadProbadorAprobadaF { get; set; }
+
+        public int CantidadProbadorAprobada { get => CantidadProbadorAprobadaF + CantidadProbadorAprobadaX; }
+
         public int CantidadProbadorCanceladaX { get; set; }
 
         public int CantidadProbadorCanceladaF { get; set; }
 
         public int CantidadProbadorCancelada { get => CantidadProbadorCanceladaF + CantidadProbadorCanceladaX; }
+
+        public int CantidadProbadorPendienteF => CantidadProbadorF - CantidadProbadorAprobadaF - CantidadProbadorCanceladaF;
+
+        public int CantidadProbadorPendienteX => CantidadProbadorX - CantidadProbadorAprobadaX - CantidadProbadorCanceladaX;
+
+        public int CantidadProbadorPendiente { get => CantidadProbadorPendienteF + CantidadProbadorPendienteX; }
+
+        public bool HuboCambios { get; set; }
+
+        public object Clone() => MemberwiseClone();
     }
 }

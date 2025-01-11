@@ -286,5 +286,18 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
+        public void UpdatePedidoDetalle(string codOrden, int nLinea, int cantidadAprobada, int? probadorAprobada, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidosDetalle";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            cmd.Parameters.AddWithValue("@pNLinea", nLinea);
+            cmd.Parameters.AddWithValue("@pCantidadAprobada", cantidadAprobada);
+            if (probadorAprobada != null) cmd.Parameters.AddWithValue("@pProbadorAprobada", probadorAprobada);
+            cmd.ExecuteNonQuery();
+        }
     }
 }

@@ -3,6 +3,8 @@
 
 @inject OrdenesService OrdenesService
 @inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject NotificationService NotificationService
 
 @if (showPage)
 {
@@ -98,9 +100,9 @@ else
                     ShowClose = false,
                     CloseDialogOnOverlayClick = false,
                     AutoFocusFirstElement = false,
-                    Width="fit-content",
+                    Width = "fit-content",
                     Height = "fit-content",
-                    Style="max-width:60vw; max-height:90vh"
+                    Style = "max-width:60vw; max-height:90vh"
                 });
     }
 
@@ -111,7 +113,17 @@ else
 
     private async Task Despachar()
     {
-
+        DialogCustom.OpenBusyWithLoader("Despachando...");
+        var response = await OrdenesService.DespacharOrdenes(selected.ToList());
+        DialogCustom.CloseDialog();
+        if (response.IsSuccessStatusCode)
+        {
+            NotificationService.Notify(NotificationSeverity.Success, "Ordenes despachadas correctamente");
+            selected = new List<OrdenExpedicion>();
+            await FillOrdenes();
+        }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
     }
 
 
