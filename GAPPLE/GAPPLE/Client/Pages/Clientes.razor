@@ -79,7 +79,6 @@ else
     {
         isBusy = true;
         clientes = await ClientesService.GetClientes(clienteEspecial: (bool?)opcion.Id );
-        Console.WriteLine(clientes.Count);
         await grilla.Reload();
         isBusy = false;
     }
