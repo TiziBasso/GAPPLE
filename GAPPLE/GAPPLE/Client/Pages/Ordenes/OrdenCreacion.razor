@@ -355,9 +355,9 @@ else
     {
         DialogCustom.OpenBusy("Cargando...");
         showCards = false;
+        orden.Linea = valorAux;
         GuardarProductosDiferenteLinea();
 
-        orden.Linea = valorAux;
         lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
         lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
         foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))

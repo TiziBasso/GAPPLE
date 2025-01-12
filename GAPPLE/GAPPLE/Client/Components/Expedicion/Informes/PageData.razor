@@ -25,9 +25,8 @@
     <tbody style="font-size: 11pt;">
         @foreach (var item in Detalle)
         {
-            @(i++)
             <tr>
-                <td style="text-align: end;">@(item.NumLinea != 0 ? item.NumLinea : i)</td>
+                <td style="text-align: end;">@item.NumLinea</td>
                 <td style="text-align: end;">@item.CodProducto</td>
                 <td>@item.DescripcionProducto</td>
                 @if (ShowF)
@@ -75,6 +74,4 @@
     [Parameter] public List<OrdenExpedicionDetalle>? Detalle { get; set; }
     [Parameter] public bool ShowX { get; set; }
     [Parameter] public bool ShowF { get; set; }
-
-    int i = 0;
 }
