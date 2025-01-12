@@ -55,7 +55,7 @@ namespace GAPPLE.Shared.Model
 
         public string CodProducto { get; set; }
 
-        public string DescripcionProducto { get; set; }
+        public string? DescripcionProducto { get; set; }
 
         public int CantidadF { get; set; }
 
@@ -63,9 +63,9 @@ namespace GAPPLE.Shared.Model
 
         public int Cantidad { get => CantidadF + CantidadX; }
 
-        public int CantidadPendienteX => CantidadX - CantidadAprobadaX - CantidadCanceladaX;
+        public int CantidadPendienteX => CantidadX - CantidadAprobadaX;
 
-        public int CantidadPendienteF => CantidadF - CantidadAprobadaF - CantidadCanceladaF;
+        public int CantidadPendienteF => CantidadF - CantidadAprobadaF;
 
         public int CantidadPendiente { get => CantidadPendienteF + CantidadPendienteX; }
 
@@ -75,11 +75,11 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadAprobada { get => CantidadAprobadaF + CantidadAprobadaX; }
 
-        public int CantidadCanceladaX { get; set; }
+        //public int CantidadCanceladaX { get; set; }
 
-        public int CantidadCanceladaF { get; set; }
+        //public int CantidadCanceladaF { get; set; }
 
-        public int CantidadCancelada { get => CantidadCanceladaF + CantidadCanceladaX; }
+        //public int CantidadCancelada { get => CantidadCanceladaF + CantidadCanceladaX; }
 
         public int CantidadProbadorF { get; set; }
 
@@ -93,15 +93,15 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadProbadorAprobada { get => CantidadProbadorAprobadaF + CantidadProbadorAprobadaX; }
 
-        public int CantidadProbadorCanceladaX { get; set; }
+        //public int CantidadProbadorCanceladaX { get; set; }
 
-        public int CantidadProbadorCanceladaF { get; set; }
+        //public int CantidadProbadorCanceladaF { get; set; }
 
-        public int CantidadProbadorCancelada { get => CantidadProbadorCanceladaF + CantidadProbadorCanceladaX; }
+        //public int CantidadProbadorCancelada { get => CantidadProbadorCanceladaF + CantidadProbadorCanceladaX; }
 
-        public int CantidadProbadorPendienteF => CantidadProbadorF - CantidadProbadorAprobadaF - CantidadProbadorCanceladaF;
+        public int CantidadProbadorPendienteF => CantidadProbadorF - CantidadProbadorAprobadaF;
 
-        public int CantidadProbadorPendienteX => CantidadProbadorX - CantidadProbadorAprobadaX - CantidadProbadorCanceladaX;
+        public int CantidadProbadorPendienteX => CantidadProbadorX - CantidadProbadorAprobadaX;
 
         public int CantidadProbadorPendiente { get => CantidadProbadorPendienteF + CantidadProbadorPendienteX; }
 

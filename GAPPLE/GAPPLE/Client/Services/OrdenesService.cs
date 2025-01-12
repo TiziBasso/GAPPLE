@@ -128,6 +128,11 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicion?idOrden={idOrden}");
         }
 
+        public async ValueTask<OrdenExpedicion> GetOrdenExpedicionImprimir(string idOrden)
+        {
+            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir?idOrden={idOrden}");
+        }
+
         public async ValueTask<Response> PostExpedicionDetalle(OrdenExpedicion orden)
         {
             try

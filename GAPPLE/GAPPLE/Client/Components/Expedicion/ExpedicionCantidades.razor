@@ -44,7 +44,7 @@
                     <RadzenText TextAlign=TextAlign.Right><strong>TOTAL:</strong></RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadAprobadaF)" TextAlign=TextAlign.Right Title="F" Width="50px" Visible=showF>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadAprobadaF)" TextAlign=TextAlign.Right Title="F" Width="80px" Visible=showF>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaF ShowUpDown=false Min="0" Max="context.CantidadF" />
                 </EditTemplate>
@@ -52,7 +52,7 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadAprobadaF)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadAprobadaX)" TextAlign=TextAlign.Right Title="X" Width="50px" Visible=showX>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadAprobadaX)" TextAlign=TextAlign.Right Title="X" Width="80px" Visible=showX>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaX ShowUpDown=false Min="0" Max="context.CantidadX" />
                 </EditTemplate>
@@ -94,7 +94,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_downward" ButtonStyle="ButtonStyle.Info" Click="@(()=>BajarLinea(context))" />
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_downward" ButtonStyle="ButtonStyle.Info" Click="@(()=>BajarLinea(context))" Disabled=editMode />
                 </Template>
                 <EditTemplate>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="save" ButtonStyle="ButtonStyle.Success" Click="@(()=>SaveUpRow(context))" />
@@ -102,7 +102,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="edit" ButtonStyle="ButtonStyle.Warning" Click="@(()=>EditUpRow(context))" />
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="edit" ButtonStyle="ButtonStyle.Warning" Click="@(()=>EditUpRow(context))" Disabled=editMode />
                 </Template>
                 <EditTemplate>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="cancel" ButtonStyle="ButtonStyle.Danger" Click="@(()=>CancelUpRow(context))" />
@@ -122,7 +122,7 @@
                     <RadzenText TextAlign=TextAlign.Right><strong>TOTAL:</strong></RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteF)" TextAlign=TextAlign.Right Title="F" Width="50px" Visible=showF>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteF)" TextAlign=TextAlign.Right Title="F" Width="80px" Visible=showF>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaF ShowUpDown=false Min="0" Max="context.CantidadF" />
                 </EditTemplate>
@@ -130,7 +130,7 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadPendienteF)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteX)" TextAlign=TextAlign.Right Title="X" Width="50px" Visible=showX>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteX)" TextAlign=TextAlign.Right Title="X" Width="80px" Visible=showX>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaX ShowUpDown=false Min="0" Max="context.CantidadX" />
                 </EditTemplate>
@@ -172,7 +172,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_upward" ButtonStyle="ButtonStyle.Info" Click="@(()=>SubirLinea(context))" />
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_upward" ButtonStyle="ButtonStyle.Info" Click="@(()=>SubirLinea(context))" Disabled=editMode />
                 </Template>
                 <EditTemplate>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="save" ButtonStyle="ButtonStyle.Success" Click="@(()=>SaveDownRow(context))" />
@@ -180,7 +180,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="edit" ButtonStyle="ButtonStyle.Warning" Click="@(()=>EditDownRow(context))" />
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="edit" ButtonStyle="ButtonStyle.Warning" Click="@(()=>EditDownRow(context))" Disabled=editMode />
                 </Template>
                 <EditTemplate>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="cancel" ButtonStyle="ButtonStyle.Danger" Click="@(()=>CancelDownRow(context))" />
@@ -191,8 +191,8 @@
 
 
     <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
-        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
-        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" Disabled=editMode />
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" Disabled=editMode />
     </RadzenStack>
 }
 else
@@ -205,7 +205,7 @@ else
 
     OrdenExpedicion? orden;
 
-    bool showComponent, showX, showF;
+    bool showComponent, showX, showF, editMode;
     OrdenExpedicionDetalle lineaEdit;
 
     RadzenDataGrid<OrdenExpedicionDetalle> gridUp, gridDown;
@@ -261,12 +261,14 @@ else
 
     private async Task EditUpRow(OrdenExpedicionDetalle linea)
     {
+        editMode = true;
         lineaEdit = (OrdenExpedicionDetalle)linea.Clone();
         await gridUp.EditRow(linea);
     }
 
     private async Task EditDownRow(OrdenExpedicionDetalle linea)
     {
+        editMode = true;
         lineaEdit = (OrdenExpedicionDetalle)linea.Clone();
         lineaEdit.CantidadAprobadaF = lineaEdit.CantidadPendienteF;
         lineaEdit.CantidadAprobadaX = lineaEdit.CantidadPendienteX;
@@ -282,6 +284,7 @@ else
         linea.CantidadAprobadaX = lineaEdit.CantidadAprobadaX;
         linea.CantidadProbadorAprobadaF = lineaEdit.CantidadProbadorAprobadaF;
         linea.CantidadProbadorAprobadaX = lineaEdit.CantidadProbadorAprobadaX;
+        editMode = false;
         await gridDown.UpdateRow(linea);
         await gridDown.Reload();
     }
@@ -293,17 +296,20 @@ else
         linea.CantidadAprobadaX = lineaEdit.CantidadAprobadaX;
         linea.CantidadProbadorAprobadaF = lineaEdit.CantidadProbadorAprobadaF;
         linea.CantidadProbadorAprobadaX = lineaEdit.CantidadProbadorAprobadaX;
+        editMode = false;
         await gridUp.UpdateRow(linea);
         await gridUp.Reload();
     }
 
     private async Task CancelDownRow(OrdenExpedicionDetalle linea)
     {
+        editMode = false;
         gridDown.CancelEditRow(linea);
     }
 
     private async Task CancelUpRow(OrdenExpedicionDetalle linea)
     {
+        editMode = false;
         gridUp.CancelEditRow(linea);
     }
 

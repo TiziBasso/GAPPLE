@@ -339,7 +339,8 @@ namespace GAPPLE.Server.Controllers
                         Linea = row["Linea"].ToString(),
                         CodCliente = row["CodigoCliente"].ToString(),
                         RazonSocial = row["RazonSocial"].ToString(),
-                        Articulos = int.Parse(row["Articulos"].ToString())
+                        Articulos = int.Parse(row["Articulos"].ToString()),
+                        Impreso = bool.Parse(row["Impreso"].ToString())
                     };
 
                     ordenes.Add(orden);
@@ -377,6 +378,7 @@ namespace GAPPLE.Server.Controllers
                 if (row["Zona"] != DBNull.Value) orden.Zona = row["Zona"].ToString();
                 if (row["Observaciones"] != DBNull.Value) orden.Observaciones = row["Observaciones"].ToString();
                 orden.Vendedor = row["Vendedor"].ToString();
+                orden.Impreso = bool.Parse(row["Impreso"].ToString());
             }
 
             using (DataTable dt = daO.ObtenerOrdenDetalleExpedicion(idOrden))
@@ -391,16 +393,16 @@ namespace GAPPLE.Server.Controllers
                         NumLinea = int.Parse(row["NLinea"].ToString()),
                         CantidadF = int.Parse(row["CantidadF"].ToString()),
                         CantidadX = int.Parse(row["CantidadX"].ToString()),
-                        CantidadCanceladaF = int.Parse(row["CantidadCanceladaF"].ToString()),
-                        CantidadCanceladaX = int.Parse(row["CantidadCanceladaX"].ToString()),
+                        //CantidadCanceladaF = int.Parse(row["CantidadCanceladaF"].ToString()),
+                        //CantidadCanceladaX = int.Parse(row["CantidadCanceladaX"].ToString()),
                         CantidadAprobadaF = int.Parse(row["CantidadAprobadaF"].ToString()),
                         CantidadAprobadaX = int.Parse(row["CantidadAprobadaX"].ToString()),
                         CantidadProbadorF = int.Parse(row["CantidadProbadorF"].ToString()),
                         CantidadProbadorX = int.Parse(row["CantidadProbadorX"].ToString()),
                         CantidadProbadorAprobadaF = int.Parse(row["CantidadProbadorAprobadaF"].ToString()),
                         CantidadProbadorAprobadaX = int.Parse(row["CantidadProbadorAprobadaX"].ToString()),
-                        CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
-                        CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
+                        //CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
+                        //CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
                     };
 
                     orden.Detalle.Add(linea);
@@ -424,10 +426,10 @@ namespace GAPPLE.Server.Controllers
                     foreach (var linea in orden.Detalle.Where(x => x.HuboCambios))
                     {
                         if (orden.LetrasOrden.Contains("F"))
-                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF != 0 ? linea.CantidadProbadorAprobadaF : null, trans);
+                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF, trans);
 
                         if (orden.LetrasOrden.Contains("X"))
-                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX != 0 ? linea.CantidadProbadorAprobadaX : null, trans);
+                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, trans);
                     }
                     trans.Commit();
                     cnn.Close();
@@ -471,6 +473,16 @@ namespace GAPPLE.Server.Controllers
                     trans.Rollback();
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        [HttpGet("expedicionImprimir")]
+        public OrdenExpedicion GetOrdenExpedicionImprimir(string idOrden)
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            OrdenExpedicion orden = GetOrdenExpedicion(idOrden);
+            foreach (var idPedido in orden.IdPedidos.Split(","))
+                daO.PersistirPedidoImpresion(idPedido);
+            return orden;
         }
     }
 }

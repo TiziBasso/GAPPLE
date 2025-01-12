@@ -1,10 +1,12 @@
 ﻿@page "/expedicion"
 @using GAPPLE.Client.Components.Expedicion
+@using GAPPLE.Client.Components.Expedicion.Informes
 
 @inject OrdenesService OrdenesService
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
 @inject NotificationService NotificationService
+@inject IJSFunction JSFunction
 
 @if (showPage)
 {
@@ -59,6 +61,16 @@
 
         </Columns>
     </RadzenDataGrid>
+
+    @if (showPrint)
+    {
+        <div id="datos" style="height:0; overflow:hidden;">
+            @for (int i = 0; i < expedicionesPrint.Count; i++)
+            {
+                <ImpresionExpediciones Orden=expedicionesPrint[i] Imprimir="@(()=>Print("datos"))" />
+            }
+        </div>
+    }
 }
 else
 {
@@ -66,8 +78,9 @@ else
 }
 
 @code {
-    bool showPage, isLoading;
+    bool showPage, isLoading, showPrint;
     List<OrdenExpedicion> expediciones = new();
+    List<OrdenExpedicion>? expedicionesPrint = null;
     RadzenDataGrid<OrdenExpedicion> grid;
     IList<OrdenExpedicion> selected = new List<OrdenExpedicion>();
 
@@ -102,13 +115,33 @@ else
                     AutoFocusFirstElement = false,
                     Width = "fit-content",
                     Height = "fit-content",
-                    Style = "max-width:60vw; max-height:90vh"
+                    Style = "max-width:80vw; max-height:90vh"
                 });
     }
 
     private async Task Imprimir()
     {
+        DialogCustom.OpenBusyWithLoader("Imprimiendo...");
+        expedicionesPrint = new();
+        foreach (var item in selected)
+        {
+            var aux = await OrdenesService.GetOrdenExpedicionImprimir(item.Orden);
+            expedicionesPrint.Add(aux);
+        }
+        showPrint = true;
+    }
 
+    public async Task Print(string id = "print")
+    {
+        await JSFunction.Imprimir(id);
+        showPrint = false;
+        expedicionesPrint = null;
+        foreach (var item in selected)
+        {
+            item.Impreso = true;
+        }
+        selected = new List<OrdenExpedicion>();
+        DialogCustom.CloseDialog();
     }
 
     private async Task Despachar()
