@@ -114,8 +114,8 @@
     {
         var response = await SeguridadService.PostPerfil(order);
 
-        lstPerfiles.Find(x => x.DescripcionPerfil == order.DescripcionPerfil).IdPerfil = int.Parse(response.Message);
-
+        lstPerfiles = await SeguridadService.GetPerfiles();
+        await grid.Reload();
         perfilesToInsert.Remove(order);
     }
 }
