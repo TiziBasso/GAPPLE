@@ -180,7 +180,33 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<PerfilUsuario>>($"{URI_BASE}/perfiles{stringJoin}");
         }
 
-        internal async ValueTask<List<Permiso>> GetPermisosTotal(int? idUsuario, int? idPerfil)
+        public async ValueTask<Response> PostPerfil(PerfilUsuario perfil)
+		{
+			var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/perfiles", perfil);
+			if (response.StatusCode == HttpStatusCode.OK)
+			{
+				return new(true);
+			}
+			else if (response.StatusCode == HttpStatusCode.BadRequest)
+				return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+			else
+				return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+		}
+
+		public async ValueTask<Response> PutPerfil(PerfilUsuario perfil)
+		{
+			var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/perfiles", perfil);
+			if (response.StatusCode == HttpStatusCode.OK)
+			{
+				return new(true);
+			}
+			else if (response.StatusCode == HttpStatusCode.BadRequest)
+				return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+			else
+				return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+		}
+
+		internal async ValueTask<List<Permiso>> GetPermisosTotal(int? idUsuario, int? idPerfil)
         {
             Dictionary<string, object> query = new();
             if (idUsuario != null) query["idUsuario"] = idUsuario.ToString();

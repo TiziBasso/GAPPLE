@@ -91,7 +91,34 @@ namespace GAPPLE.Server.Data
 
             return dt;
         }
+        public void PostUsuarioPerfiles(string? descripcion)
+        {
+			SqlConnection cnn;
+			SqlCommand cmd = new();
+			cnn = new(ConnectionString);
+			cmd.Connection = cnn;
+			cmd.CommandType = CommandType.StoredProcedure;
+			cmd.CommandText = "prc_ins_UsuarioPerfiles";
+			cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
+			cnn.Open();
+			cmd.ExecuteNonQuery();
+			cnn.Close();
+		}
+        public void PutUsuarioPerfiles(int? idPerfil, string? descripcion)
+        {
 
+			SqlConnection cnn;
+			SqlCommand cmd = new();
+			cnn = new(ConnectionString);
+			cmd.Connection = cnn;
+			cmd.CommandType = CommandType.StoredProcedure;
+			cmd.CommandText = "prc_upd_UsuarioPerfiles";
+            cmd.Parameters.AddWithValue("@pIdPerfeil", idPerfil);
+			cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
+			cnn.Open();
+			cmd.ExecuteNonQuery();
+			cnn.Close();
+		}
         internal int InsertarPermiso(int idPadre, string nombre, char tipo, string href, string icono, int orden)
         {
             int idPermiso = 0;
