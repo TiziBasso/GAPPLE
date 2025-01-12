@@ -7,77 +7,80 @@
 
 @if (showForm)
 {
-	<RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+    <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
 
-	<RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy" Style="height: 82vh;">
-		<HeaderTemplate>
-			<RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
-			<RadzenLabel Text="Clientes especiales: " Component="especial" />
-			<RadzenDropDown TValue="Opcion" Data="Variables.Clasificaciones" TextProperty="@nameof(Opcion.Descripcion)" Name="especial" Change="(() => OnChange(opcion))"/>
-		</HeaderTemplate>
-		<Columns>
-			<RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
-			<RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" Width="200px" />
-			<RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
-			<RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
-				<Template>
-					<RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-								  Click="@(() => Ver(context))" @onclick:stopPropagation="true" />
-					<RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
-				</Template>
-			</RadzenDataGridColumn>
-		</Columns>
-	</RadzenDataGrid>
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy" Style="height: 82vh;">
+        <HeaderTemplate>
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
+            <RadzenLabel Text="Clientes especiales: " Component="especial" />
+            <RadzenDropDown TValue="Opcion" @bind-Value=opcion Data="Variables.Clasificaciones" TextProperty="@nameof(Opcion.Descripcion)" Name="especial" Change="(() => OnChange(opcion))" />
+        </HeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" Width="200px" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
+                <Template>
+                    <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => Ver(context))" @onclick:stopPropagation="true" />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 else
 {
-	<Loader />
+    <Loader />
 }
 
 @code
 {
 
-	List<Cliente> clientes = new();
-	RadzenDataGrid<Cliente> grilla;
-	Opcion opcion;
-	bool showForm, isBusy;
+    List<Cliente> clientes = new();
+    RadzenDataGrid<Cliente> grilla;
+    //Opcion opcion = new();
+    Opcion opcion = new();
+    bool showForm, isBusy;
 
 
-	protected override async Task OnInitializedAsync()
-	{
-		clientes = await ClientesService.GetClientes(clienteEspecial: true);
-		showForm = true;
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        showForm = true;
+    }
 
-	async Task AgregarCliente()
-	{
-		isBusy = true;
-		await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "60vw", Height = "50vh" });
-		clientes = await ClientesService.GetClientes(clienteEspecial: true);
-		await grilla.Reload();
-		isBusy = false;
-	}
+    async Task AgregarCliente()
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente especial", null, new() { Width = "60vw", Height = "50vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
+    }
 
-	async Task Editar(Cliente cliente)
-	{
-		isBusy = true;
-		await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new() { { "Cliente", cliente } }, new() { Width = "40vw", Height = "46vh" });
-		clientes = await ClientesService.GetClientes(clienteEspecial: true);
-		await grilla.Reload();
-		isBusy = false;
-	}
+    async Task Editar(Cliente cliente)
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Editar cliente especial", new() { { "Cliente", cliente } }, new() { Width = "40vw", Height = "46vh" });
+        clientes = await ClientesService.GetClientes(clienteEspecial: true);
+        await grilla.Reload();
+        isBusy = false;
+    }
 
-	async Task Ver(Cliente cliente)
-	{
-		isBusy = true;
-		await DialogService.OpenAsync<ClienteAdd>($"Ver cliente especial", new() { { "Cliente", cliente }, { "DisabledInputs", true } }, new() { Width = "40vw", Height = "46vh" });
-		isBusy = false;
-	}
+    async Task Ver(Cliente cliente)
+    {
+        isBusy = true;
+        await DialogService.OpenAsync<ClienteAdd>($"Ver cliente especial", new() { { "Cliente", cliente }, { "DisabledInputs", true } }, new() { Width = "40vw", Height = "46vh" });
+        isBusy = false;
+    }
 
-	public async Task OnChange(Opcion opcion)
-	{
-	
-		clientes = await ClientesService.GetClientes(clienteEspecial: opcion.Id as bool?);
-		await grilla.Reload();
-	}
+    public async Task OnChange(Opcion opcion)
+    {
+        isBusy = true;
+        clientes = await ClientesService.GetClientes(clienteEspecial: (bool?)opcion.Id );
+        Console.WriteLine(clientes.Count);
+        await grilla.Reload();
+        isBusy = false;
+    }
 }
