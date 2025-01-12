@@ -41,7 +41,7 @@
         }
         else
         {
-            clientes = await ClientesService.GetClientes(clienteEspecial: true);
+            clientes = await ClientesService.GetClientes(clienteEspecial: null);
             idCliente = (int)cliente.IdCliente;
             observaciones = cliente.Observaciones;
         }
