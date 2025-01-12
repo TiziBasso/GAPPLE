@@ -25,7 +25,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void PostPermisoPorPerfil(int idPerfil, int idPermiso, IDbTransaction trans)
+        public void PostPermisoPorPerfil(int idPerfil, int idPermiso, IDbTransaction? trans)
         {
             SqlConnection cnn;
             SqlCommand cmd = new();
@@ -201,6 +201,44 @@ namespace GAPPLE.Server.Data
                 da.Fill(dt);
             }
             return dt;
+        }
+
+        public int PostPerfil(string descripcion)
+        {
+            int idGenerado = 0;
+            using (SqlConnection cnn = new SqlConnection(ConnectionString))
+            {
+                using (SqlCommand cmd = new SqlCommand("prc_ins_UsuarioPerfil", cnn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
+                    SqlParameter outputParam = new SqlParameter("@pIdGenerado", SqlDbType.Int)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(outputParam);
+                    cnn.Open();
+                    cmd.ExecuteNonQuery();
+                    idGenerado = (int)outputParam.Value;
+                }
+            }
+            return idGenerado;
+        }
+
+
+        public void PutPerfil(int idPerfil, string descripcion)
+        {
+            SqlConnection cnn;
+            SqlCommand cmd = new();
+            cnn = new(ConnectionString);
+            cmd.Connection = cnn;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_UsuarioPerfil";
+            cmd.Parameters.AddWithValue("@pIdPerfil", idPerfil);
+            cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
+            cnn.Open();
+            cmd.ExecuteNonQuery();
+            cnn.Close();
         }
     }
 }

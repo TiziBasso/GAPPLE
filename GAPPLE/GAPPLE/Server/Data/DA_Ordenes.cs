@@ -313,5 +313,22 @@ namespace GAPPLE.Server.Data
                 cnn.Close();
             }
         }
+
+        public DataTable GetCantidadesProductos()
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_CantidadesDeProductos"
+                };
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
     }
 }

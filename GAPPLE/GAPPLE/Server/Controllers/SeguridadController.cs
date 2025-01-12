@@ -416,5 +416,37 @@ namespace GAPPLE.Server.Controllers
 
             return StatusCode(StatusCodes.Status200OK, sesionDTO);
         }
+
+        [HttpPost("Perfilusuario")]
+        public IActionResult PostPerfil(PerfilUsuario perfil)
+        {
+            DA_Usuario daU = new(Configuration.GetConnectionString("DefaultConnection"));
+
+            try
+            {
+                int id = daU.PostPerfil(perfil.DescripcionPerfil);
+                return Ok(id);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("Perfilusuario")]
+        public IActionResult PutPerfil(PerfilUsuario perfil)
+        {
+            DA_Usuario daU = new(Configuration.GetConnectionString("DefaultConnection"));
+
+            try
+            {
+                daU.PutPerfil((int)perfil.IdPerfil!, perfil.DescripcionPerfil);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

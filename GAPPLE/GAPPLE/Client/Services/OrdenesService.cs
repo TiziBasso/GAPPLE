@@ -170,5 +170,10 @@ namespace GAPPLE.Client.Services
                 return new(false);
             }
         }
+
+        public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos()
+        {
+            return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos");
+        }
     }
 }

@@ -18,6 +18,7 @@
                             <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
                             <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
                         </RadzenStack>
+                        <RadzenAppearanceToggle />
                         <RadzenProfileMenu>
                             <Template>
                                  <RadzenLabel Text="@authenticationState.User.Identity!.Name" />

@@ -52,6 +52,31 @@
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                <RadzenCard Style="width:290px;height:fit-content">
+                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                        <strong>Cantidad de productos aprobados del mes</strong>
+                    </div>
+                    <hr />
+                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadAprobada</h5>
+                    </div>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                <RadzenCard Style="width:290px;height:fit-content">
+                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                        <strong>Cantidad de productos pendientes del mes</strong>
+                    </div>
+                    <hr />
+                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadPendiente</h5>
+                    </div>
+                </RadzenCard>
+            </RadzenColumn>
+
         </RadzenRow>
     </RadzenColumn>
 </RadzenRow>
@@ -70,6 +95,7 @@
     .rz-humanistic,
     .rz-humanistic-dark {
         .rz-card:has(.rz-tabview)
+
     {
         --rz-card-border: none;
     }
@@ -82,6 +108,8 @@
     IEnumerable<OrdenDashboard> openIssues;
     IEnumerable<OrdenDashboard> closedIssues;
 
+    CantidadesProductosDashboard cantidadesProductos = new();
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -89,6 +117,7 @@
             fetchingData = true;
             try
             {
+                cantidadesProductos = await OrdenesService.GetCantidadesDeProductos();
                 issues = await OrdenesService.GetOrdenDashboard();
                 openIssues = issues.Where(x => x.AltaRegistro != null);
                 closedIssues = issues.Where(x => x.FechaAprobacion != null);

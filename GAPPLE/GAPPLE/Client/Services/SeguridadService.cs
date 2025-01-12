@@ -210,5 +210,27 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.GetAsync($"{URI_BASE}/menu?idUsuario={idUsuario}");
             return response.StatusCode == HttpStatusCode.OK ? await response.Content.ReadFromJsonAsync<List<MenuNew>>() : null;
         }
+
+        internal async ValueTask<Response> PostPerfil(PerfilUsuario perfilUsuario)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/Perfilusuario", perfilUsuario);
+            if (response.IsSuccessStatusCode)
+                return new(true, await response.Content.ReadAsStringAsync());
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+            else
+                return new(false, null, await response.Content.ReadAsStringAsync());
+        }
+
+        internal async ValueTask<Response> PutPerfil(PerfilUsuario perfilUsuario)
+        {
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/Perfilusuario", perfilUsuario);
+            if (response.IsSuccessStatusCode)
+                return new(response.IsSuccessStatusCode);
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+            else
+                return new(false, null, await response.Content.ReadAsStringAsync());
+        }
     }
 }

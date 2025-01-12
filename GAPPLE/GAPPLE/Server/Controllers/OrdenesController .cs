@@ -484,5 +484,22 @@ namespace GAPPLE.Server.Controllers
                 daO.PersistirPedidoImpresion(idPedido);
             return orden;
         }
+        
+        [HttpGet("cantidadesproductos")]
+        public CantidadesProductosDashboard GetCantidadesDeProductos()
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            CantidadesProductosDashboard c = new();
+            using (DataTable dt = daO.GetCantidadesProductos())
+            {
+                foreach(DataRow row in dt.Rows)
+                {
+                    c.CantidadAprobada = int.Parse(row["TotalCantidadAprobada"].ToString());
+                    c.CantidadPendiente = int.Parse(row["TotalCantidadPendiente"].ToString());
+                }
+            }
+
+            return c;
+        }
     }
 }
