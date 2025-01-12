@@ -14,7 +14,7 @@ namespace GAPPLE.Client.Services
         private NavigationManager NavigationManager { get; }
         private const string URI_BASE = "api/seguridad";
 
-        public SeguridadService(HttpClient httpClient, NavigationManager navigationManager)
+        public SeguridadService(HttpClient httpClient, NavigationManager navigationManager, SesionDTO sesionDTOs)
         {
             HttpClient = httpClient;
             NavigationManager = navigationManager;
@@ -29,7 +29,7 @@ namespace GAPPLE.Client.Services
                 return null;
         }
 
-        internal async ValueTask ValidatePageAccess()
+        internal async ValueTask ValidatePageAccess(int? idUsuario)
         {
             string href = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
 
@@ -38,7 +38,7 @@ namespace GAPPLE.Client.Services
                 href = href.Remove(href.IndexOf('?'));
             }
 
-            var response = await HttpClient.GetAsync($"{URI_BASE}/validaracceso?href={WebUtility.UrlEncode(href.ToLower())}");
+            var response = await HttpClient.GetAsync($"{URI_BASE}/validaracceso?href={WebUtility.UrlEncode(href.ToLower())}&idUsuario={idUsuario}");
             bool? res = await response.Content.ReadAsStringAsync() == "" ? null : bool.Parse(await response.Content.ReadAsStringAsync());
 
             if (res == false)
@@ -47,19 +47,19 @@ namespace GAPPLE.Client.Services
                 NavigationManager.NavigateTo(Tools.Variables.ErrorPages.UsuarioNoEncontrado);
         }
 
-        internal async ValueTask<List<Menu>> GetPermisos()
+        internal async ValueTask<List<Menu>> GetPermisos(int? idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<List<Menu>>($"{URI_BASE}/permisos");
         }
 
-        internal async Task<List<string>> GetPermisos(string nombrePermiso, char tipoPermiso = 'P')
+        internal async Task<List<string>> GetPermisos(string nombrePermiso, char tipoPermiso = 'P', int? idUsuario = null)
         {
             return await HttpClient.GetFromJsonAsync<List<string>>($"{URI_BASE}/permisos/componente?nombre={nombrePermiso}&tipoPermiso={tipoPermiso}");
         }
 
-        internal async ValueTask<List<string>> ValidatePageAccess(string nombrePermiso)
+        internal async ValueTask<List<string>> ValidatePageAccess(string nombrePermiso, int? idUsuario)
         {
-            var permisos = await GetPermisos(nombrePermiso);
+            var permisos = await GetPermisos(nombrePermiso, idUsuario:idUsuario);
 
             if (!permisos.Any())
             {

@@ -185,6 +185,22 @@ namespace GAPPLE.Server.Data
             }
             return dt;
         }
+        
+        public DataTable ObtenerZonasPorUsuario(int idUsuario )
+        {
+            DataTable dt = new();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                using SqlCommand cmd = new();
+                cmd.Connection = cnn;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_geT_ZonasPorUsuario";
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
 
         public DataTable ObtenerUsuarioLogin(string nombreUsuario, string contrasenia)
         {
@@ -224,7 +240,6 @@ namespace GAPPLE.Server.Data
             }
             return idGenerado;
         }
-
 
         public void PutPerfil(int idPerfil, string descripcion)
         {

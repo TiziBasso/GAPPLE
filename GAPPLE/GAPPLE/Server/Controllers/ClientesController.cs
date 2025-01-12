@@ -10,6 +10,7 @@ namespace GAPPLE.Server.Controllers
     public class ClientesController : ControllerBase
     {
         private IConfiguration Configuration { get; }
+        private SesionDTO SesionDTO { get; }
 
         public ClientesController(IConfiguration configuration)
         {
@@ -17,11 +18,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
+        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null, int? idUsuario = null)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Cliente> lst = new();
-            foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, null).Rows)
+            foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, idUsuario, null).Rows)
             {
                 Cliente c = new Cliente();
                 c.IdCliente = int.Parse(row["IdCliente"].ToString()!);

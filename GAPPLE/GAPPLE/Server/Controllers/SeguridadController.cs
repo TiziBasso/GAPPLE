@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
 using System.Security.Claims;
+using System.Transactions;
 
 namespace GAPPLE.Server.Controllers
 {
@@ -55,14 +56,49 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
             daS.PostUsuario(usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña);
+
+            using (SqlConnection connection = new(Configuration.GetConnectionString("DefaultConnection")))
+            {
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    daS.InsertarZonasPorUsuario(string.Join(",", usuario.Zonas), usuario.IdUsuario, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction?.Rollback();
+                    return StatusCode(500, ex.ToString());
+                }
+            }
+
             return Ok();
         }
-
+        
         [HttpPut("usuario")]
         public IActionResult PutUsuario(Usuario usuario)
         {
             DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
             daS.PutUsuario(usuario.IdUsuario, usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña);
+
+            using (SqlConnection connection = new(Configuration.GetConnectionString("DefaultConnection")))
+            {
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    daS.EliminarZonasPorUsuario(usuario.IdUsuario, transaction);
+                    daS.InsertarZonasPorUsuario(string.Join(",",usuario.Zonas), usuario.IdUsuario, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction?.Rollback();
+                    return StatusCode(500, ex.ToString());
+                }
+            }
+
             return Ok();
         }
 
@@ -85,24 +121,24 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("validaracceso")]
-        public bool? ValidarAcceso(string href)
+        public bool? ValidarAcceso(string href, int? idUsuario)
         {
             DA_Parametro daP = new(Configuration.GetConnectionString("DefaultConnection"));
-            if (Usuario != null)
-                return daP.ObtenerPermisos(Usuario.IdUsuario, 'M', "/" + href, null, null).Rows.Count > 0;
+            if (idUsuario != null)
+                return daP.ObtenerPermisos(idUsuario, 'M', "/" + href, null, null).Rows.Count > 0;
             else return null;
         }
 
         [HttpGet("permisos/componente")]
-        public List<string> ObtenerPermisos(string nombre, char tipoPermiso)
+        public List<string> ObtenerPermisos(string nombre, char tipoPermiso, int? idUsuario)
         {
             List<string> list = new();
 
-            if (Usuario != null)
+            if (idUsuario != null)
             {
                 DA_Parametro daP = new(Configuration.GetConnectionString("DefaultConnection"));
-                int idPermiso = (int)daP.ObtenerPermisos(Usuario.IdUsuario, null, null, null, nombre).Rows[0]["IdPermiso"];
-                foreach (DataRow row in daP.ObtenerPermisos(Usuario.IdUsuario, tipoPermiso, null, idPermiso, null).Rows)
+                int idPermiso = (int)daP.ObtenerPermisos(idUsuario, null, null, null, nombre).Rows[0]["IdPermiso"];
+                foreach (DataRow row in daP.ObtenerPermisos(idUsuario, tipoPermiso, null, idPermiso, null).Rows)
                 {
                     if (row["HRef"] != DBNull.Value)
                         list.Add((string)row["HRef"]);
@@ -227,11 +263,20 @@ namespace GAPPLE.Server.Controllers
                     NombreUsuario = (string)row["NombreUsuario"],
                     ApellidoYNombre = (string)row["ApellidoYNombre"],
                     Perfil = (int)row["IdPerfil"],
-                    Provincia = (string)row["Provincia"]
+                    Provincia = (string)row["Provincia"],
+                    Contraseña = (string)row["Contraseña"],
+                    Habilitado = bool.Parse(row["Habilitado"].ToString())
                 };
 
                 if (row["Provincia"] != DBNull.Value) usuario.Provincia = (string)row["Provincia"];
                 if (row["Correo"] != DBNull.Value) usuario.Email = (string)row["Correo"];
+
+                dt = da.ObtenerZonasPorUsuario(id);
+                List<string> zonas = new List<string>();
+                foreach (DataRow dr in dt.Rows) {
+                    zonas.Add(dr["CodZona"].ToString());
+                }
+                usuario.Zonas = zonas;
             }
             return usuario;
         }

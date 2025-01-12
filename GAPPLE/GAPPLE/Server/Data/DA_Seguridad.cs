@@ -1,6 +1,7 @@
 ﻿using System.Data.SqlClient;
 using System.Data;
 using GAPPLE.Shared.Model;
+using System.Diagnostics;
 
 namespace GAPPLE.Server.Data
 {
@@ -172,6 +173,29 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_del_PermisoPorUsuario";
             cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             cmd.Parameters.AddWithValue("@pIdPermiso", idPermiso);
+            cmd.ExecuteNonQuery();
+        }
+
+
+        internal void InsertarZonasPorUsuario(string zonas, int idUsuario, SqlTransaction trans)
+        {
+            SqlConnection cnn = trans.Connection;
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = trans;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_ZonasPorUsuario";
+            cmd.Parameters.AddWithValue("@pIdZonas", zonas);
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            cmd.ExecuteNonQuery();
+        }
+        internal void EliminarZonasPorUsuario(int idUsuario, SqlTransaction trans)
+        {
+            SqlConnection cnn = trans.Connection;
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = trans;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_ZonasPorUsuario";
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             cmd.ExecuteNonQuery();
         }
 

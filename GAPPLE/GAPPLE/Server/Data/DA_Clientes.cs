@@ -12,7 +12,7 @@ namespace GAPPLE.Server.Data
         public DA_Clientes(string connectionString) => ConnectionString = connectionString;
 
 
-        public DataTable ObtenerClientes(string? codCliente, string? razonSocial, string? cuit, bool? clienteEspecial, SqlTransaction? transaction = null)
+        public DataTable ObtenerClientes(string? codCliente, string? razonSocial, string? cuit, bool? clienteEspecial, int? idUsuario, SqlTransaction? transaction = null)
         {
 
             SqlConnection cnn;
@@ -37,6 +37,7 @@ namespace GAPPLE.Server.Data
             if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocial", razonSocial);
             if (cuit != null) cmd.Parameters.AddWithValue("@pCUIT", cuit);
             if (clienteEspecial != null) cmd.Parameters.AddWithValue("@pClienteEspecial", clienteEspecial);
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);
 

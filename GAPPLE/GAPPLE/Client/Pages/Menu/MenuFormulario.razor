@@ -112,7 +112,7 @@ else
             new('N', "Notificación")
         };
 
-        Data = await SeguridadService.GetPermisos();
+        Data = await SeguridadService.GetPermisos(null);
         DataPadre = Data.Where(x => x.IdPadre == null).ToList();
         loaderContainerVisible = false;
     }

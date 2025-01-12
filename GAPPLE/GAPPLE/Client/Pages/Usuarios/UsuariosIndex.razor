@@ -8,6 +8,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
+@inject SesionDTO SesionDTO
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
 @attribute [Authorize]
@@ -59,7 +60,7 @@
                 <Columns>
                     <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.NombreUsuario)" Title="Usuario" TextAlign="TextAlign.Left" Width="200px" />
                     <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.ApellidoYNombre)" Title="Apellido y nombre" TextAlign="TextAlign.Left" Width="400px" />
-                    <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.Habilitado)" Title="Pasivo" TextAlign="TextAlign.Center" Width="85px" Filterable=false>
+                    <RadzenDataGridColumn TItem="Usuario" Property="@nameof(Usuario.Habilitado)" Title="Habilitado" TextAlign="TextAlign.Center" Width="85px" Filterable=false>
                         <Template>
                             <RadzenCheckBox Value="@context.Habilitado" ReadOnly=true />
                         </Template>
@@ -88,17 +89,16 @@ else
     List<PerfilUsuario> perfiles = Enumerable.Empty<PerfilUsuario>().ToList();
     RadzenDataGrid<Usuario> grid;
     List<Usuario> lstUsuarios = new();
-    List<string> permisos = new List<string> { "alta", "ver", "edicion" };
+    List<string> permisos = new() { "ver","edicion"};
     RadzenTextBox refNombreUsuario;
     bool showForm, buscandoUsuarios;
     string apeYNom = null, nombreUsuario = null, perfil;
     int estado = 2, render = 0;
     List<string> estados = new List<string> { "Ambos", "Activo", "Pasivo" };
 
-
     protected override async Task OnInitializedAsync()
     {
-        // await SeguridadService.ValidatePageAccess();
+        await SeguridadService.ValidatePageAccess(SesionDTO.IdUsuario);
         // permisos = await SeguridadService.GetPermisos("usuarios");
         perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
         showForm = true;

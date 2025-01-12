@@ -4,6 +4,7 @@ using GAPPLE.Client.Extensiones;
 using GAPPLE.Client.Helpers;
 using GAPPLE.Client.Services;
 using GAPPLE.Client.Tools;
+using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -38,4 +39,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<OrdenesService>();
     services.AddScoped<JSFunction>();
     services.AddScoped<IJSFunction, JSFunction>();
+    services.AddScoped<SesionDTO>();
 }

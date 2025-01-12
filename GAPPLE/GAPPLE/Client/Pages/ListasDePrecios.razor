@@ -9,10 +9,10 @@
 @if (showForm)
 {
 	<RadzenRow JustifyContent="JustifyContent.Center">
-		<RadzenColumn Size="10" Offset="1">
+		<RadzenColumn Size="10">
 
 			<RadzenDataGrid @ref="grilla" Data="listasDePrecios.OrderBy(x => x.Descripcion)" AllowSorting="true" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-			FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh; width: 150vh">
+			FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh;">
 				<Columns>
 					<RadzenDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Codigo" TextAlign="TextAlign.Right" Width="110px" Sortable="true" />
 					<RadzenDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Lista de precios" TextAlign="TextAlign.Left" Sortable="false" />

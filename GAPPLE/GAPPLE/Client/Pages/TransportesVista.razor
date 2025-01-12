@@ -9,10 +9,10 @@
 @if (showForm)
 {
 	<RadzenRow JustifyContent="JustifyContent.Center">
-		<RadzenColumn Size="10" Offset="1">
+		<RadzenColumn Size="10">
 
 			<RadzenDataGrid @ref="grilla" Data="transportes" AllowSorting="true" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-							FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh; width: 150vh">
+							FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh;">
 				<Columns>
 					<RadzenDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Codigo" TextAlign="TextAlign.Right" Width="110px" Sortable="true"/>
 					<RadzenDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Transporte" TextAlign="TextAlign.Left" Sortable="false" />
@@ -31,7 +31,6 @@ else
 
 @code
 {
-
 	List<Transporte> transportes = new();
 
 	RadzenDataGrid<Transporte> grilla;

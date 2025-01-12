@@ -5,6 +5,7 @@
 @using GAPPLE.Client.Extensiones
 @using Microsoft.AspNetCore.Components.Authorization;
 @inject AuthenticationStateProvider autenticacionProvider
+@inject SesionDTO SesionDTO
 @inject NavigationManager navManager
 
 <AuthorizeView>
@@ -78,6 +79,8 @@
     {
         var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
         authenticationState = await autenticacionExt.GetAuthenticationStateAsync();
+        if(authenticationState.User.Identity.Name != null)
+            SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
         showPage = true;
     }
 

@@ -11,9 +11,14 @@ namespace GAPPLE.Client.Services
     {
         [Inject]
         private HttpClient HttpClient { get; set; }
+        private SesionDTO SesionDTO { get; }
         private const string URI_BASE = "api/clientes";
 
-        public ClientesService(HttpClient httpClient) => HttpClient = httpClient;
+        public ClientesService(HttpClient httpClient, SesionDTO sesionDTO)
+        {
+            HttpClient = httpClient;
+            SesionDTO = sesionDTO;
+        }
 
         public async ValueTask<List<Cliente>> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
         {
@@ -23,6 +28,8 @@ namespace GAPPLE.Client.Services
             if (codCliente != null) query["codCliente"] = codCliente;
             if (razonSocial != null) query["razonSocial"] = razonSocial.Trim();
             if (cuit != null) query["cuit"] = cuit;
+            query["idUsuario"] = SesionDTO.IdUsuario;
+
 
             if (query.Any())
                 uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";

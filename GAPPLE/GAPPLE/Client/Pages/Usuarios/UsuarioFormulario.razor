@@ -6,6 +6,8 @@
 @inject RadzenCustom DialogCustom
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
+@inject SesionDTO SesionDTO
+@inject OrdenesService OrdenesService
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
 @attribute [Authorize]
@@ -74,7 +76,7 @@
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Perfil integra:" Style="margin-bottom:5px" />
+                    <RadzenLabel Text="Perfil:" Style="margin-bottom:5px" />
                     <RadzenDropDown Data="perfiles" @bind-Value=@Usuario.Perfil TextProperty="@nameof(PerfilUsuario.DescripcionPerfil)"
                                     ValueProperty="@nameof(PerfilUsuario.IdPerfil)" Disabled="@disableEdit" AllowSelectAll=false AllowClear=true
                                     AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Style="width:20rem" />
@@ -83,6 +85,24 @@
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="margin-top:2rem;width: 20rem;">
                     <RadzenLabel Text="Habilitado:" />
                     <RadzenCheckBox @bind-Value=@Usuario.Habilitado Disabled=disableEdit />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenRow>
+
+        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Zonas:" Style="margin-bottom:5px" />
+                    @* <RadzenCheckBoxList @bind-Value=@Usuario.Zonas AllowSelectAll="true" SelectAllText="Todas" TValue="string" Orientation="Orientation.Vertical" Style="height:15vh;">
+                        <Items>
+                            @foreach(var zona in zonas){
+                                <RadzenCheckBoxListItem Text="@zona.Descripcion" Value="@zona.CodigoTango" />
+                            }
+                        </Items>
+                    </RadzenCheckBoxList> *@
+                        <RadzenDropDown @bind-Value=@Usuario.Zonas Data=@zonas TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" Name="DropDownMultipleMaxLabels"
+                                        Multiple=true AllowClear=true Placeholder="Seleccionar zonas"
+                                        MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionadas" Style="width: 40rem;" />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>
@@ -108,6 +128,7 @@ else
 @code {
     [Parameter] public string Operacion { get; set; }
     [Parameter] public int? IdUsuario { get; set; }
+    List<Zonas> zonas = new List<Zonas>();
     EditContext editContext;
     CustomValidation customValidation;
     Operaciones operacion;
@@ -125,12 +146,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         Operacion = Operacion.ToLower();
-        if (((Operacion == "ver" || Operacion == "edicion") && IdUsuario == null) || Operacion == "alta" && IdUsuario != null)
-        {
-            NavigationManager.NavigateTo("errorpage");
-        }
+        // if (((Operacion == "ver" || Operacion == "edicion") && IdUsuario == null) || Operacion == "alta" && IdUsuario != null)
+        // {
+        //     NavigationManager.NavigateTo("errorpage");
+        // }
 
-        // var permisos = await SeguridadService.ValidatePageAccess("usuarios");
+        // var permisos = await SeguridadService.ValidatePageAccess("usuarios", SesionDTO.IdUsuario);
         // if (!permisos.Exists(x => x == Operacion.ToLower()))
         // {
         //     NavigationManager.NavigateTo("errorpage");
@@ -162,6 +183,7 @@ else
         }
 
         perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
+        zonas = await OrdenesService.GetZonas();
 
         editContext = new(Usuario);
         showForm = true;
