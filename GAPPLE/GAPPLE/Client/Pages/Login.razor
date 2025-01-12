@@ -8,38 +8,50 @@
 @inject AuthenticationStateProvider autenticacionProvider
 @inject NavigationManager navManager
 
-<div class="row mt-5">
-
-    <div class="col-lg-4 offset-lg-4 border">
-
-        <div class="mb-3 text-center">
-            <h3>LOGIN</h3>
-        </div>
-
-        <div class="mb-3">
-            <label>Correo</label>
-            <input @bind="login.Correo" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label>Contraseña</label>
-            <input @bind="login.Clave" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <button @onclick="IniciarSesion" class="btn btn-primary">Login</button>
-        </div>
-
+<div class="login-container">
+    <div class="welcome-section">
+        <h1>Bienvenido a Zentra</h1>
+        <ul class="items-list">
+            <li>Realiza pedidos de manera rápida y sin complicaciones.</li>
+            <li>Estamos listos para ayudarte.</li>
+            <li>Inicia sesión y descubre Zentra.</li>
+        </ul>
     </div>
 
+    <div class="login-section">
+        <img src="./Assets/Logo_Ital.png" alt="Logo Italcosmetica" class="logo" />
+        <h2>Iniciar Sesión</h2>
+        <p>Ingrese sus credenciales para acceder a Zentra</p>
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error-message">@ErrorMessage</p>
+        }
+        <EditForm Model="@login" OnValidSubmit="IniciarSesion">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label for="email">Usuario: </label>
+                <InputText id="email" class="form-control" @bind-Value="login.Correo" placeholder="nombre usuario" />
+                <ValidationMessage For="@(() => login.Correo)" />
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="login.Clave" />
+                <ValidationMessage For="@(() => login.Clave)" />
+            </div>
+            <div style="display:flex;justify-content:center;">
+            <button type="submit" class="btn btn-primary">Ingresar</button>
+            </div>
+        </EditForm>
+    </div>
 </div>
-
 
 @code {
     private LoginDTO login = new LoginDTO();
+    string? ErrorMessage = null;
 
     private async Task IniciarSesion()
     {
+        ErrorMessage = null;
         var loginResponse = await httpClient.PostAsJsonAsync<LoginDTO>("/api/seguridad/Login", login);
         if (loginResponse.IsSuccessStatusCode)
         {
@@ -49,6 +61,185 @@
 
             navManager.NavigateTo("/home");
         }
+        else
+        {
+            ErrorMessage = "Las credenciales no son correctas";
+        }
+    }
+}
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Arial', sans-serif;
+        background-color: #f5f5f5;
     }
 
-}
+    .error-message {
+        margin: 0;
+        color: red;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .login-container {
+        display: flex;
+        height: 100vh;
+    }
+
+    .welcome-section {
+        flex: 1;
+        background-color: #005f43;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items:center;
+        padding: 40px;
+    }
+
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .welcome-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+            .welcome-section ul li {
+                margin: 10px 0;
+            }
+
+    .login-section {
+        flex: 1;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        box-shadow: -3px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+        width: 300px;
+        margin-bottom: 20px;
+    }
+
+    .login-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .login-section .form-group {
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+        .login-section .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+    .login-section .form-control {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .login-section .btn-primary {
+        background-color: #005f43;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .login-section .btn-primary:hover {
+            background-color: #007b57;
+        }
+
+    .social-login {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+        .social-login button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+    .welcome-section {
+        flex: 1;
+        background: #005f43; /* Color de fondo base */
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2), transparent 50%), radial-gradient(circle at 80% 70%, rgba(0, 255, 128, 0.2), transparent 50%), radial-gradient(circle at 50% 50%, rgba(255, 255, 0, 0.15), transparent 60%);
+            z-index: 0;
+        }
+
+        .welcome-section h1,
+        .welcome-section p,
+        .welcome-section ul {
+            position: relative;
+            z-index: 1; /* Para que los textos estén encima del fondo */
+        }
+
+    .items-list {
+        list-style: none; /* Elimina los puntos de la lista */
+        padding: 0;
+        margin: 0;
+    }
+
+        .items-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #e0e0e0; /* Color claro que combina con el fondo verde */
+            font-weight: 500;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+            .items-list li:hover {
+                color: #ffffff; /* Color más brillante al pasar el mouse */
+                transform: translateX(10px); /* Efecto de movimiento suave */
+            }
+
+            .items-list li::before {
+                content: '✔'; /* Ícono decorativo (puedes cambiarlo) */
+                color: #4caf50; /* Verde brillante */
+                font-size: 18px;
+                margin-right: 10px;
+                transition: color 0.3s ease;
+            }
+
+            .items-list li:hover::before {
+                color: #76ff03; /* Verde más brillante al pasar el mouse */
+            }
+
+</style>

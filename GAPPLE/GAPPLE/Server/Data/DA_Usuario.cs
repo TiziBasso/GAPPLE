@@ -185,5 +185,22 @@ namespace GAPPLE.Server.Data
             }
             return dt;
         }
+
+        public DataTable ObtenerUsuarioLogin(string nombreUsuario, string contrasenia)
+        {
+            DataTable dt = new();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                using SqlCommand cmd = new();
+                cmd.Connection = cnn;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_get_UsuarioLogin";
+                cmd.Parameters.AddWithValue("@pNombreUsuario", nombreUsuario);
+                cmd.Parameters.AddWithValue("@pContrasenia", contrasenia);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
     }
 }

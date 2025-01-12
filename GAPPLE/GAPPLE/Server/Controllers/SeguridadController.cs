@@ -397,18 +397,21 @@ namespace GAPPLE.Server.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO login)
         {
+            DA_Usuario daU = new(Configuration.GetConnectionString("DefaultConnection"));
             SesionDTO sesionDTO = new SesionDTO();
-
-            if (login.Correo == "admin" && login.Clave == "admin")
+            using (DataTable dt = daU.ObtenerUsuarioLogin(login.Correo, login.Clave))
             {
-                sesionDTO.IdUsuario = 1;
-                sesionDTO.Nombre = "admin";
-                sesionDTO.Correo = login.Correo;
-                sesionDTO.Rol = "Administrador";
-            }
-            else
-            {
-                return Unauthorized();
+                if (dt.Rows.Count > 0)
+                {
+                    sesionDTO.IdUsuario = int.Parse(dt.Rows[0]["IdUsuario"].ToString()!);
+                    sesionDTO.Nombre = dt.Rows[0]["NombreUsuario"].ToString();
+                    sesionDTO.Correo = dt.Rows[0]["Correo"].ToString();
+                    sesionDTO.Rol = dt.Rows[0]["IdPerfil"].ToString();
+                }
+                else
+                {
+                    return Unauthorized();
+                }
             }
 
             return StatusCode(StatusCodes.Status200OK, sesionDTO);
