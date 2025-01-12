@@ -45,6 +45,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        Console.WriteLine(PageNum + " " + Detalle?.Any() + " " + Pendientes?.Any());
         if (PageNum == CantPages && ShouldPrint)
         {
             await Task.Delay(100);

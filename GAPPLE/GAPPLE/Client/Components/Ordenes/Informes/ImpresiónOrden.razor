@@ -21,7 +21,7 @@
 
 
     bool showModal;
-    int cantPages = 0, lineasXPag = 50;
+    int cantPages = 0, lineasXPag = 40, aux;
 
     protected override void OnInitialized()
     {
@@ -45,7 +45,16 @@
         if (detalle.Count > 0) showed -= detalle.Count;
         else showed -= Detalle!.Count;
 
-        pendientes = Pendientes?.Skip(showed)?.Take(remaining).ToList();
+        //No preguntar por el +3, funciona. Tampoco cambiar LineasXPag porque se rompe xd, si se toca esto hay que cambiar la logica y que sea solo 1 List<T>
+        int showedPend = 0;
+        if (page != 0 && remaining == lineasXPag)
+        {
+            aux++;
+            showedPend = (Detalle.Count % (lineasXPag * aux)) + 3;
+        }
+        else remaining--;
+
+        pendientes = Pendientes?.Skip(showedPend)?.Take(remaining).ToList();
         if (pendientes != null)
         {
             remaining -= pendientes.Count;

@@ -31,6 +31,7 @@
             </tr>
         </tbody>
     }
+
     @if (Pendientes != null && Pendientes.Any())
     {
         i = 0;
@@ -38,14 +39,14 @@
             <tr>
                 <th colspan="6" style="border: 1px solid black;border-right: none;border-left: none;">PENDIENTES</th>
             </tr>
-            <tr>
+            @* <tr>
                 <th style="border:1px solid;border-right: none; padding: 5px;">#</th>
                 <th style="border:1px solid;border-right: none; padding: 5px;">ID</th>
                 <th style="border:1px solid;border-right: none;padding: 5px;">Producto</th>
                 <th style="border:1px solid;border-right: none;padding: 5px;">Cantidad</th>
                 <th style="border:1px solid;border-right: none;padding: 5px;">Descuento</th>
                 <th style="border:1px solid;padding: 5px;">Probador</th>
-            </tr>
+            </tr> *@
             @foreach (var item in Pendientes)
             {
                 i++;
