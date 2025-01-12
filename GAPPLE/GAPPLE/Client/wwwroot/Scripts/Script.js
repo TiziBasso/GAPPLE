@@ -216,3 +216,148 @@ function navigationOnGrid(arrow, idGrid, cantCols) {
         }
     }
 }
+
+function ExpandirMenu(id) {
+    let nodoMostrar = document.getElementById(id)
+    let nodoPadre = nodoMostrar
+    let nivel = 0
+    let padreEncontrado = false
+    while (padreEncontrado == false) {
+        if (nodoPadre.parentElement.id != 'padreMenu') {
+            nivel++
+            nodoPadre = nodoPadre.parentElement
+        } else {
+            nivel++
+            padreEncontrado = true
+        }
+    }
+
+    if (nodoMostrar.nextSibling != null) {
+        if (nodoMostrar.getAttribute('expand') == 0) {
+            nodoMostrar.setAttribute('expand', 1)
+            document.getElementById(`icon${id}`).textContent = 'keyboard_arrow_up'
+            let lis = Array.from(nodoMostrar.nextSibling.childNodes).filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI')
+            lis.forEach(function (args) {
+                if (args.getAttribute('data-nodoVisible') == 1) {
+                    args.setAttribute('data-nodoVisible', 0)
+                } else {
+                    args.setAttribute('data-nodoVisible', 1)
+                    if (args.firstChild.tagName === 'A')
+                        args.firstChild.style.padding = `10px 0 5px ${nivel * 30}px`
+                    else
+                        args.style.padding = `10px 0 5px ${nivel * 30}px`
+                }
+            });
+        } else {
+            nodoMostrar.setAttribute('expand', 0)
+            document.getElementById(`icon${nodoMostrar.id}`).textContent = 'keyboard_arrow_down'
+            let nodosAOcultar = Array.from(nodoMostrar.nextSibling.querySelectorAll('[data-nodovisible="1"]'))
+            let nodosExpand = Array.from(nodoMostrar.nextSibling.querySelectorAll('[expand="1"]'))
+            nodosAOcultar.forEach(function (args) {
+                args.setAttribute('data-nodovisible', 0)
+            });
+            nodosExpand.forEach(function (args) {
+                args.setAttribute('expand', 0)
+                args.querySelector(`#icon${args.id}`).textContent = "keyboard_arrow_down"
+            });
+        }
+    }
+    OcultarItemsMenu(id)
+}
+
+function OcultarItemsMenu(id) {
+    let nodoElegido = document.getElementById(id)
+
+    if (nodoElegido.parentElement.id != 'padreMenu') {
+        let lis = Array.from(nodoElegido.parentElement.childNodes).filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI')
+        let lis2 = Array.from(nodoElegido.nextElementSibling.childNodes).filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI')
+        let idsLis = lis.map(node => node.id);
+        let idsLis2 = lis2.map(node => node.id);
+        const idsAExcluir = new Set([...idsLis, ...idsLis2]);
+
+        let nodosAOcultar = Array.from(document.querySelectorAll('[data-nodovisible="1"]')).filter(node => {
+            return !idsAExcluir.has(node.id);
+        });
+
+        lis.forEach(function (args) {
+            if (args.id != id && args.hasAttribute('expand')) {
+                args.setAttribute('expand', 0)
+                args.setAttribute('data-nodoactivo', 0)
+                document.getElementById(`icon${args.id}`).textContent = "keyboard_arrow_down"
+            }
+        })
+
+        nodosAOcultar.forEach(function (args) {
+            args.setAttribute('data-nodovisible', 0)
+            if (args.hasAttribute('expand')) {
+                args.setAttribute('expand', 0)
+                document.getElementById(`icon${args.id}`).textContent = "keyboard_arrow_down"
+            }
+        });
+    } else {
+        let lis2 = Array.from(nodoElegido.nextElementSibling.childNodes).filter(node => node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI')
+
+        let idsLis2 = lis2.map(node => node.id);
+        const idsAExcluir = new Set([...idsLis2]);
+
+        let nodosAOcultar = Array.from(document.querySelectorAll('[data-nodovisible="1"]')).filter(node => {
+            return !idsAExcluir.has(node.id);
+        });
+
+        nodosAOcultar.forEach(function (args) {
+            args.setAttribute('data-nodovisible', 0)
+            console.log(`icon${args}`)
+            if (args.hasAttribute('expand')) {
+                args.setAttribute('expand', 0)
+                document.getElementById(`icon${args.id}`).textContent = "keyboard_arrow_down"
+            }
+        });
+        if (nodosAOcultar.length > 0 && nodosAOcultar[0].parentElement.previousElementSibling.hasAttribute('expand')) {
+            nodosAOcultar[0].parentElement.previousElementSibling.setAttribute('expand', 0)
+            document.getElementById(`icon${nodosAOcultar[0].parentElement.previousElementSibling.id}`).textContent = "keyboard_arrow_down"
+        }
+    }
+}
+
+function ActivarNodoMenu(id) {
+    let nodosActivos = document.querySelectorAll('li[data-nodoactivo="1"]')
+    if (nodosActivos != null &&
+        ((document.getElementById(id).getAttribute('expand') == 0 && document.getElementById(id).getAttribute('data-nodoactivo') == 1) ||
+            (document.getElementById(id).getAttribute('expand') == null && document.getElementById(id).getAttribute('data-nodoactivo') == 0))) {
+        nodosActivos.forEach(function (nodo) {
+            nodo.setAttribute('data-nodoactivo', 0)
+        });
+    }
+    let nodoActivar = document.getElementById(id)
+
+    let nodosActivar = []
+    let padreEncontrado = false
+    while (padreEncontrado == false) {
+        if (nodoActivar.parentElement.id != 'padreMenu') {
+            if (nodoActivar.id == id) {
+                nodosActivar.push(nodoActivar)
+            } else {
+                nodosActivar.push(nodoActivar.previousElementSibling)
+            }
+            nodoActivar = nodoActivar.parentElement
+        } else {
+            if (nodoActivar.id == id) {
+                nodosActivar.push(nodoActivar)
+            } else {
+                nodosActivar.push(nodoActivar.previousElementSibling)
+            }
+            padreEncontrado = true
+        }
+    }
+    for (let i = 0; i < nodosActivar.length; i++) {
+        if (nodosActivar[i].firstChild.tagName === 'A') {
+            nodosActivar[i].setAttribute('data-nodoactivo', 1)
+        }
+    }
+}
+function BuscarNodoActivo(uri) {
+    let paginaActiva = document.querySelector(`a[href="${uri}"]`);
+    if (paginaActiva != null) {
+        paginaActiva.parentElement.setAttribute('data-nodoactivo', 1);
+    }
+}

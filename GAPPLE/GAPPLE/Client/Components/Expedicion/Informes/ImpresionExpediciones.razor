@@ -1,0 +1,46 @@
+﻿@inject OrdenesService OrdenesService
+
+@if (showModal)
+{
+    <div id="print" style="">
+        @for (int i = 0; i < cantPages; i++)
+        {
+            GetData(i);
+            <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
+                  Detalle="detalle" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public OrdenExpedicion Orden { get; set; }
+    [Parameter] public EventCallback Imprimir { get; set; }
+    [Parameter] public bool ShouldPrint { get; set; } = true;
+
+    List<OrdenExpedicionDetalle>? detalle = new();
+
+
+    bool showModal, test;
+    int cantPages = 0, lineasXPag = 50;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int sumLineas = Orden.Detalle!.Count + 1;
+
+        cantPages = sumLineas / lineasXPag;
+        if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
+
+        showModal = true;
+    }
+
+    private void GetData(int page)
+    {
+        int showed = page * lineasXPag, remaining = lineasXPag;
+
+        detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
+        remaining -= detalle!.Count;
+        if (detalle.Count > 0) showed -= detalle.Count;
+        else showed -= Orden.Detalle!.Count;
+    }
+
+}

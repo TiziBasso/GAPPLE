@@ -78,7 +78,7 @@
     </RadzenStack>
 
     <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
-        <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Medium Click="NuevaOrden" Visible=@(permisos.Contains("alta")) />
+        <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevaOrden" Visible=@(permisos.Contains("alta")) />
         @* <RadzenButton Text="Exportar Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" /> *@
     </RadzenStack>
 
@@ -152,26 +152,36 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="30px">
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                                   Click="@(() => VerOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("edicion"))
-                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  @onclick:stopPropagation="true" />
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                                  Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
+
+            @* <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("edicion"))
+        Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+        <Template Context="orden">
+        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+        @onclick:stopPropagation="true" />
+        </Template>
+        </RadzenDataGridColumn>
+        *@
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  @onclick:stopPropagation="true" Click="@(() => Delete(orden))" />
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
+                                  @onclick:stopPropagation="true" Click="@(() => CancelarOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -194,17 +204,14 @@ else
     ElementReference refIdOrden;
     RadzenDataGrid<Orden> grid;
     List<string> lineas = new();
-    List<Opcion> estados = new()
-    {
-        new((int?)null, "(Todos)"),
-        new(1, "Pendiente")
-    };
+    List<Opcion> estados = new();
     List<Orden> lstOrdenes = new();
     Orden? Resumen = null;
     bool isLoading, showPage, showResumen;
 
     DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
-    int? idPedido, idEstado = 1;
+    int? idPedido;
+    object idEstado;
     bool? presupuesto;
     string? razonSocial, linea, codTango, codOrden;
 
@@ -220,7 +227,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         lineas = await ProductosService.GetLineas();
-
+        estados = await OrdenesService.GetEstados();
+        idEstado = estados[1].Id;
         //Parametros de consulta
         showPage = true;
     }
@@ -237,48 +245,79 @@ else
 
     private async Task FillOrdenes()
     {
-        zonasFilter.Clear();
-        estadosFilter.Clear();
-        zonaFilter = null;
-        estadoFilter = null;
-
-        DialogCustom.OpenBusyWithLoader("Cargando...");
-        //parametrosconsulta
-        lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado, codTango);
-        DialogCustom.CloseDialog();
-        await grid.Reload();
-
-        if (!lstOrdenes.Any())
-            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.EmptyResponse);
+        if (desde > hasta)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, "La fecha hasta no puede ser mayor a la fecha desde");
+        }
         else
         {
-            zonasFilter = lstOrdenes.Where(x => x.Zona != null).Select(x => x.Zona!).Distinct().ToList();
-            estadosFilter = lstOrdenes.Where(x => x.DescripcionEstado != null).Select(x => x.DescripcionEstado!).Distinct().ToList();
+            zonasFilter.Clear();
+            estadosFilter.Clear();
+            zonaFilter = null;
+            estadoFilter = null;
+
+            DialogCustom.OpenBusyWithLoader("Cargando...");
+            //parametrosconsulta
+            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango);
+            DialogCustom.CloseDialog();
+            await grid.Reload();
+
+            if (!lstOrdenes.Any())
+                NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, MensajesHelper.EmptyResponse);
+            else
+            {
+                zonasFilter = lstOrdenes.Where(x => x.Zona != null).Select(x => x.Zona!).Distinct().ToList();
+                estadosFilter = lstOrdenes.Where(x => x.DescripcionEstado != null).Select(x => x.DescripcionEstado!).Distinct().ToList();
+            }
         }
     }
 
-    async Task Delete(Orden order)
+    async Task CancelarOrden(Orden order)
     {
-        if (await DialogService.Confirm($"¿Desea eliminar la orden {order.Id}?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            lstOrdenes.Remove(order);
-            await grid.Reload();
+            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 2);
+            if (response.IsSuccessStatusCode)
+            {
+                order.IdEstado = 2;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
+
+                await grid.Reload();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
+    }
+
+    async Task AprobarOrden(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("aprobar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 3);
+            if (response.IsSuccessStatusCode)
+            {
+                order.IdEstado = 3;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 3).Descripcion;
+
+                await grid.Reload();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         }
     }
 
     void NuevaOrden()
     {
-        //parametrosconsulta
         NavigationManager.NavigateTo("/orden/creacion");
     }
 
     async Task VerOrden(Orden orden)
     {
         DialogCustom.OpenBusyWithLoader("Cargando...");
-        Resumen = await OrdenesService.GetOrden(orden.Id);
+        Resumen = await OrdenesService.GetOrden(orden.CodigoOrden!);
         DialogCustom.CloseDialog();
         if (Resumen == null)
-            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         else
         {
             Resumen.Detalle!.RemoveAll(x => x.Cantidad == x.CantidadCancelada);

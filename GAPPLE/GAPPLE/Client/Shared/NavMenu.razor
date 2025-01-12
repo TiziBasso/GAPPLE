@@ -1,42 +1,106 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Menu</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using GAPPLE.Client.Extensiones
+@inject SeguridadService SeguridadService
+@inject AuthenticationStateProvider autenticacionProvider
+@inject IJSRuntime js
 
-<RadzenPanelMenu>
-    <RadzenPanelMenuItem Text="Home" Path="" Icon="Home" />
-    @* <RadzenPanelMenuItem Text="Usuarios" Path="usuarios" Icon="group" /> *@
-    @* <RadzenPanelMenuItem Text="Ordenes" Path="ordenes" Icon="shopping_cart" /> *@
-    @* <RadzenPanelMenuItem Text="Finanzas" Path="" Icon="attach_money" />
-    <RadzenPanelMenuItem Text="Expedición" Path="" Icon="package_2" />
-    <RadzenPanelMenuItem Text="Facturación" Path="" Icon="receipt" />
-    <RadzenPanelMenuItem Text="Contaduria" Path="" Icon="payments" /> *@
-    <RadzenPanelMenuItem Text="Clientes" Path="clientes" Icon="person" />
-    <RadzenPanelMenuItem Text="Productos" Path="productos" Icon="inventory_2" />
-    <RadzenPanelMenuItem Text="Ordenes" Path="ordenes" Icon="list_alt" /> 
-    <RadzenPanelMenuItem Text="Descuentos" Icon="percent">
-        <RadzenPanelMenuItem Text="Ofertas" Path="Ofertas" />
-    </RadzenPanelMenuItem>
-    <RadzenPanelMenuItem Text="Listas de precios" Path="listas-de-precios" Icon="barcode" />
-    <RadzenPanelMenuItem Text="Transportes" Path="transportes" Icon="local_shipping" />
-    <RadzenPanelMenuItem Text="Zonas" Path="zonas" Icon="pin_drop" />
+<RadzenPanelMenu Style="overflow-y: hidden;width: 100%;height: calc(100% - 52px);" Multiple=false>
+    <ChildContent>
+        @if (data != null)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
 
+                <input type="text" @bind-value="@filterDescripcion" @bind-value:event="oninput" @onkeydown=@(args=>OnKeyDown(args))
+                       class="rz-textbox rz-mb-2 rz-ml-2" style="width: 95%" placeholder="Buscar en el menu..." autocomplete=off />
 
-    @* <RadzenPanelMenuItem Text="Reportes" Path="" Icon="receipt_long" />
-    <RadzenPanelMenuItem Text="Clientes" Path="" Icon="group" /> *@
+                <RadzenIcon Icon="clear" Visible=@(!string.IsNullOrWhiteSpace(filterDescripcion)) @onclick=@(()=>Reset()) class="ClearButton" />
+            </RadzenStack>
+
+            <div id="menuMio">
+                <ul id="padreMenu" style="overflow-x:hidden;overflow-y:auto;height:calc(100vh - 96px);">
+                    @foreach (var menu in Filter(filterDescripcion))
+                    {
+                        <MenuItem Menu="@menu" />
+                    }
+                </ul>
+            </div>
+        }
+    </ChildContent>
 </RadzenPanelMenu>
 
 @code {
-    private bool collapseNavMenu = true;
+    List<MenuNew> data { get; set; }
+    string filterDescripcion = string.Empty;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
+    protected override async Task OnInitializedAsync()
     {
-        collapseNavMenu = !collapseNavMenu;
+        var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
+        var auth = await autenticacionExt.GetAuthenticationStateAsync();
+        data = await SeguridadService.GetMenu(int.Parse(auth.User.FindFirst("IdUsuario")?.Value));
     }
+
+    private void OnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Code == KeyboardKeys.Space) filterDescripcion += " ";
+    }
+
+    private void Reset()
+    {
+        filterDescripcion = null;
+    }
+
+    public List<MenuNew> Filter(string term)
+    {
+        if (string.IsNullOrEmpty(term)) return data[0].Items;
+
+        bool contains(string value) => value != null && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+        bool filter(MenuNew menu) => contains(menu.Text);
+
+        bool deepFilter(MenuNew menu) => filter(menu) || menu.Items?.Any(m => deepFilter(m)) == true;
+
+        return data[0].Items.Where(menu => menu.Items?.Any(deepFilter) == true || filter(menu))
+                       .Select(menu => new MenuNew
+                           {
+                               Id = menu.Id,
+                               IdPadre = menu.IdPadre,
+                               Text = menu.Text,
+                               Path = menu.Path,
+                               Icon = menu.Icon,
+                               Expanded = true,
+                               Items = filter(menu) ? menu.Items : menu.Items?.Where(deepFilter).Select(m => new MenuNew
+                               {
+                                   Id = m.Id,
+                                   IdPadre = m.IdPadre,
+                                   Text = m.Text,
+                                   Path = m.Path,
+                                   Icon = m.Icon,
+                                   Expanded = true,
+                                   Items = filter(m) ? m.Items : m.Items?.Where(deepFilter).ToList()
+                               }).ToList()
+                           }).ToList();
+    }
+
+    // private bool collapseNavMenu = true;
+
+    // private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    // private void ToggleNavMenu()
+    // {
+    //     collapseNavMenu = !collapseNavMenu;
+    // }
 }
+
+<style>
+    .ClearButton {
+        margin-top: 9px;
+        margin-left: -25px;
+        margin-right: 5px;
+        cursor: default;
+        color: var(--rz-text-disabled-color);
+    }
+
+        .ClearButton:Hover {
+            color: var(--rz-text-color)
+        }
+</style>

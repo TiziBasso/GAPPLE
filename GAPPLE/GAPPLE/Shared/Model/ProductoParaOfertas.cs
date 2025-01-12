@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 
 namespace GAPPLE.Shared.Model
 {
-    public class ProductoParaOfertas
+    public class ProductoParaOfertas : ICloneable
     {
         public string Familia { get; set; }
         public string CodigoProducto { get; set; }
         public string Descripcion { get; set; }
-        public bool Selected { get; set; }
-        public int  CantidadSeleccionada { get; set; }
+        public bool Probador { get; set; }
+        public int CantidadProbador { get; set; }
+        public int CantidadSeleccionada { get; set; }
+        public decimal DescuentoFinal { get; set; }
+
+        public object Clone() => MemberwiseClone();
     }
 }

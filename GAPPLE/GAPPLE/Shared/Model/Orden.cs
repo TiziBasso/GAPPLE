@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,25 +12,20 @@ namespace GAPPLE.Shared.Model
     {
         public int Id { get; set; }
 
-        public string CodigoOrden { get; set; }
+        public string? CodigoOrden { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una linea")]
         public string? Linea { get; set; }
 
         public bool Factura { get; set; }
 
         public bool Presupuesto { get; set; }
 
-        public bool Probadores { get; set; }
+        public List<OrdenDetalle>? Detalle { get; set; } = new();
 
-        public bool Obsequios { get; set; }
-
-        public bool Exhibidor { get; set; }
-
-        public List<OrdenDetalle>? Detalle { get; set; }
-
-        [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? Cliente { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar un cliente")]
         public string? CodCliente { get; set; }
 
         public string? DomicilioCliente { get; set; }
@@ -57,20 +53,25 @@ namespace GAPPLE.Shared.Model
 
         public string? CodTransporte { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una lista de precios")]
         public string CodListaPrecio { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una zona")]
         public string? Zona { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una condición de venta")]
         public string? CondicionVenta { get; set; }
 
         public string? CodVendedor { get; set; }
 
-        public List<int>? Ofertas { get; set; }
+        public List<int>? Ofertas { get; set; } = new();
 
+        [Required(ErrorMessage = "Debe ingresar un lugar de entrega")]
         public string? Entrega { get; set; }
 
         public string? Notas { get; set; }
 
+        [Required(ErrorMessage = "Debe ingresar una fecha de entrega")]
         public DateTime? FechaEntrega { get; set; }
 
         public DateTime? Creacion { get; set; }
@@ -86,6 +87,22 @@ namespace GAPPLE.Shared.Model
         public int Unidades { get; set; }
 
         public bool Aprobado { get; set; }
+    }
+    public class NotEmptyAttribute : ValidationAttribute
+    {
+        public override bool IsValid(object value)
+        {
+            if (value is ICollection collection)
+            {
+                return collection.Count > 0;
+            }
+            return false; // No es una colección válida
+        }
+
+        public override string FormatErrorMessage(string name)
+        {
+            return ErrorMessage ?? $"{name} no debe estar vacía.";
+        }
     }
 
     public class OrdenDetalle
@@ -110,20 +127,12 @@ namespace GAPPLE.Shared.Model
 
         public bool Probador { get; set; }
 
-        public decimal Descuento1 { get; set; }
+        public int CantidadProbador { get; set; }
+        
+        public int CantidadProbadorCancelada { get; set; }
 
-        public decimal Descuento2 { get; set; }
 
-        public decimal TotalDescuento
-        {
-            get
-            {
-                decimal factor1 = 1 - (Descuento1 / 100);
-                decimal factor2 = 1 - (Descuento2 / 100);
-                decimal descuentoFinal = 1 - (factor1 * factor2);
-                return descuentoFinal * 100;
-            }
-        }
+        public decimal Descuento { get; set; }
 
     }
 }

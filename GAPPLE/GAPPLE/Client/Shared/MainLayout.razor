@@ -2,61 +2,89 @@
 
 @inject IJSRuntime JS
 
-<RadzenLayout Style="width:100vw;">
-    <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
-            </RadzenStack>
-            <RadzenAppearanceToggle />
-            <RadzenProfileMenu>
-                <Template>
-                    <RadzenLabel Text="ADMIN" />
-                </Template>
-                <ChildContent>
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        @* <RadzenLabel Text="Modo oscuro:" /> *@
-                        @* <RadzenSwitch @bind-Value="modoOscuro" Change=@(args => CambiarTema(args)) /> *@
-                        <RadzenTheme Theme="default" />
+@using GAPPLE.Client.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager navManager
+
+<AuthorizeView>
+    <Authorized>
+        @if (showPage)
+        {
+            <RadzenLayout Style="width:100vw;">
+                <RadzenHeader>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                            <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
+                        </RadzenStack>
+                        <RadzenAppearanceToggle />
+                        <RadzenProfileMenu>
+                            <Template>
+                                 <RadzenLabel Text="@authenticationState.User.Identity!.Name" />
+                            </Template>
+                            <ChildContent>
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <div class="top-row px-4">
+                                        <a @onclick="CerrarSesion" href="javascript:void(0)">Salir</a>
+                                    </div>
+                                    <RadzenTheme Theme="default" />
+                                </RadzenStack>
+                            </ChildContent>
+                        </RadzenProfileMenu>
                     </RadzenStack>
-                </ChildContent>
-            </RadzenProfileMenu>
-        </RadzenStack>
-    </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;">
-        <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
-            <RadzenStack>
-                <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => sidebarExpanded = false)" />
-            </RadzenStack>
-        </RadzenStack>
-        <NavMenu />
-    </RadzenSidebar>
+                </RadzenHeader>
+                <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;">
+                    <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
+                        <RadzenStack>
+                            <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => sidebarExpanded = false)" />
+                        </RadzenStack>
+                    </RadzenStack>
+                    <NavMenu />
+                </RadzenSidebar>
 
-    <RadzenBody>
-        <div class="rz-p-4">
-            @Body
-        </div>
-    </RadzenBody>
-    @if (sidebarExpanded)
-    {
-        <div @onclick="@(() => sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
-    }
-</RadzenLayout>
+                <RadzenBody>
+                    @Body
+                </RadzenBody>
+                @if (sidebarExpanded)
+                {
+                    <div @onclick="@(() => sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
+                }
+            </RadzenLayout>
 
-<RadzenComponents />
+            <RadzenComponents />
+        }
+    </Authorized>
+    <NotAuthorized>
+
+        @{
+            if (context.User.Identity?.IsAuthenticated != true)
+                navManager.NavigateTo("/");
+            else
+            {
+                <p class="alert alert-danger">No esta autorizado para ver esta pagina</p>
+            }
+        }
+
+    </NotAuthorized>
+</AuthorizeView>
 
 @code
 {
-    bool sidebarExpanded = true, modoOscuro;
+    AuthenticationState authenticationState = new(new System.Security.Claims.ClaimsPrincipal());
+    bool sidebarExpanded = true, modoOscuro, showPage;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        
+        var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
+        authenticationState = await autenticacionExt.GetAuthenticationStateAsync();
+        showPage = true;
     }
 
-    public async Task CambiarTema(bool? args)
+    private async Task CerrarSesion()
     {
-        await JS.InvokeVoidAsync("changetheme", args);
+        var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
+        await autenticacionExt.ActualizarEstadoAutenticacion(null);
+        navManager.NavigateTo("/", true);
     }
 }

@@ -1,8 +1,12 @@
-﻿@page "/"
+﻿@page "/home"
+
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
+
+@inject OrdenesService OrdenesService
 
 <PageTitle>Index</PageTitle>
-
-<h1>Sample DashBoard</h1>
 
 <RadzenRow Style="--rz-text-h2-line-height: 1; --rz-text-h2-font-weight: 200;">
     <RadzenColumn Size="12" SizeMD="12" SizeXL="2">
@@ -11,7 +15,7 @@
                 <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
                     <RadzenStack JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText TextStyle="TextStyle.H6">Progress</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H6">Progreso</RadzenText>
                             <RadzenText TextStyle="TextStyle.H2" class="rz-color-info rz-m-0">@($"{Math.Round(closeRatioPercentage)}%")</RadzenText>
                         </RadzenStack>
                         <RadzenProgressBar ProgressBarStyle="ProgressBarStyle.Info" @bind-Value=@closeRatioPercentage ShowValue="false" Style="--rz-progressbar-background-color: var(--rz-info-lighter); --rz-progressbar-height: 1rem;" />
@@ -26,7 +30,7 @@
                             <RadzenText TextStyle="TextStyle.H2" class="rz-color-danger rz-m-0">@openIssues?.Count()</RadzenText>
                         </RadzenStack>
                         <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-danger)" />
+                            <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-danger)" />
                             <RadzenColumnOptions Margin="0" />
                             <RadzenCategoryAxis Padding="20" Visible="false" />
                         </RadzenSparkline>
@@ -41,13 +45,38 @@
                             <RadzenText TextStyle="TextStyle.H2" class="rz-color-success rz-m-0">@closedIssues?.Count()</RadzenText>
                         </RadzenStack>
                         <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="Issues" Fill="var(--rz-success)" />
+                            <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-success)" />
                             <RadzenColumnOptions Margin="0" Width="30" />
                             <RadzenCategoryAxis Padding="20" Visible="false" />
                         </RadzenSparkline>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                <RadzenCard Style="width:290px;height:fit-content">
+                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                        <strong>Cantidad de productos aprobados del mes</strong>
+                    </div>
+                    <hr />
+                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadAprobada</h5>
+                    </div>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                <RadzenCard Style="width:290px;height:fit-content">
+                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                        <strong>Cantidad de productos pendientes del mes</strong>
+                    </div>
+                    <hr />
+                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadPendiente</h5>
+                    </div>
+                </RadzenCard>
+            </RadzenColumn>
+
         </RadzenRow>
     </RadzenColumn>
 </RadzenRow>
@@ -75,9 +104,11 @@
 </style>
 
 @code {
-    IEnumerable<Issue> issues;
-    IEnumerable<Issue> openIssues;
-    IEnumerable<Issue> closedIssues;
+    IEnumerable<OrdenDashboard> issues;
+    IEnumerable<OrdenDashboard> openIssues;
+    IEnumerable<OrdenDashboard> closedIssues;
+
+    CantidadesProductosDashboard cantidadesProductos = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -86,186 +117,22 @@
             fetchingData = true;
             try
             {
-                List<Issue> issues = new List<Issue>
-        {
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/1",
-                CreatedAt = new DateTime(2023, 8, 1, 10, 15, 30),
-                ClosedAt = new DateTime(2023, 8, 5, 12, 0, 0),
-                Title = "Fix login bug",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/2",
-                CreatedAt = new DateTime(2023, 8, 2, 11, 20, 45),
-                ClosedAt = new DateTime(2023, 8, 6, 14, 15, 0),
-                Title = "Improve UI for mobile",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/3",
-                CreatedAt = new DateTime(2023, 8, 3, 9, 30, 15),
-                ClosedAt = null,
-                Title = "Update README with new instructions",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/4",
-                CreatedAt = new DateTime(2023, 8, 4, 14, 50, 20),
-                ClosedAt = new DateTime(2023, 8, 7, 16, 10, 30),
-                Title = "Add support for dark mode",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/5",
-                CreatedAt = new DateTime(2023, 8, 5, 13, 15, 50),
-                ClosedAt = null,
-                Title = "Optimize image loading",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/6",
-                CreatedAt = new DateTime(2023, 8, 6, 8, 45, 10),
-                ClosedAt = new DateTime(2023, 8, 8, 10, 20, 0),
-                Title = "Refactor CSS styles",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/7",
-                CreatedAt = new DateTime(2023, 8, 7, 10, 30, 0),
-                ClosedAt = new DateTime(2023, 8, 10, 15, 0, 0),
-                Title = "Fix security vulnerability in authentication",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/8",
-                CreatedAt = new DateTime(2023, 8, 8, 12, 0, 0),
-                ClosedAt = null,
-                Title = "Investigate memory leak",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/9",
-                CreatedAt = new DateTime(2023, 8, 9, 11, 0, 0),
-                ClosedAt = new DateTime(2023, 8, 11, 14, 0, 0),
-                Title = "Add unit tests for new API",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/10",
-                CreatedAt = new DateTime(2023, 8, 10, 9, 0, 0),
-                ClosedAt = null,
-                Title = "Enhance error logging",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/11",
-                CreatedAt = new DateTime(2023, 8, 11, 10, 15, 0),
-                ClosedAt = null,
-                Title = "Implement user feedback feature",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/12",
-                CreatedAt = new DateTime(2023, 8, 12, 11, 45, 0),
-                ClosedAt = new DateTime(2023, 8, 15, 17, 30, 0),
-                Title = "Fix typo in documentation",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/13",
-                CreatedAt = new DateTime(2023, 8, 13, 14, 20, 0),
-                ClosedAt = null,
-                Title = "Redesign homepage",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/14",
-                CreatedAt = new DateTime(2023, 8, 14, 16, 0, 0),
-                ClosedAt = new DateTime(2023, 8, 17, 18, 0, 0),
-                Title = "Fix cross-browser compatibility issues",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/15",
-                CreatedAt = new DateTime(2023, 8, 15, 12, 0, 0),
-                ClosedAt = new DateTime(2023, 8, 18, 13, 0, 0),
-                Title = "Improve database query performance",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/16",
-                CreatedAt = new DateTime(2023, 8, 16, 9, 0, 0),
-                ClosedAt = null,
-                Title = "Add localization support",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/17",
-                CreatedAt = new DateTime(2023, 8, 17, 11, 30, 0),
-                ClosedAt = new DateTime(2023, 8, 20, 14, 30, 0),
-                Title = "Upgrade to latest version of framework",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/18",
-                CreatedAt = new DateTime(2023, 8, 18, 14, 0, 0),
-                ClosedAt = new DateTime(2023, 8, 21, 15, 30, 0),
-                Title = "Implement caching for API requests",
-                State = IssueState.Closed
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/19",
-                CreatedAt = new DateTime(2023, 8, 19, 15, 0, 0),
-                ClosedAt = null,
-                Title = "Review and update code comments",
-                State = IssueState.Open
-            },
-            new Issue
-            {
-                Url = "https://github.com/user/repo/issues/20",
-                CreatedAt = new DateTime(2023, 8, 20, 10, 0, 0),
-                ClosedAt = null,
-                Title = "Fix bug in payment gateway integration",
-                State = IssueState.Open
-            }
-        };
-
-
-                filteredIssues = issues.OrderByDescending(issue => issue.CreatedAt);
-                openIssues = issues.Where(issue => issue.State == IssueState.Open);
-                closedIssues = issues.Where(issue => issue.State == IssueState.Closed);
+                cantidadesProductos = await OrdenesService.GetCantidadesDeProductos();
+                issues = await OrdenesService.GetOrdenDashboard();
+                openIssues = issues.Where(x => x.AltaRegistro != null);
+                closedIssues = issues.Where(x => x.FechaAprobacion != null);
 
                 closeRatio = closedIssues.Count() / (double)issues.Count();
                 closeRatioPercentage = closeRatio * 100;
 
-                openIssuesByDate = openIssues.GroupBy(issue => issue.CreatedAt)
+                openIssuesByDate = openIssues.GroupBy(issue => issue.AltaRegistro.Value)
                         .Select(group => new IssueGroup
                             {
                                 Week = group.Key,
                                 Count = group.Count()
                             });
 
-                closedIssuesByDate = closedIssues.GroupBy(issue => issue.ClosedAt.Value)
+                closedIssuesByDate = closedIssues.GroupBy(issue => issue.FechaAprobacion.Value)
                         .Select(group => new IssueGroup
                             {
                                 Week = group.Key,
@@ -284,56 +151,8 @@
         }
     }
 
-
-    public class Issue
-    {
-        public string Url { get; set; }
-
-        public DateTime CreatedAt { get; set; }
-
-        public DateTime? ClosedAt { get; set; }
-
-        public string Title { get; set; }
-
-        public IssueState State { get; set; }
-    }
-
-    public enum IssueState
-    {
-        Open,
-        Closed,
-        All
-    }
-
-    class IssueGroup
-    {
-        public int Count { get; set; }
-        public DateTime Week { get; set; }
-    }
-
-    class LabelGroup
-    {
-        public int Count { get; set; }
-        public string Label { get; set; }
-        public string Color { get; set; }
-    }
-
-    class UserGroup
-    {
-        public int Count { get; set; }
-        public string Name { get; set; }
-    }
-
     IEnumerable<IssueGroup> openIssuesByDate;
     IEnumerable<IssueGroup> closedIssuesByDate;
-    IEnumerable<LabelGroup> labelGroups;
-    IEnumerable<UserGroup> openByGroups;
-    IEnumerable<Issue> filteredIssues;
-    IEnumerable<string> labels;
-    IEnumerable<string> selectedLabels;
-    IEnumerable<IssueState> issueStates = Enum.GetValues(typeof(IssueState)).Cast<IssueState>();
-    IEnumerable<string> labelColors;
-    IssueState selectedState = IssueState.All;
     double closeRatio = 0;
     double closeRatioPercentage = 0;
     int currentPage = 0;

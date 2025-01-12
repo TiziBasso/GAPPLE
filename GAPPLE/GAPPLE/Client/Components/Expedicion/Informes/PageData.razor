@@ -1,0 +1,77 @@
+﻿<table style="border-collapse: collapse;width: 100%;">
+    <thead style="font-style: italic;">
+        <tr>
+            <th style="border:1px solid;border-right: none; padding: 5px;">#</th>
+            <th style="border:1px solid;border-right: none; padding: 5px;">ID</th>
+            <th style="border:1px solid;border-right: none;padding: 5px;">Producto</th>
+            @if (ShowF)
+            {
+                <th style="border:1px solid;border-right: none;padding: 5px;">F</th>
+            }
+            @if (ShowX)
+            {
+                <th style="border:1px solid;border-right: none;padding: 5px;">X</th>
+            }
+            @if (ShowF)
+            {
+                <th style="border:1px solid;border-right: none;padding: 5px;">Probador F</th>
+            }
+            @if (ShowX)
+            {
+                <th style="border:1px solid;border-right: none;padding: 5px;">Probador X</th>
+            }
+        </tr>
+    </thead>
+    <tbody style="font-size: 11pt;">
+        @foreach (var item in Detalle)
+        {
+            <tr>
+                <td style="text-align: end;">@item.NumLinea</td>
+                <td style="text-align: end;">@item.CodProducto</td>
+                <td>@item.DescripcionProducto</td>
+                @if (ShowF)
+                {
+                    <td style="text-align: end;">@item.CantidadF</td>
+                }
+                @if (ShowX)
+                {
+                    <td style="text-align: end;">@item.CantidadX</td>
+                }
+                @if (ShowF)
+                {
+                    <td style="text-align: end;">@item.CantidadProbadorF</td>
+                }
+                @if (ShowX)
+                {
+                    <td style="text-align: end;">@item.CantidadProbadorX</td>
+                }
+                <td></td>
+            </tr>
+        }
+        <tr>
+            <td colspan="2"></td>
+            <td style="text-align: end;"><strong>Total: </strong></td>
+            @if (ShowF)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadF)</strong></td>
+            }
+            @if (ShowX)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadX)</strong></td>
+            }
+            @if (ShowF)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadProbadorF)</strong></td>
+            }
+            @if (ShowX)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadProbadorX)</strong></td>
+            }
+        </tr>
+    </tbody>
+</table>
+@code {
+    [Parameter] public List<OrdenExpedicionDetalle>? Detalle { get; set; }
+    [Parameter] public bool ShowX { get; set; }
+    [Parameter] public bool ShowF { get; set; }
+}

@@ -1,0 +1,125 @@
+﻿@inject ContextMenuService ContextMenuService
+@inject SeguridadService SeguridadService
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject IJSRuntime JS
+
+@if (Menu.Items == null)
+{
+    @if (Menu.IdPadre == 1)
+    {
+        <li id="@Menu.Id" data-nodoActivo="0" @onclick="@(args => OnClickLI(args))" @oncontextmenu="@(args => OnCellContextMenu(args))" @oncontextmenu:preventDefault="true">
+            <a style="display: flex;gap: 5px;text-decoration:none" href="@Menu.Path">
+                @if (!string.IsNullOrEmpty(Menu.Icon))
+                {
+                    <RadzenIcon Icon="@Menu.Icon" />
+                }
+                @Menu.Text
+            </a>
+        </li>
+    }
+    else
+    {
+        <li data-nodoActivo="0" data-nodoVisible="0" id="@Menu.Id" @onclick="@OnClickLI" @oncontextmenu="@(args => OnCellContextMenu(args))" @oncontextmenu:preventDefault="true">
+            <a style="display: flex;gap: 5px;font-weight:400;text-decoration:none" href="@Menu.Path">
+                @if (!string.IsNullOrEmpty(Menu.Icon))
+                {
+                    <RadzenIcon Icon="@Menu.Icon" />
+                }
+                @Menu.Text
+            </a>
+        </li>
+    }
+}
+else
+{
+    @if (Menu.IdPadre == 1)
+    {
+        <li id="@Menu.Id" expand="0" @onclick="@OnClickA">
+            @if (!string.IsNullOrEmpty(Menu.Icon))
+            {
+                <RadzenIcon Icon="@Menu.Icon" />
+            }
+            <div style="width: 100%;display: flex;justify-content: space-between;">
+                @Menu.Text
+                <RadzenIcon Icon="keyboard_arrow_down" id="@("icon" + Menu.Id)" />
+            </div>
+        </li>
+    }
+    else
+    {
+        <li data-nodoActivo="0" expand="0" data-nodoVisible="0" id="@Menu.Id" @onclick="@OnClickA">
+            @if (!string.IsNullOrEmpty(Menu.Icon))
+            {
+                <RadzenIcon Icon="@Menu.Icon" />
+            }
+            <div style="width: 100%;display: flex;justify-content: space-between;">
+                @Menu.Text
+                <RadzenIcon Icon="keyboard_arrow_down" id="@("icon" + Menu.Id)" />
+            </div>
+        </li>
+    }
+    <ul>
+        @foreach (var item in Menu.Items)
+        {
+            <MenuItem Menu=@item />
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public MenuNew Menu { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Menu.IdPadre == 1)
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            await JS.InvokeVoidAsync("BuscarNodoActivo", uri.AbsolutePath);
+        }
+    }
+
+    async Task OnClickLI(MouseEventArgs args)
+    {
+        if (Menu.IdPadre != 1)
+            await JS.InvokeVoidAsync("ActivarNodoMenu", Menu.Id);
+
+        if (Menu.Items != null && Menu.Items.Any())
+            await JS.InvokeVoidAsync("ExpandirMenu", Menu.Id);
+    }
+
+    async Task OnClickA()
+    {
+        if (Menu.IdPadre != 1)
+            await JS.InvokeVoidAsync("ActivarNodoMenu", Menu.Id);
+
+        if (Menu.Items.Any())
+            await JS.InvokeVoidAsync("ExpandirMenu", Menu.Id);
+    }
+
+    private void OnCellContextMenu(MouseEventArgs args)
+    {
+        // List<ContextMenuItem> menuItems = new();
+        // if (Menu.IdMarcador == null)
+        //     menuItems.Add(new ContextMenuItem() { Text = "Marcar favorito", Value = 1, Icon = "star" });
+        // else
+        //     menuItems.Add(new ContextMenuItem() { Text = "Eliminar favorito", Value = 2, Icon = "backspace" });
+
+        // ContextMenuService.Open(args, menuItems,
+        //     async (e) =>
+        //     {
+        //         switch (int.Parse(e.Value.ToString()))
+        //         {
+        //             case 1:
+        //                 await SeguridadService.PostMarcador(Menu.Id);
+        //                 NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        //                 break;
+        //             case 2:
+        //                 await SeguridadService.DeleteMarcador((int)Menu.IdMarcador);
+        //                 NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        //                 break;
+        //         }
+        //         ContextMenuService.Close();
+        //     });
+    }
+}

@@ -21,7 +21,7 @@
 
 
     bool showModal;
-    int cantPages = 0;
+    int cantPages = 0, lineasXPag = 50;
 
     protected override void OnInitialized()
     {
@@ -30,20 +30,20 @@
         if (Pendientes != null && Pendientes.Any())
             sumLineas += Pendientes.Count + 3;
 
-        cantPages = sumLineas / 33;
-        if (cantPages == 0) cantPages = 1;
+        cantPages = sumLineas / lineasXPag;
+        if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
 
         showModal = true;
     }
 
     private void GetData(int page)
     {
-        int showed = page * 30, remaining = 30;
+        int showed = page * lineasXPag, remaining = lineasXPag;
 
         detalle = Detalle.Skip(showed)?.Take(remaining).ToList();
         remaining -= detalle!.Count;
         if (detalle.Count > 0) showed -= detalle.Count;
-        else showed -= Pedido.Detalle!.Count;
+        else showed -= Detalle!.Count;
 
         pendientes = Pendientes?.Skip(showed)?.Take(remaining).ToList();
         if (pendientes != null)

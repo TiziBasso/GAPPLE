@@ -30,9 +30,7 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = (string)row["Descripcion"],
-                        Pasivo = (bool)row["Pasivo"],
                     };
-                    if (row["Clasificacion"] != DBNull.Value) producto.Clasificacion = row["Clasificacion"].ToString()!;
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
 

@@ -141,16 +141,16 @@ else
     async Task Guardar()
     {
         Oferta.Inclusiones = string.Join('|', lstProductosOferta.Select(x => x.CodigoProducto));
-
+        Oferta.Hasta = Oferta.Hasta.AddHours(23).AddMinutes(59).AddSeconds(59);
         if (esNueva)
         {
             await OfertasService.PostOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         else
         {
             await OfertasService.PutOferta(Oferta);
-            NotificationService.Notify(NotificationSeverity.Success, "Zentra", "Datos guardados correctamente");
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         DialogService.Close(Oferta);
     }

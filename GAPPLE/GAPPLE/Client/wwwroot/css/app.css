@@ -70,3 +70,103 @@ input[type=number]::-webkit-outer-spin-button {
     appearance: none;
     margin: 0;
 }
+
+#menuMio ul,
+#menuMio li {
+    list-style: none;
+    padding: 0;
+}
+
+#menuMio a {
+    color: white;
+}
+
+#menuMio li {
+    cursor: pointer;
+    align-items: center;
+}
+
+#padreMenu > li {
+    font-weight: 600;
+    gap: 5px;
+    cursor: pointer;
+    padding: 10px 6px;
+    display: flex;
+    align-items: center;
+}
+
+    #padreMenu > li > a {
+        font-weight: 600;
+        gap: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+#menuMio li:hover {
+    background-color: #f0f8ff21;
+}
+
+#menuMio a {
+    width: 100%;
+}
+
+#padreMenu {
+    padding: 0;
+}
+
+li[data-nodoactivo="1"] {
+    background: transparent;
+    border-left: 6px solid rgb(54 154 211);
+}
+
+li[data-nodoVisible="1"] {
+    display: flex;
+}
+
+li[data-nodoVisible="0"] {
+    display: none;
+}
+
+li[expand="1"] {
+    border-bottom: 1px solid rgba(0,0,0,.2);
+}
+
+    li[expand="1"] + ul + li {
+        border-top: 1px solid rgba(0,0,0,.2);
+    }
+
+#menuMio ul::-webkit-scrollbar {
+    width: 12px;
+}
+
+/* Estilo para el contenedor de carga */
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+}
+
+/* Estilo para el spinner */
+.spinner {
+    border: 8px solid #f3f3f3; /* Color de fondo */
+    border-top: 8px solid #3498db; /* Color del spinner */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+/* Animación del spinner */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
