@@ -49,7 +49,7 @@
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Title="Ver" Width="35px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="visibility" Click="@(()=>VerPedido(context))" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation=true />
+                    <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(()=>VerPedido(context))" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation=true />
                 </Template>
             </RadzenDataGridColumn>
 

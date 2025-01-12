@@ -21,21 +21,21 @@
 
 
     bool showModal, test;
-    int cantPages = 0;
+    int cantPages = 0, lineasXPag = 50;
 
     protected override async Task OnInitializedAsync()
     {
         int sumLineas = Orden.Detalle!.Count + 1;
 
-        cantPages = sumLineas / 33;
-        if (cantPages == 0) cantPages = 1;
+        cantPages = sumLineas / lineasXPag;
+        if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
 
         showModal = true;
     }
 
     private void GetData(int page)
     {
-        int showed = page * 30, remaining = 30;
+        int showed = page * lineasXPag, remaining = lineasXPag;
 
         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
         remaining -= detalle!.Count;

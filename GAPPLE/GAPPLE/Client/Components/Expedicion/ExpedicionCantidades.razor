@@ -35,7 +35,7 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref=gridUp TItem=OrdenExpedicionDetalle Data="orden.Detalle.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0)"
-                    Style="height:fit-content; max-height:25vh; min-height:1rem;" EmptyText="">
+                    Style="height:fit-content; max-height:25vh; min-height:1rem;" EmptyText="" AllowVirtualization=true>
         <Columns>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.NumLinea)" TextAlign=TextAlign.Right Title="Item" Width="40px" />
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CodProducto)" TextAlign=TextAlign.Right Title="Cód." Width="90px" />
@@ -113,7 +113,8 @@
 
     <RadzenText Text="Pendientes" class="rz-mb-2 rz-mt-2" TextStyle="TextStyle.DisplayH5" Style="color:var(--rz-text-disabled-color)" />
 
-    <RadzenDataGrid @ref=gridDown TItem=OrdenExpedicionDetalle Data="orden.Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0)" Style="height:fit-content; max-height:25vh; min-height:1rem;" EmptyText="">
+    <RadzenDataGrid @ref=gridDown TItem=OrdenExpedicionDetalle Data="orden.Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0)"
+                    Style="height:fit-content; max-height:25vh; min-height:1rem;" EmptyText="" AllowVirtualization=true>
         <Columns>
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.NumLinea)" TextAlign=TextAlign.Right Title="Item" Width="40px" />
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CodProducto)" TextAlign=TextAlign.Right Title="Cód." Width="90px" />
