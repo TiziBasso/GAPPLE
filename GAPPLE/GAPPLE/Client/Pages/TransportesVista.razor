@@ -1,0 +1,48 @@
+﻿@page "/transportes"
+
+@using GAPPLE.Client.Components.Cliente
+
+@inject OrdenesService OrdenesService
+
+<RadzenText Text="Transportes" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+
+@if (showForm)
+{
+	<RadzenRow JustifyContent="JustifyContent.Center">
+		<RadzenColumn Size="10" Offset="1">
+
+			<RadzenDataGrid @ref="grilla" Data="transportes" AllowSorting="true" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+							FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh; width: 150vh">
+				<Columns>
+					<RadzenDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Codigo" TextAlign="TextAlign.Right" Width="110px" Sortable="true"/>
+					<RadzenDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Transporte" TextAlign="TextAlign.Left" Sortable="false" />
+					<RadzenDataGridColumn Property="@nameof(Transporte.CUIT)" Title="CUIT" TextAlign="TextAlign.Left" Width="200px" Filterable="true" Sortable="false" />
+				</Columns>
+
+			</RadzenDataGrid>
+
+		</RadzenColumn>
+	</RadzenRow>
+}
+else
+{
+	<Loader />
+}
+
+@code
+{
+
+	List<Transporte> transportes = new();
+
+	RadzenDataGrid<Transporte> grilla;
+
+	bool showForm;
+
+	protected override async Task OnInitializedAsync()
+	{
+		transportes = await OrdenesService.GetTransportes();
+		showForm = true;
+	}
+
+
+}
