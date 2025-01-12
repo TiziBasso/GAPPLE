@@ -139,3 +139,34 @@ li[expand="1"] {
 #menuMio ul::-webkit-scrollbar {
     width: 12px;
 }
+
+/* Estilo para el contenedor de carga */
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+}
+
+/* Estilo para el spinner */
+.spinner {
+    border: 8px solid #f3f3f3; /* Color de fondo */
+    border-top: 8px solid #3498db; /* Color del spinner */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+/* Animación del spinner */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

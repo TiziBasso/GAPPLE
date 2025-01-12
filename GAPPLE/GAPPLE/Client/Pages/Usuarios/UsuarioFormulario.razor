@@ -1,13 +1,14 @@
 ﻿@page "/seguridad/Usuario/{operacion}"
 @page "/seguridad/Usuario/{operacion}/{idusuario:int}"
 
-@* @inject AuthenticationService AuthenticationService *@
 @inject SeguridadService SeguridadService
 @inject DialogService DialogService
 @inject RadzenCustom DialogCustom
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
-@* @inject ToolsService ToolsService *@
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
 
 @if (showForm)
 {

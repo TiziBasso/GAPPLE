@@ -54,6 +54,18 @@
             <RadzenComponents />
         }
     </Authorized>
+    <NotAuthorized>
+
+        @{
+            if (context.User.Identity?.IsAuthenticated != true)
+                navManager.NavigateTo("/");
+            else
+            {
+                <p class="alert alert-danger">No esta autorizado para ver esta pagina</p>
+            }
+        }
+
+    </NotAuthorized>
 </AuthorizeView>
 
 @code

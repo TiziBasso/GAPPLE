@@ -3,6 +3,9 @@
 @inject DialogCustom DialogCustom
 @inject DialogService DialogService
 @inject NotificationService NotificationService
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
 
 @if (showForm)
 {

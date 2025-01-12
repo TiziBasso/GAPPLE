@@ -9,7 +9,7 @@
     @if (Menu.IdPadre == 1)
     {
         <li id="@Menu.Id" data-nodoActivo="0" @onclick="@(args => OnClickLI(args))" @oncontextmenu="@(args => OnCellContextMenu(args))" @oncontextmenu:preventDefault="true">
-            <a style="display: flex;gap: 5px;" href="@Menu.Path">
+            <a style="display: flex;gap: 5px;text-decoration:none" href="@Menu.Path">
                 @if (!string.IsNullOrEmpty(Menu.Icon))
                 {
                     <RadzenIcon Icon="@Menu.Icon" />
@@ -21,7 +21,7 @@
     else
     {
         <li data-nodoActivo="0" data-nodoVisible="0" id="@Menu.Id" @onclick="@OnClickLI" @oncontextmenu="@(args => OnCellContextMenu(args))" @oncontextmenu:preventDefault="true">
-            <a style="display: flex;gap: 5px;font-weight:400;" href="@Menu.Path">
+            <a style="display: flex;gap: 5px;font-weight:400;text-decoration:none" href="@Menu.Path">
                 @if (!string.IsNullOrEmpty(Menu.Icon))
                 {
                     <RadzenIcon Icon="@Menu.Icon" />

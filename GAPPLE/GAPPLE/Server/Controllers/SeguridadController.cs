@@ -292,7 +292,7 @@ namespace GAPPLE.Server.Controllers
                     };
                     if (dr["HabilitadoPorusuario"] != DBNull.Value)
                     {
-                        p.HabilitadoPorUsuario = bool.Parse(dr["HabilitadoPorUsuario"].ToString());
+                        p.HabilitadoPorUsuario = (dr["HabilitadoPorusuario"].ToString() == "1") ? true : false;
                     }
 
                     permisos.Add(p);
