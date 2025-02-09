@@ -25,8 +25,9 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage = "Debe ingresar una contraseña")]
         public string Contraseña { get; set; }
 
-        [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Email invalido"),
-            StringLength(50, ErrorMessage = "Maximo de caracteres 50")]
+        [Required(ErrorMessage = "Debe ingresar un email"),
+            RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Email invalido"),
+                StringLength(50, ErrorMessage = "Maximo de caracteres 50")]
         public string Email { get; set; }
         public IEnumerable<string> Zonas { get; set; } = new List<string>();
 

@@ -93,13 +93,6 @@
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Zonas:" Style="margin-bottom:5px" />
-                    @* <RadzenCheckBoxList @bind-Value=@Usuario.Zonas AllowSelectAll="true" SelectAllText="Todas" TValue="string" Orientation="Orientation.Vertical" Style="height:15vh;">
-                        <Items>
-                            @foreach(var zona in zonas){
-                                <RadzenCheckBoxListItem Text="@zona.Descripcion" Value="@zona.CodigoTango" />
-                            }
-                        </Items>
-                    </RadzenCheckBoxList> *@
                         <RadzenDropDown @bind-Value=@Usuario.Zonas Data=@zonas TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" Name="DropDownMultipleMaxLabels"
                                         Multiple=true AllowClear=true Placeholder="Seleccionar zonas"
                                         MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionadas" Style="width: 40rem;" />

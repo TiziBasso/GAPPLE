@@ -3,6 +3,8 @@ using GAPPLE.Client.Pages;
 using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using RestSharp;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -451,6 +453,7 @@ namespace GAPPLE.Server.Controllers
             SqlTransaction? trans = null;
             try
             {
+                var a = JsonConvert.SerializeObject(ordenes[0]);
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -459,8 +462,24 @@ namespace GAPPLE.Server.Controllers
                     foreach (var orden in ordenes)
                     {
                         var idPedidos = orden.IdPedidos.Split(",");
+
+                        RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
+                        restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
+                        restClient.AddDefaultHeader("Company", "53");
+
+                        RestRequest request = new RestRequest("Create?process=19845",Method.Post);
+                        
+                        PedidoDTO pedido = new PedidoDTO();
+
+                        request.AddBody(pedido);
+
+                        var response = restClient.Execute(request);
+                        Console.WriteLine(response.ToString());
+
                         foreach (var id in idPedidos)
+                        {
                             daO.PersistirPedidoEstado(id, 4, trans);
+                        }
                     }
                     trans.Commit();
                     cnn.Close();
@@ -480,11 +499,12 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             OrdenExpedicion orden = GetOrdenExpedicion(idOrden);
+            var a = JsonConvert.SerializeObject(orden);
             foreach (var idPedido in orden.IdPedidos.Split(","))
                 daO.PersistirPedidoImpresion(idPedido);
             return orden;
         }
-        
+
         [HttpGet("cantidadesproductos")]
         public CantidadesProductosDashboard GetCantidadesDeProductos()
         {
@@ -492,10 +512,12 @@ namespace GAPPLE.Server.Controllers
             CantidadesProductosDashboard c = new();
             using (DataTable dt = daO.GetCantidadesProductos())
             {
-                foreach(DataRow row in dt.Rows)
+                foreach (DataRow row in dt.Rows)
                 {
-                    c.CantidadAprobada = int.Parse(row["TotalCantidadAprobada"].ToString());
-                    c.CantidadPendiente = int.Parse(row["TotalCantidadPendiente"].ToString());
+                    if (row["TotalCantidadAprobada"] != DBNull.Value) c.CantidadAprobada = int.Parse(row["TotalCantidadAprobada"].ToString());
+                    else c.CantidadAprobada = 0;
+                    if (row["TotalCantidadPendiente"] != DBNull.Value) c.CantidadPendiente = int.Parse(row["TotalCantidadPendiente"].ToString());
+                    else c.CantidadPendiente = 0;
                 }
             }
 
