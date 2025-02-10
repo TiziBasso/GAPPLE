@@ -223,6 +223,7 @@ else
     DateTime? creacionFilter, entregaFilter;
     List<string> zonasFilter = new(), estadosFilter = new();
     string? zonaFilter, estadoFilter, codOrdenFilter;
+    int render;
 
     protected override async Task OnInitializedAsync()
     {
@@ -231,6 +232,13 @@ else
         idEstado = estados[1].Id;
         //Parametros de consulta
         showPage = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+            await FillOrdenes();
     }
 
 
@@ -246,9 +254,7 @@ else
     private async Task FillOrdenes()
     {
         if (desde > hasta)
-        {
             NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, "La fecha hasta no puede ser mayor a la fecha desde");
-        }
         else
         {
             zonasFilter.Clear();
@@ -260,6 +266,7 @@ else
             //parametrosconsulta
             lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango);
             DialogCustom.CloseDialog();
+            StateHasChanged();
             await grid.Reload();
 
             if (!lstOrdenes.Any())

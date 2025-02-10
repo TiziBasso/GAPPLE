@@ -347,7 +347,6 @@ else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
             }
             lstLineasDif.Add(orden.Linea);
-
         }
     }
 
@@ -462,7 +461,8 @@ else
                             Probador = product.Probador
                         });
             }
-            orden.Linea = string.Join(',', lstLineasDif.Distinct());
+            if (lstLineasDif.Any())
+                orden.Linea = string.Join(',', lstLineasDif.Distinct());
             if (!orden.Detalle.Any())
             {
                 NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
@@ -549,7 +549,7 @@ else
         display: flex;
         flex-direction: column;
         gap: 1px;
-        background-color:var(--rz-input-background-color);
+        background-color: var(--rz-input-background-color);
     }
 
     .product {
@@ -563,9 +563,9 @@ else
     .product-input {
         width: 50px;
         font-size: smaller;
-        border-radius:var(--rz-input-border-radius);
-        background-color:var(--rz-input-background-color);
-        box-shadow:var(--rz-input-shadow);
-        border:var(--rz-input-border)
+        border-radius: var(--rz-input-border-radius);
+        background-color: var(--rz-input-background-color);
+        box-shadow: var(--rz-input-shadow);
+        border: var(--rz-input-border)
     }
 </style>

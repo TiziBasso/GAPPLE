@@ -265,6 +265,7 @@ namespace GAPPLE.Server.Controllers
                         {
                             numLinea++;
                             daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            item.CantidadProbador = 0;
                         }
                     }
 
@@ -467,8 +468,8 @@ namespace GAPPLE.Server.Controllers
                         restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
                         restClient.AddDefaultHeader("Company", "53");
 
-                        RestRequest request = new RestRequest("Create?process=19845",Method.Post);
-                        
+                        RestRequest request = new RestRequest("Create?process=19845", Method.Post);
+
                         PedidoDTO pedido = new PedidoDTO();
 
                         request.AddBody(pedido);

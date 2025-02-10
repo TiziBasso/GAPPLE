@@ -6,7 +6,7 @@
     <RadzenRow>
         <RadzenColumn Size="6">
             <RadzenLabel Text="Nombre" Component="nombre" />
-            <RadzenTextBox Name="nombre" @bind-Value="permiso.Nombre" Style="width:100%;" AutoComplete="false" />
+            <RadzenTextBox Name="nombre" @bind-Value="permiso.Nombre" Style="width:100%;" AutoCompleteType="AutoCompleteType.Off" />
             <ValidationMessage For="@(() => permiso.Nombre)" />
         </RadzenColumn>
     </RadzenRow>
@@ -18,19 +18,19 @@
         </RadzenColumn>
         <RadzenColumn Size="6">
             <RadzenLabel Text="URL" Component="url" />
-            <RadzenTextBox @bind-Value="permiso.Url" Name="url" Style="width:100%;" AutoComplete="false" />
+            <RadzenTextBox @bind-Value="permiso.Url" Name="url" Style="width:100%;" AutoCompleteType="AutoCompleteType.Off" />
             <ValidationMessage For="@(() => permiso.Url)" />
         </RadzenColumn>
     </RadzenRow>
     <RadzenRow Style="margin-top:15px;">
         <RadzenColumn Size="6">
             <RadzenLabel Text="Icono" Component="icono" />
-            <RadzenTextBox @bind-Value="permiso.Icono" Name="icono" Style="width:100%;" AutoComplete="false" />
+            <RadzenTextBox @bind-Value="permiso.Icono" Name="icono" Style="width:100%;" AutoCompleteType="AutoCompleteType.Off" />
             <ValidationMessage For="@(() => permiso.Icono)" />
         </RadzenColumn>
         <RadzenColumn Size="6">
             <RadzenLabel Text="Orden" Component="orden" />
-            <RadzenNumeric @bind-Value="permiso.Orden" ShowUpDown="false" Name="orden" Style="width:100%;" AutoComplete="false" />
+            <RadzenNumeric @bind-Value="permiso.Orden" ShowUpDown="false" Name="orden" Style="width:100%;" AutoCompleteType="AutoCompleteType.Off" />
             <ValidationMessage For="@(() => permiso.Orden)" />
         </RadzenColumn>
     </RadzenRow>

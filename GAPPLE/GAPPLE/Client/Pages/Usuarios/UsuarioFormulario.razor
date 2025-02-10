@@ -25,12 +25,12 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Nombre de Usuario:" />
                     <RadzenTextBox @bind-Value=@Usuario.NombreUsuario Disabled=disableEdit @ref="refNombreUsuario"
-                                   Style="width:20rem" MaxLength="50" Change="@(()=>Usuario.NombreUsuario = Usuario.NombreUsuario.ToUpper())" AutoComplete="false" />
+                                   Style="width:20rem" MaxLength="50" Change="@(()=>Usuario.NombreUsuario = Usuario.NombreUsuario.ToUpper())" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For=@(() => Usuario.NombreUsuario ) />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Apellido y nombre:" />
-                    <RadzenTextBox @bind-Value=@Usuario.ApellidoYNombre Disabled=disableEdit Style="width:20rem" Change="@(()=>Usuario.ApellidoYNombre = Usuario.ApellidoYNombre.ToUpper())" AutoComplete="false" />
+                    <RadzenTextBox @bind-Value=@Usuario.ApellidoYNombre Disabled=disableEdit Style="width:20rem" Change="@(()=>Usuario.ApellidoYNombre = Usuario.ApellidoYNombre.ToUpper())" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For=@(() => Usuario.ApellidoYNombre) />
                 </RadzenStack>
             </RadzenStack>
@@ -41,7 +41,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Contraseña:" />
                     <RadzenPassword @bind-Value="@Usuario.Contraseña" Disabled="@disableEdit"
-                                    Style="width:20rem" AutoComplete="false" />
+                                    Style="width:20rem" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For="@(() => Usuario.Contraseña)" />
                     @if (!string.IsNullOrEmpty(ErrorMensaje))
                     {
@@ -51,7 +51,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px;" Text="Confirmar Contraseña:" />
                     <RadzenPassword @bind-Value="@ConfirmarContraseña" Disabled="@disableEdit"
-                                    Style="width:20rem" AutoComplete="false" />
+                                    Style="width:20rem" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For="@(() => Usuario.Contraseña)" />
                 </RadzenStack>
             </RadzenStack>
@@ -61,7 +61,7 @@
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Email:" />
-                    <RadzenTextBox @bind-Value=@Usuario.Email Disabled=disableEdit Style="width:20rem" MaxLength="50" AutoComplete="false" />
+                    <RadzenTextBox @bind-Value=@Usuario.Email Disabled=disableEdit Style="width:20rem" MaxLength="50" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For=@(() => Usuario.Email) />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
@@ -95,7 +95,7 @@
                     <RadzenLabel Text="Zonas:" Style="margin-bottom:5px" />
                         <RadzenDropDown @bind-Value=@Usuario.Zonas Data=@zonas TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" Name="DropDownMultipleMaxLabels"
                                         Multiple=true AllowClear=true Placeholder="Seleccionar zonas"
-                                        MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionadas" Style="width: 40rem;" />
+                                        MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionadas" Style="width: 41rem;" />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>
