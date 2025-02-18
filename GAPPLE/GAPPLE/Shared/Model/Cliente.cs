@@ -5,6 +5,7 @@ namespace GAPPLE.Shared.Model
 {
     public class Cliente
     {
+        public int Id_GVA { get; set; }
         public int? IdCliente { get; set; }
         //[JsonProperty("COD_GVA14")]
         public string? CodigoCliente { get; set; }

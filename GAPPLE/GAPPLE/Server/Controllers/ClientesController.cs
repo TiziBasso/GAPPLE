@@ -34,6 +34,7 @@ namespace GAPPLE.Server.Controllers
                 c.CodListaPrecioDefault = row["IdListaDePrecio"].ToString()!;
                 c.CondVentaDefault = row["CondVenta"].ToString()!;
                 c.ZonaDefault = row["Zona"].ToString()!;
+                c.Id_GVA = int.Parse(row["ID_GVA"].ToString());
                 lst.Add(c);
             }
             return lst;
@@ -43,7 +44,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PostClienteEspecial(Cliente cliente)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-            daC.PersistirEdicionCliente((int)cliente.IdCliente!,true,cliente.Observaciones!);
+            daC.PersistirEdicionCliente((int)cliente.IdCliente!, true, cliente.Observaciones!);
             return Ok();
         }
 

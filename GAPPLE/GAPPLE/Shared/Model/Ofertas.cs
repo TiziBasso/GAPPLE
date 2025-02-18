@@ -4,6 +4,7 @@ namespace GAPPLE.Shared.Model
 {
     public class Oferta
     {
+        public int Id_GVA { get; set; }
         public int IdOferta { get; set; }
         [Required(ErrorMessage = "Debe ingresar un nombre"), StringLength(50, ErrorMessage = "Máximo de caracteres 50")]
         public string Nombre { get; set; }

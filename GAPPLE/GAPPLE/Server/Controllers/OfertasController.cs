@@ -23,9 +23,9 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Oferta> lstOfertas = new List<Oferta>();
-            using (DataTable dt = daO.ObtenerOfertas(nombre,linea,desde,hasta, activas))
+            using (DataTable dt = daO.ObtenerOfertas(nombre, linea, desde, hasta, activas))
             {
-                foreach(DataRow row in dt.Rows)
+                foreach (DataRow row in dt.Rows)
                 {
                     Oferta o = new()
                     {
@@ -37,7 +37,8 @@ namespace GAPPLE.Server.Controllers
                         Hasta = DateTime.Parse(row["Hasta"].ToString()!),
                         Activa = bool.Parse(row["Activo"].ToString()!),
                         Descripcion = row["Descripcion"].ToString()!,
-                        Inclusiones = row["Inclusiones"].ToString()
+                        Inclusiones = row["Inclusiones"].ToString(),
+                        Id_GVA = int.Parse(row["ID_GVA"].ToString()!)
                     };
                     lstOfertas.Add(o);
                 }

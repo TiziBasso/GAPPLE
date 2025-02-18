@@ -30,6 +30,7 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = (string)row["Descripcion"],
+                        Id_STA = int.Parse(row["ID_STA"].ToString())
                     };
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;

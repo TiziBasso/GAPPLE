@@ -4,6 +4,8 @@ namespace GAPPLE.Shared.Model
 {
     public class Producto : RegistroUsuario
     {
+        public int Id_STA { get; set; }
+
         public int IdProducto { get; set; }
 
         public string CodigoProducto { get; set; }

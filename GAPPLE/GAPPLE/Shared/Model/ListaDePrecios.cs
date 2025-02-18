@@ -8,6 +8,7 @@ namespace GAPPLE.Shared.Model
 {
     public class ListaDePrecios
     {
+        public int Id_GVA { get; set; }
         public int IdLista {  get; set; }
         public string CodigoTango { get; set; }
         public string Descripcion { get; set; }

@@ -8,6 +8,7 @@ namespace GAPPLE.Shared.Model
 {
     public class PedidoDTO
     {
+        public int Id_GVA { get; set; }
         public int ID_GVA43_TALON_PED { get; set; }
         public string NRO_PEDIDO { get; set; }
         public int ESTADO { get; set; }
