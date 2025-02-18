@@ -22,7 +22,7 @@ namespace GAPPLE.Server.Data
             cmd.Connection = cnn;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_get_Usuarios";
-            if(idUsuario != null) cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            if (idUsuario != null) cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             if (nombreUsuario != null) cmd.Parameters.AddWithValue("@pNombreUsuario", nombreUsuario);
             if (apellidoYNombre != null) cmd.Parameters.AddWithValue("@pApellidoYNombre", apellidoYNombre);
             if (idPerfil != null) cmd.Parameters.AddWithValue("@pIdPerfil", idPerfil);
@@ -33,7 +33,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void PostUsuario(string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña)
+        public void PostUsuario(string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña, int? idVendedor)
         {
             SqlConnection cnn;
             SqlCommand cmd = new();
@@ -48,12 +48,13 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pContrasenia", contraseña);
             cmd.Parameters.AddWithValue("@pProvincia", Provincia);
             cmd.Parameters.AddWithValue("@pHabilitado", habilitado);
+            if (idVendedor != null) cmd.Parameters.AddWithValue("@pIdVendedor", idVendedor);
             cnn.Open();
             cmd.ExecuteNonQuery();
             cnn.Close();
         }
 
-        public void PutUsuario(int idUsuario, string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña)
+        public void PutUsuario(int idUsuario, string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña, int? idVendedor)
         {
             SqlConnection cnn;
             SqlCommand cmd = new();
@@ -69,6 +70,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pContrasenia", contraseña);
             cmd.Parameters.AddWithValue("@pProvincia", Provincia);
             cmd.Parameters.AddWithValue("@pHabilitado", habilitado);
+            if (idVendedor != null) cmd.Parameters.AddWithValue("@pIdVendedor", idVendedor);
             cnn.Open();
             cmd.ExecuteNonQuery();
             cnn.Close();

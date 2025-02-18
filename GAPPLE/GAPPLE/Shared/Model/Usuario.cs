@@ -31,6 +31,8 @@ namespace GAPPLE.Shared.Model
         public string Email { get; set; }
         public IEnumerable<string> Zonas { get; set; } = new List<string>();
 
+        public int? IdVendedor { get; set; }
+
         public bool Habilitado { get; set; }
 
         public object Clone()

@@ -55,7 +55,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PostUsuario(Usuario usuario)
         {
             DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
-            daS.PostUsuario(usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña);
+            daS.PostUsuario(usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña, usuario.IdVendedor);
 
             using (SqlConnection connection = new(Configuration.GetConnectionString("DefaultConnection")))
             {
@@ -75,12 +75,12 @@ namespace GAPPLE.Server.Controllers
 
             return Ok();
         }
-        
+
         [HttpPut("usuario")]
         public IActionResult PutUsuario(Usuario usuario)
         {
             DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
-            daS.PutUsuario(usuario.IdUsuario, usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña);
+            daS.PutUsuario(usuario.IdUsuario, usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña, usuario.IdVendedor);
 
             using (SqlConnection connection = new(Configuration.GetConnectionString("DefaultConnection")))
             {
@@ -89,7 +89,7 @@ namespace GAPPLE.Server.Controllers
                 try
                 {
                     daS.EliminarZonasPorUsuario(usuario.IdUsuario, transaction);
-                    daS.InsertarZonasPorUsuario(string.Join(",",usuario.Zonas), usuario.IdUsuario, transaction);
+                    daS.InsertarZonasPorUsuario(string.Join(",", usuario.Zonas), usuario.IdUsuario, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -270,10 +270,12 @@ namespace GAPPLE.Server.Controllers
 
                 if (row["Provincia"] != DBNull.Value) usuario.Provincia = (string)row["Provincia"];
                 if (row["Correo"] != DBNull.Value) usuario.Email = (string)row["Correo"];
+                if (row["ID_VENDEDOR"] != DBNull.Value) usuario.IdVendedor = int.Parse(row["Id_Vendedor"].ToString());
 
                 dt = da.ObtenerZonasPorUsuario(id);
                 List<string> zonas = new List<string>();
-                foreach (DataRow dr in dt.Rows) {
+                foreach (DataRow dr in dt.Rows)
+                {
                     zonas.Add(dr["CodZona"].ToString());
                 }
                 usuario.Zonas = zonas;
@@ -492,6 +494,32 @@ namespace GAPPLE.Server.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        [HttpGet("vendedores")]
+        public List<Vendedor> GetVendedores()
+        {
+            List<Vendedor> vendedores = new();
+            DA_Vendedores daV = new(Configuration.GetConnectionString("DefaultConnection"));
+
+            using (DataTable dt = daV.ObtenerVendedores())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    Vendedor v = new()
+                    {
+                        IdVendedor = int.Parse(row["IdVendedor"].ToString()),
+                        CodTango = row["CodTango"].ToString(),
+                        Nombre = row["Nombre"].ToString()
+                    };
+                    if (row["Comision"] != DBNull.Value) v.Comision = decimal.Parse(row["Comision"].ToString());
+                    if (row["ID_GVA"] != DBNull.Value) v.Id_GVA = int.Parse(row["ID_GVA"].ToString());
+
+                    vendedores.Add(v);
+                }
+            }
+
+            return vendedores;
         }
     }
 }

@@ -232,5 +232,10 @@ namespace GAPPLE.Client.Services
             else
                 return new(false, null, await response.Content.ReadAsStringAsync());
         }
+
+        public async ValueTask<List<Vendedor>> GetVendedores()
+        {
+            return await HttpClient.GetFromJsonAsync<List<Vendedor>>($"{URI_BASE}/vendedores");
+        }
     }
 }
