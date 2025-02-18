@@ -13,27 +13,27 @@ namespace GAPPLE.Shared.Model
         public string NRO_PEDIDO { get; set; }
         public int ESTADO { get; set; }
         public DateTime FECHA_PEDIDO { get; set; }
-        public int ID_GVA14 { get; set; }
+        public int? ID_GVA14 { get; set; }
         public bool ES_CLIENTE_HABITUAL { get; set; }
-        public int ID_GVA01 { get; set; }
-        public int ID_GVA23 { get; set; }
-        public int ID_STA22 { get; set; }
-        public int ID_GVA24 { get; set; }
-        public int ID_MONEDA { get; set; }
+        public int? ID_GVA01 { get; set; }
+        public int? ID_GVA23 { get; set; }
+        public int? ID_STA22 { get; set; }
+        public int? ID_GVA24 { get; set; }
+        public string ID_MONEDA { get; set; }
         public decimal COTIZACION { get; set; }
-        public int ID_GVA10 { get; set; }
-        public int ID_DIRECCION_ENTREGA { get; set; }
+        public int? ID_GVA10 { get; set; }
+        public string ID_DIRECCION_ENTREGA { get; set; }
         public DateTime FECHA_ENTREGA { get; set; }
-        public int ID_ASIENTO_MODELO_GV { get; set; }
-        public int ID_GVA81 { get; set; }
-        public int ID_GVA43_TALONARIO_FACTURA { get; set; }
+        public string ID_ASIENTO_MODELO_GV { get; set; }
+        public string ID_GVA81 { get; set; }
+        public string ID_GVA43_TALONARIO_FACTURA { get; set; }
         public string NRO_ORDEN_COMPRA { get; set; }
         public DateTime FECHA_ORDEN_COMPRA { get; set; }
-        public int ID_SUCURSAL_DESTINO { get; set; }
+        public string ID_SUCURSAL_DESTINO { get; set; }
         public bool COMPROMETE_STOCK { get; set; }
-        public int ID_ACTIVIDAD_EMPRESA_AFIP { get; set; }
+        public string ID_ACTIVIDAD_EMPRESA_AFIP { get; set; }
         public string ACTIVIDAD_COMPROBANTE_AFIP { get; set; }
-        public int ID_TIPO_DOCUMENTO_GV { get; set; }
+        public string ID_TIPO_DOCUMENTO_GV { get; set; }
         public string NUMERO_DOCUMENTO_PAGADOR { get; set; }
         public string LEYENDA_1 { get; set; }
         public string LEYENDA_2 { get; set; }
@@ -47,7 +47,7 @@ namespace GAPPLE.Shared.Model
         public bool APLICA_DESCUENTO_CLIENTE { get; set; }
         public bool CALCULA_PROMOCIONES { get; set; }
         public bool VALIDA_LIMITE_CREDITO { get; set; }
-        public int ID_SBA01 { get; set; }
+        public string ID_SBA01 { get; set; }
         public string OBSERVACIONES { get; set; }
         public List<RenglonDTO> RENGLON_DTO { get; set; }
         public List<ClienteOcasionalDTO> CLIENTE_OCASIONAL_DTO { get; set; }
