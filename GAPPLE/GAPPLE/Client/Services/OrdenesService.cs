@@ -122,7 +122,32 @@ namespace GAPPLE.Client.Services
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "PostPedido");
+                Logger.LogError(ex, "PutPedido");
+                return new(false);
+            }
+        }
+
+        public async ValueTask<Response> PutPedidoAprobacion(Orden pedido)
+        {
+            try
+            {
+                pedido.Usuario = SesionDTO.Nombre;
+                pedido.CodCliente = "asd";              //para que no salte validacion
+                pedido.CondicionVenta = "asd";          //para que no salte validacion
+                pedido.Entrega = "asd";                 //para que no salte validacion
+                pedido.FechaEntrega = DateTime.Today;   //para que no salte validacion
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion", pedido);
+                pedido.FechaEntrega = null;   //para que no salte validacion
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "PutPedidoAprobacion");
                 return new(false);
             }
         }

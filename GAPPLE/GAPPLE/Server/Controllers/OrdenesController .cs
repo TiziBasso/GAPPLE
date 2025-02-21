@@ -50,8 +50,15 @@ namespace GAPPLE.Server.Controllers
                         IdEstado = int.Parse(row["IdEstado"].ToString()!),
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString(),
-                        Unidades = (int)row["CantidadLineas"]
+                        Unidades = (int)row["CantidadLineas"],
+                        CodListaPrecio = row["IdListaDePrecio"].ToString()!,
+                        Transporte = row["DescripcionTransporte"].ToString(),
+                        CodTransporte = row["CodigoTransporte"].ToString(),
+                        AprobadoContaduria = bool.Parse(row["AprobadoContaduria"].ToString()),
+                        AprobadoVentas = bool.Parse(row["AprobadoVentas"].ToString()),
+                        AprobadoFinanzas = bool.Parse(row["AprobadoContaduria"].ToString())
                     };
+                    if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
 
                     lstOrdenes.Add(o);
                 }
@@ -60,11 +67,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden? GetOrden(string? codOrden, bool conDetalle, int? idPedido)
+        public Orden? GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction? trans)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;
-            using (DataTable dt = daO.ObtenerOrden(codOrden, idPedido))
+            using (DataTable dt = daO.ObtenerOrden(codOrden, idPedido, trans))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -344,6 +351,111 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
+        [HttpPut("aprobacion")]
+        public IActionResult PutPedidoAprobacion(Orden pedido)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Ordenes daO = new(cnn.ConnectionString);
+                cnn.Open();
+                trans = cnn.BeginTransaction();
+                daO.PersistirPedidoAprobacion(pedido.Id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, trans);
+                if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                {
+                    var orden = GetOrdenExpedicion(pedido.CodigoOrden.Substring(2), 4, trans);
+                    var response = PostTango(orden, trans);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        if (response.Message != null)
+                            ModelState.AddModelError("error", response.Message);
+                        else
+                            throw new Exception();
+                    }
+                }
+
+                if (ModelState.ErrorCount > 0)
+                {
+                    trans.Rollback();
+                    cnn.Close();
+                    return BadRequest(ModelState);
+                }
+                else
+                {
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), 3, trans);
+                    trans.Commit();
+                    cnn.Close();
+                    return Ok();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        private Response PostTango(OrdenExpedicion orden, SqlTransaction trans)
+        {
+
+            RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
+            restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
+            restClient.AddDefaultHeader("Company", "53");
+
+            RestRequest request = new RestRequest("Create?process=19845", Method.Post);
+            var idPedidos = orden.IdPedidos.Split(",");
+
+            foreach (var id in idPedidos)
+            {
+
+                PedidoDTO pedido = new PedidoDTO();
+
+                Orden ordenFull = GetOrden(null, true, int.Parse(id), trans)!;
+
+                if (!ordenFull.Detalle.Any())
+                    return new(false, "La orden debe poseer al menos 1 producto");
+
+                pedido.NRO_ORDEN_COMPRA = id;
+                pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);
+                pedido.ID_GVA43_TALON_PED = 3;
+                pedido.ESTADO = 2;
+                pedido.ES_CLIENTE_HABITUAL = true;
+                pedido.ID_GVA01 = ordenFull.ID_GVA01;
+                pedido.ID_GVA14 = ordenFull.ID_GVA14;
+                pedido.ID_GVA24 = ordenFull.ID_GVA24;
+                pedido.ID_GVA10 = ordenFull.ID_GVA10;
+                pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
+                pedido.ID_STA22 = 11;
+                pedido.FECHA_PEDIDO = orden.Fecha;
+                pedido.FECHA_ENTREGA = orden.Fecha.AddDays(1);
+                pedido.ID_MONEDA = "1";
+                pedido.NOTA_PEDIDO_DTO = new();
+                pedido.NOTA_PEDIDO_DTO.Add(new NotaPedidoDTO() { MENSAJE = string.IsNullOrEmpty(pedido.OBSERVACIONES) ? "." : pedido.OBSERVACIONES });
+                pedido.COTIZACION = 1;
+
+                pedido.RENGLON_DTO = new();
+                foreach (var detalle in ordenFull.Detalle)
+                {
+                    if (detalle.CantidadAprobada > 0)
+                    {
+                        RenglonDTO renglonDTO = new();
+                        renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadAprobada;
+                        renglonDTO.ID_STA11 = detalle.ID_STA11;
+                        pedido.RENGLON_DTO.Add(renglonDTO);
+                    }
+                }
+
+                request.AddBody(pedido);
+
+                var response = restClient.Execute(request);
+                if (!response.IsSuccessStatusCode)
+                    return new(false);
+            }
+            return new(true);
+        }
+
         [HttpPut("{idEstado:int}")]
         public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string id)
         {
@@ -401,14 +513,14 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("expedicion")]
-        public OrdenExpedicion GetOrdenExpedicion(string idOrden)
+        public OrdenExpedicion GetOrdenExpedicion(string idOrden, int? idEstado = null, SqlTransaction? trans = null)
         {
             OrdenExpedicion orden = new()
             {
                 Detalle = new()
             };
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daO.ObtenerOrdenExpediciones(idOrden))
+            using (DataTable dt = daO.ObtenerOrdenExpediciones(idOrden, idEstado, trans))
             {
                 DataRow row = dt.Rows[0];
                 orden.IdPedidos = row["IdPedidos"].ToString();
@@ -508,61 +620,9 @@ namespace GAPPLE.Server.Controllers
                     trans = cnn.BeginTransaction();
                     foreach (var orden in ordenes)
                     {
-                        var idPedidos = orden.IdPedidos.Split(",");
-
-                        RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
-                        restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
-                        restClient.AddDefaultHeader("Company", "53");
-
-                        RestRequest request = new RestRequest("Create?process=19845", Method.Post);
-
-                        foreach (var id in idPedidos)
+                        foreach (var id in orden.IdPedidos.Split(","))
                         {
-
-                            PedidoDTO pedido = new PedidoDTO();
-
-                            Orden ordenFull = GetOrden(null, true, int.Parse(id))!;
-
-                            if (!ordenFull.Detalle.Any())
-                            {
-                                return BadRequest("La orden debe poseer al menos 1 producto");
-                            }
-
-                            pedido.NRO_ORDEN_COMPRA = id;
-                            pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);
-                            pedido.ID_GVA43_TALON_PED = 3;
-                            pedido.ESTADO = 2;
-                            pedido.ES_CLIENTE_HABITUAL = true;
-                            pedido.ID_GVA01 = ordenFull.ID_GVA01;
-                            pedido.ID_GVA14 = ordenFull.ID_GVA14;
-                            pedido.ID_GVA24 = ordenFull.ID_GVA24;
-                            pedido.ID_GVA10 = ordenFull.ID_GVA10;
-                            pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
-                            pedido.ID_STA22 = 11;
-                            pedido.FECHA_PEDIDO = orden.Fecha;
-                            pedido.FECHA_ENTREGA = orden.Fecha.AddDays(1);
-                            pedido.ID_MONEDA = "1";
-                            pedido.NOTA_PEDIDO_DTO = new();
-                            pedido.NOTA_PEDIDO_DTO.Add(new NotaPedidoDTO() { MENSAJE = string.IsNullOrEmpty(pedido.OBSERVACIONES) ? "." : pedido.OBSERVACIONES });
-                            pedido.COTIZACION = 1;
-
-                            pedido.RENGLON_DTO = new();
-                            foreach (var detalle in ordenFull.Detalle)
-                            {
-                                if (detalle.CantidadAprobada > 0)
-                                {
-                                    RenglonDTO renglonDTO = new();
-                                    renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadAprobada;
-                                    renglonDTO.ID_STA11 = detalle.ID_STA11;
-                                    pedido.RENGLON_DTO.Add(renglonDTO);
-                                }
-                            }
-
-                            request.AddBody(pedido);
-
-                            var response = restClient.Execute(request);
-                            if (response.IsSuccessStatusCode)
-                                daO.PersistirPedidoEstado(id, 4, trans);
+                            daO.PersistirPedidoEstado(id, 4, trans);
                         }
                     }
                     trans.Commit();

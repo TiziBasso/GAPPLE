@@ -155,7 +155,7 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
                                   Click="@(() => EditarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
@@ -223,7 +223,7 @@ else
     bool? presupuesto;
     string? razonSocial, linea, codTango, codOrden;
 
-    List<string> permisos = new() { "alta", "eliminar" };
+    List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
 
 
     //filters variables
@@ -306,19 +306,9 @@ else
 
     async Task AprobarOrden(Orden order)
     {
-        if (await DialogService.Confirm(MensajesHelper.Confirm("aprobar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
-        {
-            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 3);
-            if (response.IsSuccessStatusCode)
-            {
-                order.IdEstado = 3;
-                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 3).Descripcion;
-
-                await grid.Reload();
-            }
-            else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
-        }
+        await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
+                                                        new() { { "Permisos", permisos }, { "Orden", order } },
+                                                        new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
     }
 
     void NuevaOrden()

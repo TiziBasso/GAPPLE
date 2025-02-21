@@ -40,22 +40,28 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable ObtenerOrden(string? codOrden, int? idPedido)
+        public DataTable ObtenerOrden(string? codOrden, int? idPedido, SqlTransaction? trans = null)
         {
             DataTable dt = new DataTable();
-            using (SqlConnection cnn = new(ConnectionString))
+            SqlConnection cnn;
+            SqlCommand cmd;
+            if (trans != null)
             {
-                SqlCommand cmd = new()
-                {
-                    Connection = cnn,
-                    CommandType = CommandType.StoredProcedure,
-                    CommandText = "prc_get_PedidosCabecera"
-                };
-                if(codOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
-                if(idPedido != null) cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
-                SqlDataAdapter da = new(cmd);
-                da.Fill(dt);
+                cnn = trans.Connection;
+                cmd = cnn.CreateCommand();
+                cmd.Transaction = trans;
             }
+            else
+            {
+                cnn = new(ConnectionString);
+                cmd = cnn.CreateCommand();
+            }
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_PedidosCabecera";
+            if (codOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
+            if (idPedido != null) cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
             return dt;
         }
 
@@ -274,6 +280,39 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
+        public void PersistirPedidoAprobacion(int idPedido, bool finanzas, bool ventas, bool contaduria, SqlTransaction? trans = null)
+        {
+            SqlConnection cnn;
+            SqlCommand cmd;
+            if (trans == null)
+            {
+                cnn = new(ConnectionString);
+                cmd = cnn.CreateCommand();
+            }
+            else
+            {
+                cnn = trans.Connection;
+                cmd = cnn.CreateCommand();
+                cmd.Transaction = trans;
+            }
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pAprobadoFinanzas", finanzas);
+            cmd.Parameters.AddWithValue("@pAprobadoVentas", ventas);
+            cmd.Parameters.AddWithValue("@pAprobadoContaduria", contaduria);
+            if (trans == null)
+            {
+                cnn.Open();
+                cmd.ExecuteNonQuery();
+                cnn.Close();
+            }
+            else
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         public int ObtenerCodigoOrden()
         {
             int cod;
@@ -289,21 +328,29 @@ namespace GAPPLE.Server.Data
             return cod;
         }
 
-        public DataTable ObtenerOrdenExpediciones(string? idOrden = null)
+        public DataTable ObtenerOrdenExpediciones(string? idOrden = null, int? idEstado = null, SqlTransaction? trans = null)
         {
             DataTable dt = new DataTable();
-            using (SqlConnection cnn = new(ConnectionString))
+            SqlConnection cnn;
+            SqlCommand cmd;
+            if (trans != null)
             {
-                SqlCommand cmd = new()
-                {
-                    Connection = cnn,
-                    CommandType = CommandType.StoredProcedure,
-                    CommandText = "prc_get_PedidosCabeceraExpedicion"
-                };
-                if (idOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", idOrden);
-                SqlDataAdapter da = new(cmd);
-                da.Fill(dt);
+                cnn = trans.Connection;
+                cmd = cnn.CreateCommand();
+                cmd.Transaction = trans;
             }
+            else
+            {
+                cnn = new(ConnectionString);
+                cmd = cnn.CreateCommand();
+            }
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_PedidosCabeceraExpedicion";
+            if (idOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", idOrden);
+            if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+
             return dt;
         }
 

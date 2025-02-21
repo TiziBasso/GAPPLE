@@ -1,0 +1,128 @@
+﻿@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject OrdenesService OrdenesService
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Zona:" />
+        <RadzenTextBox Value="@Orden.Zona" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Linea:" />
+        <RadzenTextBox Value="@Orden.Linea" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Cliente:" />
+        <RadzenTextBox Value="@Orden.Cliente" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-mb-2">
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Lista de precios:" />
+        <RadzenTextBox Value="@Orden.CodListaPrecio" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="5px">
+        <RadzenLabel Text="Presupuesto:" />
+        <RadzenCheckBox Value="@Orden.Presupuesto" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Transporte:" />
+        <RadzenTextBox Value="@Orden.Transporte" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Cód. Trans:" />
+        <RadzenTextBox Value="@Orden.CodTransporte" Disabled=true Style="width:100%" />
+    </RadzenStack>
+
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2" Style="width:100%">
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px" Style="width:100%">
+        <RadzenLabel Text="Notas:" />
+        <RadzenTextBox Value="@Orden.Notas" Disabled=true Style="width:100%; height:3rem;" />
+    </RadzenStack>
+
+</RadzenStack>
+
+<hr />
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-mb-2">
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="5px">
+        <RadzenLabel Text="Finanzas:" Component="finanzas" />
+        <RadzenCheckBox Name="finanzas" @bind-Value=finanzas Disabled=@(!Permisos.Contains("finanzas")) />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="5px">
+        <RadzenLabel Text="Contaduría:" Component="contaduria" />
+        <RadzenCheckBox Name="contaduria" @bind-Value=contaduria Disabled=@(!Permisos.Contains("contaduria")) />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="5px">
+        <RadzenLabel Text="Ventas:" Component="ventas" />
+        <RadzenCheckBox Name="ventas" @bind-Value=ventas Disabled=@(!Permisos.Contains("ventas")) />
+    </RadzenStack>
+
+</RadzenStack>
+
+<RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-4">
+    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
+</RadzenStack>
+
+@code {
+    [Parameter] public List<string> Permisos { get; set; }
+    [Parameter] public Orden Orden { get; set; }
+
+    bool finanzas, ventas, contaduria;
+
+    protected override void OnInitialized()
+    {
+        finanzas = Orden.AprobadoFinanzas;
+        ventas = Orden.AprobadoVentas;
+        contaduria = Orden.AprobadoContaduria;
+    }
+
+    private void Cancelar()
+    {
+        DialogService.Close();
+    }
+
+    private async Task Guardar()
+    {
+        string msg = MensajesHelper.Confirm();
+        if (Orden.AprobadoVentas && Orden.AprobadoFinanzas && Orden.AprobadoContaduria)
+            msg = MensajesHelper.Confirm($"enviar la orden {Orden.Id}", "a tango");
+
+        if (await DialogService.Confirm(msg, MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Cargando...");
+            Orden.AprobadoFinanzas = finanzas;
+            Orden.AprobadoContaduria = contaduria;
+            Orden.AprobadoVentas = ventas;
+            var response = await OrdenesService.PutPedidoAprobacion(Orden);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+            {
+                Orden.IdEstado = 3;
+                NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
+                DialogService.Close();
+            }
+            else if (response.Errors != null && response.Errors.Any())
+                DialogCustom.ShowErrors(response.Errors["error"]);
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        }
+    }
+}
