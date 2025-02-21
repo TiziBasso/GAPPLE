@@ -137,9 +137,13 @@ namespace GAPPLE.Client.Services
                 pedido.Entrega = "asd";                 //para que no salte validacion
                 pedido.FechaEntrega = DateTime.Today;   //para que no salte validacion
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion", pedido);
-                pedido.FechaEntrega = null;   //para que no salte validacion
+                pedido.FechaEntrega = null;             //para que no modifique grilla
                 if (response.IsSuccessStatusCode)
+                {
+                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
+                    pedido.IdEstado = p.IdEstado;
                     return new(true);
+                }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                     return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else

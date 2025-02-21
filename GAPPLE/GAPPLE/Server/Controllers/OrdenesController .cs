@@ -373,6 +373,11 @@ namespace GAPPLE.Server.Controllers
                         else
                             throw new Exception();
                     }
+                    else
+                    {
+                        daO.PersistirPedidoEstado(pedido.Id.ToString(), 3, trans);
+                        pedido.IdEstado = 3;
+                    }
                 }
 
                 if (ModelState.ErrorCount > 0)
@@ -383,10 +388,9 @@ namespace GAPPLE.Server.Controllers
                 }
                 else
                 {
-                    daO.PersistirPedidoEstado(pedido.Id.ToString(), 3, trans);
                     trans.Commit();
                     cnn.Close();
-                    return Ok();
+                    return Ok(pedido);
                 }
             }
             catch (Exception ex)

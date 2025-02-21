@@ -309,6 +309,7 @@ else
         await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
                                                         new() { { "Permisos", permisos }, { "Orden", order } },
                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
+        StateHasChanged();
     }
 
     void NuevaOrden()

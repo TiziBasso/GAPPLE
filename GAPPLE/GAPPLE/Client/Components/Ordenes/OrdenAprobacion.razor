@@ -115,7 +115,6 @@
             DialogCustom.CloseDialog();
             if (response.IsSuccessStatusCode)
             {
-                Orden.IdEstado = 3;
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();
             }
