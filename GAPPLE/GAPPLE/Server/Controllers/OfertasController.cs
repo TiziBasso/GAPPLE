@@ -38,7 +38,6 @@ namespace GAPPLE.Server.Controllers
                         Activa = bool.Parse(row["Activo"].ToString()!),
                         Descripcion = row["Descripcion"].ToString()!,
                         Inclusiones = row["Inclusiones"].ToString(),
-                        Id_GVA = int.Parse(row["ID_GVA"].ToString()!)
                     };
                     lstOfertas.Add(o);
                 }

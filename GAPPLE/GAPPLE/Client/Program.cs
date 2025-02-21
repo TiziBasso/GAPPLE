@@ -39,5 +39,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<OrdenesService>();
     services.AddScoped<JSFunction>();
     services.AddScoped<IJSFunction, JSFunction>();
-    services.AddScoped<SesionDTO>();
+    services.AddSingleton<SesionDTO>();
 }

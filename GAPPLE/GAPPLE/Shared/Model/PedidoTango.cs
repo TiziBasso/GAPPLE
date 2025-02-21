@@ -57,21 +57,7 @@ namespace GAPPLE.Shared.Model
     public class RenglonDTO
     {
         public int ID_STA11 { get; set; }
-        public string DESCRIPCION_ARTICULO { get; set; }
-        public string DESCRIPCION_ADICIONAL_ARTICULO { get; set; }
-        public int ID_STA22 { get; set; }
-        public string MODULO_UNIDAD_MEDIDA { get; set; }
         public decimal CANTIDAD_PEDIDA { get; set; }
-        public decimal CANTIDAD_A_FACTURAR { get; set; }
-        public decimal CANTIDAD_A_DESCARGAR { get; set; }
-        public decimal CANTIDAD_PENDIENTE_A_FACTURAR { get; set; }
-        public decimal PRECIO { get; set; }
-        public decimal PORCENTAJE_BONIFICACION { get; set; }
-        public decimal IMPORTE { get; set; }
-        public int ID_GVA81 { get; set; }
-        public string OBSERVACIONES { get; set; }
-        public List<PlanEntregaDTO> PLAN_DE_ENTREGA_DTO { get; set; }
-        public List<DescripcionAdicionalDTO> DESCRIPCION_ADICIONAL_DTO { get; set; }
     }
 
     public class PlanEntregaDTO

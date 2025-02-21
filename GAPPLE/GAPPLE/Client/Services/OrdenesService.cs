@@ -12,10 +12,11 @@ namespace GAPPLE.Client.Services
         [Inject]
         private HttpClient HttpClient { get; set; }
         private ILogger<OrdenesService> Logger { get; }
+        private SesionDTO SesionDTO { get; }
 
         private const string URI_BASE = "api/ordenes";
 
-        public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger) => (HttpClient, Logger) = (httpClient, logger);
+        public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger, SesionDTO sesionDTO) => (HttpClient, Logger, SesionDTO) = (httpClient, logger, sesionDTO);
 
         public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango)
@@ -80,6 +81,9 @@ namespace GAPPLE.Client.Services
         {
             try
             {
+                Console.WriteLine(SesionDTO.Nombre);
+                Console.WriteLine(SesionDTO.IdUsuario);
+                pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
                 if (response.IsSuccessStatusCode)
                 {

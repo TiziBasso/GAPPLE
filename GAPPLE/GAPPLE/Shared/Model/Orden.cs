@@ -94,6 +94,7 @@ namespace GAPPLE.Shared.Model
         public int Unidades { get; set; }
 
         public bool Aprobado { get; set; }
+        public string? Usuario { get; set; }
     }
     public class NotEmptyAttribute : ValidationAttribute
     {

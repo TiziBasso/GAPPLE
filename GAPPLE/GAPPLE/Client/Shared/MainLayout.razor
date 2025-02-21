@@ -22,7 +22,7 @@
                         <RadzenAppearanceToggle />
                         <RadzenProfileMenu>
                             <Template>
-                                 <RadzenLabel Text="@authenticationState.User.Identity!.Name" />
+                                <RadzenLabel Text="@authenticationState.User.Identity!.Name" />
                             </Template>
                             <ChildContent>
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
@@ -80,7 +80,11 @@
         var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
         authenticationState = await autenticacionExt.GetAuthenticationStateAsync();
         if(authenticationState.User.Identity.Name != null)
-            SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
+        {
+        SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
+        SesionDTO.Nombre = authenticationState.User.Identity.Name;
+            
+        }
         showPage = true;
     }
 
