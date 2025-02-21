@@ -68,7 +68,7 @@
                     <RadzenText TextAlign=TextAlign.Right><strong>@((orden.Detalle.Sum(x => x.CantidadAprobadaF) + orden.Detalle.Sum(x => x.CantidadAprobadaX)).ToString())</strong></RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorAprobadaF)" TextAlign=TextAlign.Right Title="Probadores F" Width="100px" Visible=showF>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorAprobadaF)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=showF>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaF ShowUpDown=false Min="0" Max="context.CantidadProbadorF" />
                 </EditTemplate>
@@ -76,7 +76,7 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorAprobadaF)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorAprobadaX)" TextAlign=TextAlign.Right Title="Probadores X" Width="100px" Visible=showX>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorAprobadaX)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=@(showX && !showF)>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaX ShowUpDown=false Min="0" Max="context.CantidadProbadorX" />
                 </EditTemplate>
@@ -84,14 +84,14 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorAprobadaX)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Right Title="Probadores totales" Width="140px" Visible=@(showX && showF)>
-                <Template>
-                    <strong>@(context.CantidadProbadorAprobada)</strong>
-                </Template>
-                <FooterTemplate>
-                    <RadzenText TextAlign=TextAlign.Right><strong>@(orden.Detalle.Sum(x => x.CantidadProbadorAprobada))</strong></RadzenText>
-                </FooterTemplate>
-            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Right Title="Probadores totales" Width="140px" Visible=@(showX && showF)>
+        <Template>
+        <strong>@(context.CantidadProbadorAprobada)</strong>
+        </Template>
+        <FooterTemplate>
+        <RadzenText TextAlign=TextAlign.Right><strong>@(orden.Detalle.Sum(x => x.CantidadProbadorAprobada))</strong></RadzenText>
+        </FooterTemplate>
+        </RadzenDataGridColumn> *@
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_downward" ButtonStyle="ButtonStyle.Info" Click="@(()=>BajarLinea(context))" Disabled=editMode />
@@ -147,7 +147,7 @@
                     <RadzenText TextAlign=TextAlign.Right><strong>@((orden.Detalle.Sum(x => x.CantidadPendiente)).ToString())</strong></RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteF)" TextAlign=TextAlign.Right Title="Probadores F" Width="100px" Visible=showF>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteF)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=showF>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaF ShowUpDown=false Min="0" Max="context.CantidadProbadorF" />
                 </EditTemplate>
@@ -155,7 +155,7 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorPendienteF)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteX)" TextAlign=TextAlign.Right Title="Probadores X" Width="100px" Visible=showX>
+            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteX)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=@(showX && !showF)>
                 <EditTemplate>
                     <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaX ShowUpDown=false Min="0" Max="context.CantidadProbadorX" />
                 </EditTemplate>
@@ -163,14 +163,14 @@
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorPendienteX)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Right Title="Probadores totales" Width="140px" Visible=@(showX && showF)>
-                <Template>
-                    <strong>@(context.CantidadProbador - context.CantidadProbadorAprobada)</strong>
-                </Template>
-                <FooterTemplate>
-                    <RadzenText TextAlign=TextAlign.Right><strong>@(orden.Detalle.Sum(x => x.CantidadProbadorPendiente))</strong></RadzenText>
-                </FooterTemplate>
-            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Right Title="Probadores totales" Width="140px" Visible=@(showX && showF)>
+        <Template>
+        <strong>@(context.CantidadProbador - context.CantidadProbadorAprobada)</strong>
+        </Template>
+        <FooterTemplate>
+        <RadzenText TextAlign=TextAlign.Right><strong>@(orden.Detalle.Sum(x => x.CantidadProbadorPendiente))</strong></RadzenText>
+        </FooterTemplate>
+        </RadzenDataGridColumn> *@
             <RadzenDataGridColumn TItem="OrdenExpedicionDetalle" TextAlign=TextAlign.Center Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Size="ButtonSize.ExtraSmall" Icon="arrow_upward" ButtonStyle="ButtonStyle.Info" Click="@(()=>SubirLinea(context))" Disabled=editMode />
