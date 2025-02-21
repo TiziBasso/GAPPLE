@@ -60,11 +60,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden? GetOrden(string codOrden, bool conDetalle)
+        public Orden? GetOrden(string? codOrden, bool conDetalle, int? idPedido)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;
-            using (DataTable dt = daO.ObtenerOrden(codOrden))
+            using (DataTable dt = daO.ObtenerOrden(codOrden, idPedido))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -88,8 +88,13 @@ namespace GAPPLE.Server.Controllers
                         IdEstado = (int)row["IdEstado"],
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         IdTango = row["CodigoTango"].ToString(),
-                        NumeroFactura = row["NumFactura"].ToString(),
+                        NumeroFactura = row["NumFactura"].ToString()
                     };
+                    if (row["GVA_CONDVENTA"] != DBNull.Value) orden.ID_GVA01 = int.Parse(row["GVA_CONDVENTA"].ToString());
+                    if (row["GVA_LISTAPRECIO"] != DBNull.Value) orden.ID_GVA10 = int.Parse(row["GVA_LISTAPRECIO"].ToString());
+                    if (row["GVA_CLIENTE"] != DBNull.Value) orden.ID_GVA14 = int.Parse(row["GVA_CLIENTE"].ToString());
+                    if (row["GVA_VENDEDOR"] != DBNull.Value) orden.ID_GVA23 = int.Parse(row["GVA_VENDEDOR"].ToString());
+                    if (row["GVA_TRANSPORTE"] != DBNull.Value) orden.ID_GVA24 = int.Parse(row["GVA_TRANSPORTE"].ToString());
                     if (row["CodTransporte"] != DBNull.Value) orden.CodTransporte = row["CodTransporte"].ToString();
                     if (row["DescripcionTransporte"] != DBNull.Value) orden.Transporte = row["DescripcionTransporte"].ToString();
                 }
@@ -97,7 +102,7 @@ namespace GAPPLE.Server.Controllers
 
             if (orden != null && conDetalle)
             {
-                using (DataTable dt = daO.ObtenerOrdenDetalle(codOrden))
+                using (DataTable dt = daO.ObtenerOrdenDetalle(orden.CodigoOrden))
                 {
                     if (dt.Rows.Count > 0) //siempre deberia tener pero por las dudas
                     {
@@ -115,7 +120,7 @@ namespace GAPPLE.Server.Controllers
                                 CantidadAprobada = (int)dr["CantidadAprobada"],
                                 CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
-
+                            if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }
                     }
@@ -454,7 +459,6 @@ namespace GAPPLE.Server.Controllers
             SqlTransaction? trans = null;
             try
             {
-                var a = JsonConvert.SerializeObject(ordenes[0]);
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -470,16 +474,48 @@ namespace GAPPLE.Server.Controllers
 
                         RestRequest request = new RestRequest("Create?process=19845", Method.Post);
 
-                        PedidoDTO pedido = new PedidoDTO();
-
-                        request.AddBody(pedido);
-
-                        var response = restClient.Execute(request);
-                        Console.WriteLine(response.ToString());
-
                         foreach (var id in idPedidos)
                         {
-                            daO.PersistirPedidoEstado(id, 4, trans);
+
+                            PedidoDTO pedido = new PedidoDTO();
+
+                            Orden ordenFull = GetOrden(null, true, int.Parse(id))!;
+
+                            pedido.NRO_ORDEN_COMPRA = id;
+                            pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);
+                            pedido.ID_GVA43_TALON_PED = 3;
+                            pedido.ESTADO = 2;
+                            pedido.ES_CLIENTE_HABITUAL = true;
+                            pedido.ID_GVA01 = ordenFull.ID_GVA01;
+                            pedido.ID_GVA14 = ordenFull.ID_GVA14;
+                            pedido.ID_GVA24 = ordenFull.ID_GVA24;
+                            pedido.ID_GVA10 = ordenFull.ID_GVA10;
+                            pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
+                            pedido.ID_STA22 = ordenFull.ID_STA22;
+                            pedido.FECHA_PEDIDO = orden.Fecha;
+                            pedido.FECHA_ENTREGA = orden.Fecha.AddDays(1);
+                            pedido.ID_MONEDA = "1";
+                            pedido.NOTA_PEDIDO_DTO = new();
+                            pedido.NOTA_PEDIDO_DTO.Add(new NotaPedidoDTO() { MENSAJE = string.IsNullOrEmpty(pedido.OBSERVACIONES) ? "." : pedido.OBSERVACIONES });
+                            pedido.COTIZACION = 1;
+
+                            pedido.RENGLON_DTO = new();
+                            foreach (var detalle in ordenFull.Detalle)
+                            {
+                                if (detalle.CantidadAprobada > 0)
+                                {
+                                    RenglonDTO renglonDTO = new();
+                                    renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadAprobada;
+                                    renglonDTO.ID_STA11 = detalle.ID_STA11;
+                                    pedido.RENGLON_DTO.Add(renglonDTO);
+                                }
+                            }
+
+                            request.AddBody(pedido);
+
+                            var response = restClient.Execute(request);
+                            if (response.IsSuccessStatusCode)
+                                daO.PersistirPedidoEstado(id, 4, trans);
                         }
                     }
                     trans.Commit();

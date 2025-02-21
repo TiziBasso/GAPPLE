@@ -12,6 +12,13 @@ namespace GAPPLE.Shared.Model
     {
         public int Id { get; set; }
 
+        public int? ID_GVA01 { get; set; }
+        public int? ID_GVA14 { get; set; }
+        public int? ID_GVA24 { get; set; }
+        public int? ID_GVA10 { get; set; }
+        public int? ID_GVA23 { get; set; }
+        public int? ID_STA22 { get; set; } = 11;
+
         public string? CodigoOrden { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar una linea")]
@@ -108,6 +115,7 @@ namespace GAPPLE.Shared.Model
     public class OrdenDetalle
     {
         public int Id { get; set; }
+        public int ID_STA11 { get; set; }
 
         public int NumeroLinea { get; set; }
 
@@ -128,7 +136,7 @@ namespace GAPPLE.Shared.Model
         public bool Probador { get; set; }
 
         public int CantidadProbador { get; set; }
-        
+
         public int CantidadProbadorCancelada { get; set; }
 
 

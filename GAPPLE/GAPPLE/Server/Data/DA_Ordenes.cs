@@ -40,7 +40,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable ObtenerOrden(string codOrden)
+        public DataTable ObtenerOrden(string? codOrden, int? idPedido)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -51,7 +51,8 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_PedidosCabecera"
                 };
-                cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
+                if(codOrden != null) cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
+                if(idPedido != null) cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
