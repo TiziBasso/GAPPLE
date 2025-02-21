@@ -208,6 +208,44 @@ namespace GAPPLE.Server.Data
             return id;
         }
 
+        public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
+                                            bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
+                                            string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidoCabeceraCompleto";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            cmd.Parameters.AddWithValue("@pLinea", linea);
+            cmd.Parameters.AddWithValue("@pCodigoCliente", codigoCliente);
+            cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
+            cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+            cmd.Parameters.AddWithValue("@pZona", zona);
+            cmd.Parameters.AddWithValue("@pListaDePrecios", listaPrecio);
+            cmd.Parameters.AddWithValue("@pFactura", factura);
+            cmd.Parameters.AddWithValue("@pPresupuesto", presupuesto);
+            cmd.Parameters.AddWithValue("@pCodTransporte", codTransporte);
+            cmd.Parameters.AddWithValue("@pCondicionVenta", condicionVenta);
+            cmd.Parameters.AddWithValue("@pEntregarEn", entregarEn);
+            cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
+            cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
+            cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EliminarPedidoDetalle(string codOrden, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_PedidosDetalleCompleto";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            cmd.ExecuteNonQuery();
+        }
+
         public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, decimal descuento, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;

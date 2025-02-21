@@ -279,12 +279,54 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), 1,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                                 pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                                pedido.Notas!, pedido.FechaEntrega!.Value, "Prueba", trans);
+                                                                pedido.Notas!, pedido.FechaEntrega!.Value, pedido.Usuario, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
                             daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                        }
+                    }
+
+                    trans.Commit();
+                    cnn.Close();
+                }
+
+                return Ok(pedido);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut]
+        public IActionResult PutPedido(Orden pedido)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+
+                    if (pedido.Factura)
+                    {
+                        daO.UpdatePedidoCabecera(pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
+                                                            pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
+                                                            pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
+                                                            pedido.Notas!, pedido.FechaEntrega!.Value, pedido.Usuario, trans);
+                        daO.EliminarPedidoDetalle(pedido.CodigoOrden, trans);
+                        int numLinea = 0;
+                        foreach (var item in pedido.Detalle!)
+                        {
+                            numLinea++;
+                            daO.PersistirPedidoDetalle(pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            item.CantidadProbador = 0;
                         }
                     }
 
@@ -480,6 +522,11 @@ namespace GAPPLE.Server.Controllers
                             PedidoDTO pedido = new PedidoDTO();
 
                             Orden ordenFull = GetOrden(null, true, int.Parse(id))!;
+
+                            if (!ordenFull.Detalle.Any())
+                            {
+                                return BadRequest("La orden debe poseer al menos 1 producto");
+                            }
 
                             pedido.NRO_ORDEN_COMPRA = id;
                             pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);

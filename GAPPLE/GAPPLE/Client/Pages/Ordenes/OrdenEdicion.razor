@@ -1,0 +1,590 @@
+﻿@page "/orden/edicion/{CodOrden}"
+
+@inject ProductosService ProductosService
+@inject OrdenesService OrdenesService
+@inject ClientesService ClientesService
+@inject NavigationManager NavigationManager
+@inject OfertasService OfertasService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject SesionDTO SesionDTO
+@using System.Linq
+@using GAPPLE.Client.Components.Ordenes
+
+@if (showForm)
+{
+    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext">
+        <DataAnnotationsValidator />
+        <CustomValidation @ref="customValidation" />
+
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Línea:" />
+                    <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
+                    <ValidationMessage For="@(() => orden.Linea)" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Cliente:" />
+                    <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.CodCliente" AllowSorting=false
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
+                    AllowVirtualization="true" Change="AsignarVariables" Name="clientes" Density="Density.Compact">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código"></RadzenDropDownDataGridColumn>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social"></RadzenDropDownDataGridColumn>
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                    <ValidationMessage For="@(() => orden.CodCliente)" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Zona:" />
+                    <RadzenDropDownDataGrid Data="zonas" Disabled="true" @bind-Value="orden.Zona" AllowSorting=false
+                    TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                    <ValidationMessage For="@(() => orden.Zona)" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Entregar en:" />
+                    <RadzenTextBox @bind-Value="orden.Entrega" />
+                    <ValidationMessage For="@(() => orden.Entrega)" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Lista de precios:" />
+                    <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="true"
+                    TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                            <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                    <ValidationMessage For="@(() => orden.CodListaPrecio)" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Cond.Venta:" />
+                    <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                            <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                    <ValidationMessage For="@(() => orden.CondicionVenta)" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="3">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="F.Entrega:" />
+                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
+                </RadzenStack>
+                <ValidationMessage For="@(() => orden.FechaEntrega)" />
+            </RadzenColumn>
+
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Transporte:" />
+                    <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código"></RadzenDropDownDataGridColumn>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción"></RadzenDropDownDataGridColumn>
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="F:" />
+                        <RadzenCheckBox @bind-Value="@orden.Factura" ReadOnly="true" Disabled="true" />
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                        <RadzenLabel Text="P:" />
+                        <RadzenCheckBox @bind-Value="@orden.Presupuesto" ReadOnly="true" Disabled="true" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Notas:" />
+                    <RadzenTextArea @bind-Value="orden.Notas" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Ofertas:" />
+                    <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas" Change="RecalcularOfertas"
+                    TextProperty="@nameof(Oferta.Descripcion)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                    Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="12">
+                <RadzenFieldset Text="Selección de productos" Style="height: 45vh;">
+                    <ValidationMessage For="@(() => orden.Detalle)" />
+                    @if (showCards && lstProductos != null && lstProductos.Any())
+                    {
+                        <div class="cards-container">
+                            @foreach (var card in Cards)
+                            {
+                                <div class="card">
+                                    <h6 style="text-align:center;">@card.FamilyName</h6>
+                                    @foreach (var product in card.Products)
+                                    {
+                                        <div class="product">
+                                            <label style="width:60px;">@product.CodigoProducto</label>
+                                            <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
+                                            class="product-input" @bind-value="product.CantidadSeleccionada" />
+                                            @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                                            {
+                                                codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
+                                                var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                                                var descuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                                                product.DescuentoFinal = Math.Round(descuentoFinal, 2);
+                                                <div style="background:yellow; display:flex;">
+                                                    <span>@Math.Round(descuentoFinal, 2)</span>
+                                                    <strong>%</strong>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                                                {
+                                                    <div style="display:flex;">
+                                                        <span>@articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento</span>
+                                                    </div>
+                                                    product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+                                                }
+                                                else
+                                                {
+                                                    <span>0</span>
+                                                }
+                                                <strong>%</strong>
+                                            }
+                                            <RadzenCheckBox @bind-Value=product.Probador />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+            <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+<script>
+    document.addEventListener('keydown', function (event) {
+    if (event.target.classList.contains('product-input')) {
+    const currentInput = event.target;
+    const inputs = Array.from(document.querySelectorAll('.product-input'));
+    const currentCard = currentInput.closest('.card');
+    const allCards = Array.from(document.querySelectorAll('.card'));
+    const inputsInCurrentCard = Array.from(currentCard.querySelectorAll('.product-input'));
+
+    const inputIndexInCard = inputsInCurrentCard.findIndex(input => input === currentInput);
+    const currentCardRect = currentCard.getBoundingClientRect();
+
+    // Manejo de teclas
+    if (event.key === 'ArrowUp') {
+    if (inputIndexInCard > 0) {
+    inputsInCurrentCard[inputIndexInCard - 1].focus();
+    setTimeout(() => inputsInCurrentCard[inputIndexInCard - 1].select(), 0);
+    } else {
+    const targetCard = findCardAbove(allCards, currentCardRect);
+    if (targetCard) {
+    const targetInputs = targetCard.querySelectorAll('.product-input');
+    const targetInput = targetInputs[targetInputs.length - 1];
+    targetInput.focus();
+    setTimeout(() => targetInput.select(), 0);
+    }
+    }
+    } else if (event.key === 'ArrowDown') {
+    if (inputIndexInCard < inputsInCurrentCard.length - 1) {
+    inputsInCurrentCard[inputIndexInCard + 1].focus();
+    setTimeout(() => inputsInCurrentCard[inputIndexInCard + 1].select(), 0);
+    } else {
+    const targetCard = findCardBelow(allCards, currentCardRect);
+    if (targetCard) {
+    const targetInputs = targetCard.querySelectorAll('.product-input');
+    const targetInput = targetInputs[0];
+    targetInput.focus();
+    setTimeout(() => targetInput.select(), 0);
+    }
+    }
+    } else if (event.key === 'ArrowLeft') {
+    const currentCardIndex = allCards.findIndex(card => card === currentCard);
+    if (currentCardIndex > 0) {
+    const previousCard = allCards[currentCardIndex - 1];
+    const inputsInPreviousCard = previousCard.querySelectorAll('.product-input');
+    const targetInput = inputsInPreviousCard[inputIndexInCard] || inputsInPreviousCard[inputsInPreviousCard.length - 1];
+    targetInput.focus();
+    setTimeout(() => targetInput.select(), 0);
+    }
+    } else if (event.key === 'ArrowRight') {
+    const currentCardIndex = allCards.findIndex(card => card === currentCard);
+    if (currentCardIndex < allCards.length - 1) {
+    const nextCard = allCards[currentCardIndex + 1];
+    const inputsInNextCard = nextCard.querySelectorAll('.product-input');
+    const targetInput = inputsInNextCard[inputIndexInCard] || inputsInNextCard[inputsInNextCard.length - 1];
+    targetInput.focus();
+    setTimeout(() => targetInput.select(), 0);
+    }
+    }
+    }
+    });
+
+
+    // Función para encontrar la tarjeta en la fila superior
+    function findCardAbove(cards, currentRect) {
+    return cards.reverse().find(card => {
+    const rect = card.getBoundingClientRect();
+    return rect.bottom <= currentRect.top && rect.left < currentRect.right && rect.right > currentRect.left;
+    });
+    }
+
+    // Función para encontrar la tarjeta en la fila inferior
+    function findCardBelow(cards, currentRect) {
+    return cards.find(card => {
+    const rect = card.getBoundingClientRect();
+    return rect.top >= currentRect.bottom && rect.left < currentRect.right && rect.right > currentRect.left;
+    });
+    }
+</script>
+
+@code {
+    [Parameter] public string CodOrden { get; set; }
+
+    List<ProductoParaOfertas> lstProductosOferta = null;
+    List<ProductoParaOfertas> lstProductos = null;
+    List<ProductoParaOfertas> lstProductosDifLinea = new();
+    Orden orden = new() { IdEstado = 1 };
+    List<string> lstLineas = new();
+    List<string> lstLineasDif = new();
+    string? valorAux;
+    EditContext editContext;
+    private List<Card> Cards = new();
+    CustomValidation customValidation;
+
+    bool showForm, showCards;
+
+    List<Transporte> transportes = new();
+    List<ListaDePrecios> listasDePrecio = new();
+    List<CondicionDeVenta> condicionesDeVenta = new();
+    List<Zonas> zonas = new();
+    List<Cliente> clientes = new();
+    List<Oferta> ofertas = new();
+    List<ArticulosPorCliente> articulosPorClientes = new();
+
+    Dictionary<string, List<Oferta>> codigosEnOfertas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        lstLineas = await ProductosService.GetLineas();
+        clientes = await ClientesService.GetClientes(null, null, null, null);
+        transportes = await OrdenesService.GetTransportes();
+        listasDePrecio = await OrdenesService.GetListasDePrecio();
+        condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
+        zonas = await OrdenesService.GetZonas();
+        editContext = new(orden);
+
+        orden = await OrdenesService.GetOrden(CodOrden, true);
+
+        orden.Factura = !orden.Presupuesto;
+
+        foreach (var detalle in orden.Detalle)
+        {
+            lstProductosDifLinea!.Add(new ProductoParaOfertas()
+                {
+                    CodigoProducto = detalle.CodProducto,
+                    CantidadSeleccionada = detalle.Cantidad,
+                    DescuentoFinal = detalle.Descuento,
+                    Probador = detalle.Probador
+                });
+        }
+
+        showForm = true;
+    }
+
+    private void GuardarProductosDiferenteLinea()
+    {
+        foreach (var card in Cards)
+        {
+            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
+            {
+                if (lstProductosDifLinea.Exists(x => x.CodigoProducto == product.CodigoProducto))
+                {
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                }
+                else
+                    lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
+            }
+            lstLineasDif.Add(orden.Linea);
+        }
+    }
+
+    async Task BuscarProductos()
+    {
+        DialogCustom.OpenBusy("Cargando...");
+        showCards = false;
+        orden.Linea = valorAux;
+        GuardarProductosDiferenteLinea();
+
+        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
+        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
+        {
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+            lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+        }
+        var grouped = lstProductos.GroupBy(p => p.Familia);
+        Cards.Clear();
+        foreach (var group in grouped)
+        {
+            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+                                      .GroupBy(x => x.Index / 10)
+                                      .Select(g => g.Select(x => x.Product).ToList());
+            foreach (var chunk in productChunks)
+                Cards.Add(new Card(group.Key, chunk));
+        }
+
+        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        RecalcularOfertas();
+
+
+        showCards = true;
+        DialogCustom.CloseDialog();
+    }
+
+    async Task AsignarVariables()
+    {
+        DialogCustom.OpenBusyWithLoader("Cargando...");
+        articulosPorClientes = await ClientesService.GetArticulosPorCliente(orden.CodCliente);
+        var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
+        orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
+        orden.CondicionVenta = clientes[index].CondVentaDefault;
+        orden.Zona = clientes[index].ZonaDefault;
+        editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Cliente)));
+        editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CondicionVenta)));
+        editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
+        editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
+        DialogCustom.CloseDialog();
+    }
+
+    void RecalcularOfertas()
+    {
+        if (orden.Ofertas != null && orden.Ofertas.Any())
+        {
+            var ofertasFiltradas = ofertas.Where(o => orden.Ofertas!.Contains(o.IdOferta));
+
+            codigosEnOfertas = ofertasFiltradas
+                .SelectMany(o => o.Inclusiones.Split('|').Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
+                .GroupBy(x => x.CodigoProducto)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
+        }
+        else
+            codigosEnOfertas.Clear();
+    }
+
+    bool Validar()
+    {
+        bool error = false;
+
+        if (!orden.Factura && !orden.Presupuesto)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe ingrear al menos 1 tipo de pedido");
+            error = true;
+        }
+
+        foreach (var card in Cards)
+        {
+            if (card.Products.Exists(e => e.CantidadSeleccionada < 0))
+            {
+                NotificationService.Notify(NotificationSeverity.Info, "Hay productos con cantidad negativa");
+                error = true;
+                break;
+            }
+        }
+
+        if (!error)
+        {
+            orden.Detalle!.Clear();
+            foreach (var card in Cards)
+            {
+                foreach (var product in card.Products)
+                {
+                    if (product.CantidadSeleccionada > 0)
+                        orden.Detalle!.Add(new OrdenDetalle()
+                            {
+                                Cantidad = product.CantidadSeleccionada,
+                                CodProducto = product.CodigoProducto,
+                                Descuento = product.DescuentoFinal,
+                                Probador = product.Probador
+                            });
+                }
+            }
+            foreach (var product in lstProductosDifLinea)
+            {
+                if (!orden.Detalle.Any(x => x.CodProducto == product.CodigoProducto))
+                    orden.Detalle!.Add(new OrdenDetalle()
+                        {
+                            Cantidad = product.CantidadSeleccionada,
+                            CodProducto = product.CodigoProducto,
+                            Descuento = product.DescuentoFinal,
+                            Probador = product.Probador
+                        });
+            }
+            if (lstLineasDif.Any())
+                orden.Linea = string.Join(',', lstLineasDif.Distinct());
+            if (!orden.Detalle.Any())
+            {
+                NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
+                error = true;
+            }
+        }
+
+        return !error;
+    }
+
+    async Task Guardar()
+    {
+        if (Validar())
+        {
+            bool valid = false;
+            if (orden.Detalle!.Any(x => x.Probador))
+            {
+                valid = await DialogService.OpenAsync<ModalCantidadesProbadores>("Seleccionar cantidad de probadores", new()
+                {
+                    { "Detalle", orden.Detalle}
+                }, new()
+                {
+                    CloseDialogOnEsc = false,
+                    ShowClose = false,
+                    CloseDialogOnOverlayClick = false,
+                    Style = "max-height:90vh; max-width:60vw;",
+                    Height = "fit-content",
+                    Width = "fit-content"
+                });
+                if (!valid) return;
+            }
+
+            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            {
+                DialogCustom.OpenBusyWithLoader("Guardando...");
+                var result = await OrdenesService.PutPedido(orden);
+                DialogCustom.CloseDialog();
+                if (result.IsSuccessStatusCode)
+                {
+                    //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
+                    NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
+                    NavigationManager.NavigateTo("ordenes");
+                }
+                else
+                    NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            }
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        if (!editContext.IsModified() || await DialogService.Confirm(MensajesHelper.Cancel(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            NavigationManager.NavigateTo("ordenes");
+    }
+
+    private class Card
+    {
+        public string FamilyName { get; }
+        public List<ProductoParaOfertas> Products { get; }
+
+        public Card(string familyName, List<ProductoParaOfertas> products)
+        {
+            FamilyName = familyName;
+            Products = products;
+        }
+    }
+}
+
+<style>
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        height: 39vh;
+        gap: 2px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .card {
+        border: 1px solid #ccc;
+        padding: 5px;
+        border-radius: 5px;
+        width: 180px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background-color: var(--rz-input-background-color);
+    }
+
+    .product {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        font-size: smaller;
+        align-items: center;
+    }
+
+    .product-input {
+        width: 50px;
+        font-size: smaller;
+        border-radius: var(--rz-input-border-radius);
+        background-color: var(--rz-input-background-color);
+        box-shadow: var(--rz-input-shadow);
+        border: var(--rz-input-border)
+    }
+</style>

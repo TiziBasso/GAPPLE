@@ -18,8 +18,8 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref=grid TItem="OrdenExpedicion" Data="expediciones" @bind-Value=selected SelectionMode=DataGridSelectionMode.Multiple IsLoading=isLoading
-                    AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize=true Density=Density.Compact
-                    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
+    AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize=true Density=Density.Compact
+    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
         <HeaderTemplate>
             <RadzenButton Size="ButtonSize.Small" Text="Imprimir seleccionados" Icon="print" Click="Imprimir" ButtonStyle="ButtonStyle.Info" Variant="Variant.Outlined" Disabled=@(!selected.Any()) />
             <RadzenButton Size="ButtonSize.Small" Text="Despachar seleccionados" Icon="send" Click="Despachar" ButtonStyle="ButtonStyle.Success" Disabled=@(!selected.Any()) />
@@ -30,10 +30,10 @@
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.IdPedidos)" Title="Id orden" MinWidth="10px" />
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Fecha)" Title="Fecha" FormatString="{0:dd/MM/yyyy HH:mm}"
-                                  Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
+            Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
-                                  Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
+            Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" /> @*debería ir? ahora los pedidos contienen varias lineas*@
 
@@ -156,7 +156,9 @@ else
             await FillOrdenes();
         }
         else
-            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Ha ocurrido un error", response.Message);
+        }
     }
 
 

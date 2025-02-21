@@ -103,6 +103,30 @@ namespace GAPPLE.Client.Services
             }
         }
 
+        public async ValueTask<Response> PutPedido(Orden pedido)
+        {
+            try
+            {
+                pedido.Usuario = SesionDTO.Nombre;
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", pedido);
+                if (response.IsSuccessStatusCode)
+                {
+                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
+                    pedido.CodigoOrden = p.CodigoOrden;
+                    return new(true);
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "PostPedido");
+                return new(false);
+            }
+        }
+
         public async ValueTask<Response> CambiarEstadoPedidos(string id, int idEstado)
         {
             try
@@ -164,9 +188,8 @@ namespace GAPPLE.Client.Services
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
-                else
-                    throw new Exception(await response.Content.ReadAsStringAsync());
+                    return new(false, await response.Content.ReadAsStringAsync());
+                return new(false, await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
