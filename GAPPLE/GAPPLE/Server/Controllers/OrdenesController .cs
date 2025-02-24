@@ -423,7 +423,7 @@ namespace GAPPLE.Server.Controllers
 
                 pedido.NRO_ORDEN_COMPRA = id;
                 pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);
-                pedido.ID_GVA43_TALON_PED = 3;
+                pedido.ID_GVA43_TALON_PED = 23;
                 pedido.ESTADO = 2;
                 pedido.ES_CLIENTE_HABITUAL = true;
                 pedido.ID_GVA01 = ordenFull.ID_GVA01;
