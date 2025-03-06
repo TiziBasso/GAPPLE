@@ -9,9 +9,11 @@
             <strong style="width: fit-content;">@Orden.CondicionIVA</strong>
         </div>
         <div style="display: flex;justify-content: space-between;">
-            <strong style="width: fit-content;">Entregar En: @Orden.FechaEntrega</strong>
+            <strong style="width: fit-content;">Fecha de entrega: @Orden.FechaEntrega.ToString("dd/MM/yyyy")</strong>
+            <strong style="width: fit-content;">Entregar En: @Orden.EntregarEn</strong>
         </div>
         <div style="display: flex;justify-content: space-between;">
+            <strong style="width: fit-content;">Orden: @Orden.Orden</strong>
             <strong style="width: fit-content;">Observaciones: @Orden.Observaciones</strong>
         </div>
     </div>
