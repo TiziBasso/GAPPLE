@@ -361,23 +361,53 @@ namespace GAPPLE.Server.Controllers
                 DA_Ordenes daO = new(cnn.ConnectionString);
                 cnn.Open();
                 trans = cnn.BeginTransaction();
+
                 daO.PersistirPedidoAprobacion(pedido.Id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, trans);
+
                 if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
                 {
-                    var orden = GetOrdenExpedicion(pedido.CodigoOrden.Substring(2), 4, trans);
-                    var response = PostTango(orden, trans);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        if (response.Message != null)
-                            ModelState.AddModelError("error", response.Message);
-                        else
-                            throw new Exception();
-                    }
+                    pedido.IdEstado = 3;
+                    pedido.DescripcionEstado = "APROBADO";
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, trans);
+                }
+
+                trans.Commit();
+                cnn.Close();
+                return Ok(pedido);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("tango")]
+        public IActionResult PasarATango(Orden pedido)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Ordenes daO = new(cnn.ConnectionString);
+                cnn.Open();
+                trans = cnn.BeginTransaction();
+
+                var orden = GetOrdenExpedicion(pedido.CodigoOrden.Substring(2), 4, trans);
+                var response = PostTango(orden, trans);
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.Message != null)
+                        ModelState.AddModelError("error", response.Message);
                     else
-                    {
-                        daO.PersistirPedidoEstado(pedido.Id.ToString(), 3, trans);
-                        pedido.IdEstado = 3;
-                    }
+                        throw new Exception();
+                }
+                else
+                {
+                    pedido.IdEstado = 5;
+                    pedido.DescripcionEstado = "EN TANGO";
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, trans);
                 }
 
                 if (ModelState.ErrorCount > 0)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 using System.Net;
 using GAPPLE.Client.Tools;
+using System.ComponentModel.Design.Serialization;
 
 namespace GAPPLE.Client.Services
 {
@@ -142,6 +143,7 @@ namespace GAPPLE.Client.Services
                 {
                     Orden p = await response.Content.ReadFromJsonAsync<Orden>();
                     pedido.IdEstado = p.IdEstado;
+                    pedido.DescripcionEstado = p.DescripcionEstado;
                     return new(true);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -218,7 +220,8 @@ namespace GAPPLE.Client.Services
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                     return new(false, await response.Content.ReadAsStringAsync());
-                return new(false, await response.Content.ReadAsStringAsync());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
@@ -230,6 +233,37 @@ namespace GAPPLE.Client.Services
         public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos()
         {
             return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos");
+        }
+
+        public async ValueTask<Response> PasarATango(Orden order)
+        {
+            try
+            {
+                order.Usuario = SesionDTO.Nombre;
+                order.CodCliente = "asd";              //para que no salte validacion
+                order.CondicionVenta = "asd";          //para que no salte validacion
+                order.Entrega = "asd";                 //para que no salte validacion
+                order.FechaEntrega = DateTime.Today;   //para que no salte validacion
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", order);
+                order.FechaEntrega = null;             //para que no modifique grilla
+                if (response.IsSuccessStatusCode)
+                {
+                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
+                    order.IdEstado = p.IdEstado;
+                    order.DescripcionEstado = p.DescripcionEstado;
+                    return new(true);
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadAsStringAsync());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Pasar a tango");
+                return new(false);
+            }
         }
     }
 }
