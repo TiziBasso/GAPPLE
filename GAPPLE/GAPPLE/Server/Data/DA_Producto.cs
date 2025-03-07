@@ -65,5 +65,22 @@ namespace GAPPLE.Server.Data
             dataAdapter.Fill(dt);
             return dt;
         }
+
+        public void EditarProducto(string idProducto, bool pasivo, int orden)
+        {
+            SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = new()
+            {
+                Connection = cnn,
+                CommandType = CommandType.StoredProcedure,
+                CommandText = "prc_upd_Producto"
+            };
+            cmd.Parameters.AddWithValue("@pIdProducto", idProducto);
+            cmd.Parameters.AddWithValue("@pPasivo", pasivo);
+            cmd.Parameters.AddWithValue("@pOrden", orden);
+            cnn.Open();
+            cmd.ExecuteNonQuery();
+            cnn.Close();
+        }
     }
 }

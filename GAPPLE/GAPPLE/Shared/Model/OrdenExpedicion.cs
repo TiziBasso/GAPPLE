@@ -14,9 +14,9 @@ namespace GAPPLE.Shared.Model
 
         public string? LetrasOrden { get; set; }
 
-        public DateTime FechaEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
 
-        public DateTime Fecha { get; set; }
+        public DateTime? Fecha { get; set; }
 
         public string? Linea { get; set; }
 

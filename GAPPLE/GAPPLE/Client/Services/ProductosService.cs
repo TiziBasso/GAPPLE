@@ -74,19 +74,20 @@ namespace GAPPLE.Client.Services
         public async ValueTask<Response> PutProducto(Producto producto)
         {
             var response = await HttpClient.PutAsJsonAsync($"{REQUEST_URI_BASE}", producto);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var prod = await response.Content.ReadFromJsonAsync<Producto>();
-                producto.IdProducto = prod!.IdProducto;
-                producto.CodigoProducto = prod.CodigoProducto;
-                return new(true);
-            }
-            else
-            {
-                return response.StatusCode == HttpStatusCode.BadRequest
-                    ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
-                    : new(false, "Ha ocurrido un error inesperado!");
-            }
+            return new(true);
+            //if (response.StatusCode == HttpStatusCode.OK)
+            //{
+            //    var prod = await response.Content.ReadFromJsonAsync<Producto>();
+            //    producto.IdProducto = prod!.IdProducto;
+            //    producto.CodigoProducto = prod.CodigoProducto;
+            //    return new(true);
+            //}
+            //else
+            //{
+            //    return response.StatusCode == HttpStatusCode.BadRequest
+            //        ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
+            //        : new(false, "Ha ocurrido un error inesperado!");
+            //}
         }
 
         public async ValueTask<List<string>> GetLineas()

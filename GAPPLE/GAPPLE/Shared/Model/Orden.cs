@@ -73,12 +73,10 @@ namespace GAPPLE.Shared.Model
 
         public List<int>? Ofertas { get; set; } = new();
 
-        [Required(ErrorMessage = "Debe ingresar un lugar de entrega")]
         public string? Entrega { get; set; }
 
         public string? Notas { get; set; }
 
-        [Required(ErrorMessage = "Debe ingresar una fecha de entrega")]
         public DateTime? FechaEntrega { get; set; }
 
         public DateTime? Creacion { get; set; }

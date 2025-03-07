@@ -23,7 +23,7 @@ namespace GAPPLE.Shared.Model
         public decimal COTIZACION { get; set; }
         public int? ID_GVA10 { get; set; }
         public string ID_DIRECCION_ENTREGA { get; set; }
-        public DateTime FECHA_ENTREGA { get; set; }
+        public DateTime? FECHA_ENTREGA { get; set; }
         public string ID_ASIENTO_MODELO_GV { get; set; }
         public string ID_GVA81 { get; set; }
         public string ID_GVA43_TALONARIO_FACTURA { get; set; }

@@ -8,7 +8,7 @@
     <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="font-size:small" class="rz-mb-2">
         <RadzenText Text="@("Pedidos " + orden.IdPedidos)" />
         <RadzenText Text="@("Tango " + orden.CodTango != string.Empty ? orden.CodTango:orden.IdPedidos.Contains(",") ? "NO - NO":"NO")" />
-        <RadzenText Text="@("Fecha " + orden.Fecha.ToString("dd/MM/yyyy"))" />
+        <RadzenText Text="@("Fecha " + orden.Fecha.Value.ToString("dd/MM/yyyy"))" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical" Gap="10px" class="rz-mb-2">
@@ -22,7 +22,7 @@
 
     <RadzenStack Orientation="Orientation.Vertical" Gap="10px" class="rz-mb-2">
         <RadzenStack Orientation="Orientation.Horizontal" Gap="3rem">
-            <RadzenText><strong>Fecha de entrega: </strong> @orden.FechaEntrega.ToString("dd/MM/yyyy") </RadzenText>
+            <RadzenText><strong>Fecha de entrega: </strong> @(orden.FechaEntrega != null ? orden.FechaEntrega.Value.ToString("dd/MM/yyyy") : "") </RadzenText>
             <RadzenText><strong>Lugar de entrega: </strong> @orden.EntregarEn </RadzenText>
             <RadzenText><strong>Transporte: </strong> @orden.Transporte </RadzenText>
             <RadzenText><strong>Zona: </strong> @orden.Zona </RadzenText>

@@ -16,7 +16,7 @@
                 <RadzenHeader>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                            <RadzenSidebarToggle  MouseEnter="@(() => sidebarExpanded =true)" />
                             <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
                         </RadzenStack>
                         <RadzenAppearanceToggle />
@@ -35,13 +35,13 @@
                         </RadzenProfileMenu>
                     </RadzenStack>
                 </RadzenHeader>
-                <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;">
+                <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;" MouseEnter="@(() => sidebarExpanded =true)" MouseLeave="@(() => sidebarExpanded =false)">
                     <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
                         <RadzenStack>
                             <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => sidebarExpanded = false)" />
                         </RadzenStack>
                     </RadzenStack>
-                    <NavMenu />
+                    <NavMenu  />
                 </RadzenSidebar>
 
                 <RadzenBody>
@@ -79,11 +79,10 @@
     {
         var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
         authenticationState = await autenticacionExt.GetAuthenticationStateAsync();
-        if(authenticationState.User.Identity.Name != null)
+        if (authenticationState.User.Identity.Name != null)
         {
-        SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
-        SesionDTO.Nombre = authenticationState.User.Identity.Name;
-            
+            SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
+            SesionDTO.Nombre = authenticationState.User.Identity.Name;
         }
         showPage = true;
     }

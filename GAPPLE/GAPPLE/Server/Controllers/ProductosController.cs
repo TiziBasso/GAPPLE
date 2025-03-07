@@ -30,6 +30,8 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = (string)row["Descripcion"],
+                        Pasivo = bool.Parse(row["Pasivo"].ToString()),
+                        Orden= int.Parse(row["Orden"].ToString()),
                         Id_STA = int.Parse(row["ID_STA"].ToString())
                     };
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
@@ -39,6 +41,14 @@ namespace GAPPLE.Server.Controllers
                 }
             }
             return productos;
+        }
+
+        [HttpPut]
+        public IActionResult PutProducto([FromBody]Producto producto)
+        {
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            daP.EditarProducto(producto.CodigoProducto, producto.Pasivo, producto.Orden);
+            return Ok();
         }
 
         [HttpGet("lineas")]

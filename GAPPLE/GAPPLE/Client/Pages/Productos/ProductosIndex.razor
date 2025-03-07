@@ -11,6 +11,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
+@inject RadzenCustom RadzenCustom
 
 @if (showPage)
 {
@@ -20,7 +21,7 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Código Producto:" Component="codigo" />
             <input @ref="refCodigoInterno" type="text" id="codigo" @bind-value="@codigoProducto" @bind-value:event="oninput" @onkeypress="KeyPress"
-                   class="rz-textbox" style="width: 9rem; text-align: right;" disabled="@(isLoading)" autocomplete="off" />
+            class="rz-textbox" style="width: 9rem; text-align: right;" disabled="@(isLoading)" autocomplete="off" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -31,8 +32,8 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Clasificado:" Component="estado" />
             <RadzenDropDown Data=@Variables.Clasificaciones @bind-Value=@clasificacion Name="estado" Placeholder="Todos"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            Disabled="@isLoading" Style="width: 8rem;" />
+            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+            Disabled="@isLoading" Style="width: 8rem;" />
         </RadzenStack>
 
         <RadzenButton Click="FillProductos" IsBusy=isLoading Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" />
@@ -44,67 +45,48 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref="@refGrid" Data="productos" AllowSorting="true" AllowGrouping="true" AllowFiltering="true" Density="Density.Compact"
-                    IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
-                    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
-                    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
-                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args)=> RowExpand(args))" Style="height: 65vh;" EmptyText="">
+    IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
+    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
+    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
+    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args)=> RowExpand(args))" Style="height: 65vh;" EmptyText="">
         <Columns>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.CodigoProducto))" Title="Código" TextAlign="TextAlign.Right"
-                                  Width="90px" FilterValue="@codigoInternoFilter" Groupable="false" Resizable="false">
+            Width="90px" FilterValue="@codigoInternoFilter" Groupable="false" Resizable="false">
                 <FilterTemplate>
                     <input type="text" @bind-value="@codigoInternoFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Descripcion))" Title="Descripción" FilterValue="@descripcionFilter"
-                                  Groupable="false" Width="300px">
+            Groupable="false" Width="300px">
                 <FilterTemplate>
                     <input type="text" @bind-value="@descripcionFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Pasivo))" Title="Pasivo" TextAlign="TextAlign.Center" Width="75px"
-                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false">
+            Filterable="false" Sortable="false" Groupable="false" Resizable="false">
                 <Template Context="producto">
-                    <RadzenCheckBox @bind-Value=@producto.Pasivo Disabled=true />
+                    <RadzenCheckBox @bind-Value=@producto.Pasivo TValue="bool" Change="@(()=>Change(producto))"  />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Orden))" Title="Orden" FilterOperator="FilterOperator.Contains"
+            Width="150px" Groupable="false" Resizable="false">
+                <Template Context="producto">
+                    <RadzenNumeric @bind-Value="producto.Orden" TValue="int" Change="@(() => Change(producto))"></RadzenNumeric>
+                </Template>
+        </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Clasificacion))" Title="Clasificación" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
+            Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
+            Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
-
-            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Familia))" Title="Familia" Width="150px" FilterValue="@familiasFilter">
-        <FilterTemplate>
-        <input type="text" @bind-value="@familiasFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
-        </FilterTemplate>
-        </RadzenDataGridColumn> *@
-            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Proveedor))" Title="Proveedor" Width="150px" FilterValue="@proveedorFilter">
-        <FilterTemplate>
-        <input type="text" @bind-value="@proveedorFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
-        </FilterTemplate>
-        </RadzenDataGridColumn> *@
-            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.PrecioCosto))" Title="Precio costo" TextAlign="TextAlign.Right" Width="120px"
-        Filterable="false" Groupable="false" Resizable="false" FormatString="{0:C2}" Visible=@(listPermisos.Contains("mostrarprecioscostos")) /> *@
-
-            @* <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.AltaRegistro))" Title="Act. de precio" FormatString="{0:dd/MM/yyyy}"
-        TextAlign="TextAlign.Center" Width="105px" Filterable="false" Groupable="false" Resizable="false" /> *@
-
+            Width="300px" Groupable="false" Resizable="false" />
             @* <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
-        Frozen="true" FrozenPosition="FrozenColumnPosition.Left" Visible="@(listPermisos.Contains("ver"))">
-        <Template Context="producto">
-        <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-        Click="@(() => VerProducto(producto))" @onclick:stopPropagation="true" title="Ver producto" />
-        </Template>
-        </RadzenDataGridColumn> *@
-
-            @* <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
-        Frozen="true" FrozenPosition="FrozenColumnPosition.Left" Visible="@listPermisos.Contains("edicion")">
-        <Template Context="producto">
-        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-        Click="@(() => ModificarProducto(producto))" @onclick:stopPropagation="true" title="Editar producto" />
-        </Template>
-        </RadzenDataGridColumn> *@
+            Frozen="true" FrozenPosition="FrozenColumnPosition.Left">
+                <Template Context="producto">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                    Click="@(() => ModificarProducto(producto))" @onclick:stopPropagation="true" title="Editar producto" />
+                </Template>
+            </RadzenDataGridColumn> *@
         </Columns>
     </RadzenDataGrid>
 }
@@ -154,6 +136,17 @@ else
             ParametrosDeConsulta.Clear();
 
         showPage = true;
+    }
+
+    private async Task Change(Producto producto)
+    {
+        RadzenCustom.OpenBusyWithLoader();
+        var response = await ProductosService.PutProducto(producto);
+        if (response.IsSuccessStatusCode)
+        {
+            NotificationService.Notify(NotificationSeverity.Success, "Los datos se han guardado");
+        }
+        RadzenCustom.CloseDialog();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -221,8 +214,6 @@ else
     {
         DialogCustom.OpenBusy("Cargando...");
         await refGrid.SelectRow(producto);
-        GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
-        navigationManager.NavigateTo($"producto/edicion/{producto.IdProducto}");
     }
 
     private async Task VerProductoSku(Producto producto)

@@ -4,14 +4,14 @@
 @inject AuthenticationStateProvider autenticacionProvider
 @inject IJSRuntime js
 
-<RadzenPanelMenu Style="overflow-y: hidden;width: 100%;height: calc(100% - 52px);" Multiple=false>
+<RadzenPanelMenu Style="overflow-y: hidden;width: 100%;height: calc(100% - 52px);" Multiple=false >
     <ChildContent>
         @if (data != null)
         {
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
 
                 <input type="text" @bind-value="@filterDescripcion" @bind-value:event="oninput" @onkeydown=@(args=>OnKeyDown(args))
-                       class="rz-textbox rz-mb-2 rz-ml-2" style="width: 95%" placeholder="Buscar en el menu..." autocomplete=off />
+                class="rz-textbox rz-mb-2 rz-ml-2" style="width: 95%" placeholder="Buscar en el menu..." autocomplete=off />
 
                 <RadzenIcon Icon="clear" Visible=@(!string.IsNullOrWhiteSpace(filterDescripcion)) @onclick=@(()=>Reset()) class="ClearButton" />
             </RadzenStack>
@@ -29,6 +29,7 @@
 </RadzenPanelMenu>
 
 @code {
+    // [Parameter] EventCallback 
     List<MenuNew> data { get; set; }
     string filterDescripcion = string.Empty;
 

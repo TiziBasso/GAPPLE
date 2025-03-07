@@ -102,6 +102,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["GVA_CLIENTE"] != DBNull.Value) orden.ID_GVA14 = int.Parse(row["GVA_CLIENTE"].ToString());
                     if (row["GVA_VENDEDOR"] != DBNull.Value) orden.ID_GVA23 = int.Parse(row["GVA_VENDEDOR"].ToString());
                     if (row["GVA_TRANSPORTE"] != DBNull.Value) orden.ID_GVA24 = int.Parse(row["GVA_TRANSPORTE"].ToString());
+                    else orden.ID_GVA24 = 8;
                     if (row["CodTransporte"] != DBNull.Value) orden.CodTransporte = row["CodTransporte"].ToString();
                     if (row["DescripcionTransporte"] != DBNull.Value) orden.Transporte = row["DescripcionTransporte"].ToString();
                 }
@@ -271,7 +272,7 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega!.Value, pedido.Usuario, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
@@ -452,7 +453,7 @@ namespace GAPPLE.Server.Controllers
                     return new(false, "La orden debe poseer al menos 1 producto");
 
                 pedido.NRO_ORDEN_COMPRA = id;
-                pedido.FECHA_ORDEN_COMPRA = orden.Fecha.AddDays(-1);
+                pedido.FECHA_ORDEN_COMPRA = orden.Fecha.Value.AddDays(-1);
                 pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
                 pedido.ESTADO = 2;
                 pedido.ES_CLIENTE_HABITUAL = true;
@@ -462,8 +463,8 @@ namespace GAPPLE.Server.Controllers
                 pedido.ID_GVA10 = ordenFull.ID_GVA10;
                 pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
                 pedido.ID_STA22 = 23;
-                pedido.FECHA_PEDIDO = orden.Fecha;
-                pedido.FECHA_ENTREGA = orden.Fecha.AddDays(1);
+                pedido.FECHA_PEDIDO = orden.Fecha.Value;
+                pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
                 pedido.ID_MONEDA = "1";
                 pedido.NOTA_PEDIDO_DTO = new();
                 pedido.NOTA_PEDIDO_DTO.Add(new NotaPedidoDTO() { MENSAJE = string.IsNullOrEmpty(pedido.OBSERVACIONES) ? "." : pedido.OBSERVACIONES });
@@ -531,7 +532,6 @@ namespace GAPPLE.Server.Controllers
                     {
                         IdPedidos = row["IdPedidos"].ToString(),
                         Orden = row["Orden"].ToString(),
-                        FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString()),
                         Fecha = DateTime.Parse(row["AltaRegistro"].ToString()),
                         Linea = row["Linea"].ToString(),
                         CodCliente = row["CodigoCliente"].ToString(),
@@ -539,7 +539,7 @@ namespace GAPPLE.Server.Controllers
                         Articulos = int.Parse(row["Articulos"].ToString()),
                         Impreso = bool.Parse(row["Impreso"].ToString())
                     };
-
+                    if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                     ordenes.Add(orden);
                 }
             }
@@ -561,7 +561,7 @@ namespace GAPPLE.Server.Controllers
                 orden.IdPedidos = row["IdPedidos"].ToString();
                 orden.Orden = idOrden;
                 if (row["CodigoTango"] != DBNull.Value) orden.CodTango = row["CodigoTango"].ToString();
-                orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
+                if(row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                 orden.Fecha = DateTime.Parse(row["AltaRegistro"].ToString());
                 orden.Linea = row["Linea"].ToString();
                 orden.LetrasOrden = row["LetrasOrdenes"].ToString();

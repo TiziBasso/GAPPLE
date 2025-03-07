@@ -1,6 +1,6 @@
 ﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 30cm; break-after:page">
     <div>
-        <strong>@(Orden.Fecha.ToString("dd/MM/yyyy"))</strong>
+        <strong>@(Orden.Fecha.Value.ToString("dd/MM/yyyy"))</strong>
     </div>
     <div style="display: grid;gap: 10px;margin-top: 10px;">
         <div style="display: flex;justify-content: space-between;">
@@ -9,7 +9,7 @@
             <strong style="width: fit-content;">@Orden.CondicionIVA</strong>
         </div>
         <div style="display: flex;justify-content: space-between;">
-            <strong style="width: fit-content;">Fecha de entrega: @Orden.FechaEntrega.ToString("dd/MM/yyyy")</strong>
+            <strong style="width: fit-content;">Fecha de entrega: @(Orden.FechaEntrega != null ? Orden.FechaEntrega.Value.ToString("dd/MM/yyyy") : "")</strong>
             <strong style="width: fit-content;">Entregar En: @Orden.EntregarEn</strong>
         </div>
         <div style="display: flex;justify-content: space-between;">

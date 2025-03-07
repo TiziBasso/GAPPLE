@@ -187,7 +187,7 @@ namespace GAPPLE.Server.Data
 
         public int PersistirPedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
+                                            string observaciones, DateTime? fechaEntrega, string altaUsuario, SqlTransaction transaction)
         {
             int id;
             SqlConnection cnn = transaction.Connection;
