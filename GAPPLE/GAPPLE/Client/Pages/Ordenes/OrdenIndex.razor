@@ -171,19 +171,18 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
                                   Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
-            @* <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("edicion"))
-        Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
-        <Template Context="orden">
-        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-        @onclick:stopPropagation="true" />
-        </Template>
-        </RadzenDataGridColumn>
-        *@
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                                  Click="@(() => PasarATango(orden))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
@@ -310,6 +309,22 @@ else
                                                         new() { { "Permisos", permisos }, { "Orden", order } },
                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
         StateHasChanged();
+    }
+
+    async Task PasarATango(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("exportar a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Exportando...");
+            var response = await OrdenesService.PasarATango(order);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+                StateHasChanged();
+            else if (response.Errors != null && response.Errors.Any())
+                DialogCustom.ShowErrors(response.Errors["error"], MensajesHelper.Title);
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
     }
 
     void NuevaOrden()
