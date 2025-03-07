@@ -28,10 +28,11 @@ namespace GAPPLE.Server.Controllers
                 {
                     Producto producto = new()
                     {
+                        IdProducto = int.Parse(row["IdProducto"].ToString()),
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = (string)row["Descripcion"],
                         Pasivo = bool.Parse(row["Pasivo"].ToString()),
-                        Orden= int.Parse(row["Orden"].ToString()),
+                        Orden = int.Parse(row["Orden"].ToString()),
                         Id_STA = int.Parse(row["ID_STA"].ToString())
                     };
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
@@ -44,7 +45,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut]
-        public IActionResult PutProducto([FromBody]Producto producto)
+        public IActionResult PutProducto([FromBody] Producto producto)
         {
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
             daP.EditarProducto(producto.CodigoProducto, producto.Pasivo, producto.Orden);
