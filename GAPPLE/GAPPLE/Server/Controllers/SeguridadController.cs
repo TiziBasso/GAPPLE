@@ -55,7 +55,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PostUsuario(Usuario usuario)
         {
             DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
-            daS.PostUsuario(usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña, usuario.IdVendedor);
+            usuario.IdUsuario = daS.PostUsuario(usuario.NombreUsuario, usuario.ApellidoYNombre, usuario.Perfil, usuario.Email, usuario.Provincia, usuario.Habilitado, usuario.Contraseña, usuario.IdVendedor);
 
             using (SqlConnection connection = new(Configuration.GetConnectionString("DefaultConnection")))
             {

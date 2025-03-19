@@ -33,8 +33,10 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void PostUsuario(string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña, int? idVendedor)
+        public int PostUsuario(string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña, int? idVendedor)
         {
+            int idUsuario = 0;
+            DataTable dt = new();
             SqlConnection cnn;
             SqlCommand cmd = new();
             cnn = new(ConnectionString);
@@ -49,9 +51,10 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pProvincia", Provincia);
             cmd.Parameters.AddWithValue("@pHabilitado", habilitado);
             if (idVendedor != null) cmd.Parameters.AddWithValue("@pIdVendedor", idVendedor);
-            cnn.Open();
-            cmd.ExecuteNonQuery();
-            cnn.Close();
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+            idUsuario = int.Parse(dt.Rows[0]["IdUsuario"].ToString()!);
+            return idUsuario;
         }
 
         public void PutUsuario(int idUsuario, string nombreUsuario, string apellidoYNombre, int idPerfil, string email, string Provincia, bool habilitado, string contraseña, int? idVendedor)
