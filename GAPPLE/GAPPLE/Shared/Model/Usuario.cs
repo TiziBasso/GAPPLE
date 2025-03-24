@@ -30,6 +30,7 @@ namespace GAPPLE.Shared.Model
                 StringLength(50, ErrorMessage = "Maximo de caracteres 50")]
         public string Email { get; set; }
         public IEnumerable<string> Zonas { get; set; } = new List<string>();
+        public IEnumerable<string> Vendedores { get; set; } = new List<string>();
 
         public int? IdVendedor { get; set; }
 

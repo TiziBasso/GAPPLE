@@ -59,8 +59,9 @@ namespace GAPPLE.Server.Controllers
                         CodTransporte = row["CodigoTransporte"].ToString(),
                         AprobadoContaduria = bool.Parse(row["AprobadoContaduria"].ToString()),
                         AprobadoVentas = bool.Parse(row["AprobadoVentas"].ToString()),
-                        AprobadoFinanzas = bool.Parse(row["AprobadoContaduria"].ToString())
+                        AprobadoFinanzas = bool.Parse(row["AprobadoContaduria"].ToString()),
                     };
+                    if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
 
                     lstOrdenes.Add(o);
@@ -97,7 +98,7 @@ namespace GAPPLE.Server.Controllers
                         Zona = row["DescripcionZona"].ToString(),
                         IdEstado = (int)row["IdEstado"],
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
-                        IdTango = row["CodigoTango"].ToString(),
+                        NROTANGO = row["NroPedidoTango"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString()
                     };
                     if (row["GVA_CONDVENTA"] != DBNull.Value) orden.ID_GVA01 = int.Parse(row["GVA_CONDVENTA"].ToString());

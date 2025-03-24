@@ -86,7 +86,7 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
-                    AllowColumnResize=true
+                    AllowColumnResize=true Density="Density.Compact"
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
         <Columns>
             <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
@@ -123,15 +123,15 @@
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Estado" Property="@nameof(Orden.DescripcionEstado)" Width="130px" FilterValue="estadoFilter" MinWidth="20px">
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" TItem="Orden" Title="Estado" Property="@nameof(Orden.DescripcionEstado)" Width="130px" FilterValue="estadoFilter" MinWidth="20px">
                 <FilterTemplate>
                     <RadzenDropDown Data="estadosFilter" @bind-Value=estadoFilter AllowClear=true Style="width:100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.IdTango)" Width="100px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+            <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.NROTANGO)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
                 <Template>
-                    @(context.IdTango != null ? context.IdTango : "NO")
+                    @(context.NROTANGO != null ? context.NROTANGO : "NO")
                 </Template>
             </RadzenDataGridColumn>
 
@@ -147,12 +147,6 @@
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=entregaFilter AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
                 </FilterTemplate>
-            </RadzenDataGridColumn>
-
-            <RadzenDataGridColumn TItem="Orden" Title="Aprobado" Property="@nameof(Orden.Aprobado)" Width="90px" TextAlign="TextAlign.Center" Filterable=false Resizable=false>
-                <Template>
-                    <RadzenCheckBox Value="context.Aprobado" ReadOnly=true />
-                </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"

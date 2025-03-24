@@ -85,7 +85,7 @@ namespace GAPPLE.Shared.Model
 
         public string? DescripcionEstado { get; set; }
 
-        public string? IdTango { get; set; }
+        public string? NROTANGO { get; set; }
 
         public string? NumeroFactura { get; set; }
 

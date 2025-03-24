@@ -181,7 +181,6 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-
         internal void InsertarZonasPorUsuario(string zonas, int idUsuario, SqlTransaction trans)
         {
             SqlConnection cnn = trans.Connection;
@@ -200,6 +199,28 @@ namespace GAPPLE.Server.Data
             cmd.Transaction = trans;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_del_ZonasPorUsuario";
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            cmd.ExecuteNonQuery();
+        }
+
+        internal void InsertarVendedoresPorUsuario(string vendedores, int idUsuario, SqlTransaction trans)
+        {
+            SqlConnection cnn = trans.Connection;
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = trans;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_VendedoresPorUsuario";
+            cmd.Parameters.AddWithValue("@pIdVendedores", vendedores);
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            cmd.ExecuteNonQuery();
+        }
+        internal void EliminarVendedoresPorUsuario(int idUsuario, SqlTransaction trans)
+        {
+            SqlConnection cnn = trans.Connection;
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = trans;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_VendedoresPorUsuario";
             cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             cmd.ExecuteNonQuery();
         }

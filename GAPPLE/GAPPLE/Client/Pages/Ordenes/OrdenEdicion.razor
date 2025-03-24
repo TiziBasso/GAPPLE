@@ -329,7 +329,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await SeguridadService.ValidatePageAccess();
+        await SeguridadService.ValidatePageAccess("Ordenes");
         lstLineas = await ProductosService.GetLineas();
         clientes = await ClientesService.GetClientes(null, null, null, null);
         transportes = await OrdenesService.GetTransportes();

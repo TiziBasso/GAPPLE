@@ -93,14 +93,15 @@
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Zonas:" Style="margin-bottom:5px" />
-                    <RadzenDropDown @bind-Value=@Usuario.Zonas Data=@zonas TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" Name="DropDownMultipleMaxLabels"
+                    <RadzenDropDown Disabled="true" @bind-Value=@Usuario.Zonas Data=@zonas TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)"
                                     Multiple=true AllowClear=true Placeholder="Seleccionar zonas"
                                     MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionadas" Style="width: 20rem;" />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Vendedor:" Style="margin-bottom:5px" />
-                    <RadzenDropDown @bind-Value=@Usuario.IdVendedor Data="vendedores" AllowClear=true Placeholder="Seleccionar vendedor"
-                                    TextProperty="@nameof(Vendedor.Nombre)" ValueProperty="@nameof(Vendedor.IdVendedor)" Style="width:20rem" />
+                    <RadzenLabel Text="Vendedores:" Style="margin-bottom:5px" Component="DropDownMultipleMaxLabels" />
+                    <RadzenDropDown @bind-Value=@Usuario.Vendedores Data=@vendedores TextProperty="@nameof(Vendedor.Nombre)" ValueProperty="@nameof(Vendedor.CodTango)" Name="DropDownMultipleMaxLabels"
+                                    Multiple=true AllowClear=true Placeholder="Seleccionar vendedores" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true"
+                                    MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionados" Style="width: 20rem;" />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>

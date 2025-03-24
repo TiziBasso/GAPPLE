@@ -63,7 +63,8 @@ namespace GAPPLE.Server.Controllers
                 SqlTransaction transaction = connection.BeginTransaction();
                 try
                 {
-                    daS.InsertarZonasPorUsuario(string.Join(",", usuario.Zonas), usuario.IdUsuario, transaction);
+                    daS.InsertarVendedoresPorUsuario(string.Join(",", usuario.Vendedores), usuario.IdUsuario, transaction);
+                    //daS.InsertarZonasPorUsuario(string.Join(",", usuario.Zonas), usuario.IdUsuario, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -88,8 +89,8 @@ namespace GAPPLE.Server.Controllers
                 SqlTransaction transaction = connection.BeginTransaction();
                 try
                 {
-                    daS.EliminarZonasPorUsuario(usuario.IdUsuario, transaction);
-                    daS.InsertarZonasPorUsuario(string.Join(",", usuario.Zonas), usuario.IdUsuario, transaction);
+                    daS.EliminarVendedoresPorUsuario(usuario.IdUsuario, transaction);
+                    daS.InsertarVendedoresPorUsuario(string.Join(",", usuario.Vendedores), usuario.IdUsuario, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
