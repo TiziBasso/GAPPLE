@@ -2,6 +2,7 @@
 
 @using GAPPLE.Client.Components.Cliente
 
+@inject SeguridadService SeguridadService
 @inject ClientesService ClientesService
 @inject DialogService DialogService
 
@@ -40,12 +41,13 @@ else
     List<Cliente> clientes = new();
     RadzenDataGrid<Cliente> grilla;
     RadzenDropDown<Opcion> dropdown;
-    bool? opcion;    
+    bool? opcion;
     bool showForm, isBusy;
 
 
     protected override async Task OnInitializedAsync()
-    {        
+    {
+        await SeguridadService.ValidatePageAccess();
         clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
         showForm = true;
     }
@@ -65,7 +67,7 @@ else
         isBusy = true;
         await DialogService.OpenAsync<ClienteAdd>($"Modificar a cliente especial", new() { { "Cliente", cliente } }, new() { Width = "40vw", Height = "46vh" });
         opcion = true;
-        clientes = await ClientesService.GetClientes(clienteEspecial:opcion);
+        clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
         await grilla.Reload();
         isBusy = false;
     }

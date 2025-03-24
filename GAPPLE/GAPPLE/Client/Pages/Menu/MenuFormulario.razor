@@ -7,86 +7,87 @@
 
 @if (!loaderContainerVisible)
 {
-            <RadzenRow>
-                <RadzenColumn Size="12">
-                    <RadzenDataGrid Data="DataPadre" @ref="grilla" TItem="Menu" Density="Density.Default" RowRender="RowRender" LoadChildData="LoadChildData" @bind-Value="selectedMenu" RowCollapse="RowCollapse"
-                                    SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true" AllowVirtualization="true" PageSize="30"
-                                    ExpandMode="DataGridExpandMode.Multiple" Style="height:80vh;">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="Menu" Title="Nombre" Property="@nameof(Menu.Nombre)" Width="160px">
-                                <EditTemplate>
-                                    <RadzenTextBox @bind-Value="@context.Nombre" Style="width:100%;" Name="Nombre" />
-                                    <RadzenLengthValidator Component="Nombre" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Menu" Title="Tipo" Width="70px" Property="@nameof(Menu.Tipo)" Filterable="false">
-                                <Template>
-                                    @{
-                                        var menu = (Menu)context;
-                                        if (menu.Tipo == 'M')
-                                        {
-                                            <span>Menú</span>
-                                        }
-                                        else if (menu.Tipo == 'P')
-                                        {
-                                            <span>Permiso</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Notificación</span>
-                                        }
-                                    }
-                                </Template>
-                                <EditTemplate>
-                                    @{
-                                        var menu = (Menu)context;
-                                        <RadzenDropDown Data="@tipoMenu" @bind-Value="@menu.Tipo" ValueProperty="@nameof(Opcion.Id)" TextProperty="@nameof(Opcion.Descripcion)" Style="width:100%;" />
-                                    }
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Menu" Title="Href" Property="@nameof(Menu.Url)" Width="180px">
-                                <EditTemplate>
-                                    <RadzenTextBox @bind-Value="@context.Url" Style="width:100%;" Name="url" />
-                                    <RadzenLengthValidator Component="url" Text="No puede superar los 200 caracteres" Max="200" Popup="true" />
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Menu" Title="Icono" Property="@nameof(Menu.Icono)" Width="90px" Filterable="false" TextAlign="TextAlign.Center">
-                                <Template>
-                                    <RadzenIcon Icon="@context.Icono" Style="width:100%;" />
-                                </Template>
-                                <EditTemplate>
-                                    <RadzenTextBox @bind-Value="@context.Icono" Name="icono" />
-                                    <RadzenLengthValidator Component="icono" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Menu" Title="Orden" Width="65px" Property="@nameof(Menu.Orden)" Filterable="false">
-                                <EditTemplate>
-                                    <RadzenNumeric @bind-Value="@context.Orden" Style="width:100%;" />
-                                </EditTemplate>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="Menu" Width="70px" Filterable="false">
-                                <Template>
-                                    @{
-                                        var menu = (Menu)context;
+    <RadzenRow>
+        <RadzenColumn Size="12">
+            <RadzenDataGrid Data="DataPadre" @ref="grilla" TItem="Menu" Density="Density.Default" RowRender="RowRender" LoadChildData="LoadChildData" 
+            @bind-Value="selectedMenu" RowCollapse="RowCollapse"
+            SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true" AllowVirtualization="true" PageSize="30"
+            ExpandMode="DataGridExpandMode.Multiple" Style="height:80vh;">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Menu" Title="Nombre" Property="@nameof(Menu.Nombre)" Width="160px">
+                        <EditTemplate>
+                            <RadzenTextBox @bind-Value="@context.Nombre" Style="width:100%;" Name="Nombre" />
+                            <RadzenLengthValidator Component="Nombre" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Menu" Title="Tipo" Width="70px" Property="@nameof(Menu.Tipo)" Filterable="false">
+                        <Template>
+                            @{
+                                var menu = (Menu)context;
+                                if (menu.Tipo == 'M')
+                                {
+                                    <span>Menú</span>
+                                }
+                                else if (menu.Tipo == 'P')
+                                {
+                                    <span>Permiso</span>
+                                }
+                                else
+                                {
+                                    <span>Notificación</span>
+                                }
+                            }
+                        </Template>
+                        <EditTemplate>
+                            @{
+                                var menu = (Menu)context;
+                                <RadzenDropDown Data="@tipoMenu" @bind-Value="@menu.Tipo" ValueProperty="@nameof(Opcion.Id)" TextProperty="@nameof(Opcion.Descripcion)" Style="width:100%;" />
+                            }
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Menu" Title="Href" Property="@nameof(Menu.Url)" Width="180px">
+                        <EditTemplate>
+                            <RadzenTextBox @bind-Value="@context.Url" Style="width:100%;" Name="url" />
+                            <RadzenLengthValidator Component="url" Text="No puede superar los 200 caracteres" Max="200" Popup="true" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Menu" Title="Icono" Property="@nameof(Menu.Icono)" Width="90px" Filterable="false" TextAlign="TextAlign.Center">
+                        <Template>
+                            <RadzenIcon Icon="@context.Icono" Style="width:100%;" />
+                        </Template>
+                        <EditTemplate>
+                            <RadzenTextBox @bind-Value="@context.Icono" Name="icono" />
+                            <RadzenLengthValidator Component="icono" Text="No puede superar los 100 caracteres" Max="100" Popup="true" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Menu" Title="Orden" Width="65px" Property="@nameof(Menu.Orden)" Filterable="false">
+                        <EditTemplate>
+                            <RadzenNumeric @bind-Value="@context.Orden" Style="width:100%;" />
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Menu" Width="70px" Filterable="false">
+                        <Template>
+                            @{
+                                var menu = (Menu)context;
 
-                                        <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnAdd(context))" />
+                                <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnAdd(context))" />
 
-                                        if (menu.IdPermiso > 2)
-                                        {
-                                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnEdit(context))" />
+                                if (menu.IdPermiso > 2)
+                                {
+                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnEdit(context))" />
 
-                                            if (!menu.TieneHijos)
-                                            {
-                                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=>OnDelete(context))" />
-                                            }
-                                        }
+                                    if (!menu.TieneHijos)
+                                    {
+                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=>OnDelete(context))" />
                                     }
-                                </Template>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenColumn>
-            </RadzenRow>
+                                }
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
 }
 else
 {
@@ -105,6 +106,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await SeguridadService.ValidatePageAccess();
         tipoMenu = new List<Opcion>()
         {
             new('M', "Menú"),
@@ -215,6 +217,6 @@ else
     }
 
     /*.rz-data-row.rz-datatable-edit {
-                                                                        display: none;
-                                                                    }*/
+                                                                            display: none;
+                                                                        }*/
 </style>

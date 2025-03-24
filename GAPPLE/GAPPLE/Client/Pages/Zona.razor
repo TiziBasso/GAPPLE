@@ -2,43 +2,45 @@
 
 @using GAPPLE.Client.Components.Cliente
 
+@inject SeguridadService SeguridadService
 @inject OrdenesService OrdenesService
 
 <RadzenText Text="Zonas" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
 
 @if (showForm)
 {
-	<RadzenRow JustifyContent="JustifyContent.Center">
-		<RadzenColumn Size="10">
+    <RadzenRow JustifyContent="JustifyContent.Center">
+        <RadzenColumn Size="10">
 
-			<RadzenDataGrid @ref="grilla" Data="zona.OrderBy(x => x.Descripcion)" AllowSorting="true" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-							FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh;">
-				<Columns>
-					<RadzenDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Codigo" TextAlign="TextAlign.Right" Width="110px" Sortable="true" />
-					<RadzenDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Zona" TextAlign="TextAlign.Left" Sortable="false" />
-				</Columns>
-			</RadzenDataGrid>
-		</RadzenColumn>
-	</RadzenRow>
+            <RadzenDataGrid @ref="grilla" Data="zona.OrderBy(x => x.Descripcion)" AllowSorting="true" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" Style="height: 82vh;">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Codigo" TextAlign="TextAlign.Right" Width="110px" Sortable="true" />
+                    <RadzenDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Zona" TextAlign="TextAlign.Left" Sortable="false" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
 
 }
 else
 {
-	<Loader />
+    <Loader />
 }
 
 @code
 {
-	bool showForm;
+    bool showForm;
 
-	List<Zonas> zona = new();
+    List<Zonas> zona = new();
 
-	RadzenDataGrid<Zonas> grilla;
+    RadzenDataGrid<Zonas> grilla;
 
-	protected override async Task OnInitializedAsync()
-	{
-		zona = await OrdenesService.GetZonas();
-		showForm = true;
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        zona = await OrdenesService.GetZonas();
+        showForm = true;
+    }
 }
 

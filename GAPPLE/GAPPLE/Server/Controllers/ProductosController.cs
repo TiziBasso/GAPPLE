@@ -18,11 +18,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Producto> GetProductosDTO(string? codigoProducto, string? descripcion, bool? clasificado)
+        public List<Producto> GetProductosDTO(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo)
         {
             List<Producto> productos = new();
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daP.ObtenerProductos(codigoProducto, descripcion, clasificado))
+            using (DataTable dt = daP.ObtenerProductos(codigoProducto, descripcion, clasificado, pasivo))
             {
                 foreach (DataRow row in dt.Rows)
                 {

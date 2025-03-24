@@ -36,7 +36,7 @@ namespace GAPPLE.Client.Tools
             {
                 return new List<Opcion>
                 {
-                    new Opcion((object)null, "(Todos)"),
+                    new Opcion((object)null, "Todos"),
                     new Opcion(false, "Activo"),
                     new Opcion(true, "Pasivo")
                 };

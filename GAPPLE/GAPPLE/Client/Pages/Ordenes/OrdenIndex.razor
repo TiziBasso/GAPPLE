@@ -4,6 +4,7 @@
 @using GAPPLE.Client.Extensiones
 @using Microsoft.AspNetCore.Components.Authorization
 
+@inject SeguridadService SeguridadService
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
 @inject OrdenesService OrdenesService
@@ -27,7 +28,7 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Hasta:" Component="hasta" />
-            <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today.AddDays(1)" Name="hasta" Style="width:8rem" />
+            <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" Style="width:8rem" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -157,7 +158,7 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && permisos.Contains("alta"))
                                   Click="@(() => EditarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
@@ -173,7 +174,7 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && aprueba)
                                   Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
@@ -181,7 +182,8 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                    <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat"
+                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4 && permisos.Contains("tango"))
                                   Click="@(() => PasarATango(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
@@ -218,14 +220,15 @@ else
     Orden? Resumen = null;
     bool isLoading, showPage, showResumen;
 
-    DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Now;
+    DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
     int? idPedido;
     object idEstado;
     bool? presupuesto;
     string? razonSocial, linea, codTango, codOrden;
 
-    List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
-
+    //List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
+    List<string> permisos;
+    bool aprueba; //variable auxiliar para no hacer la consulta en cada row
 
     //filters variables
     int? idFilter, unidadesFilter;
@@ -236,6 +239,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await SeguridadService.ValidatePageAccess();
+        permisos = await SeguridadService.GetPermisos("ordenes");
+        aprueba = permisos.Contains("finanzas") || permisos.Contains("contaduria") || permisos.Contains("ventas");
         lineas = await ProductosService.GetLineas();
         estados = await OrdenesService.GetEstados();
         idEstado = estados[1].Id;
@@ -275,7 +281,10 @@ else
             //parametrosconsulta
             var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
             var auth = await autenticacionExt.GetAuthenticationStateAsync();
-            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value));
+            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59),
+                                                        idPedido, codOrden, presupuesto, razonSocial, linea, null,
+                                                        idEstado != null ? int.Parse(idEstado.ToString()!) : null,
+                                                        codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value));
             DialogCustom.CloseDialog();
             StateHasChanged();
             await grid.Reload();

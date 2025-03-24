@@ -9,7 +9,7 @@ namespace GAPPLE.Server.Data
 
         public DA_Producto(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerProductos(string? codigoProducto, string? descripcion, bool? clasificado, SqlTransaction? transaction = null)
+        public DataTable ObtenerProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, SqlTransaction? transaction = null)
         {
             SqlConnection cnn;
             SqlCommand cmd = new();
@@ -29,6 +29,7 @@ namespace GAPPLE.Server.Data
             if (codigoProducto!= null) cmd.Parameters.AddWithValue("@pCodigoProducto", codigoProducto);
             if (descripcion != null) cmd.Parameters.AddWithValue("@pDescripcion", descripcion);
             if (clasificado != null) cmd.Parameters.AddWithValue("@pClasificados", clasificado);
+            if (pasivo != null) cmd.Parameters.AddWithValue("@pPasivo", pasivo);
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);
 

@@ -2,6 +2,7 @@
 @using GAPPLE.Client.Components.Expedicion
 @using GAPPLE.Client.Components.Expedicion.Informes
 
+@inject SeguridadService SeguridadService
 @inject OrdenesService OrdenesService
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
@@ -35,7 +36,7 @@
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
             Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" /> @*debería ir? ahora los pedidos contienen varias lineas*@
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" /> 
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.CodCliente)" Title="Cliente" MinWidth="10px" />
 
@@ -88,8 +89,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        //await SeguridadService.ValidatePageAccess();
-        //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
+        await SeguridadService.ValidatePageAccess();
 
         await FillOrdenes();
         showPage = true;

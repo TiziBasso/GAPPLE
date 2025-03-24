@@ -89,7 +89,8 @@ else
     List<PerfilUsuario> perfiles = Enumerable.Empty<PerfilUsuario>().ToList();
     RadzenDataGrid<Usuario> grid;
     List<Usuario> lstUsuarios = new();
-    List<string> permisos = new() { "ver","edicion","alta"};
+    //List<string> permisos = new() { "ver","edicion","alta"};
+    List<string> permisos;
     RadzenTextBox refNombreUsuario;
     bool showForm, buscandoUsuarios;
     string apeYNom = null, nombreUsuario = null, perfil;
@@ -99,7 +100,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess(SesionDTO.IdUsuario);
-        // permisos = await SeguridadService.GetPermisos("usuarios");
+        permisos = await SeguridadService.GetPermisos("usuarios");
         perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
         showForm = true;
     }

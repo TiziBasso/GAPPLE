@@ -76,7 +76,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // await SeguridadService.ValidatePageAccess();
+        await SeguridadService.ValidatePageAccess();
         perfiles = await SeguridadService.GetPerfiles();
         perfiles = perfiles.OrderBy(x => x.DescripcionPerfil).ToList();
         showForm = true;

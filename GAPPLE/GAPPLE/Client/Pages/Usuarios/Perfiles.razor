@@ -42,6 +42,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await SeguridadService.ValidatePageAccess();
         lstPerfiles = await SeguridadService.GetPerfiles();
         showPage = true;
     }

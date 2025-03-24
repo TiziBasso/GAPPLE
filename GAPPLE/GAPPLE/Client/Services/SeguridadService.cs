@@ -11,13 +11,16 @@ namespace GAPPLE.Client.Services
     {
         [Inject]
         private HttpClient HttpClient { get; }
+        [Inject]
+        private SesionDTO SesionDTO { get; }
         private NavigationManager NavigationManager { get; }
         private const string URI_BASE = "api/seguridad";
 
-        public SeguridadService(HttpClient httpClient, NavigationManager navigationManager, SesionDTO sesionDTOs)
+        public SeguridadService(HttpClient httpClient, NavigationManager navigationManager, SesionDTO sesionDTO)
         {
             HttpClient = httpClient;
             NavigationManager = navigationManager;
+            SesionDTO = sesionDTO;
         }
 
         public async ValueTask<Usuario> GetUsuario(int? idUsuario)
@@ -29,8 +32,10 @@ namespace GAPPLE.Client.Services
                 return null;
         }
 
-        internal async ValueTask ValidatePageAccess(int? idUsuario)
+        internal async ValueTask ValidatePageAccess(int? idUsuario = null)
         {
+            if (idUsuario == null) idUsuario = SesionDTO.IdUsuario;
+
             string href = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
 
             if (href.Contains('?'))
@@ -54,17 +59,27 @@ namespace GAPPLE.Client.Services
 
         internal async Task<List<string>> GetPermisos(string nombrePermiso, char tipoPermiso = 'P', int? idUsuario = null)
         {
-            return await HttpClient.GetFromJsonAsync<List<string>>($"{URI_BASE}/permisos/componente?nombre={nombrePermiso}&tipoPermiso={tipoPermiso}");
+            Console.WriteLine("idUsuario: " + SesionDTO.IdUsuario);
+            Console.WriteLine("Session: " + SesionDTO.ToString());
+            string uri = $"{URI_BASE}/permisos/componente";
+            Dictionary<string, object> query = new();
+            query["nombre"] = nombrePermiso;
+            query["tipoPermiso"] = tipoPermiso;
+            if (idUsuario == null) idUsuario = SesionDTO.IdUsuario;
+            query["idUsuario"] = idUsuario;
+
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+
+            return await HttpClient.GetFromJsonAsync<List<string>>(uri);
         }
 
-        internal async ValueTask<List<string>> ValidatePageAccess(string nombrePermiso, int? idUsuario)
+        internal async ValueTask<List<string>> ValidatePageAccess(string nombrePermiso, int? idUsuario = null)
         {
-            var permisos = await GetPermisos(nombrePermiso, idUsuario:idUsuario);
+            if (idUsuario == null) idUsuario = SesionDTO.IdUsuario;
+            var permisos = await GetPermisos(nombrePermiso, idUsuario: idUsuario);
 
             if (!permisos.Any())
-            {
                 NavigationManager.NavigateTo(Tools.Variables.ErrorPages.Desautorizado);
-            }
 
             return permisos;
         }

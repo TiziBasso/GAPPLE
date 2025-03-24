@@ -15,13 +15,14 @@ namespace GAPPLE.Client.Services
 
         public ProductosService(HttpClient httpClient, ILogger<ProductosService> logger) => (HttpClient, Logger) = (httpClient, logger);
 
-        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado,
+        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo,
             CancellationTokenSource? cancellationToken = null)
         {
             Dictionary<string, object> query = new();
             if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codigoProducto"] = codigoProducto;
             if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
             if (clasificado != null) query["clasificado"] = clasificado;
+            if (pasivo != null) query["pasivo"] = pasivo;
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
             if (cancellationToken == null)

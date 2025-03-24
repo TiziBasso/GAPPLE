@@ -36,6 +36,13 @@
                             Disabled="@isLoading" Style="width: 8rem;" />
         </RadzenStack>
 
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="pasivo" />
+            <RadzenDropDown Data=@Variables.EstadosBool @bind-Value=@pasivo Name="pasivo" Placeholder="Todos"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            Disabled="@isLoading" Style="width: 8rem;" />
+        </RadzenStack>
+
         <RadzenButton Click="FillProductos" IsBusy=isLoading Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" />
     </RadzenStack>
 
@@ -44,7 +51,7 @@
         @* <RadzenButton Text="Exportar a Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" Disabled="@(!productos.Any() || isLoading)" /> *@
     </RadzenStack>
 
-    <RadzenDataGrid @ref="@refGrid" Data="productos" AllowSorting="true" AllowGrouping="true" AllowFiltering="true" Density="Density.Compact"
+    <RadzenDataGrid @ref="@refGrid" Data="productos" AllowSorting="true" AllowFiltering="true" Density="Density.Compact"
                     IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
                     FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
                     SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
@@ -99,7 +106,7 @@ else
     CancellationTokenSource cancellationToken = new CancellationTokenSource();
     ElementReference refCodigoInterno;
 
-    bool? clasificacion = null;
+    bool? clasificacion = null, pasivo = false;
     string? codigoProducto, descripcion, proveedor, familia, codSegunProveedor, marca;
     int render, index;
 
@@ -111,12 +118,12 @@ else
     string? codigoInternoFilter, descripcionFilter, observacionesFilter, lineasFilter;
     bool isLoading, showPage;
 
-    List<string> listPermisos = new();
+    //List<string> listPermisos = new();
     Dictionary<string, object> parametros = new();
 
     protected override async Task OnInitializedAsync()
     {
-        //await SeguridadService.ValidatePageAccess();
+        await SeguridadService.ValidatePageAccess();
         //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
 
         if (this.ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.ProductosIndex && this.ParametrosDeConsulta.Parametros.Any())
@@ -185,7 +192,7 @@ else
         if (!string.IsNullOrWhiteSpace(descripcion)) parametros.Add("descripcion", descripcion.Trim());
         if (clasificacion != null) parametros.Add("clasificacion", clasificacion);
 
-        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, cancellationToken);
+        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, pasivo, cancellationToken);
 
         isLoading = false;
 

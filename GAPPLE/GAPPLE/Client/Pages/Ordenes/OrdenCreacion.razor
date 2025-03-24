@@ -1,5 +1,6 @@
 ﻿@page "/orden/creacion"
 
+@inject SeguridadService SeguridadService
 @inject ProductosService ProductosService
 @inject OrdenesService OrdenesService
 @inject ClientesService ClientesService
@@ -326,6 +327,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await SeguridadService.ValidatePageAccess();
         lstLineas = await ProductosService.GetLineas();
         clientes = await ClientesService.GetClientes(null, null, null, null);
         transportes = await OrdenesService.GetTransportes();

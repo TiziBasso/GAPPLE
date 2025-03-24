@@ -91,7 +91,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // await SeguridadService.ValidatePageAccess();
+        await SeguridadService.ValidatePageAccess();
         usuarios = await SeguridadService.GetUsuarios(conDetalle: false);
         usuarios = usuarios.OrderBy(x => x.ApellidoYNombre).ToList();
         showForm = true;

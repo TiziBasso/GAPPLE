@@ -40,7 +40,7 @@
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Contraseña:" />
-                    <RadzenPassword @bind-Value="@Usuario.Contraseña" Disabled="@disableEdit"
+                    <RadzenPassword @bind-Value="@Usuario.Contraseña" Disabled="@disableEdit" Change="@(()=>ConfirmarContraseña = string.Empty)"
                                     Style="width:20rem" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For="@(() => Usuario.Contraseña)" />
                     @if (!string.IsNullOrEmpty(ErrorMensaje))
@@ -145,16 +145,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         Operacion = Operacion.ToLower();
-        // if (((Operacion == "ver" || Operacion == "edicion") && IdUsuario == null) || Operacion == "alta" && IdUsuario != null)
-        // {
-        //     NavigationManager.NavigateTo("errorpage");
-        // }
+        if (((Operacion == "ver" || Operacion == "edicion") && IdUsuario == null) || Operacion == "alta" && IdUsuario != null)
+        {
+            NavigationManager.NavigateTo("errorpage");
+        }
 
-        // var permisos = await SeguridadService.ValidatePageAccess("usuarios", SesionDTO.IdUsuario);
-        // if (!permisos.Exists(x => x == Operacion.ToLower()))
-        // {
-        //     NavigationManager.NavigateTo("errorpage");
-        // }
+        var permisos = await SeguridadService.ValidatePageAccess("usuarios");
+        if (!permisos.Exists(x => x == Operacion.ToLower()))
+        {
+            NavigationManager.NavigateTo("errorpage");
+        }
 
         switch (Operacion)
         {
@@ -179,6 +179,7 @@ else
         else
         {
             Usuario = await SeguridadService.GetUsuario(IdUsuario);
+            ConfirmarContraseña = Usuario.Contraseña;
         }
 
         perfiles = (await SeguridadService.GetPerfiles()).OrderBy(x => x.DescripcionPerfil).ToList();
