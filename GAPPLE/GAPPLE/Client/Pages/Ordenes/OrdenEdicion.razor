@@ -221,6 +221,9 @@ else
 <script>
     document.addEventListener('keydown', function (event) {
     if (event.target.classList.contains('product-input')) {
+        if (event.key === 'Enter') {
+        event.preventDefault(); // Evita el submit del formulario
+    }
     const currentInput = event.target;
     const inputs = Array.from(document.querySelectorAll('.product-input'));
     const currentCard = currentInput.closest('.card');
@@ -244,7 +247,7 @@ else
     setTimeout(() => targetInput.select(), 0);
     }
     }
-    } else if (event.key === 'ArrowDown') {
+    } else if (event.key === 'ArrowDown' || event.key === 'Enter') {
     if (inputIndexInCard < inputsInCurrentCard.length - 1) {
     inputsInCurrentCard[inputIndexInCard + 1].focus();
     setTimeout(() => inputsInCurrentCard[inputIndexInCard + 1].select(), 0);
@@ -384,7 +387,7 @@ else
         GuardarProductosDiferenteLinea();
 
         lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
-        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        // lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
         foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
         {
             lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;

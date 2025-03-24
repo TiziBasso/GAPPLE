@@ -13,7 +13,7 @@ namespace GAPPLE.Server.Data
         public DA_Ordenes(string connectionString) => ConnectionString = connectionString;
 
         public DataTable ObtenerOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango)
+                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -26,6 +26,7 @@ namespace GAPPLE.Server.Data
                 };
                 cmd.Parameters.AddWithValue("@pDesde", desde);
                 cmd.Parameters.AddWithValue("@pHasta", hasta);
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
                 if (idPedido != null) cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
                 if (presupuesto != null) cmd.Parameters.AddWithValue("@pPresupuesto", presupuesto);
                 if (!string.IsNullOrEmpty(razonSocial)) cmd.Parameters.AddWithValue("@pRazonSocial", razonSocial);
@@ -216,7 +217,7 @@ namespace GAPPLE.Server.Data
 
         public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            string observaciones, DateTime fechaEntrega, string altaUsuario, SqlTransaction transaction)
+                                            string observaciones, DateTime? fechaEntrega, string altaUsuario, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -238,6 +239,17 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void EliminarPedidoCabecera(string codOrden, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_PedidoCabeceraCompleto";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
             cmd.ExecuteNonQuery();
         }
 
@@ -268,7 +280,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoEstado(string idPedido, int estado, SqlTransaction transaction)
+        public void PersistirPedidoEstado(string idPedido, int estado, string? saveId, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -277,6 +289,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_upd_PedidosCabecera";
             cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
             cmd.Parameters.AddWithValue("@pIdEstado", estado);
+            cmd.Parameters.AddWithValue("@pCodigoTango", saveId);
             cmd.ExecuteNonQuery();
         }
 

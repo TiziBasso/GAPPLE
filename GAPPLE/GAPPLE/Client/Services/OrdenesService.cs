@@ -20,7 +20,7 @@ namespace GAPPLE.Client.Services
         public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger, SesionDTO sesionDTO) => (HttpClient, Logger, SesionDTO) = (httpClient, logger, sesionDTO);
 
         public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango)
+                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
         {
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
@@ -34,6 +34,7 @@ namespace GAPPLE.Client.Services
             if (!string.IsNullOrWhiteSpace(codOrden)) query["codOrden"] = codOrden;
             if (idEstado != null) query["idEstado"] = idEstado;
             if (!string.IsNullOrWhiteSpace(codTango)) query["codTango"] = codTango;
+            query["idUsuario"] = idUsuario;
 
             uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
@@ -82,8 +83,6 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                Console.WriteLine(SesionDTO.Nombre);
-                Console.WriteLine(SesionDTO.IdUsuario);
                 pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
                 if (response.IsSuccessStatusCode)

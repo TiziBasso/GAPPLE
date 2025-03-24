@@ -1,6 +1,8 @@
 ﻿@page "/ordenes"
 @using GAPPLE.Client.Components.Ordenes
 @using GAPPLE.Client.Components.Ordenes.Informes
+@using GAPPLE.Client.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
@@ -10,6 +12,7 @@
 @inject NavigationManager NavigationManager
 @inject DialogCustom DialogCustom
 @inject IJSFunction JSFunction
+@inject AuthenticationStateProvider AutenticacionProvider
 
 @if (showPage)
 {
@@ -79,7 +82,6 @@
 
     <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
         <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevaOrden" Visible=@(permisos.Contains("alta")) />
-        @* <RadzenButton Text="Exportar Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" /> *@
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
@@ -271,7 +273,9 @@ else
 
             DialogCustom.OpenBusyWithLoader("Cargando...");
             //parametrosconsulta
-            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango);
+            var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
+            var auth = await autenticacionExt.GetAuthenticationStateAsync();
+            lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, null, idEstado != null ? int.Parse(idEstado.ToString()!) : null, codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value));
             DialogCustom.CloseDialog();
             StateHasChanged();
             await grid.Reload();
@@ -320,10 +324,8 @@ else
             DialogCustom.CloseDialog();
             if (response.IsSuccessStatusCode)
                 StateHasChanged();
-            else if (response.Errors != null && response.Errors.Any())
-                DialogCustom.ShowErrors(response.Errors["error"], MensajesHelper.Title);
             else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, response.Message);
         }
     }
 

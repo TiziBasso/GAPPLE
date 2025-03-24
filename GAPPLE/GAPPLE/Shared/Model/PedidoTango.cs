@@ -51,13 +51,14 @@ namespace GAPPLE.Shared.Model
         public string OBSERVACIONES { get; set; }
         public List<RenglonDTO> RENGLON_DTO { get; set; }
         public List<ClienteOcasionalDTO> CLIENTE_OCASIONAL_DTO { get; set; }
-        public List<NotaPedidoDTO> NOTA_PEDIDO_DTO { get; set; }
+        //public List<NotaPedidoDTO> NOTA_PEDIDO_DTO { get; set; }
     }
 
     public class RenglonDTO
     {
         public int ID_STA11 { get; set; }
         public decimal CANTIDAD_PEDIDA { get; set; }
+        public decimal PORCENTAJE_BONIFICACION { get; set; }
     }
 
     public class PlanEntregaDTO

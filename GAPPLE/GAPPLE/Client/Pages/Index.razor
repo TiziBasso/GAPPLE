@@ -2,12 +2,18 @@
 
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
+@using GAPPLE.Client.Extensiones
 @attribute [Authorize]
 
+@inject AuthenticationStateProvider autenticacionProvider
 @inject OrdenesService OrdenesService
+@inject SeguridadService SeguridadService
 
 <PageTitle>Index</PageTitle>
 
+@if (showHome)
+{
+   
 <RadzenRow Style="--rz-text-h2-line-height: 1; --rz-text-h2-font-weight: 200;">
     <RadzenColumn Size="12" SizeMD="12" SizeXL="2">
         <RadzenRow>
@@ -80,6 +86,7 @@
         </RadzenRow>
     </RadzenColumn>
 </RadzenRow>
+}
 
 <style>
     .rz-tabview-panel {
@@ -109,6 +116,28 @@
     IEnumerable<OrdenDashboard> closedIssues;
 
     CantidadesProductosDashboard cantidadesProductos = new();
+
+    bool showHome;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
+        var auth = await autenticacionExt.GetAuthenticationStateAsync();
+        var data = await SeguridadService.GetMenu(int.Parse(auth.User.FindFirst("IdUsuario")?.Value));
+        menuRecursivo(data);
+    }
+
+    void menuRecursivo(List<MenuNew> data)
+    {
+        foreach (var item in data)
+        {
+            if (item.Id == 2)
+                showHome = true;
+
+            if (item.Items != null && item.Items.Count > 0)
+                menuRecursivo(item.Items);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

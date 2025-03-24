@@ -283,6 +283,32 @@ namespace GAPPLE.Server.Controllers
             return usuario;
         }
 
+        public Usuario GetUsuario(string nombre)
+        {
+            Usuario usuario = null;
+            DA_Usuario da = new(Configuration.GetConnectionString("DefaultConnection"));
+            DataTable dt = da.ObtenerUsuario(nombreUsuario: nombre);
+            if (dt.Rows.Count > 0)
+            {
+                DataRow row = dt.Rows[0];
+                usuario = new()
+                {
+                    IdUsuario = (int)row["IdUsuario"],
+                    NombreUsuario = (string)row["NombreUsuario"],
+                    ApellidoYNombre = (string)row["ApellidoYNombre"],
+                    Perfil = (int)row["IdPerfil"],
+                    Provincia = (string)row["Provincia"],
+                    Contraseña = (string)row["Contraseña"],
+                    Habilitado = bool.Parse(row["Habilitado"].ToString())
+                };
+
+                if (row["Provincia"] != DBNull.Value) usuario.Provincia = (string)row["Provincia"];
+                if (row["Correo"] != DBNull.Value) usuario.Email = (string)row["Correo"];
+                if (row["ID_VENDEDOR"] != DBNull.Value) usuario.IdVendedor = int.Parse(row["Id_Vendedor"].ToString());
+            }
+            return usuario;
+        }
+
         [HttpPost("permisosUsuario")]
         public IActionResult PostPermisosPorUsuario(List<Permiso> lstCambios)
         {
