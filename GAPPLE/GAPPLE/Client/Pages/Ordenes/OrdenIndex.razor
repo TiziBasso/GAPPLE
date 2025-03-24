@@ -27,7 +27,7 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Hasta:" Component="hasta" />
-            <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" Style="width:8rem" />
+            <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today.AddDays(1)" Name="hasta" Style="width:8rem" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -218,7 +218,7 @@ else
     Orden? Resumen = null;
     bool isLoading, showPage, showResumen;
 
-    DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Today;
+    DateTime desde = DateTime.Today.AddMonths(-1), hasta = DateTime.Now;
     int? idPedido;
     object idEstado;
     bool? presupuesto;

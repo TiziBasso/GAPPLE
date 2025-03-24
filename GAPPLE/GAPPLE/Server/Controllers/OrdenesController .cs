@@ -419,7 +419,8 @@ namespace GAPPLE.Server.Controllers
                 {
                     pedido.IdEstado = 5;
                     pedido.DescripcionEstado = "EN TANGO";
-                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, response.Message, trans);
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, trans);
+                    daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
                 }
 
                 if (ModelState.ErrorCount > 0)
