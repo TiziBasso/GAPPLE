@@ -12,7 +12,7 @@ namespace GAPPLE.Server.Data
 
         public DA_Ordenes(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
+        public DataTable ObtenerOrdenes(DateTime? desde, DateTime? hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
         {
             DataTable dt = new DataTable();

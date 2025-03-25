@@ -29,12 +29,15 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("lista")]
-        public List<Orden> GetOrdenes(string desdeStr, string hastaStr, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
+        public List<Orden> GetOrdenes(string? desdeStr, string? hastaStr, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
                                         string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
         {
-            DateTime desde, hasta;
-            desde = DateTime.Parse(WebUtility.UrlDecode(desdeStr));
-            hasta = DateTime.Parse(WebUtility.UrlDecode(hastaStr));
+            DateTime? desde = null, hasta = null;
+            if (desdeStr != null && hastaStr != null)
+            {
+                desde = DateTime.Parse(WebUtility.UrlDecode(desdeStr));
+                hasta = DateTime.Parse(WebUtility.UrlDecode(hastaStr));
+            }
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Orden> lstOrdenes = new();
             using (DataTable dt = daO.ObtenerOrdenes(desde, hasta, idPedido, codOrden, presupuesto, razonSocial, linea, zona, idEstado, codTango, idUsuario))
@@ -372,16 +375,21 @@ namespace GAPPLE.Server.Controllers
             {
                 SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
                 DA_Ordenes daO = new(cnn.ConnectionString);
+                var pedidos = GetOrdenes(null, null, null, pedido.CodigoOrden.Substring(2), null, null, null, null, null, null, Usuario.IdUsuario).AsEnumerable();
+                var idPedidos = pedidos.Where(x=>x.IdEstado == 1).Select(x => x.Id);
+
                 cnn.Open();
                 trans = cnn.BeginTransaction();
-
-                daO.PersistirPedidoAprobacion(pedido.Id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, trans);
-
-                if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                foreach (var id in idPedidos)
                 {
-                    pedido.IdEstado = 3;
-                    pedido.DescripcionEstado = "APROBADO";
-                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, trans);
+                    daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, trans);
+
+                    if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                    {
+                        pedido.IdEstado = 3;
+                        pedido.DescripcionEstado = "APROBADO";
+                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, trans);
+                    }
                 }
 
                 trans.Commit();
