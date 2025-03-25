@@ -686,12 +686,23 @@ namespace GAPPLE.Server.Controllers
             SqlTransaction? trans = null;
             try
             {
+                List<OrdenExpedicion> ordenesAux = new();
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                foreach (var orden in ordenes)
+                {
+                    var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden.Substring(2)).AsEnumerable();
+                    if (detalle.All(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 || int.Parse(x["CantidadAprobadaX"].ToString()) != 0))
+                        ordenesAux.Add(orden);
+                    else
+                    {
+                        ModelState.AddModelError("error", $"Todos los productos de la orden {orden.Orden} están pendientes");
+                    }
+                }
                 using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
                 {
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    foreach (var orden in ordenes)
+                    foreach (var orden in ordenesAux)
                     {
                         foreach (var id in orden.IdPedidos.Split(","))
                         {
@@ -701,7 +712,10 @@ namespace GAPPLE.Server.Controllers
                     trans.Commit();
                     cnn.Close();
                 }
-                return Ok();
+                if (ModelState.ErrorCount == 0)
+                    return Ok();
+                else
+                    return BadRequest(ModelState);
             }
             catch (Exception ex)
             {

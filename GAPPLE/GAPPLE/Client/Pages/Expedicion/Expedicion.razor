@@ -36,7 +36,7 @@
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
             Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" /> 
+            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" />
 
             <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.CodCliente)" Title="Cliente" MinWidth="10px" />
 
@@ -153,6 +153,11 @@ else
         {
             NotificationService.Notify(NotificationSeverity.Success, "Ordenes despachadas correctamente");
             selected = new List<OrdenExpedicion>();
+            await FillOrdenes();
+        }
+        else if (response.Errors != null && response.Errors.Any())
+        {
+            await DialogCustom.ShowErrors(response.Errors["error"]);
             await FillOrdenes();
         }
         else
