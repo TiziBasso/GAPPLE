@@ -273,13 +273,14 @@ namespace GAPPLE.Server.Controllers
                 if (row["Correo"] != DBNull.Value) usuario.Email = (string)row["Correo"];
                 if (row["ID_VENDEDOR"] != DBNull.Value) usuario.IdVendedor = int.Parse(row["Id_Vendedor"].ToString());
 
-                dt = da.ObtenerZonasPorUsuario(id);
-                List<string> zonas = new List<string>();
+                //dt = da.ObtenerZonasPorUsuario(id);
+                dt = da.ObtenerVendedoresPorUsuario(id);
+                List<string> vendedores = new List<string>();
                 foreach (DataRow dr in dt.Rows)
                 {
-                    zonas.Add(dr["CodZona"].ToString());
+                    vendedores.Add(dr["CodVendedor"].ToString());
                 }
-                usuario.Zonas = zonas;
+                usuario.Vendedores = vendedores;
             }
             return usuario;
         }

@@ -101,7 +101,7 @@
                     <RadzenLabel Text="Vendedores:" Style="margin-bottom:5px" Component="DropDownMultipleMaxLabels" />
                     <RadzenDropDown @bind-Value=@Usuario.Vendedores Data=@vendedores TextProperty="@nameof(Vendedor.Nombre)" ValueProperty="@nameof(Vendedor.CodTango)" Name="DropDownMultipleMaxLabels"
                                     Multiple=true AllowClear=true Placeholder="Seleccionar vendedores" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true"
-                                    MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionados" Style="width: 20rem;" />
+                                    MaxSelectedLabels="3" SelectAllText="Todas" SelectedItemsText="selecionados" Style="width: 20rem;" Disabled="@disableEdit" />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>
