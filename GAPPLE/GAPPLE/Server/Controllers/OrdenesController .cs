@@ -415,8 +415,8 @@ namespace GAPPLE.Server.Controllers
                 cnn.Open();
                 trans = cnn.BeginTransaction();
 
-                var orden = GetOrdenExpedicion(pedido.CodigoOrden.Substring(2), 4, trans);
-                var response = PostTango(orden, trans);
+                //var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
+                var response = PostTango(pedido, trans);
                 if (!response.IsSuccessStatusCode)
                 {
                     if (response.Message != null)
@@ -453,27 +453,24 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        private Response PostTango(OrdenExpedicion orden, SqlTransaction trans)
+        private Response PostTango(Orden orden, SqlTransaction trans)
         {
             RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
             restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
             restClient.AddDefaultHeader("Company", "54");
 
             RestRequest request = new RestRequest("Create?process=19845", Method.Post);
-            var idPedidos = orden.IdPedidos.Split(",");
-
-            foreach (var id in idPedidos)
-            {
+            //var idPedidos = orden.IdPedidos.Split(",");
 
                 PedidoDTO pedido = new PedidoDTO();
 
-                Orden ordenFull = GetOrden(null, true, int.Parse(id), trans)!;
+                Orden ordenFull = GetOrden(orden.CodigoOrden, true, null, trans)!;
 
                 if (!ordenFull.Detalle.Any())
                     return new(false, "La orden debe poseer al menos 1 producto");
 
-                pedido.NRO_ORDEN_COMPRA = id;
-                pedido.FECHA_ORDEN_COMPRA = orden.Fecha.Value.AddDays(-1);
+                pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
+                pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
                 pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
                 pedido.ESTADO = 2;
                 pedido.ES_CLIENTE_HABITUAL = true;
@@ -483,7 +480,7 @@ namespace GAPPLE.Server.Controllers
                 pedido.ID_GVA10 = ordenFull.ID_GVA10;
                 pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
                 pedido.ID_STA22 = 23;
-                pedido.FECHA_PEDIDO = orden.Fecha.Value;
+                pedido.FECHA_PEDIDO = orden.Creacion.Value;
                 pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
                 pedido.ID_MONEDA = "1";
                 //pedido.NOTA_PEDIDO_DTO = new();
@@ -533,7 +530,6 @@ namespace GAPPLE.Server.Controllers
                 {
                     return new(false, "Error inesperado");
                 }
-            }
 
             return new(true);
         }
