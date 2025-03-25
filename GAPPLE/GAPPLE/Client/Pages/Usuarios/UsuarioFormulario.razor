@@ -30,7 +30,8 @@
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Style="margin-bottom:5px" Text="Apellido y nombre:" />
-                    <RadzenTextBox @bind-Value=@Usuario.ApellidoYNombre Disabled=disableEdit Style="width:20rem" Change="@(()=>Usuario.ApellidoYNombre = Usuario.ApellidoYNombre.ToUpper())" AutoCompleteType="AutoCompleteType.Off" />
+                    <RadzenTextBox @bind-Value=@Usuario.ApellidoYNombre Disabled=disableEdit Style="width:20rem"
+                                   Change="@(()=>Usuario.ApellidoYNombre = Usuario.ApellidoYNombre.ToUpper())" AutoCompleteType="AutoCompleteType.Off" />
                     <ValidationMessage For=@(() => Usuario.ApellidoYNombre) />
                 </RadzenStack>
             </RadzenStack>
@@ -83,8 +84,8 @@
                     <ValidationMessage For=@(() => Usuario.Perfil) />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="margin-top:2rem;width: 20rem;">
-                    <RadzenLabel Text="Habilitado:" />
-                    <RadzenCheckBox @bind-Value=@Usuario.Habilitado Disabled=disableEdit />
+                    <RadzenLabel Text="Habilitado:" Component="habilitado" />
+                    <RadzenCheckBox @bind-Value=@Usuario.Habilitado Name="habilitado" Disabled=@(disableEdit || operacion == Operaciones.Alta) />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>
@@ -175,7 +176,7 @@ else
 
         if (operacion == Operaciones.Alta)
         {
-            Usuario = new();
+            Usuario = new() { Habilitado = true };
         }
         else
         {
