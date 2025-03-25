@@ -13,6 +13,7 @@ namespace GAPPLE.Client.Services
         [Inject]
         private HttpClient HttpClient { get; set; }
         private ILogger<OrdenesService> Logger { get; }
+        [Inject]
         private SesionDTO SesionDTO { get; }
 
         private const string URI_BASE = "api/ordenes";
@@ -136,7 +137,7 @@ namespace GAPPLE.Client.Services
                 pedido.CondicionVenta = "asd";          //para que no salte validacion
                 pedido.Entrega = "asd";                 //para que no salte validacion
                 pedido.FechaEntrega = DateTime.Today;   //para que no salte validacion
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion", pedido);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion/{SesionDTO.IdUsuario}", pedido);
                 pedido.FechaEntrega = null;             //para que no modifique grilla
                 if (response.IsSuccessStatusCode)
                 {
