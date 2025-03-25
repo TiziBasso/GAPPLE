@@ -148,7 +148,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Ofertas:" />
                     <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas" Change="RecalcularOfertas"
-                                    TextProperty="@nameof(Oferta.Descripcion)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                                    TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
                                     Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
                 </RadzenStack>
             </RadzenColumn>
