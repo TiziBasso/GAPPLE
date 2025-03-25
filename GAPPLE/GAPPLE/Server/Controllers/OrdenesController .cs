@@ -367,16 +367,16 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpPut("aprobacion")]
-        public IActionResult PutPedidoAprobacion(Orden pedido)
+        [HttpPut("aprobacion/{idUsuario:int}")]
+        public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] Orden pedido)
         {
             SqlTransaction? trans = null;
             try
             {
                 SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
                 DA_Ordenes daO = new(cnn.ConnectionString);
-                var pedidos = GetOrdenes(null, null, null, pedido.CodigoOrden.Substring(2), null, null, null, null, null, null, Usuario.IdUsuario).AsEnumerable();
-                var idPedidos = pedidos.Where(x=>x.IdEstado == 1).Select(x => x.Id);
+                var pedidos = GetOrdenes(null, null, null, pedido.CodigoOrden.Substring(2), null, null, null, null, null, null, idUsuario).AsEnumerable();
+                var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
 
                 cnn.Open();
                 trans = cnn.BeginTransaction();
