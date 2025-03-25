@@ -375,7 +375,7 @@ namespace GAPPLE.Server.Controllers
             {
                 SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
                 DA_Ordenes daO = new(cnn.ConnectionString);
-                var pedidos = GetOrdenes(null, null, null, pedido.CodigoOrden.Substring(2), null, null, null, null, null, null, idUsuario).AsEnumerable();
+                var pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
                 var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
 
                 cnn.Open();
@@ -694,28 +694,33 @@ namespace GAPPLE.Server.Controllers
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 foreach (var orden in ordenes)
                 {
-                    var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden.Substring(2)).AsEnumerable();
-                    if (detalle.All(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 || int.Parse(x["CantidadAprobadaX"].ToString()) != 0))
+                    var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
+                    if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 || int.Parse(x["CantidadAprobadaX"].ToString()) != 0))
                         ordenesAux.Add(orden);
                     else
                     {
                         ModelState.AddModelError("error", $"Todos los productos de la orden {orden.Orden} están pendientes");
                     }
                 }
-                using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+
+                if (ordenesAux.Any())
                 {
-                    cnn.Open();
-                    trans = cnn.BeginTransaction();
-                    foreach (var orden in ordenesAux)
+                    using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
                     {
-                        foreach (var id in orden.IdPedidos.Split(","))
+                        cnn.Open();
+                        trans = cnn.BeginTransaction();
+                        foreach (var orden in ordenesAux)
                         {
-                            daO.PersistirPedidoEstado(id, 4, trans);
+                            foreach (var id in orden.IdPedidos.Split(","))
+                            {
+                                daO.PersistirPedidoEstado(id, 4, trans);
+                            }
                         }
+                        trans.Commit();
+                        cnn.Close();
                     }
-                    trans.Commit();
-                    cnn.Close();
                 }
+
                 if (ModelState.ErrorCount == 0)
                     return Ok();
                 else

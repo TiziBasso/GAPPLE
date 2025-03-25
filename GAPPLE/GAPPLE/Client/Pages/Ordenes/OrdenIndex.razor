@@ -315,6 +315,15 @@ else
         await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
                                                         new() { { "Permisos", permisos }, { "Orden", order } },
                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
+        var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == order.IdEstado);
+        if (o != null)
+        {
+            o.IdEstado = order.IdEstado;
+            o.DescripcionEstado = order.DescripcionEstado;
+            o.AprobadoContaduria = order.AprobadoContaduria;
+            o.AprobadoVentas = order.AprobadoVentas;
+            o.AprobadoFinanzas = order.AprobadoFinanzas;
+        }
         StateHasChanged();
     }
 

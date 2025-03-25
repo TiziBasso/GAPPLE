@@ -219,7 +219,7 @@ namespace GAPPLE.Client.Services
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadAsStringAsync());
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
