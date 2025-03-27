@@ -173,12 +173,17 @@
                                                    class="product-input" @bind-value="product.CantidadSeleccionada" />
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
-                                                codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
-                                                var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
-                                                var descuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
-                                                product.DescuentoFinal = Math.Round(descuentoFinal, 2);
                                                 <div style="background:yellow; display:flex;">
-                                                    <span>@Math.Round(descuentoFinal, 2)</span>
+                                                    @if (SesionDTO.Rol == "1")
+                                                    {
+                                                        <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                        @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@product.DescuentoFinal</span>
+                                                    }
+
                                                     <strong>%</strong>
                                                 </div>
                                             }
@@ -186,14 +191,31 @@
                                             {
                                                 @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
                                                 {
+
                                                     <div style="display:flex;">
-                                                        <span>@articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento</span>
+                                                        @if (SesionDTO.Rol == "1")
+                                                        {
+                                                            <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                            @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+                                                        }
+                                                        else
+                                                        {
+
+                                                            <span>@product.DescuentoFinal</span>
+                                                        }
                                                     </div>
-                                                    product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
                                                 }
                                                 else
                                                 {
-                                                    <span>0</span>
+                                                    @if (SesionDTO.Rol == "1")
+                                                    {
+                                                        <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                        @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>0</span>
+                                                    }
                                                 }
                                                 <strong>%</strong>
                                             }
@@ -222,8 +244,8 @@ else
 <script>
     document.addEventListener('keydown', function (event) {
     if (event.target.classList.contains('product-input')) {
-        if (event.key === 'Enter') {
-        event.preventDefault(); // Evita el submit del formulario
+    if (event.key === 'Enter') {
+    event.preventDefault(); // Evita el submit del formulario
     }
     const currentInput = event.target;
     const inputs = Array.from(document.querySelectorAll('.product-input'));
@@ -313,6 +335,8 @@ else
     private List<Card> Cards = new();
     CustomValidation customValidation;
 
+    Dictionary<string, decimal> descuentosPersonalizados = new();
+
     bool showForm, showCards;
 
     List<Transporte> transportes = new();
@@ -374,6 +398,25 @@ else
             lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
         }
         var grouped = lstProductos.GroupBy(p => p.Familia);
+
+        foreach (var product in lstProductos)
+        {
+            if (!product.ModificadoManual)
+            {
+                if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                {
+                    product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+                }
+
+                if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                {
+                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
+                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                }
+            }
+        }
+
         Cards.Clear();
         foreach (var group in grouped)
         {
@@ -404,10 +447,42 @@ else
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CondicionVenta)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
+
+        foreach (var product in lstProductos)
+        {
+            if (!product.ModificadoManual)
+            {
+                if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                {
+                    product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+                }
+                if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                {
+                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
+                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                }
+            }
+        }
+
+        Cards.Clear();
+        var grouped = lstProductos.GroupBy(p => p.Familia);
+        foreach (var group in grouped)
+        {
+            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+                                      .GroupBy(x => x.Index / 10)
+                                      .Select(g => g.Select(x => x.Product).ToList());
+            foreach (var chunk in productChunks)
+                Cards.Add(new Card(group.Key, chunk));
+        }
+
+        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        await RecalcularOfertas();
+
         DialogCustom.CloseDialog();
     }
 
-    void RecalcularOfertas()
+    async Task RecalcularOfertas()
     {
         if (orden.Ofertas != null && orden.Ofertas.Any())
         {
@@ -420,6 +495,35 @@ else
         }
         else
             codigosEnOfertas.Clear();
+
+        foreach (var product in lstProductos)
+        {
+            if (!product.ModificadoManual)
+            {
+                if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                {
+                    product.DescuentoFinal = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+                }
+
+                if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                {
+                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
+                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                }
+            }
+        }
+
+        Cards.Clear();
+        var grouped = lstProductos.GroupBy(p => p.Familia);
+        foreach (var group in grouped)
+        {
+            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+                                      .GroupBy(x => x.Index / 10)
+                                      .Select(g => g.Select(x => x.Product).ToList());
+            foreach (var chunk in productChunks)
+                Cards.Add(new Card(group.Key, chunk));
+        }
     }
 
     bool Validar()
@@ -482,6 +586,12 @@ else
         return !error;
     }
 
+    void ModificarDescuento(decimal e, ProductoParaOfertas p)
+    {
+        p.DescuentoFinal = Math.Round(e, 2);
+        p.ModificadoManual = true;
+    }
+
     async Task Guardar()
     {
         if (Validar())
@@ -525,6 +635,11 @@ else
     {
         if (!editContext.IsModified() || await DialogService.Confirm(MensajesHelper.Cancel(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             NavigationManager.NavigateTo("ordenes");
+    }
+
+    private void PersonalizacionDescuento(Producto p, decimal descuento)
+    {
+
     }
 
     private class Card
@@ -576,5 +691,10 @@ else
         background-color: var(--rz-input-background-color);
         box-shadow: var(--rz-input-shadow);
         border: var(--rz-input-border)
+    }
+
+    .rz-numeric-input{
+        width: 32px !important;
+        padding:0 !important;
     }
 </style>

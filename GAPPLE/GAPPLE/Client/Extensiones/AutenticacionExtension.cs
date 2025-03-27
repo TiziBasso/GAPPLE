@@ -54,7 +54,7 @@ namespace GAPPLE.Client.Extensiones
                     new Claim("IdUsuario",sesionUsuario.IdUsuario.ToString()),
                     new Claim(ClaimTypes.Name,sesionUsuario.Nombre),
                     new Claim(ClaimTypes.Email,sesionUsuario.Correo),
-                    new Claim(ClaimTypes.Role,sesionUsuario.Rol)
+                    new Claim("Perfil",sesionUsuario.Rol)
                 }, "JwtAuth"));
 
 

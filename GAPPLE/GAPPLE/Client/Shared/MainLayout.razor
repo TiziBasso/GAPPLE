@@ -82,6 +82,7 @@
         if (authenticationState.User.Identity.Name != null)
         {
             SesionDTO.IdUsuario = int.Parse(authenticationState.User.FindFirst("idUsuario")!.Value);
+            SesionDTO.Rol = authenticationState.User.FindFirst("Perfil")!.Value;
             SesionDTO.Nombre = authenticationState.User.Identity.Name;
         }
         showPage = true;

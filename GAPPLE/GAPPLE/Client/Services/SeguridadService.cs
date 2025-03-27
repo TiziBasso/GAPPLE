@@ -59,8 +59,6 @@ namespace GAPPLE.Client.Services
 
         internal async Task<List<string>> GetPermisos(string nombrePermiso, char tipoPermiso = 'P', int? idUsuario = null)
         {
-            Console.WriteLine("idUsuario: " + SesionDTO.IdUsuario);
-            Console.WriteLine("Session: " + SesionDTO.ToString());
             string uri = $"{URI_BASE}/permisos/componente";
             Dictionary<string, object> query = new();
             query["nombre"] = nombrePermiso;
