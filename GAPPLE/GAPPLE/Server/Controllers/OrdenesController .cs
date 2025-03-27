@@ -136,6 +136,9 @@ namespace GAPPLE.Server.Controllers
                                 CantidadAprobada = (int)dr["CantidadAprobada"],
                                 CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
+                            if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
+                            if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
+                            if (dr["CantidadProbadorCancelada"] != DBNull.Value) detalle.CantidadProbadorCancelada = int.Parse(dr["CantidadProbadorCancelada"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }

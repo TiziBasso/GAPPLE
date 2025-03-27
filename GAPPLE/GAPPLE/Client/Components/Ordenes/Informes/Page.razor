@@ -15,7 +15,7 @@
         <strong style="width: fit-content;">Domicilio: @Pedido.DomicilioCliente</strong>
     </div>
     <div style="margin-top: 10px;height: 60rem;">
-        <PageData Detalle="Detalle" Pendientes="Pendientes" />
+        <PageData Detalle="Detalle" Pendientes="Pendientes" ShowProbadores=ShowProbadores />
     </div>
     <div>
         <div style="display: flex;justify-content: space-between;">
@@ -42,10 +42,10 @@
     [Parameter] public bool ShouldPrint { get; set; } = true;
     [Parameter, EditorRequired] public List<OrdenDetalle> Detalle { get; set; }
     [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public bool ShowProbadores { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine(PageNum + " " + Detalle?.Any() + " " + Pendientes?.Any());
         if (PageNum == CantPages && ShouldPrint)
         {
             await Task.Delay(100);
