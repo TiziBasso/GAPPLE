@@ -58,9 +58,9 @@ namespace GAPPLE.Client.Services
         {
             return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");
         }
-        public async ValueTask<List<OrdenDashboard>> GetOrdenDashboard()
+        public async ValueTask<List<OrdenDashboard>> GetOrdenDashboard(int idUsuario)
         {
-            return await HttpClient.GetFromJsonAsync<List<OrdenDashboard>>($"{URI_BASE}/ordenDashboard");
+            return await HttpClient.GetFromJsonAsync<List<OrdenDashboard>>($"{URI_BASE}/ordenDashboard?idUsuario={idUsuario}");
         }
         public async ValueTask<List<CondicionDeVenta>> GetCondicionesDeVenta()
         {
@@ -230,9 +230,9 @@ namespace GAPPLE.Client.Services
             }
         }
 
-        public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos()
+        public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos(int idUsuario)
         {
-            return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos");
+            return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos?idUsuario={idUsuario}");
         }
 
         public async ValueTask<Response> PasarATango(Orden order)

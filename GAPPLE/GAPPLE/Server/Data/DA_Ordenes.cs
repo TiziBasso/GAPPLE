@@ -102,7 +102,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable ObtenerOrdenesDashboard()
+        public DataTable ObtenerOrdenesDashboard(int idUsuario)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -113,6 +113,7 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_OrdenesDashboard"
                 };
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }
@@ -424,7 +425,7 @@ namespace GAPPLE.Server.Data
             }
         }
 
-        public DataTable GetCantidadesProductos()
+        public DataTable GetCantidadesProductos(int idUsuario)
         {
             DataTable dt = new DataTable();
             using (SqlConnection cnn = new(ConnectionString))
@@ -435,6 +436,7 @@ namespace GAPPLE.Server.Data
                     CommandType = CommandType.StoredProcedure,
                     CommandText = "prc_get_CantidadesDeProductos"
                 };
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }

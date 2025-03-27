@@ -193,11 +193,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("ordenDashboard")]
-        public List<OrdenDashboard> GetOrdenesDashboard()
+        public List<OrdenDashboard> GetOrdenesDashboard(int idUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<OrdenDashboard> oDashs = new List<OrdenDashboard>();
-            using (DataTable dt = daO.ObtenerOrdenesDashboard())
+            using (DataTable dt = daO.ObtenerOrdenesDashboard(idUsuario))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -749,11 +749,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("cantidadesproductos")]
-        public CantidadesProductosDashboard GetCantidadesDeProductos()
+        public CantidadesProductosDashboard GetCantidadesDeProductos(int idUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             CantidadesProductosDashboard c = new();
-            using (DataTable dt = daO.GetCantidadesProductos())
+            using (DataTable dt = daO.GetCantidadesProductos(idUsuario))
             {
                 foreach (DataRow row in dt.Rows)
                 {
