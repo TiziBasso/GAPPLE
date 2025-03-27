@@ -13,79 +13,79 @@
 
 @if (showHome)
 {
-   
-<RadzenRow Style="--rz-text-h2-line-height: 1; --rz-text-h2-font-weight: 200;">
-    <RadzenColumn Size="12" SizeMD="12" SizeXL="2">
-        <RadzenRow>
-            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
-                    <RadzenStack JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText TextStyle="TextStyle.H6">Progreso</RadzenText>
-                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-info rz-m-0">@($"{Math.Round(closeRatioPercentage)}%")</RadzenText>
-                        </RadzenStack>
-                        <RadzenProgressBar ProgressBarStyle="ProgressBarStyle.Info" @bind-Value=@closeRatioPercentage ShowValue="false" Style="--rz-progressbar-background-color: var(--rz-info-lighter); --rz-progressbar-height: 1rem;" />
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
-            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
-                    <RadzenStack Gap="0">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText TextStyle="TextStyle.H6">Ordenes abiertas</RadzenText>
-                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-danger rz-m-0">@openIssues?.Count()</RadzenText>
-                        </RadzenStack>
-                        <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-danger)" />
-                            <RadzenColumnOptions Margin="0" />
-                            <RadzenCategoryAxis Padding="20" Visible="false" />
-                        </RadzenSparkline>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
-            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
-                    <RadzenStack Gap="0">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText TextStyle="TextStyle.H6">Ordenes cerradas</RadzenText>
-                            <RadzenText TextStyle="TextStyle.H2" class="rz-color-success rz-m-0">@closedIssues?.Count()</RadzenText>
-                        </RadzenStack>
-                        <RadzenSparkline Style="width: 100%; height: 80px;">
-                            <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-success)" />
-                            <RadzenColumnOptions Margin="0" Width="30" />
-                            <RadzenCategoryAxis Padding="20" Visible="false" />
-                        </RadzenSparkline>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
 
-            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                <RadzenCard Style="width:290px;height:fit-content">
-                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
-                        <strong>Cantidad de productos aprobados del mes</strong>
-                    </div>
-                    <hr />
-                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
-                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadAprobada</h5>
-                    </div>
-                </RadzenCard>
-            </RadzenColumn>
+    <RadzenRow Style="--rz-text-h2-line-height: 1; --rz-text-h2-font-weight: 200;">
+        <RadzenColumn Size="12" SizeMD="12" SizeXL="2">
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                    <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
+                        <RadzenStack JustifyContent="JustifyContent.SpaceBetween" Style="height: 100%;">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Progreso</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H2" class="rz-color-info rz-m-0">@($"{Math.Round(closeRatioPercentage)}%")</RadzenText>
+                            </RadzenStack>
+                            <RadzenProgressBar ProgressBarStyle="ProgressBarStyle.Info" @bind-Value=@closeRatioPercentage ShowValue="false" Style="--rz-progressbar-background-color: var(--rz-info-lighter); --rz-progressbar-height: 1rem;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                    <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
+                        <RadzenStack Gap="0">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Ordenes abiertas</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H2" class="rz-color-danger rz-m-0">@openIssues?.Count()</RadzenText>
+                            </RadzenStack>
+                            <RadzenSparkline Style="width: 100%; height: 80px;">
+                                <RadzenColumnSeries Data=@openIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-danger)" />
+                                <RadzenColumnOptions Margin="0" />
+                                <RadzenCategoryAxis Padding="20" Visible="false" />
+                            </RadzenSparkline>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                    <RadzenCard Variant="Variant.Outlined" Style="height: 100%;">
+                        <RadzenStack Gap="0">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Ordenes cerradas</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H2" class="rz-color-success rz-m-0">@closedIssues?.Count()</RadzenText>
+                            </RadzenStack>
+                            <RadzenSparkline Style="width: 100%; height: 80px;">
+                                <RadzenColumnSeries Data=@closedIssuesByDate ValueProperty="Count" CategoryProperty="Week" Title="ordenes" Fill="var(--rz-success)" />
+                                <RadzenColumnOptions Margin="0" Width="30" />
+                                <RadzenCategoryAxis Padding="20" Visible="false" />
+                            </RadzenSparkline>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
 
-            <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                <RadzenCard Style="width:290px;height:fit-content">
-                    <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
-                        <strong>Cantidad de productos pendientes del mes</strong>
-                    </div>
-                    <hr />
-                    <div style="width:100%;display:flex; align-items:center; justify-content:center">
-                        <h5 class="DashBoardH5">@cantidadesProductos.CantidadPendiente</h5>
-                    </div>
-                </RadzenCard>
-            </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                    <RadzenCard Style="width:290px;height:fit-content">
+                        <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                            <strong>Cantidad de productos aprobados del mes</strong>
+                        </div>
+                        <hr />
+                        <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                            <h5 class="DashBoardH5">@cantidadesProductos.CantidadAprobada</h5>
+                        </div>
+                    </RadzenCard>
+                </RadzenColumn>
 
-        </RadzenRow>
-    </RadzenColumn>
-</RadzenRow>
+                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
+                    <RadzenCard Style="width:290px;height:fit-content">
+                        <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
+                            <strong>Cantidad de productos pendientes del mes</strong>
+                        </div>
+                        <hr />
+                        <div style="width:100%;display:flex; align-items:center; justify-content:center">
+                            <h5 class="DashBoardH5">@cantidadesProductos.CantidadPendiente</h5>
+                        </div>
+                    </RadzenCard>
+                </RadzenColumn>
+
+            </RadzenRow>
+        </RadzenColumn>
+    </RadzenRow>
 }
 
 <style>
@@ -118,12 +118,14 @@
     CantidadesProductosDashboard cantidadesProductos = new();
 
     bool showHome;
+    int idUsuario;
 
     protected override async Task OnInitializedAsync()
     {
         var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
         var auth = await autenticacionExt.GetAuthenticationStateAsync();
-        var data = await SeguridadService.GetMenu(int.Parse(auth.User.FindFirst("IdUsuario")?.Value));
+        idUsuario = int.Parse(auth.User.FindFirst("IdUsuario")?.Value);
+        var data = await SeguridadService.GetMenu(idUsuario);
         menuRecursivo(data);
     }
 
@@ -146,8 +148,8 @@
             fetchingData = true;
             try
             {
-                cantidadesProductos = await OrdenesService.GetCantidadesDeProductos();
-                issues = await OrdenesService.GetOrdenDashboard();
+                cantidadesProductos = await OrdenesService.GetCantidadesDeProductos(idUsuario);
+                issues = await OrdenesService.GetOrdenDashboard(idUsuario);
                 openIssues = issues.Where(x => x.AltaRegistro != null);
                 closedIssues = issues.Where(x => x.FechaAprobacion != null);
 

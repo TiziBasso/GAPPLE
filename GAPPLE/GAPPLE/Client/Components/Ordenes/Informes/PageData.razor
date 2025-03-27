@@ -8,7 +8,10 @@
                 <th style="border:1px solid;border-right: none;padding: 5px;">Producto</th>
                 <th style="border:1px solid;border-right: none;padding: 5px;">Cantidad</th>
                 <th style="border:1px solid;border-right: none;padding: 5px;">Descuento</th>
-                <th style="border:1px solid;padding: 5px;">Probador</th>
+                @if (ShowProbadores)
+                {
+                    <th style="border:1px solid;padding: 5px;">Probador</th>
+                }
             </tr>
         </thead>
         <tbody style="font-size: 11pt;">
@@ -19,9 +22,12 @@
                     <td style="text-align: end;">@(item.NumeroLinea != 0 ? item.NumeroLinea : i)</td>
                     <td style="text-align: end;">@item.CodProducto</td>
                     <td>@item.Descripcion</td>
-                    <td style="text-align: end;">@item.Cantidad</td>
+                    <td style="text-align: end;">@item.CantidadAprobada</td>
                     <td style="text-align: end;">@item.Descuento %</td>
-                    <td></td>
+                    @if (ShowProbadores)
+                    {
+                        <td style="text-align: end;">@(item.CantidadProbadorAprobada != 0 ? item.CantidadProbadorAprobada : "")</td>
+                    }
                 </tr>
             }
             <tr>
@@ -55,7 +61,11 @@
                     <td style="text-align: end;">@item.CodProducto</td>
                     <td>@item.Descripcion</td>
                     <td style="text-align: end;">@item.CantidadPendiente</td>
-                    <td colspan="2"></td>
+                    <td></td>
+                    @if (ShowProbadores)
+                    {
+                        <td style="text-align: end;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
+                    }
                 </tr>
             }
         </tfoot>
@@ -64,6 +74,7 @@
 @code {
     [Parameter] public List<OrdenDetalle>? Detalle { get; set; } = null;
     [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public bool ShowProbadores { get; set; } = false;
 
     int i = 0;
 }

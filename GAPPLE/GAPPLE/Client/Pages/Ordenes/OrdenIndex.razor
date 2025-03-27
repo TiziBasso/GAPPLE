@@ -195,8 +195,9 @@
     @if (showResumen)
     {
         <ImpresiónOrden Pedido=Resumen
-                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0).ToList())"
-                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0) ? Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0).ToList() : null)
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
+                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
+                                    Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
@@ -312,10 +313,11 @@ else
 
     async Task AprobarOrden(Orden order)
     {
+        var idEstadoAnt = order.IdEstado;
         await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
                                                         new() { { "Permisos", permisos }, { "Orden", order } },
                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
-        var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == order.IdEstado);
+        var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == idEstadoAnt);
         if (o != null)
         {
             o.IdEstado = order.IdEstado;

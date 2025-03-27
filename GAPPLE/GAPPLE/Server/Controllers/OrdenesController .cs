@@ -136,6 +136,9 @@ namespace GAPPLE.Server.Controllers
                                 CantidadAprobada = (int)dr["CantidadAprobada"],
                                 CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
+                            if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
+                            if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
+                            if (dr["CantidadProbadorCancelada"] != DBNull.Value) detalle.CantidadProbadorCancelada = int.Parse(dr["CantidadProbadorCancelada"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }
@@ -190,11 +193,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("ordenDashboard")]
-        public List<OrdenDashboard> GetOrdenesDashboard()
+        public List<OrdenDashboard> GetOrdenesDashboard(int idUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<OrdenDashboard> oDashs = new List<OrdenDashboard>();
-            using (DataTable dt = daO.ObtenerOrdenesDashboard())
+            using (DataTable dt = daO.ObtenerOrdenesDashboard(idUsuario))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -746,11 +749,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("cantidadesproductos")]
-        public CantidadesProductosDashboard GetCantidadesDeProductos()
+        public CantidadesProductosDashboard GetCantidadesDeProductos(int idUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             CantidadesProductosDashboard c = new();
-            using (DataTable dt = daO.GetCantidadesProductos())
+            using (DataTable dt = daO.GetCantidadesProductos(idUsuario))
             {
                 foreach (DataRow row in dt.Rows)
                 {

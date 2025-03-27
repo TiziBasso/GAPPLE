@@ -143,8 +143,11 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadProbador { get; set; }
 
+        public int CantidadProbadorAprobada { get; set; }
+
         public int CantidadProbadorCancelada { get; set; }
 
+        public int CantidadProbadorPendiente => CantidadProbador - CantidadProbadorAprobada - CantidadProbadorCancelada;
 
         public decimal Descuento { get; set; }
 

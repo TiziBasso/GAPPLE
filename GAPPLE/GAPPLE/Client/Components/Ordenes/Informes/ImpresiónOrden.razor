@@ -5,7 +5,7 @@
         {
             GetData(i);
             <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-                  Detalle="detalle" Pendientes="pendientes" />
+                  Detalle="detalle" Pendientes="pendientes" ShowProbadores=showProbadores />
         }
     </div>
 }
@@ -20,12 +20,21 @@
     List<OrdenDetalle>? detalle = new(), pendientes = new();
 
 
-    bool showModal;
+    bool showModal, showProbadores;
     int cantPages = 0, lineasXPag = 40, aux;
 
     protected override void OnInitialized()
     {
         int sumLineas = Detalle!.Count + 1;
+
+
+        bool? anyDetalle = Detalle?.Any(x => x.CantidadProbador > 0);
+        bool? anyPendiente = Pendientes?.Any(x => x.CantidadProbador > 0);
+        
+        bool anyD = (anyDetalle != null ? (bool)anyDetalle : false);
+        bool anyP = (anyPendiente != null ? (bool)anyPendiente : false);
+
+        showProbadores = anyD || anyP;
 
         if (Pendientes != null && Pendientes.Any())
             sumLineas += Pendientes.Count + 3;
