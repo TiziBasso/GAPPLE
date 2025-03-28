@@ -104,6 +104,13 @@ namespace GAPPLE.Server.Controllers
                         NROTANGO = row["NroPedidoTango"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString()
                     };
+                    if (row["Ofertas"] != DBNull.Value)
+                    {
+                        orden.Ofertas = row["Ofertas"].ToString()
+                            .Split(',')
+                            .Select(x => int.TryParse(x.Trim(), out int num) ? num : 0) // Valores inválidos serán 0
+                            .ToList();
+                    }
                     if (row["GVA_CONDVENTA"] != DBNull.Value) orden.ID_GVA01 = int.Parse(row["GVA_CONDVENTA"].ToString());
                     if (row["GVA_LISTAPRECIO"] != DBNull.Value) orden.ID_GVA10 = int.Parse(row["GVA_LISTAPRECIO"].ToString());
                     if (row["GVA_CLIENTE"] != DBNull.Value) orden.ID_GVA14 = int.Parse(row["GVA_CLIENTE"].ToString());
@@ -137,6 +144,7 @@ namespace GAPPLE.Server.Controllers
                                 CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
                             if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
+                            if (detalle.CantidadProbador > 0) detalle.Probador = true;
                             if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
                             if (dr["CantidadProbadorCancelada"] != DBNull.Value) detalle.CantidadProbadorCancelada = int.Parse(dr["CantidadProbadorCancelada"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
@@ -283,7 +291,7 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte! == null ? "01" : pedido.CodTransporte, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",",pedido.Ofertas), pedido.Usuario, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
@@ -298,7 +306,7 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), 1,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                                 pedido.CodTransporte! == null ? "01" : pedido.CodTransporte, pedido.CondicionVenta!, pedido.Entrega!,
-                                                                pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, trans);
+                                                                pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",", pedido.Ofertas), pedido.Usuario, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {

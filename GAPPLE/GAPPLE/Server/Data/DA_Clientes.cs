@@ -64,6 +64,25 @@ namespace GAPPLE.Server.Data
 
         }
 
+        public DataTable GetSucursalesPorCliente(string codCliente)
+        {
+
+            SqlConnection cnn;
+            SqlCommand cmd = new();
+            cnn = new(ConnectionString);
+            DataTable dt = new();
+            cmd.Parameters.Clear();
+            cmd.Connection = cnn;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_SucursalesPorCliente";
+            cmd.Parameters.AddWithValue("@pCodCliente", codCliente);
+            SqlDataAdapter dataAdapter = new(cmd);
+            dataAdapter.Fill(dt);
+
+            return dt;
+
+        }
+
         public void PersistirEdicionCliente(int idCliente, bool clienteEspecial, string observaciones)
         {
             SqlConnection cnn;

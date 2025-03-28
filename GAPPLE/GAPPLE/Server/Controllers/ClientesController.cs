@@ -63,7 +63,22 @@ namespace GAPPLE.Server.Controllers
             return lst;
         }
 
+        [HttpGet("sucursales")]
+        public List<SucursalesPorCliente> GetSucursalesPorCliente(string codCliente)
+        {
+            DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<SucursalesPorCliente> lst = new();
+            foreach (DataRow row in daC.GetSucursalesPorCliente(codCliente).Rows)
+            {
+                SucursalesPorCliente c = new SucursalesPorCliente();
+                c.CodCliente = row["CodCliente"].ToString();
+                c.CodigoPostal = row["CodigoPostal"].ToString();
+                c.Direccion = row["Direccion"].ToString();
+                c.Localidad = row["Localidad"].ToString();
+                c.Habitual = Convert.ToBoolean(row["Habitual"].ToString());
+                lst.Add(c);
+            }
+            return lst.OrderByDescending(x => x.Habitual).ToList();
+        }
     }
-
-
 }

@@ -61,6 +61,18 @@ namespace GAPPLE.Client.Services
 
             return await HttpClient.GetFromJsonAsync<List<ArticulosPorCliente>>(uri);
         }
+
+        public async ValueTask<List<SucursalesPorCliente>> GetSucursalesPorCliente(string codCliente)
+        {
+            string uri = $"{URI_BASE}/sucursales";
+            Dictionary<string, object> query = new();
+            if (codCliente != null) query["codCliente"] = codCliente;
+
+            if (query.Any())
+                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+
+            return await HttpClient.GetFromJsonAsync<List<SucursalesPorCliente>>(uri);
+        }
     }
 
 }
