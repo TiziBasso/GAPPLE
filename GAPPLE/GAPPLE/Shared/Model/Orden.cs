@@ -63,7 +63,6 @@ namespace GAPPLE.Shared.Model
         [Required(ErrorMessage = "Debe ingresar una lista de precios")]
         public string CodListaPrecio { get; set; }
 
-        [Required(ErrorMessage = "Debe ingresar una zona")]
         public string? Zona { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar una condición de venta")]
