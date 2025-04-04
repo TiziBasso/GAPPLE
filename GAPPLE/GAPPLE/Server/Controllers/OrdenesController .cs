@@ -478,8 +478,8 @@ namespace GAPPLE.Server.Controllers
         private Response PostTango(Orden orden, SqlTransaction trans)
         {
             RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
-            restClient.AddDefaultHeader("ApiAuthorization", "D2D0ABBE-9E80-464E-85FC-40B0EDBB5C1E");
-            restClient.AddDefaultHeader("Company", "54");
+            restClient.AddDefaultHeader("ApiAuthorization", "35639960-b67a-41f0-bb7b-b38b1355ff0d");
+            restClient.AddDefaultHeader("Company", "7");
 
             RestRequest request = new RestRequest("Create?process=19845", Method.Post);
             //var idPedidos = orden.IdPedidos.Split(",");
