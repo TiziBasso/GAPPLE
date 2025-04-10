@@ -420,6 +420,7 @@ else
                 {
                     lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
                     lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).DescuentoFinal = product.DescuentoFinal;
                 }
                 else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
@@ -605,14 +606,21 @@ else
                 foreach (var product in card.Products)
                 {
                     if (product.CantidadSeleccionada > 0)
+                    {
+                        int cantProv = 0;
+                        var prod = lstProductosDifLinea.FirstOrDefault(x => x.CodigoProducto == product.CodigoProducto);
+                        if (prod != null)
+                            cantProv = prod.CantidadProbador;
+
                         orden.Detalle!.Add(new OrdenDetalle()
                             {
                                 Cantidad = product.CantidadSeleccionada,
                                 CodProducto = product.CodigoProducto,
                                 Descuento = product.DescuentoFinal,
                                 Probador = product.Probador,
-                                CantidadProbador = product.CantidadProbador
+                                CantidadProbador = cantProv
                             });
+                    }
                 }
             }
             foreach (var product in lstProductosDifLinea)
