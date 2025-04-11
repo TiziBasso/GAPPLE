@@ -212,7 +212,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
-            cmd.Parameters.AddWithValue("@pOfertas", ofertas);
+            if (!string.IsNullOrEmpty(ofertas)) cmd.Parameters.AddWithValue("@pOfertas", ofertas);
             id = (int)cmd.ExecuteScalar();
             return id;
         }
