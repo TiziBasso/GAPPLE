@@ -34,7 +34,7 @@ namespace GAPPLE.Server.Controllers
                 c.CodListaPrecioDefault = row["IdListaDePrecio"].ToString()!;
                 c.CondVentaDefault = row["CondVenta"].ToString()!;
                 c.ZonaDefault = row["Zona"].ToString()!;
-                c.Id_GVA = int.Parse(row["ID_GVA"].ToString());
+                if (row["ID_GVA"] != DBNull.Value) c.Id_GVA = int.Parse(row["ID_GVA"].ToString());
                 lst.Add(c);
             }
             return lst;

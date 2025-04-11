@@ -549,5 +549,20 @@ namespace GAPPLE.Server.Controllers
 
             return vendedores;
         }
+
+        [HttpGet("sincronizar")]
+        public IActionResult SincronizarTodo()
+        {
+            try
+            {
+                DA_Seguridad daS = new(Configuration.GetConnectionString("DefaultConnection"));
+                daS.SincronizarTodo();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

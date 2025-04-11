@@ -7,6 +7,10 @@
 @inject AuthenticationStateProvider autenticacionProvider
 @inject SesionDTO SesionDTO
 @inject NavigationManager navManager
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject SeguridadService SeguridadService
 
 <AuthorizeView>
     <Authorized>
@@ -16,7 +20,7 @@
                 <RadzenHeader>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                            <RadzenSidebarToggle  MouseEnter="@(() => sidebarExpanded =true)" />
+                            <RadzenSidebarToggle MouseEnter="@(() => sidebarExpanded =true)" />
                             <RadzenImage Path="./Assets/Logo_Ital.png" Style="width:11rem;" />
                         </RadzenStack>
                         <RadzenAppearanceToggle />
@@ -25,8 +29,18 @@
                                 <RadzenLabel Text="@authenticationState.User.Identity!.Name" />
                             </Template>
                             <ChildContent>
+                                @if (SesionDTO.Rol == "1")
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                        <div class="top-row px-4" style="width:100%">
+                                            <a @onclick="Sincronizar" href="javascript:void(0)">Sincronizar datos</a>
+                                        </div>
+                                        <RadzenTheme Theme="default" />
+                                    </RadzenStack>
+                                }
+
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                    <div class="top-row px-4">
+                                    <div class="top-row px-4" style="width:100%">
                                         <a @onclick="CerrarSesion" href="javascript:void(0)">Salir</a>
                                     </div>
                                     <RadzenTheme Theme="default" />
@@ -35,13 +49,14 @@
                         </RadzenProfileMenu>
                     </RadzenStack>
                 </RadzenHeader>
+
                 <RadzenSidebar @bind-Expanded="@sidebarExpanded" Responsive="false" Style="position: absolute;z-index:3;" MouseEnter="@(() => sidebarExpanded =true)" MouseLeave="@(() => sidebarExpanded =false)">
                     <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
                         <RadzenStack>
                             <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => sidebarExpanded = false)" />
                         </RadzenStack>
                     </RadzenStack>
-                    <NavMenu  />
+                    <NavMenu />
                 </RadzenSidebar>
 
                 <RadzenBody>
@@ -93,5 +108,19 @@
         var autenticacionExt = (AutenticacionExtension)autenticacionProvider;
         await autenticacionExt.ActualizarEstadoAutenticacion(null);
         navManager.NavigateTo("/", true);
+    }
+
+    async Task Sincronizar()
+    {
+        if (await DialogService.Confirm("La operación de sincronización puede requerir varios minutos. ¿Continuar?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Sincronizando");
+            var response = await SeguridadService.SincronizarTodo();
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+                NotificationService.Notify(NotificationSeverity.Success, "Datos sincronizados correctamente");
+            else
+                NotificationService.Notify(NotificationSeverity.Error, "Uno a más datos no pudieron ser sincronizados");
+        }
     }
 }

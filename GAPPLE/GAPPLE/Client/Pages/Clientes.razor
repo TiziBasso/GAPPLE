@@ -10,7 +10,9 @@
 {
     <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
 
-    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros" ShowEmptyMessage="true" IsLoading="isBusy" Style="height: 82vh;">
+    <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" Density=Density.Compact
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros"
+                    ShowEmptyMessage="true" IsLoading="isBusy" Style="height: 82vh;">
         <HeaderTemplate>
             <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
             <RadzenLabel Text="Clientes especiales: " Component="especial" />

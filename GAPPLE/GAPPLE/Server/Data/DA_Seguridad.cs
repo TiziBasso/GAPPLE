@@ -238,5 +238,18 @@ namespace GAPPLE.Server.Data
             }
             return dt;
         }
+
+        internal void SincronizarTodo()
+        {
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = cnn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_sinc_Todo";
+                cnn.Open();
+                cmd.ExecuteNonQuery();
+                cnn.Close();
+            }
+        }
     }
 }

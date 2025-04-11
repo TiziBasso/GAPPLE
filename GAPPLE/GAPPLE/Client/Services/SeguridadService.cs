@@ -250,5 +250,14 @@ namespace GAPPLE.Client.Services
         {
             return await HttpClient.GetFromJsonAsync<List<Vendedor>>($"{URI_BASE}/vendedores");
         }
+
+        public async ValueTask<Response> SincronizarTodo()
+        {
+            var response = await HttpClient.GetAsync($"{URI_BASE}/sincronizar");
+            if (response.IsSuccessStatusCode)
+                return new(response.IsSuccessStatusCode);
+            else
+                return new(false, await response.Content.ReadAsStringAsync());
+        }
     }
 }
