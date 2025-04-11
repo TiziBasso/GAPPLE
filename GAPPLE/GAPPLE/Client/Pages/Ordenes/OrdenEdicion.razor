@@ -32,9 +32,9 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Cliente:" />
                     <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.CodCliente" AllowSorting=false
-                                            AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                            TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
-                                            AllowVirtualization="true" Change="AsignarVariables" Name="clientes" Density="Density.Compact">
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
+                    AllowVirtualization="true" Change="AsignarVariables" Name="clientes" Density="Density.Compact">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="4rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
@@ -47,7 +47,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Zona:" />
                     <RadzenDropDownDataGrid Data="zonas" Disabled="true" @bind-Value="orden.Zona" AllowSorting=false
-                                            TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
+                    TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código" Width="4rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción" />
@@ -63,9 +63,9 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
                     <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
-                                            AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                            TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
-                                            AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
@@ -92,7 +92,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Lista de precios:" />
                     <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="true"
-                                            TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                    TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
@@ -106,8 +106,8 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Cond.Venta:" />
                     <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false
-                                            AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                            TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código" Width="4rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción" />
@@ -131,8 +131,8 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Transporte:" />
                     <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
-                                            AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                            TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
+                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                    TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
                         <Columns>
                             <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código" Width="4rem" />
                             <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción" />
@@ -169,8 +169,8 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Ofertas:" />
                     <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas" Change="RecalcularOfertas"
-                                    TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
-                                    Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
+                    TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                    Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -189,10 +189,10 @@
                                     @foreach (var product in card.Products)
                                     {
                                         <div class="product">
-                                            <label style="width:60px;">@product.CodigoProducto</label>
+                                            <label style="width:65px;">@product.CodigoProducto</label>
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
-                                                   class="product-input" @bind-value="product.CantidadSeleccionada" />
+                                            class="product-input" @bind-value="product.CantidadSeleccionada" />
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -366,6 +366,7 @@ else
     List<Oferta> ofertas = new();
     List<ArticulosPorCliente> articulosPorClientes = new();
     List<SucursalesPorCliente> sucursalesPorClientes = new();
+    List<ProductoParaOfertas> lstProductosConDescuentoManual = new();
 
     Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
@@ -425,6 +426,11 @@ else
                 }
                 else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
+
+            }
+            foreach (var product in card.Products.Where(x => x.ModificadoManual))
+            {
+                lstProductosConDescuentoManual.Add((ProductoParaOfertas)product.Clone());
             }
             lstLineasDif.Add(orden.Linea);
         }
@@ -443,6 +449,11 @@ else
 
         foreach (var product in lstProductos)
         {
+            int esManual = lstProductosConDescuentoManual.FindIndex(x => product.CodigoProducto == x.CodigoProducto);
+            if (esManual != -1){
+                product.ModificadoManual = true;
+                product.DescuentoFinal = lstProductosConDescuentoManual[esManual].DescuentoFinal;
+            }
             if (!product.ModificadoManual)
             {
                 if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
