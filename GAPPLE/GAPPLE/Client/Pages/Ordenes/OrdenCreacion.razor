@@ -190,6 +190,7 @@
                                     {
                                         <div class="product">
                                             <label style="width:60px;">@product.CodigoProducto</label>
+                                            <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
                                                    class="product-input" @bind-value="product.CantidadSeleccionada" />
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
@@ -692,7 +693,7 @@ else
         border: 1px solid #ccc;
         padding: 5px;
         border-radius: 5px;
-        width: 200px;
+        width: 240px;
         display: flex;
         flex-direction: column;
         gap: 1px;

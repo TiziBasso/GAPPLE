@@ -33,8 +33,8 @@ namespace GAPPLE.Server.Controllers
                         Descripcion = (string)row["Descripcion"],
                         Pasivo = bool.Parse(row["Pasivo"].ToString()),
                         Orden = int.Parse(row["Orden"].ToString()),
-                        Id_STA = int.Parse(row["ID_STA"].ToString())
                     };
+                    if (row["ID_STA"] != DBNull.Value) producto.Id_STA = int.Parse(row["ID_STA"].ToString()!);
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
 
@@ -80,7 +80,8 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = row["Descripcion"].ToString()!,
-                        Familia = row["Familia"].ToString()!
+                        Familia = row["Familia"].ToString()!,
+                        Sinonimo = row["Sinonimo"].ToString()!
                     };
                     productos.Add(p);
                 }
