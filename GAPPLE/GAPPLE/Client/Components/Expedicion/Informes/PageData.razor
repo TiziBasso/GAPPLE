@@ -10,18 +10,19 @@
             }
             @if (ShowX)
             {
-                <th style="border:1px solid;border-right: none;padding: 5px;">X</th>
+                <th style="border:1px solid;border-right:none;padding: 5px;">X</th>
             }
+            <th style="border:1px solid;border-right:none;padding: 5px;">T</th>
             @if (ShowPX || ShowPF)
             {
-                <th style="border:1px solid;border-right: none;padding: 5px;">Probador</th>
+                <th style="border:1px solid;padding: 5px;">Probador</th>
             }
         </tr>
     </thead>
     <tbody style="font-size: 11pt;">
         @foreach (var item in Detalle)
         {
-            <tr>
+            <tr style="border-bottom:1px solid">
                 <td style="text-align: end;">@item.NumLinea</td>
                 <td style="text-align: end;">@item.CodProducto</td>
                 <td>@item.DescripcionProducto</td>
@@ -33,6 +34,7 @@
                 {
                     <td style="text-align: end;">@item.CantidadX</td>
                 }
+                <td style="text-align:end">@item.Cantidad</td>
                 @if (ShowPF)
                 {
                     <td style="text-align: end;">@item.CantidadProbadorF</td>
@@ -55,6 +57,7 @@
             {
                 <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadX)</strong></td>
             }
+            <td style="text-align: end;"><strong>@Detalle.Sum(x => x.Cantidad)</strong></td>
             @if (ShowPF)
             {
                 <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadProbadorF)</strong></td>
