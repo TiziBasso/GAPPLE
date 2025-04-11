@@ -44,8 +44,8 @@ namespace GAPPLE.Server.Data
             DataTable dt = new();
             cmd.Parameters.Clear();
             cmd.Connection = cnn;
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = "select distinct Linea from Clasificaciones";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_Lineas";
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);
             return dt;
