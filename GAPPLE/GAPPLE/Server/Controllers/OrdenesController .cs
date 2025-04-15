@@ -477,12 +477,17 @@ namespace GAPPLE.Server.Controllers
 
         private Response PostTango(Orden orden, SqlTransaction trans)
         {
-            RestClient restClient = new RestClient("http://192.168.10.10:17000/Api");
+            var options = new RestClientOptions("http://192.168.10.10:17000/Api")
+            {
+                ThrowOnAnyError = true,
+                MaxTimeout = 300000
+            };
+            RestClient restClient = new RestClient(options);
+      
             restClient.AddDefaultHeader("ApiAuthorization", "35639960-b67a-41f0-bb7b-b38b1355ff0d");
             restClient.AddDefaultHeader("Company", "7");
 
             RestRequest request = new RestRequest("Create?process=19845", Method.Post);
-            //var idPedidos = orden.IdPedidos.Split(",");
 
             PedidoDTO pedido = new PedidoDTO();
 
@@ -505,8 +510,6 @@ namespace GAPPLE.Server.Controllers
             pedido.FECHA_PEDIDO = orden.Creacion.Value;
             pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
             pedido.ID_MONEDA = "1";
-            //pedido.NOTA_PEDIDO_DTO = new();
-            //pedido.NOTA_PEDIDO_DTO.Add(new NotaPedidoDTO() { MENSAJE = string.IsNullOrEmpty(pedido.OBSERVACIONES) ? "." : pedido.OBSERVACIONES });
             pedido.COTIZACION = 1;
             pedido.ID_ASIENTO_MODELO_GV = "14";
             pedido.LEYENDA_1 = ordenFull.Entrega!;
