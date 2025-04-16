@@ -21,7 +21,7 @@ namespace GAPPLE.Client.Services
         public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger, SesionDTO sesionDTO) => (HttpClient, Logger, SesionDTO) = (httpClient, logger, sesionDTO);
 
         public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
+                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario, CancellationTokenSource cancellationToken)
         {
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
@@ -39,7 +39,10 @@ namespace GAPPLE.Client.Services
 
             uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
-            return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
+            if (cancellationToken == null)
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
+            else
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri, cancellationToken.Token);
         }
 
         public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
