@@ -111,7 +111,7 @@
 
             <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="180px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
 
-            <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
+            @* <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px" /> *@
 
             <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="120px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter" Resizable=false>
                 <FilterTemplate>

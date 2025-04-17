@@ -692,10 +692,10 @@ namespace GAPPLE.Server.Controllers
                     foreach (var linea in orden.Detalle.Where(x => x.HuboCambios))
                     {
                         if (orden.LetrasOrden.Contains("F"))
-                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF, trans);
+                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF, trans);
 
                         if (orden.LetrasOrden.Contains("X"))
-                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.NumLinea, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, trans);
+                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, trans);
                     }
                     trans.Commit();
                     cnn.Close();

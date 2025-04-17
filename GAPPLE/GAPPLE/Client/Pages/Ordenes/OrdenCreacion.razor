@@ -198,7 +198,7 @@
                                                 <div style="background:yellow; display:flex;">
                                                     @if (SesionDTO.Rol == "1")
                                                     {
-                                                        <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                        <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
                                                         @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
                                                     }
                                                     else
@@ -217,7 +217,7 @@
                                                     <div style="display:flex;">
                                                         @if (SesionDTO.Rol == "1")
                                                         {
-                                                            <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                            <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
                                                             @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
                                                         }
                                                         else
@@ -231,7 +231,7 @@
                                                 {
                                                     @if (SesionDTO.Rol == "1")
                                                     {
-                                                        <RadzenNumeric TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                        <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
                                                         @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
                                                     }
                                                     else
