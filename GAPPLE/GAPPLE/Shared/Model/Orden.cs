@@ -72,7 +72,9 @@ namespace GAPPLE.Shared.Model
 
         public List<int>? Ofertas { get; set; } = new();
 
+        [StringLength(60, ErrorMessage = "El maximo de caracteres son 60")]
         public string? Entrega { get; set; }
+        [StringLength(60, ErrorMessage = "El maximo de caracteres son 60")]
 
         public string? Notas { get; set; }
 

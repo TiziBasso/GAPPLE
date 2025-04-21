@@ -162,13 +162,14 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Notas:" />
                     <RadzenTextArea @bind-Value="orden.Notas" />
+                    <ValidationMessage For="@(() => orden.Notas)" />
                 </RadzenStack>
             </RadzenColumn>
 
             <RadzenColumn Size="4">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Ofertas:" />
-                    <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="orden.Ofertas" Change="RecalcularOfertas"
+                    <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas" Change="RecalcularOfertas"
                                     TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
                                     Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
                 </RadzenStack>
@@ -358,6 +359,8 @@ else
 
     bool showForm, showCards;
 
+    List<int> ofertasSeleccionadas = new();
+
     List<Transporte> transportes = new();
     List<ListaDePrecios> listasDePrecio = new();
     List<CondicionDeVenta> condicionesDeVenta = new();
@@ -491,6 +494,7 @@ else
         }
 
         ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
         await RecalcularOfertas();
 
 
@@ -546,6 +550,18 @@ else
 
     async Task RecalcularOfertas()
     {
+        var ofertasIdsMarcaActual = ofertas.Select(o => o.IdOferta).ToList();
+
+        orden.Ofertas.RemoveAll(id => ofertasIdsMarcaActual.Contains(id) && !ofertasSeleccionadas.Contains(id));
+
+        foreach (var id in ofertasSeleccionadas)
+        {
+            if (ofertasIdsMarcaActual.Contains(id) && !orden.Ofertas.Contains(id))
+            {
+                orden.Ofertas.Add(id);
+            }
+        }
+
         if (orden.Ofertas != null && orden.Ofertas.Any())
         {
             var ofertasFiltradas = ofertas.Where(o => orden.Ofertas!.Contains(o.IdOferta));
