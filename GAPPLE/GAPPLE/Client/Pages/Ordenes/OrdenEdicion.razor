@@ -141,7 +141,15 @@
                 </RadzenStack>
             </RadzenColumn>
 
-            <RadzenColumn Size="5">
+            <RadzenColumn Size="3">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="O.C.:" />
+                    <RadzenTextArea @bind-Value="orden.Notas" />
+                    <ValidationMessage For="@(() => orden.Notas)" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="2">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                         <RadzenLabel Text="F:" />
@@ -158,11 +166,11 @@
 
 
         <RadzenRow Style="margin-top:10px;">
-            <RadzenColumn Size="4">
+            <RadzenColumn Size="8">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Notas:" />
-                    <RadzenTextArea @bind-Value="orden.Notas" />
-                    <ValidationMessage For="@(() => orden.Notas)" />
+                    <RadzenTextArea @bind-Value="orden.ObservacionesZentra" />
+                    <ValidationMessage For="@(() => orden.ObservacionesZentra)" />
                 </RadzenStack>
             </RadzenColumn>
 

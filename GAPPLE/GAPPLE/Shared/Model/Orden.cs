@@ -103,6 +103,7 @@ namespace GAPPLE.Shared.Model
         public bool AprobadoContaduria { get; set; }
 
         public bool TieneOrdenDoble { get; set; }
+        public string? ObservacionesZentra { get; set; }
     }
     public class NotEmptyAttribute : ValidationAttribute
     {

@@ -189,7 +189,7 @@ namespace GAPPLE.Server.Data
 
         public int PersistirPedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            string observaciones, DateTime? fechaEntrega, string ofertas, string altaUsuario, SqlTransaction transaction)
+                                            string observaciones, DateTime? fechaEntrega, string ofertas, string altaUsuario, string? observacionesZentra, SqlTransaction transaction)
         {
             int id;
             SqlConnection cnn = transaction.Connection;
@@ -213,13 +213,14 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
             if (!string.IsNullOrEmpty(ofertas)) cmd.Parameters.AddWithValue("@pOfertas", ofertas);
+            if (!string.IsNullOrEmpty(observacionesZentra)) cmd.Parameters.AddWithValue("@pObservacionesZentra", observacionesZentra);
             id = (int)cmd.ExecuteScalar();
             return id;
         }
 
         public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            string observaciones, DateTime? fechaEntrega, string altaUsuario, SqlTransaction transaction)
+                                            string observaciones, DateTime? fechaEntrega, string altaUsuario, string? observacionesZentra, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -241,6 +242,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
+            if (!string.IsNullOrEmpty(observacionesZentra)) cmd.Parameters.AddWithValue("@pObservacionesZentra", observacionesZentra);
             cmd.ExecuteNonQuery();
         }
 

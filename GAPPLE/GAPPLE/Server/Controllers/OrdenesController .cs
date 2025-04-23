@@ -111,6 +111,7 @@ namespace GAPPLE.Server.Controllers
                             .Select(x => int.TryParse(x.Trim(), out int num) ? num : 0) // Valores inválidos serán 0
                             .ToList();
                     }
+                    if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
                     if (row["GVA_CONDVENTA"] != DBNull.Value) orden.ID_GVA01 = int.Parse(row["GVA_CONDVENTA"].ToString());
                     if (row["GVA_LISTAPRECIO"] != DBNull.Value) orden.ID_GVA10 = int.Parse(row["GVA_LISTAPRECIO"].ToString());
                     if (row["GVA_CLIENTE"] != DBNull.Value) orden.ID_GVA14 = int.Parse(row["GVA_CLIENTE"].ToString());
@@ -301,7 +302,7 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("F-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte! == null ? "01" : pedido.CodTransporte, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",", pedido.Ofertas), pedido.Usuario, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",", pedido.Ofertas), pedido.Usuario, pedido.ObservacionesZentra, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
@@ -316,7 +317,7 @@ namespace GAPPLE.Server.Controllers
                         daO.PersistirPedidoCabecera("X-" + pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                                 pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                                 pedido.CodTransporte! == null ? "01" : pedido.CodTransporte, pedido.CondicionVenta!, pedido.Entrega!,
-                                                                pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",", pedido.Ofertas), pedido.Usuario, trans);
+                                                                pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, string.Join(",", pedido.Ofertas), pedido.Usuario, pedido.ObservacionesZentra, trans);
                         int numLinea = 0;
                         foreach (var item in pedido.Detalle!)
                         {
@@ -356,14 +357,14 @@ namespace GAPPLE.Server.Controllers
                         daO.UpdatePedidoCabecera(pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, trans);
                     }
                     else
                     {
                         daO.UpdatePedidoCabecera(pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, trans);
                     }
 
                     daO.EliminarPedidoDetalle(pedido.CodigoOrden, trans);
