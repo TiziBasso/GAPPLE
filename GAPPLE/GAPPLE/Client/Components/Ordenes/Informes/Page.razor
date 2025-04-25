@@ -1,6 +1,7 @@
 ﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 29.7cm; break-after:page">
-    <div>
+    <div style="display: flex;justify-content: space-between;">
         <strong>@(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
+        <strong>@(Pedido.CodigoOrden)</strong>
     </div>
     <div style="display: grid;gap: 10px;margin-top: 10px;">
         <div style="display: flex;justify-content: space-between;">
@@ -10,12 +11,18 @@
         </div>
         <div style="display: flex;justify-content: space-between;">
             <strong style="width: fit-content;">Entregar En: @Pedido.Entrega</strong>
-            <strong style="width: fit-content;">Observaciones: @Pedido.Notas</strong>
+            <strong style="width: fit-content;">O.C.: @Pedido.Notas</strong>
         </div>
         <strong style="width: fit-content;">Domicilio: @Pedido.DomicilioCliente</strong>
     </div>
+    <div style="display: flex;justify-content: space-between;">
+        @if (!string.IsNullOrEmpty(Pedido.ObservacionesZentra))
+        {
+            <strong style="width: fit-content;">Observaciones:</strong> @Pedido.ObservacionesZentra
+        }
+    </div>
     <div style="margin-top: 10px;height: 60rem;">
-        <PageData Detalle="Detalle" Pendientes="Pendientes" ShowProbadores=ShowProbadores />
+        <PageData Detalle="Detalle.Where(x=>x.CantidadPendiente == 0 && x.CantidadProbadorPendiente == 0).ToList()" Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList()" ShowProbadores=ShowProbadores />
     </div>
     <div>
         <div style="display: flex;justify-content: space-between;">
@@ -41,7 +48,6 @@
     [Parameter, EditorRequired] public int PageNum { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
     [Parameter, EditorRequired] public List<OrdenDetalle> Detalle { get; set; }
-    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
     [Parameter] public bool ShowProbadores { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

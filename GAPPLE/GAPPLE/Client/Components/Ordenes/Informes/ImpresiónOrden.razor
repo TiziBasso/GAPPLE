@@ -5,7 +5,7 @@
         {
             GetData(i);
             <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-                  Detalle="detalle" Pendientes="pendientes" ShowProbadores=showProbadores />
+                  Detalle="detalle" ShowProbadores=showProbadores />
         }
     </div>
 }
@@ -17,29 +17,30 @@
     [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
-    List<OrdenDetalle>? detalle = new(), pendientes = new();
-
+    List<OrdenDetalle>? detalleCompleto = new();
+    List<OrdenDetalle>? detalle = new();
 
     bool showModal, showProbadores;
-    int cantPages = 0, lineasXPag = 40, aux;
+    int cantPages = 0, lineasXPag = 49, aux;
 
     protected override void OnInitialized()
     {
-        int sumLineas = Detalle!.Count + 1;
+        detalleCompleto!.AddRange(Detalle);
+        if (Pendientes != null) detalleCompleto.AddRange(Pendientes);
 
+        int sumLineas = detalleCompleto.Count + 1;
+        if (Pendientes != null && Pendientes.Any()) sumLineas++;
 
-        bool? anyDetalle = Detalle?.Any(x => x.CantidadProbador > 0);
-        bool? anyPendiente = Pendientes?.Any(x => x.CantidadProbador > 0);
-        
-        bool anyD = (anyDetalle != null ? (bool)anyDetalle : false);
-        bool anyP = (anyPendiente != null ? (bool)anyPendiente : false);
+        bool anyDetalle = Detalle?.Any(x => x.CantidadProbador > 0) ?? false;
+        bool anyPendiente = Pendientes?.Any(x => x.CantidadProbador > 0) ?? false;
 
-        showProbadores = anyD || anyP;
+        showProbadores = anyDetalle || anyPendiente;
 
-        if (Pendientes != null && Pendientes.Any())
-            sumLineas += Pendientes.Count + 3;
-
+        Console.WriteLine(sumLineas);
         cantPages = sumLineas / lineasXPag;
+        Console.WriteLine(cantPages);
+        Console.WriteLine(sumLineas % lineasXPag > 0);
+        Console.WriteLine(cantPages == 0);
         if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
 
         showModal = true;
@@ -47,28 +48,12 @@
 
     private void GetData(int page)
     {
-        int showed = page * lineasXPag, remaining = lineasXPag;
+        // int showed = page * lineasXPag, remaining = lineasXPag;
 
-        detalle = Detalle.Skip(showed)?.Take(remaining).ToList();
-        remaining -= detalle!.Count;
-        if (detalle.Count > 0) showed -= detalle.Count;
-        else showed -= Detalle!.Count;
-
-        //No preguntar por el +3, funciona. Tampoco cambiar LineasXPag porque se rompe xd, si se toca esto hay que cambiar la logica y que sea solo 1 List<T>
-        int showedPend = 0;
-        if (page != 0 && remaining == lineasXPag)
-        {
-            aux++;
-            showedPend = (Detalle.Count % (lineasXPag * aux)) + 3;
-        }
-        else remaining--;
-
-        pendientes = Pendientes?.Skip(showedPend)?.Take(remaining).ToList();
-        if (pendientes != null)
-        {
-            remaining -= pendientes.Count;
-            if (pendientes.Count > 0) showed -= pendientes.Count;
-            else showed -= Pendientes!.Count;
-        }
+        detalle = detalleCompleto!.Skip(page * lineasXPag)?.Take(lineasXPag).ToList();
+        // al trabajar con 1 sola List<T> es innecesario guardar los valores en variables extras
+        // remaining -= detalleCompleto!.Count;
+        // if (detalleCompleto.Count > 0) showed -= detalleCompleto.Count;
+        // else showed -= detalleCompleto!.Count;
     }
 }

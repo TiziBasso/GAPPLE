@@ -66,6 +66,7 @@ namespace GAPPLE.Server.Controllers
                     };
                     if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
+                    if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();
 
                     lstOrdenes.Add(o);
                 }
@@ -372,7 +373,7 @@ namespace GAPPLE.Server.Controllers
                     foreach (var item in pedido.Detalle!)
                     {
                         numLinea++;
-                        daO.PersistirPedidoDetalle(pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                        daO.PersistirPedidoDetalle(pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador ? item.CantidadProbador : 0, item.Descuento, trans);
                         item.CantidadProbador = 0;
                     }
 
@@ -484,7 +485,7 @@ namespace GAPPLE.Server.Controllers
                 MaxTimeout = 300000
             };
             RestClient restClient = new RestClient(options);
-      
+
             restClient.AddDefaultHeader("ApiAuthorization", "35639960-b67a-41f0-bb7b-b38b1355ff0d");
             restClient.AddDefaultHeader("Company", "7");
 
@@ -608,6 +609,7 @@ namespace GAPPLE.Server.Controllers
                         Impreso = bool.Parse(row["Impreso"].ToString())
                     };
                     if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
+                    if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
                     ordenes.Add(orden);
                 }
             }
@@ -641,9 +643,10 @@ namespace GAPPLE.Server.Controllers
                 orden.EntregarEn = row["EntregarEn"].ToString();
                 if (row["Transporte"] != DBNull.Value) orden.Transporte = row["Transporte"].ToString();
                 if (row["Zona"] != DBNull.Value) orden.Zona = row["Zona"].ToString();
-                if (row["Observaciones"] != DBNull.Value) orden.Observaciones = row["Observaciones"].ToString();
+                if (row["Observaciones"] != DBNull.Value) orden.OrdenCompra = row["Observaciones"].ToString();
                 orden.Vendedor = row["Vendedor"].ToString();
                 orden.Impreso = bool.Parse(row["Impreso"].ToString());
+                if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
             }
 
             using (DataTable dt = daO.ObtenerOrdenDetalleExpedicion(idOrden))

@@ -14,8 +14,11 @@
         </div>
         <div style="display: flex;justify-content: space-between;">
             <strong style="width: fit-content;">Orden: @Orden.Orden</strong>
-            <strong style="width: fit-content;">Observaciones: @Orden.Observaciones</strong>
+            <strong style="width: fit-content;">O.C.: @Orden.OrdenCompra</strong>
         </div>
+        <span>
+            <strong style="width: fit-content;">Observaciones:</strong> @Orden.ObservacionesZentra
+        </span>
     </div>
     <div style="margin-top: 10px;height: 26cm;">
         <PageData Detalle="Detalle" ShowF=@(Detalle.Sum(x=>x.CantidadF) > 0) ShowX=@(Detalle.Sum(x=>x.CantidadX) > 0) ShowPF=@(Detalle.Sum(x=>x.CantidadProbadorF) > 0) ShowPX=@(Detalle.Sum(x=>x.CantidadProbadorX) > 0) />

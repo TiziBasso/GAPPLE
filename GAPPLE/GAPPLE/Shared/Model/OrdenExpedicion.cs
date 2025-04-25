@@ -38,7 +38,9 @@ namespace GAPPLE.Shared.Model
 
         public string? Zona { get; set; }
 
-        public string? Observaciones { get; set; }
+        public string? OrdenCompra { get; set; }
+
+        public string? ObservacionesZentra { get; set; }
 
         public int Articulos { get; set; }
 

@@ -643,25 +643,22 @@ else
             foreach (var card in Cards)
             {
                 lstProductosDifLinea.RemoveAll(x => card.Products.Exists(y => y.CodigoProducto == x.CodigoProducto && y.CantidadSeleccionada == 0));//elimino las lineas que se hayan editado a 0
-                
-                foreach (var product in card.Products)
-                {
-                    if (product.CantidadSeleccionada > 0)
-                    {
-                        int cantProv = 0;
-                        var prod = lstProductosDifLinea.FirstOrDefault(x => x.CodigoProducto == product.CodigoProducto);
-                        if (prod != null)
-                            cantProv = prod.CantidadProbador;
 
-                        orden.Detalle!.Add(new OrdenDetalle()
-                            {
-                                Cantidad = product.CantidadSeleccionada,
-                                CodProducto = product.CodigoProducto,
-                                Descuento = product.DescuentoFinal,
-                                Probador = product.Probador,
-                                CantidadProbador = cantProv
-                            });
-                    }
+                foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
+                {
+                    int cantProv = 0;
+                    var prod = lstProductosDifLinea.FirstOrDefault(x => x.CodigoProducto == product.CodigoProducto);
+                    if (prod != null)
+                        cantProv = prod.CantidadProbador;
+
+                    orden.Detalle!.Add(new OrdenDetalle()
+                        {
+                            Cantidad = product.CantidadSeleccionada,
+                            CodProducto = product.CodigoProducto,
+                            Descuento = product.DescuentoFinal,
+                            Probador = product.Probador,
+                            CantidadProbador = cantProv
+                        });
                 }
             }
             foreach (var product in lstProductosDifLinea)
