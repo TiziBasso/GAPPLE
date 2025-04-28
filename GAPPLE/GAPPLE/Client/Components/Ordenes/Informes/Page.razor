@@ -22,7 +22,7 @@
         }
     </div>
     <div style="margin-top: 10px;height: 60rem;">
-        <PageData Detalle="Detalle.Where(x=>x.CantidadPendiente == 0 && x.CantidadProbadorPendiente == 0).ToList()" Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList()" ShowProbadores=ShowProbadores />
+        <PageData Detalle="Detalle.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList()" Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList()" ShowProbadores=ShowProbadores />
     </div>
     <div>
         <div style="display: flex;justify-content: space-between;">

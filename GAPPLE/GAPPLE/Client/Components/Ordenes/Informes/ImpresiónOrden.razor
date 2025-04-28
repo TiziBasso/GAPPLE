@@ -36,11 +36,7 @@
 
         showProbadores = anyDetalle || anyPendiente;
 
-        Console.WriteLine(sumLineas);
         cantPages = sumLineas / lineasXPag;
-        Console.WriteLine(cantPages);
-        Console.WriteLine(sumLineas % lineasXPag > 0);
-        Console.WriteLine(cantPages == 0);
         if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
 
         showModal = true;
