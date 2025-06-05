@@ -155,6 +155,8 @@
 
             <RadzenDataGridColumn TItem="Orden" Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" MinWidth="10px" />
 
+            <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" MinWidth="10px" />
+
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
@@ -203,7 +205,7 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
-                                    Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
+                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
