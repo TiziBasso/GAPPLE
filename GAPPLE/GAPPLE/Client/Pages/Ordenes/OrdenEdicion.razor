@@ -429,7 +429,7 @@ else
         {
             lstProductosDifLinea.RemoveAll(x => card.Products.Exists(y => y.CodigoProducto == x.CodigoProducto && y.CantidadSeleccionada == 0));
 
-            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
+            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0 || x.Probador))
             {
                 if (lstProductosDifLinea.Exists(x => x.CodigoProducto == product.CodigoProducto))
                 {
@@ -644,7 +644,7 @@ else
             {
                 lstProductosDifLinea.RemoveAll(x => card.Products.Exists(y => y.CodigoProducto == x.CodigoProducto && y.CantidadSeleccionada == 0));//elimino las lineas que se hayan editado a 0
 
-                foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0))
+                foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0 || x.Probador))
                 {
                     int cantProv = 0;
                     var prod = lstProductosDifLinea.FirstOrDefault(x => x.CodigoProducto == product.CodigoProducto);

@@ -414,7 +414,7 @@ namespace GAPPLE.Server.Controllers
                     {
                         pedido.IdEstado = 3;
                         pedido.DescripcionEstado = "APROBADO";
-                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, trans);
+                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado,pedido.Usuario, trans);
                     }
                 }
 
@@ -454,7 +454,7 @@ namespace GAPPLE.Server.Controllers
                 {
                     pedido.IdEstado = 5;
                     pedido.DescripcionEstado = "EN TANGO";
-                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, trans);
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado,pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
                 }
 
@@ -563,8 +563,8 @@ namespace GAPPLE.Server.Controllers
             return new(true);
         }
 
-        [HttpPut("{idEstado:int}")]
-        public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string id)
+        [HttpPut("{idEstado:int}/{nombreUsuario}")]
+        public IActionResult CambioEstadoPedido(int idEstado, [FromBody] string id, string nombreUsuario)
         {
             SqlTransaction? trans = null;
             try
@@ -574,7 +574,7 @@ namespace GAPPLE.Server.Controllers
                 {
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    daO.PersistirPedidoEstado(id, idEstado, trans);
+                    daO.PersistirPedidoEstado(id, idEstado,nombreUsuario , trans);
                     trans.Commit();
                     cnn.Close();
                 }
@@ -717,8 +717,8 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpPost("despachar")]
-        public IActionResult DespacharOrdenes(List<OrdenExpedicion> ordenes)
+        [HttpPost("despachar/{nombreUsuario}")]
+        public IActionResult DespacharOrdenes(List<OrdenExpedicion> ordenes, string nombreUsuario)
         {
             SqlTransaction? trans = null;
             try
@@ -746,7 +746,7 @@ namespace GAPPLE.Server.Controllers
                         {
                             foreach (var id in orden.IdPedidos.Split(","))
                             {
-                                daO.PersistirPedidoEstado(id, 4, trans);
+                                daO.PersistirPedidoEstado(id, 4,nombreUsuario ,trans);
                             }
                         }
                         trans.Commit();
