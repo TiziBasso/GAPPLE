@@ -18,7 +18,11 @@
     <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
-
+        <RadzenPanel AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText Text="Cabecera" />
+            </HeaderTemplate>
+            <ChildContent>
         <RadzenRow Style="margin-top:10px;">
             <RadzenColumn Size="4">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
@@ -183,10 +187,12 @@
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
+            </ChildContent>
+        </RadzenPanel>
 
-        <RadzenRow Style="margin-top:10px;">
+        <RadzenRow Style="margin-top:10px;max-height: 100%;overflow: auto;">
             <RadzenColumn Size="12">
-                <RadzenFieldset Text="Selección de productos" Style="height: 45vh;">
+                <RadzenFieldset Text="Selección de productos">
                     <ValidationMessage For="@(() => orden.Detalle)" />
                     @if (showCards && lstProductos != null && lstProductos.Any())
                     {
@@ -201,7 +207,7 @@
                                             <label style="width:65px;">@product.CodigoProducto</label>
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
-                                                   class="product-input" @bind-value="product.CantidadSeleccionada" />
+                                                   class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product.CodigoComplemento, product.CantidadSeleccionada))" />
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -730,6 +736,22 @@ else
             NavigationManager.NavigateTo("ordenes");
     }
 
+    private async Task AgregarComplemento(string? codigoComplemento, int cantidad)
+    {
+        if (!string.IsNullOrEmpty(codigoComplemento))
+        {
+            int indexCard = Cards.FindIndex(x => x.Products.Exists(p => p.CodigoProducto == codigoComplemento));
+            if (indexCard != -1)
+            {
+                int indexComplemento = Cards[indexCard].Products.FindIndex(x => x.CodigoProducto == codigoComplemento);
+                if (indexComplemento != -1)
+                {
+                    Cards[indexCard].Products[indexComplemento].CantidadSeleccionada = cantidad;
+                }
+            }
+        }
+    }
+
     private class Card
     {
         public string FamilyName { get; }
@@ -747,7 +769,6 @@ else
     .cards-container {
         display: flex;
         flex-wrap: wrap;
-        height: 39vh;
         gap: 2px;
         overflow-y: auto;
         overflow-x: hidden;

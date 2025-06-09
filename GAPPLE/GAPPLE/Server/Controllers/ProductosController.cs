@@ -83,6 +83,7 @@ namespace GAPPLE.Server.Controllers
                         Familia = row["Familia"].ToString()!,
                         Sinonimo = row["Sinonimo"].ToString()!
                     };
+                    if (row["CodigoComplemento"] != DBNull.Value) p.CodigoComplemento = row["CodigoComplemento"].ToString();
                     productos.Add(p);
                 }
             }
