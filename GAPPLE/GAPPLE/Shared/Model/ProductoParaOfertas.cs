@@ -17,6 +17,7 @@ namespace GAPPLE.Shared.Model
         public int CantidadSeleccionada { get; set; }
         public decimal DescuentoFinal { get; set; }
         public string Sinonimo { get; set; }
+        public string? CodigoComplemento { get; set; }
 
         public object Clone() => MemberwiseClone();
     }

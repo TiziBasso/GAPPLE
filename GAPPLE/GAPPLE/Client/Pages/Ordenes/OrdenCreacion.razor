@@ -15,179 +15,179 @@
 
 @if (showForm)
 {
-    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext">
+    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext" Style="display: grid;grid-template-rows: auto 1fr auto;height: calc(100vh - 83px);">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
 
-        <RadzenRow Style="margin-top:10px;">
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Línea:" />
-                    <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
-                    <ValidationMessage For="@(() => orden.Linea)" />
-                </RadzenStack>
-            </RadzenColumn>
-
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Cliente:" />
-                    <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.CodCliente" AllowSorting=false
-                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                    TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
-                    AllowVirtualization="true" Change="AsignarVariables" Name="clientes" Density="Density.Compact">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="4rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                    <ValidationMessage For="@(() => orden.CodCliente)" />
-                </RadzenStack>
-            </RadzenColumn>
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Zona:" />
-                    <RadzenDropDownDataGrid Data="zonas" Disabled="true" @bind-Value="orden.Zona" AllowSorting=false
-                    TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código" Width="4rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción" />
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                    <ValidationMessage For="@(() => orden.Zona)" />
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
-
-        <RadzenRow Style="margin-top:10px;">
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
-                    <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
-                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
-                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
-                                <Template Context="sucCliente">
-                                    @if (sucCliente.Habitual)
-                                    {
-                                        <span>SÍ</span>
-                                    }
-                                    else
-                                    {
-                                        <span>NO</span>
-                                    }
-                                </Template>
-                            </RadzenDropDownDataGridColumn>
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                    <ValidationMessage For="@(() => orden.Entrega)" />
-                </RadzenStack>
-            </RadzenColumn>
-
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Lista de precios:" />
-                    <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact"
-                    TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                    <ValidationMessage For="@(() => orden.CodListaPrecio)" />
-                </RadzenStack>
-            </RadzenColumn>
-
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Cond.Venta:" />
-                    <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
-                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                    TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código" Width="4rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción" />
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                    <ValidationMessage For="@(() => orden.CondicionVenta)" />
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
-
-        <RadzenRow Style="margin-top:10px;">
-            <RadzenColumn Size="3">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="F.Entrega:" />
-                    <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
-                </RadzenStack>
-                <ValidationMessage For="@(() => orden.FechaEntrega)" />
-            </RadzenColumn>
-
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Transporte:" />
-                    <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
-                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                    TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
-                        <Columns>
-                            <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código" Width="4rem" />
-                            <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción" />
-                        </Columns>
-                    </RadzenDropDownDataGrid>
-                </RadzenStack>
-            </RadzenColumn>
-
-            <RadzenColumn Size="3">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="O.C.:" />
-                    <RadzenTextArea @bind-Value="orden.Notas" />
-                    <ValidationMessage For="@(() => orden.Notas)" />
-                </RadzenStack>
-            </RadzenColumn>
-
-            <RadzenColumn Size="2">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                        <RadzenLabel Text="F:" />
-                        <RadzenCheckBox @bind-Value="@orden.Factura" />
+        <RadzenFieldset AllowCollapse="true" Text="@($"Orden cabecera" + orden != null && orden.CodCliente != null ? clientes.Find(x => x.CodigoCliente == orden.CodCliente)!.RazonSocial : "Seleccionar cliente")">
+            <RadzenRow Style="margin-top:10px;">
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Línea:" />
+                        <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
+                        <ValidationMessage For="@(() => orden.Linea)" />
                     </RadzenStack>
+                </RadzenColumn>
 
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                        <RadzenLabel Text="P:" />
-                        <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Cliente:" />
+                        <RadzenDropDownDataGrid Data="clientes" @bind-Value="orden.CodCliente" AllowSorting=false
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
+                                                AllowVirtualization="true" Change="AsignarVariables" Name="clientes" Density="Density.Compact">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.CodCliente)" />
                     </RadzenStack>
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
+                </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Zona:" />
+                        <RadzenDropDownDataGrid Data="zonas" Disabled="true" @bind-Value="orden.Zona" AllowSorting=false
+                                                TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.Zona)" />
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
 
+            <RadzenRow Style="margin-top:10px;">
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
+                        <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                                                AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
+                                    <Template Context="sucCliente">
+                                        @if (sucCliente.Habitual)
+                                        {
+                                            <span>SÍ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>NO</span>
+                                        }
+                                    </Template>
+                                </RadzenDropDownDataGridColumn>
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.Entrega)" />
+                    </RadzenStack>
+                </RadzenColumn>
 
-        <RadzenRow Style="margin-top:10px;">
-            
-            <RadzenColumn Size="8">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Notas:" />
-                    <RadzenTextArea @bind-Value="orden.ObservacionesZentra" />
-                    <ValidationMessage For="@(() => orden.ObservacionesZentra)" />
-                </RadzenStack>
-            </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Lista de precios:" />
+                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact"
+                                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.CodListaPrecio)" />
+                    </RadzenStack>
+                </RadzenColumn>
 
-            <RadzenColumn Size="4">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                    <RadzenLabel Text="Ofertas:" />
-                    <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas" Change="RecalcularOfertas"
-                    TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
-                    Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Cond.Venta:" />
+                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.CondicionVenta)" />
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
 
-        <RadzenRow Style="margin-top:10px;">
+            <RadzenRow Style="margin-top:10px;">
+                <RadzenColumn Size="3">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="F.Entrega:" />
+                        <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
+                    </RadzenStack>
+                    <ValidationMessage For="@(() => orden.FechaEntrega)" />
+                </RadzenColumn>
+
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Transporte:" />
+                        <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </RadzenStack>
+                </RadzenColumn>
+
+                <RadzenColumn Size="3">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="O.C.:" />
+                        <RadzenTextArea @bind-Value="orden.Notas" />
+                        <ValidationMessage For="@(() => orden.Notas)" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                <RadzenColumn Size="2">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenLabel Text="F:" />
+                            <RadzenCheckBox @bind-Value="@orden.Factura" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenLabel Text="P:" />
+                            <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow Style="margin-top:10px;">
+
+                <RadzenColumn Size="8">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Notas:" />
+                        <RadzenTextArea @bind-Value="orden.ObservacionesZentra" />
+                        <ValidationMessage For="@(() => orden.ObservacionesZentra)" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Ofertas:" />
+                        <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas" Change="RecalcularOfertas"
+                                        TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                                        Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenFieldset>
+
+        <RadzenRow Style="margin-top:10px;max-height: 100%;overflow: auto;">
             <RadzenColumn Size="12">
-                <RadzenFieldset Text="Selección de productos" Style="height: 45vh;">
+                <RadzenFieldset Text="Selección de productos">
                     <ValidationMessage For="@(() => orden.Detalle)" />
                     @if (showCards && lstProductos != null && lstProductos.Any())
                     {
@@ -202,7 +202,7 @@
                                             <label style="width:65px;">@product.CodigoProducto</label>
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
-                                            class="product-input" @bind-value="product.CantidadSeleccionada" />
+                                                   class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product.CodigoComplemento, product.CantidadSeleccionada))" />
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -704,6 +704,22 @@ else
 
     }
 
+    private async Task AgregarComplemento(string? codigoComplemento, int cantidad)
+    {
+        if (string.IsNullOrWhiteSpace(codigoComplemento)) return;
+
+        foreach (var card in Cards)
+        {
+            var producto = card.Products.FirstOrDefault(p => p.CodigoProducto == codigoComplemento);
+            if (producto != null)
+            {
+                producto.CantidadSeleccionada = cantidad;
+                return;
+            }
+        }
+    }
+
+
     private class Card
     {
         public string FamilyName { get; }
@@ -721,7 +737,6 @@ else
     .cards-container {
         display: flex;
         flex-wrap: wrap;
-        height: 39vh;
         gap: 2px;
         overflow-y: auto;
         overflow-x: hidden;
