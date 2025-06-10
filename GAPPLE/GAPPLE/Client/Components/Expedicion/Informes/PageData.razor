@@ -23,25 +23,25 @@
         @foreach (var item in Detalle)
         {
             <tr style="border-bottom:1px solid">
-                <td style="text-align: end;">@item.NumLinea</td>
-                <td style="text-align: center;">@item.CodProducto</td>
-                <td>@item.DescripcionProducto</td>
+                <td style="text-align: end;padding:1px;">@item.NumLinea</td>
+                <td style="text-align: center;padding:1px;">@item.CodProducto</td>
+                <td style="padding:1px;">@item.DescripcionProducto</td>
                 @if (ShowF)
                 {
-                    <td style="text-align: end;">@item.CantidadF</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadF</td>
                 }
                 @if (ShowX)
                 {
-                    <td style="text-align: end;">@item.CantidadX</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadX</td>
                 }
-                <td style="text-align:end">@item.Cantidad</td>
+                <td style="text-align:end;padding:1px;">@item.Cantidad</td>
                 @if (ShowPF)
                 {
-                    <td style="text-align: end;">@item.CantidadProbadorF</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadProbadorF</td>
                 }
                 @if (ShowPX)
                 {
-                    <td style="text-align: end;">@item.CantidadProbadorX</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadProbadorX</td>
                 }
                 <td></td>
             </tr>

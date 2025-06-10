@@ -768,14 +768,14 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpGet("expedicionImprimir")]
-        public OrdenExpedicion GetOrdenExpedicionImprimir(string idOrden)
+        [HttpGet("expedicionImprimir/{nombreUsuario}")]
+        public OrdenExpedicion GetOrdenExpedicionImprimir(string idOrden, string nombreUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             OrdenExpedicion orden = GetOrdenExpedicion(idOrden);
             var a = JsonConvert.SerializeObject(orden);
             foreach (var idPedido in orden.IdPedidos.Split(","))
-                daO.PersistirPedidoImpresion(idPedido);
+                daO.PersistirPedidoImpresion(idPedido, nombreUsuario);
             return orden;
         }
 

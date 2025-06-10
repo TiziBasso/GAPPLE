@@ -192,7 +192,7 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<OrdenExpedicion> GetOrdenExpedicionImprimir(string idOrden)
         {
-            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir?idOrden={idOrden}");
+            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir/{SesionDTO.Nombre}?idOrden={idOrden}");
         }
 
         public async ValueTask<Response> PostExpedicionDetalle(OrdenExpedicion orden)

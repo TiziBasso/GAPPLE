@@ -414,7 +414,7 @@ namespace GAPPLE.Server.Data
             if (probadorAprobada != null) cmd.Parameters.AddWithValue("@pProbadorAprobada", probadorAprobada);
             cmd.ExecuteNonQuery();
         }
-        public void PersistirPedidoImpresion(string idPedido)
+        public void PersistirPedidoImpresion(string idPedido, string nombreUsuario)
         {
             using (SqlConnection cnn = new(ConnectionString))
             {
@@ -423,6 +423,7 @@ namespace GAPPLE.Server.Data
                 cmd.CommandText = "prc_upd_PedidosCabecera";
                 cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
                 cmd.Parameters.AddWithValue("@pImpreso", true);
+                cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
                 cnn.Open();
                 cmd.ExecuteNonQuery();
                 cnn.Close();
