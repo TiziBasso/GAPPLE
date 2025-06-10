@@ -2,6 +2,7 @@
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace GAPPLE.Server.Controllers
 {
@@ -18,11 +19,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Producto> GetProductosDTO(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo)
+        public List<Producto> GetProductosDTO(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea)
         {
             List<Producto> productos = new();
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daP.ObtenerProductos(codigoProducto, descripcion, clasificado, pasivo))
+            using (DataTable dt = daP.ObtenerProductos(codigoProducto, descripcion, clasificado, pasivo, linea))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -89,5 +90,86 @@ namespace GAPPLE.Server.Controllers
             }
             return productos;
         }
+
+        [HttpGet("complementos")]
+        public List<ProductosComplementos> GetProductosComplementos()
+        {
+            List<ProductosComplementos> pc = new();
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daP.GetProductosComplementos())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    ProductosComplementos p = new()
+                    {
+                        CodigoPrincipal = row["CodigoPrincipal"].ToString(),
+                        DescripcionPrincipal = row["DescripcionPrincipal"].ToString(),
+                        LineaPrincipal = row["LineaPrincipal"].ToString(),
+                        CodigoRelacionado = row["CodigoRelacionado"].ToString(),
+                        DescripcionRelacionado = row["DescripcionRelacionado"].ToString(),
+                        LineaRelacionado = row["LineaRelacionado"].ToString()
+                    };
+                    pc.Add(p);
+                }
+            }
+            return pc;
+        }
+
+        [HttpPost("complementos/insert")]
+        public IActionResult InsertProductosComplementos(List<ProductosComplementos> productosComplementos)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    DA_Producto daP = new(cnn.ConnectionString);
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var p in productosComplementos)
+                        daP.InsertProductosComplementos(p.CodigoPrincipal, p.CodigoRelacionado, trans);
+
+                    trans.Commit();
+                    cnn.Close();
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPost("complementos/delete")]
+        public IActionResult DeleteProductosComplementos(List<ProductosComplementos> productosComplementos)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                {
+                    DA_Producto daP = new(cnn.ConnectionString);
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var p in productosComplementos)
+                        daP.DeleteProductosComplementos(p.CodigoPrincipal, p.CodigoRelacionado, trans);
+
+                    trans.Commit();
+                    cnn.Close();
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
     }
 }

@@ -15,7 +15,7 @@ namespace GAPPLE.Client.Services
 
         public ProductosService(HttpClient httpClient, ILogger<ProductosService> logger) => (HttpClient, Logger) = (httpClient, logger);
 
-        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo,
+        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea, 
             CancellationTokenSource? cancellationToken = null)
         {
             Dictionary<string, object> query = new();
@@ -23,6 +23,7 @@ namespace GAPPLE.Client.Services
             if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
             if (clasificado != null) query["clasificado"] = clasificado;
             if (pasivo != null) query["pasivo"] = pasivo;
+            if (linea != null) query["linea"] = linea;
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
             if (cancellationToken == null)
@@ -110,6 +111,33 @@ namespace GAPPLE.Client.Services
                 return await response.Content.ReadFromJsonAsync<List<ProductoParaOfertas>>()!;
             else
                 return null;
+        }
+
+        public async ValueTask<List<ProductosComplementos>> GetProductosComplementos()
+        {
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/complementos");
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<ProductosComplementos>>();
+            else
+                return null;
+        }
+
+        public async ValueTask<bool> InsertProductosComplementos(List<ProductosComplementos> productosComplementos)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/complementos/insert", productosComplementos);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return true;
+            else
+                return false;
+        }
+
+        public async ValueTask<bool> DeleteProductosComplementos(List<ProductosComplementos> productosComplementos)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/complementos/delete", productosComplementos);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return true;
+            else
+                return false;
         }
     }
 }
