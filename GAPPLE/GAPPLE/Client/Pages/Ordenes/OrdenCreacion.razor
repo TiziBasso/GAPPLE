@@ -711,19 +711,19 @@ else
 
     private async Task AgregarComplemento(string? codigoComplemento, int cantidad)
     {
-        if (!string.IsNullOrEmpty(codigoComplemento))
+        if (string.IsNullOrWhiteSpace(codigoComplemento)) return;
+
+        foreach (var card in Cards)
         {
-            int indexCard = Cards.FindIndex(x => x.Products.Exists(p => p.CodigoProducto == codigoComplemento));
-            if (indexCard != -1)
+            var producto = card.Products.FirstOrDefault(p => p.CodigoProducto == codigoComplemento);
+            if (producto != null)
             {
-                int indexComplemento = Cards[indexCard].Products.FindIndex(x => x.CodigoProducto == codigoComplemento);
-                if (indexComplemento != -1)
-                {
-                    Cards[indexCard].Products[indexComplemento].CantidadSeleccionada = cantidad;
-                }
+                producto.CantidadSeleccionada = cantidad;
+                return;
             }
         }
     }
+
 
     private class Card
     {
