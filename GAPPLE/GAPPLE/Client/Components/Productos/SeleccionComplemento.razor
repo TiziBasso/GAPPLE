@@ -5,88 +5,88 @@
 
 @if (showPage)
 {
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-        <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-2">
-            <RadzenLabel Text="Línea:" />
-            <RadzenDropDown Data="lstLineas" @bind-Value="linea" Change="BuscarProductos" />
-        </RadzenStack>
-    </RadzenStack>
+	<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+		<RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-2">
+			<RadzenLabel Text="Línea:" />
+			<RadzenDropDown Data="lstLineas" @bind-Value="linea" Change="BuscarProductos" Disabled=@(productoRelacionado != null || productosPrincipales.Any()) />
+		</RadzenStack>
+	</RadzenStack>
 
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
-        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-            <RadzenLabel Text="Productos principales:" />
-            <RadzenCheckBoxList Data="productos" @bind-Value="productosPrincipales" Orientation=Orientation.Vertical Style="height:25rem; overflow-y:auto"
-                                ValueProperty="@nameof(Producto.IdProducto)" TextProperty="@nameof(Producto.Descripcion)" />
-        </RadzenStack>
-        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-            <RadzenLabel Text="Producto relacionado:" />
-            <RadzenDropDown Data="productos" @bind-Value="productoRelacionado" AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
-                            ValueProperty="@nameof(Producto.IdProducto)" TextProperty="@nameof(Producto.Descripcion)" Disabled=@(linea == null) />
-        </RadzenStack>
-    </RadzenStack>
+	<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenStack Orientation="Orientation.Vertical" Gap="0">
+			<RadzenLabel Text="Productos principales:" />
+			<RadzenCheckBoxList Data="productos" @bind-Value="productosPrincipales" Orientation=Orientation.Vertical Style="height:25rem; overflow-y:auto"
+								ValueProperty="@nameof(Producto.IdProducto)" TextProperty="@nameof(Producto.Descripcion)" />
+		</RadzenStack>
+		<RadzenStack Orientation="Orientation.Vertical" Gap="0">
+			<RadzenLabel Text="Producto relacionado:" />
+			<RadzenDropDown Data="productos" @bind-Value="productoRelacionado" AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
+							ValueProperty="@nameof(Producto.IdProducto)" TextProperty="@nameof(Producto.Descripcion)" Disabled=@(linea == null) />
+		</RadzenStack>
+	</RadzenStack>
 
-    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
-        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
-        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" Disabled=@(productoRelacionado == null || !productosPrincipales.Any()) />
-    </RadzenStack>
+	<RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+		<RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+		<RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" Disabled=@(productoRelacionado == null || !productosPrincipales.Any()) />
+	</RadzenStack>
 }
 
 @code {
-    [Parameter] public EventCallback<List<ProductosComplementos>> InsertCallback { get; set; }
-    bool showPage;
-    List<string> lstLineas = new();
-    string? linea;
-    List<Producto> productos = new();
-    IEnumerable<int> productosPrincipales = new List<int>();
-    int? productoRelacionado;
+	[Parameter] public EventCallback<List<ProductosComplementos>> InsertCallback { get; set; }
+	bool showPage;
+	List<string> lstLineas = new();
+	string? linea;
+	List<Producto> productos = new();
+	IEnumerable<int> productosPrincipales = new List<int>();
+	int? productoRelacionado;
 
-    protected override async Task OnInitializedAsync()
-    {
-        lstLineas = await ProductosService.GetLineas();
-        showPage = true;
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		lstLineas = await ProductosService.GetLineas();
+		showPage = true;
+	}
 
-    private async Task BuscarProductos()
-    {
-        DialogCustom.OpenBusy("Cargando...");
-        productos = await ProductosService.GetProductos(null, null, null, null, linea, null);
-        DialogCustom.CloseDialog();
-    }
+	private async Task BuscarProductos()
+	{
+		DialogCustom.OpenBusy("Cargando...");
+		productos = await ProductosService.GetProductos(null, null, null, null, linea, null);
+		DialogCustom.CloseDialog();
+	}
 
-    private async Task Cancelar()
-    {
-        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
-            DialogService.Close();
-    }
+	private async Task Cancelar()
+	{
+		if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+			DialogService.Close();
+	}
 
-    private async Task Guardar()
-    {
-        if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
-        {
-            List<ProductosComplementos> complementos = new();
-            var relacionado = productos.First(x => x.IdProducto == productoRelacionado);
-            foreach (var p in productosPrincipales)
-            {
-                var principal = productos.First(x => x.IdProducto == p);
-                ProductosComplementos c = new()
-                    {
-                        CodigoPrincipal = principal.CodigoProducto,
-                        DescripcionPrincipal = principal.Descripcion,
-                        LineaPrincipal = principal.Linea,
-                        CodigoRelacionado = relacionado.CodigoProducto,
-                        DescripcionRelacionado = relacionado.Descripcion,
-                        LineaRelacionado = relacionado.Linea
-                    };
-                complementos.Add(c);
-            }
+	private async Task Guardar()
+	{
+		if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+		{
+			List<ProductosComplementos> complementos = new();
+			var relacionado = productos.First(x => x.IdProducto == productoRelacionado);
+			foreach (var p in productosPrincipales)
+			{
+				var principal = productos.First(x => x.IdProducto == p);
+				ProductosComplementos c = new()
+				{
+					CodigoPrincipal = principal.CodigoProducto,
+					DescripcionPrincipal = principal.Descripcion,
+					LineaPrincipal = principal.Linea,
+					CodigoRelacionado = relacionado.CodigoProducto,
+					DescripcionRelacionado = relacionado.Descripcion,
+					LineaRelacionado = relacionado.Linea
+				};
+				complementos.Add(c);
+			}
 
-            DialogCustom.OpenBusyWithLoader("Guardando...");
-            var response = await ProductosService.InsertProductosComplementos(complementos);
-            DialogCustom.CloseDialog();
-            if (response)
-                await InsertCallback.InvokeAsync(complementos);
-            else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
-        }
-    }
+			DialogCustom.OpenBusyWithLoader("Guardando...");
+			var response = await ProductosService.InsertProductosComplementos(complementos);
+			DialogCustom.CloseDialog();
+			if (response)
+				await InsertCallback.InvokeAsync(complementos);
+			else
+				NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+		}
+	}
 }
