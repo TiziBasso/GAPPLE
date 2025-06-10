@@ -284,7 +284,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoEstado(string idPedido, int estado, SqlTransaction transaction)
+        public void PersistirPedidoEstado(string idPedido, int estado,string nombreUsuario , SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -293,6 +293,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_upd_PedidosCabecera";
             cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
             cmd.Parameters.AddWithValue("@pIdEstado", estado);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario",nombreUsuario );
             cmd.ExecuteNonQuery();
         }
 
@@ -413,7 +414,7 @@ namespace GAPPLE.Server.Data
             if (probadorAprobada != null) cmd.Parameters.AddWithValue("@pProbadorAprobada", probadorAprobada);
             cmd.ExecuteNonQuery();
         }
-        public void PersistirPedidoImpresion(string idPedido)
+        public void PersistirPedidoImpresion(string idPedido, string nombreUsuario)
         {
             using (SqlConnection cnn = new(ConnectionString))
             {
@@ -422,6 +423,7 @@ namespace GAPPLE.Server.Data
                 cmd.CommandText = "prc_upd_PedidosCabecera";
                 cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
                 cmd.Parameters.AddWithValue("@pImpreso", true);
+                cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
                 cnn.Open();
                 cmd.ExecuteNonQuery();
                 cnn.Close();

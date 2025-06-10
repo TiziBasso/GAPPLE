@@ -111,6 +111,8 @@
 
             <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="180px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
 
+            <RadzenDataGridColumn Title="Cód.Cliente" Property="@nameof(Orden.CodCliente)" Width="110px" />
+
             @* <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px" /> *@
 
             <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="120px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter" Resizable=false>
@@ -151,11 +153,12 @@
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="O.C." Property="@nameof(Orden.Notas)" MinWidth="10px" />
+            <RadzenDataGridColumn TItem="Orden" Title="O.C." Property="@nameof(Orden.Notas)" Width="120px" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="Orden" Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" MinWidth="10px" />
+            <RadzenDataGridColumn TItem="Orden" Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" Width="200px" MinWidth="10px" />
 
-            <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" MinWidth="10px" />
+            <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" Width="150px" MinWidth="10px" />
+
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
