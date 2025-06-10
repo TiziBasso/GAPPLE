@@ -165,7 +165,7 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{idEstado}", id);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{idEstado}/{SesionDTO.Nombre}", id);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -218,7 +218,7 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/despachar", ordenes);
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/despachar/{SesionDTO.Nombre}", ordenes);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
