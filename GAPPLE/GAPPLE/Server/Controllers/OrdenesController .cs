@@ -63,6 +63,7 @@ namespace GAPPLE.Server.Controllers
                         AprobadoContaduria = bool.Parse(row["AprobadoContaduria"].ToString()),
                         AprobadoVentas = bool.Parse(row["AprobadoVentas"].ToString()),
                         AprobadoFinanzas = bool.Parse(row["AprobadoContaduria"].ToString()),
+                        Usuario = row["AltaUsuario"].ToString()
                     };
                     if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
@@ -103,7 +104,8 @@ namespace GAPPLE.Server.Controllers
                         IdEstado = (int)row["IdEstado"],
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NROTANGO = row["NroPedidoTango"].ToString(),
-                        NumeroFactura = row["NumFactura"].ToString()
+                        NumeroFactura = row["NumFactura"].ToString(),
+                        Usuario = row["AltaUsuario"].ToString()
                     };
                     if (row["Ofertas"] != DBNull.Value)
                     {
