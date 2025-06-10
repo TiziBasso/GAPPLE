@@ -50,6 +50,7 @@ namespace GAPPLE.Server.Controllers
                         CodigoOrden = row["CodigoOrden"].ToString()!,
                         Presupuesto = (bool)row["Presupuesto"],
                         Cliente = row["RazonSocial"].ToString(),
+                        CodCliente = row["CodigoCliente"].ToString(),
                         Linea = row["Linea"].ToString(),
                         Creacion = (DateTime)row["AltaRegistro"],
                         Zona = row["DescripcionZona"].ToString(),
