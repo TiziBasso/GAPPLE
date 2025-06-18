@@ -87,7 +87,8 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                pedido.Usuario = SesionDTO.Nombre;
+                if (pedido.Usuario == null)
+                    pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
                 if (response.IsSuccessStatusCode)
                 {

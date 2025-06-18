@@ -94,7 +94,7 @@ namespace GAPPLE.Shared.Model
 
         public bool Aprobado { get; set; }
 
-        public string? Usuario { get; set; }
+        public string Usuario { get; set; } = null;
 
         public bool AprobadoVentas { get; set; }
 
