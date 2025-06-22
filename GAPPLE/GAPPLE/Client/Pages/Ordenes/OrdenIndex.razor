@@ -200,6 +200,13 @@
                                   @onclick:stopPropagation="true" Click="@(() => CancelarOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
+                                  @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
+                </Template>
+            </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 
@@ -315,6 +322,23 @@ else
             {
                 order.IdEstado = 2;
                 order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
+
+                await grid.Reload();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
+    }
+    
+    async Task RevertirConfirmacionOrden(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("Revertir", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            var response = await OrdenesService.RevertirOrden(order.Id.ToString());
+            if (response.IsSuccessStatusCode)
+            {
+                order.IdEstado = 1;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 1).Descripcion;
 
                 await grid.Reload();
             }

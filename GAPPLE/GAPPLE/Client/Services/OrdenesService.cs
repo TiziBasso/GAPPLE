@@ -87,7 +87,8 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                pedido.Usuario = SesionDTO.Nombre;
+                if (pedido.Usuario == null)
+                    pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
                 if (response.IsSuccessStatusCode)
                 {
@@ -166,6 +167,25 @@ namespace GAPPLE.Client.Services
             try
             {
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{idEstado}/{SesionDTO.Nombre}", id);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "CambioEstadoPedidos");
+                return new(false);
+            }
+        }
+        
+        public async ValueTask<Response> RevertirOrden(string id)
+        {
+            try
+            {
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{SesionDTO.Nombre}", id);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)

@@ -1,0 +1,43 @@
+﻿@inject SeguridadService SeguridadService
+@inject DialogService DialogService
+
+@if (showModal)
+{
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Vendedor:" Component="vendedor" />
+        <RadzenDropDown Data="lstVendedores" @bind-Value=selected AllowFiltering=true AllowVirtualization=true
+                        TextProperty="@nameof(Usuario.ApellidoYNombre)" />
+    </RadzenStack>
+
+    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
+    </RadzenStack>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showModal;
+    List<Usuario> lstVendedores;
+    Usuario selected = new();
+    protected override async Task OnInitializedAsync()
+    {
+        lstVendedores = await SeguridadService.GetUsuarios(null, null, null, false, false);
+        showModal = true;
+    }
+
+    private async Task Guardar()
+    {
+        if (await DialogService.Confirm("¿Confirma el pedido con el vendedor " + selected.ApellidoYNombre + "?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            DialogService.Close(selected.NombreUsuario);
+    }
+
+    private async Task Cancelar()
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            DialogService.Close(null);
+    }
+}
