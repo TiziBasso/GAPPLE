@@ -180,6 +180,25 @@ namespace GAPPLE.Client.Services
                 return new(false);
             }
         }
+        
+        public async ValueTask<Response> RevertirOrden(string id)
+        {
+            try
+            {
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{SesionDTO.Nombre}", id);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "CambioEstadoPedidos");
+                return new(false);
+            }
+        }
 
         public async ValueTask<List<OrdenExpedicion>> GetOrdenesExpediciones()
         {

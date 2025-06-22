@@ -415,7 +415,7 @@ namespace GAPPLE.Server.Controllers
                     {
                         pedido.IdEstado = 3;
                         pedido.DescripcionEstado = "APROBADO";
-                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado,pedido.Usuario, trans);
+                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     }
                 }
 
@@ -455,7 +455,7 @@ namespace GAPPLE.Server.Controllers
                 {
                     pedido.IdEstado = 5;
                     pedido.DescripcionEstado = "EN TANGO";
-                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado,pedido.Usuario, trans);
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
                 }
 
@@ -575,7 +575,7 @@ namespace GAPPLE.Server.Controllers
                 {
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    daO.PersistirPedidoEstado(id, idEstado,nombreUsuario , trans);
+                    daO.PersistirPedidoEstado(id, idEstado, nombreUsuario, trans);
                     trans.Commit();
                     cnn.Close();
                 }
@@ -747,7 +747,7 @@ namespace GAPPLE.Server.Controllers
                         {
                             foreach (var id in orden.IdPedidos.Split(","))
                             {
-                                daO.PersistirPedidoEstado(id, 4,nombreUsuario ,trans);
+                                daO.PersistirPedidoEstado(id, 4, nombreUsuario, trans);
                             }
                         }
                         trans.Commit();
@@ -796,6 +796,21 @@ namespace GAPPLE.Server.Controllers
             }
 
             return c;
+        }
+
+        [HttpPut("revertirorden/{nombreUsuario}")]
+        public IActionResult RevertirOrden(string idOrden, string nombreUsuario)
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            try
+            {
+                daO.RevertirOrden(idOrden, nombreUsuario);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

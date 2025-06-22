@@ -447,5 +447,20 @@ namespace GAPPLE.Server.Data
             }
             return dt;
         }
+
+        public void RevertirOrden(string idPedido, string nombreUsuario)
+        {
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = cnn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_upd_RevertirOrden";
+                cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+                cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
+                cnn.Open();
+                cmd.ExecuteNonQuery();
+                cnn.Close();
+            }
+        }
     }
 }
