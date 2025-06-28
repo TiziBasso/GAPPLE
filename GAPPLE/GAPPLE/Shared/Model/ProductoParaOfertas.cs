@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GAPPLE.Shared.Model
+﻿namespace GAPPLE.Shared.Model
 {
     public class ProductoParaOfertas : ICloneable
     {
@@ -15,6 +9,8 @@ namespace GAPPLE.Shared.Model
         public bool ModificadoManual { get; set; }
         public int CantidadProbador { get; set; }
         private int _cantidadSeleccionada;
+
+        public decimal Precio { get; set; }
 
         public int CantidadSeleccionadaAnterior { get; set; }
 

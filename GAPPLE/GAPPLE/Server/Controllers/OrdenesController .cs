@@ -1,16 +1,11 @@
 ﻿using GAPPLE.Client.Entities;
-using GAPPLE.Client.Pages;
 using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
-using Integra.Web.Shared.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
-using System.Globalization;
 using System.Net;
 using System.Text.Json;
 
@@ -70,6 +65,41 @@ namespace GAPPLE.Server.Controllers
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
                     if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();
 
+                    lstOrdenes.Add(o);
+                }
+            }
+            return lstOrdenes;
+        }
+
+        [HttpGet("listaconpendientes")]
+        public List<Orden> GetOrdenesConPendientes(string? desdeStr, string? hastaStr, int idUsuario)
+        {
+            DateTime? desde = null, hasta = null;
+            if (desdeStr != null && hastaStr != null)
+            {
+                desde = DateTime.Parse(WebUtility.UrlDecode(desdeStr));
+                hasta = DateTime.Parse(WebUtility.UrlDecode(hastaStr));
+            }
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<Orden> lstOrdenes = new();
+            using (DataTable dt = daO.ObtenerOrdenesConPendientes(desde, hasta, idUsuario))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    Orden o = new()
+                    {
+                        Id = (int)row["IdPedido"],
+                        CodigoOrden = row["CodigoOrden"].ToString()!,
+                        Presupuesto = (bool)row["Presupuesto"],
+                        CodCliente = row["CodigoCliente"].ToString(),
+                        Cliente = row["RazonSocial"].ToString(),
+                        Linea = row["Linea"].ToString(),
+                        Creacion = (DateTime)row["AltaRegistro"],
+                        NumeroFactura = row["NumFactura"].ToString(),
+                        Unidades = (int)row["CantidadLineas"]
+                    };
+                    if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
+                    if (row["FechaAprobacion"] != DBNull.Value) o.FechaEntrega = DateTime.Parse(row["FechaAprobacion"].ToString());
                     lstOrdenes.Add(o);
                 }
             }
@@ -168,6 +198,31 @@ namespace GAPPLE.Server.Controllers
                     }
                 }
             }
+
+            return orden;
+        }
+
+        [HttpGet("ordenconpendiente/{codOrden}")]
+        public List<OrdenDetalle> GetOrdenConPendienteDetalle(string? codOrden)
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            List<OrdenDetalle> orden = new();
+                using (DataTable dt = daO.ObtenerOrdenConPendienteDetalle(codOrden))
+                {
+                    if (dt.Rows.Count > 0) //siempre deberia tener pero por las dudas
+                    {
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            OrdenDetalle detalle = new()
+                            {
+                                CodProducto = dr["CodProducto"].ToString(),
+                                Cantidad = (int)dr["Cantidad"],
+                                CantidadAprobada = (int)dr["CantidadAprobada"],
+                            };
+                            orden.Add(detalle);
+                        }
+                    }
+                }
 
             return orden;
         }

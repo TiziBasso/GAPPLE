@@ -92,7 +92,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
                         <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact"
-                                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true" Change="BuscarProductos">
                             <Columns>
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4.5rem" />
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
@@ -203,6 +203,7 @@
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
                                                    class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product))" />
+                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.Precio.ToString("N2")</label>
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -457,7 +458,7 @@ else
         orden.Linea = valorAux;
         GuardarProductosDiferenteLinea();
 
-        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
+        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!, orden.CodListaPrecio);
 
         var grouped = lstProductos.GroupBy(p => p.Familia);
 
@@ -518,6 +519,7 @@ else
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
+        await BuscarProductos();
         orden.CondicionVenta = clientes[index].CondVentaDefault;
         orden.Zona = clientes[index].ZonaDefault;
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Cliente)));
@@ -658,6 +660,7 @@ else
                             CodProducto = product.CodigoProducto,
                             Descuento = product.DescuentoFinal,
                             Probador = product.Probador,
+                            Precio = product.Precio,
                             CantidadProbador = cantProv
                         });
                 }
@@ -671,6 +674,7 @@ else
                             CodProducto = product.CodigoProducto,
                             Descuento = product.DescuentoFinal,
                             Probador = product.Probador,
+                            Precio = product.Precio,
                             CantidadProbador = product.CantidadProbador
                         });
             }
@@ -708,7 +712,7 @@ else
                 if (!valid) return;
             }
 
-            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
                 DialogCustom.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PutPedido(orden);
@@ -774,7 +778,7 @@ else
         border: 1px solid #ccc;
         padding: 5px;
         border-radius: 5px;
-        width: 240px;
+        width: 340px;
         display: flex;
         flex-direction: column;
         gap: 1px;

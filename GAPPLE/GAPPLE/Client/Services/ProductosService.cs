@@ -104,9 +104,9 @@ namespace GAPPLE.Client.Services
                 return null;
         }
 
-        public async ValueTask<List<ProductoParaOfertas>> GetProductosParaOfertas(string linea)
+        public async ValueTask<List<ProductoParaOfertas>> GetProductosParaOfertas(string linea, string codListaPrecio = null)
         {
-            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/productosparaofertas?linea={linea}");
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/productosparaofertas?linea={linea}&codListaPrecio={codListaPrecio}");
             if (response.StatusCode == HttpStatusCode.OK)
                 return await response.Content.ReadFromJsonAsync<List<ProductoParaOfertas>>()!;
             else

@@ -6,16 +6,16 @@
 
 @implements IDisposable
 
-@inject SeguridadService SeguridadService
-@inject DialogService DialogService
-@inject DialogCustom DialogCustom
 @inject OrdenesService OrdenesService
-@inject ProductosService ProductosService
+@inject DialogCustom DialogCustom
+@inject DialogService DialogService
 @inject NotificationService NotificationService
+@inject AuthenticationStateProvider AutenticacionProvider
+@inject SeguridadService SeguridadService
+@inject ProductosService ProductosService
 @inject NavigationManager NavigationManager
 @inject DialogCustom DialogCustom
 @inject IJSFunction JSFunction
-@inject AuthenticationStateProvider AutenticacionProvider
 
 @if (showPage)
 {

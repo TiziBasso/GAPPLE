@@ -10,6 +10,7 @@
 @inject DialogService DialogService
 @inject DialogCustom DialogCustom
 @inject SesionDTO SesionDTO
+@inject IJSRuntime JSRuntime
 @using System.Linq
 @using GAPPLE.Client.Components.Ordenes
 
@@ -93,7 +94,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
                         <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact"
-                        TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true">
+                        TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true" Change="BuscarProductos">
                             <Columns>
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4rem" />
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
@@ -192,17 +193,23 @@
                     @if (showCards && lstProductos != null && lstProductos.Any())
                     {
                         <div class="cards-container">
-                            @foreach (var card in Cards)
-                            {
-                                <div class="card">
+                            <Virtualize Items="Cards" Context="card">
+                                @* @foreach (var card in Cards)
+                            { *@
+                                <div class="card"  @key="card.Guid">
                                     <h6 style="text-align:center;">@card.FamilyName</h6>
                                     @foreach (var product in card.Products)
                                     {
                                         <div class="product">
                                             <label style="width:65px;">@product.CodigoProducto</label>
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
-                                            <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
-                                            class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusin="@(() => {product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada;})" @onfocusout="@(() => AgregarComplemento(product))" />
+                                            <input id="input-@product.CodigoProducto"
+                                            type="text"
+                                            class="product-input"
+                                            value="@product.CantidadSeleccionada"
+                                            @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
+                                            @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
+                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.Precio.ToString("N2")</label>
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -255,7 +262,8 @@
                                         </div>
                                     }
                                 </div>
-                            }
+                                @* } *@
+                            </Virtualize>
                         </div>
                     }
                 </RadzenFieldset>
@@ -434,13 +442,14 @@ else
         GuardarProductosDiferenteLinea();
         orden.Linea = valorAux;
 
-        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!);
-        // lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
+        lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!, orden.CodListaPrecio);
+        lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
         foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
         {
             lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
             lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
         }
+
         var grouped = lstProductos.GroupBy(p => p.Familia);
 
         foreach (var product in lstProductos)
@@ -460,14 +469,27 @@ else
 
                 if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                 {
-                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
-                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
                     product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
                 }
             }
         }
 
+        ReconstruirCards();
+
+        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+        RecalcularOfertas();
+
+        //await JSRuntime.InvokeVoidAsync("refreshDomCache");
+        showCards = true;
+        DialogCustom.CloseDialog();
+    }
+
+    void ReconstruirCards()
+    {
         Cards.Clear();
+        var grouped = lstProductos.GroupBy(p => p.Familia);
         foreach (var group in grouped)
         {
             var productChunks = group.Select((p, i) => new { Product = p, Index = i })
@@ -476,14 +498,6 @@ else
             foreach (var chunk in productChunks)
                 Cards.Add(new Card(group.Key, chunk));
         }
-
-        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
-        ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
-        RecalcularOfertas();
-
-
-        showCards = true;
-        DialogCustom.CloseDialog();
     }
 
     async Task AsignarVariables()
@@ -493,6 +507,7 @@ else
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
+        await BuscarProductos();
         orden.CondicionVenta = clientes[index].CondVentaDefault;
         orden.Zona = clientes[index].ZonaDefault;
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Cliente)));
@@ -510,29 +525,37 @@ else
                 }
                 if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                 {
-                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
-                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
                     product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
                 }
             }
         }
 
-        Cards.Clear();
-        var grouped = lstProductos.GroupBy(p => p.Familia);
-        foreach (var group in grouped)
-        {
-            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
-                                      .GroupBy(x => x.Index / 10)
-                                      .Select(g => g.Select(x => x.Product).ToList());
-            foreach (var chunk in productChunks)
-                Cards.Add(new Card(group.Key, chunk));
-        }
+        // Cards.Clear();
+        // var grouped = lstProductos.GroupBy(p => p.Familia);
+        // foreach (var group in grouped)
+        // {
+        //     var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+        //                               .GroupBy(x => x.Index / 10)
+        //                               .Select(g => g.Select(x => x.Product).ToList());
+        //     foreach (var chunk in productChunks)
+        //         Cards.Add(new Card(group.Key, chunk));
+        // }
 
         ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
         RecalcularOfertas();
 
+        //await JSRuntime.InvokeVoidAsync("refreshDomCache");
+
         DialogCustom.CloseDialog();
     }
+
+    Oferta GetOfertaConMayorDescuento(string codigoProducto)
+    {
+        codigosEnOfertas.TryGetValue(codigoProducto, out var ofertasDondeSeEncuentra);
+        return ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+    }
+
 
     void RecalcularOfertas()
     {
@@ -571,23 +594,22 @@ else
 
                 if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                 {
-                    codigosEnOfertas.TryGetValue(product.CodigoProducto, out var ofertasDondeSeEncuentra);
-                    var ofertaConDescuentoMasAlto = ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+                    var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
                     product.DescuentoFinal = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
                 }
             }
         }
 
-        Cards.Clear();
-        var grouped = lstProductos.GroupBy(p => p.Familia);
-        foreach (var group in grouped)
-        {
-            var productChunks = group.Select((p, i) => new { Product = p, Index = i })
-                                      .GroupBy(x => x.Index / 10)
-                                      .Select(g => g.Select(x => x.Product).ToList());
-            foreach (var chunk in productChunks)
-                Cards.Add(new Card(group.Key, chunk));
-        }
+        // Cards.Clear();
+        // var grouped = lstProductos.GroupBy(p => p.Familia);
+        // foreach (var group in grouped)
+        // {
+        //     var productChunks = group.Select((p, i) => new { Product = p, Index = i })
+        //                               .GroupBy(x => x.Index / 10)
+        //                               .Select(g => g.Select(x => x.Product).ToList());
+        //     foreach (var chunk in productChunks)
+        //         Cards.Add(new Card(group.Key, chunk));
+        // }
     }
 
     bool Validar()
@@ -623,7 +645,8 @@ else
                                 Cantidad = product.CantidadSeleccionada,
                                 CodProducto = product.CodigoProducto,
                                 Descuento = product.DescuentoFinal,
-                                Probador = product.Probador
+                                Probador = product.Probador,
+                                Precio = product.Precio
                             });
                 }
             }
@@ -635,7 +658,8 @@ else
                             Cantidad = product.CantidadSeleccionada,
                             CodProducto = product.CodigoProducto,
                             Descuento = product.DescuentoFinal,
-                            Probador = product.Probador
+                            Probador = product.Probador,
+                            Precio = product.Precio
                         });
             }
             if (lstLineasDif.Any())
@@ -694,11 +718,9 @@ else
                         Width = "fit-content"
                     });
                 if (orden.Usuario == null) return;
-
-                valid = true;
             }
 
-            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", "el pedido"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
                 DialogCustom.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PostPedido(orden);
@@ -721,9 +743,20 @@ else
             NavigationManager.NavigateTo("ordenes");
     }
 
-    private void PersonalizacionDescuento(Producto p, decimal descuento)
+    private async Task OnCantidadChanged(string? nuevoValor, ProductoParaOfertas product)
     {
-
+        if (int.TryParse(nuevoValor, out var cantidad))
+        {
+            if (cantidad != product.CantidadSeleccionada)
+            {
+                product.CantidadSeleccionada = cantidad;
+                await AgregarComplemento(product);
+            }
+        }
+        else
+        {
+            product.CantidadSeleccionada = 0;
+        }
     }
 
     private async Task AgregarComplemento(ProductoParaOfertas product)
@@ -743,14 +776,15 @@ else
         }
     }
 
-
     private class Card
     {
+        public Guid Guid { get; }
         public string FamilyName { get; }
         public List<ProductoParaOfertas> Products { get; }
 
         public Card(string familyName, List<ProductoParaOfertas> products)
         {
+            Guid = Guid.NewGuid();
             FamilyName = familyName;
             Products = products;
         }
@@ -770,7 +804,7 @@ else
         border: 1px solid #ccc;
         padding: 5px;
         border-radius: 5px;
-        width: 240px;
+        width: 340px;
         display: flex;
         flex-direction: column;
         gap: 1px;

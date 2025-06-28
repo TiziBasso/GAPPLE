@@ -69,11 +69,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("productosparaofertas")]
-        public List<ProductoParaOfertas> GetProductosParaOfertas(string linea)
+        public List<ProductoParaOfertas> GetProductosParaOfertas(string linea, string codListaPrecio)
         {
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
             List<ProductoParaOfertas> productos = new();
-            using (DataTable dt = daP.GetProductosParaOfertas(linea))
+            using (DataTable dt = daP.GetProductosParaOfertas(linea, codListaPrecio))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -85,6 +85,7 @@ namespace GAPPLE.Server.Controllers
                         Sinonimo = row["Sinonimo"].ToString()!
                     };
                     if (row["CodigoComplemento"] != DBNull.Value) p.CodigoComplemento = row["CodigoComplemento"].ToString();
+                    if (row["Precio"] != DBNull.Value) p.Precio = decimal.Parse(row["Precio"].ToString());
                     productos.Add(p);
                 }
             }
@@ -93,6 +94,30 @@ namespace GAPPLE.Server.Controllers
 
         [HttpGet("complementos")]
         public List<ProductosComplementos> GetProductosComplementos()
+        {
+            List<ProductosComplementos> pc = new();
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daP.GetProductosComplementos())
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    ProductosComplementos p = new()
+                    {
+                        CodigoPrincipal = row["CodigoPrincipal"].ToString(),
+                        DescripcionPrincipal = row["DescripcionPrincipal"].ToString(),
+                        LineaPrincipal = row["LineaPrincipal"].ToString(),
+                        CodigoRelacionado = row["CodigoRelacionado"].ToString(),
+                        DescripcionRelacionado = row["DescripcionRelacionado"].ToString(),
+                        LineaRelacionado = row["LineaRelacionado"].ToString()
+                    };
+                    pc.Add(p);
+                }
+            }
+            return pc;
+        }
+
+        [HttpGet("precios")]
+        public List<ProductosComplementos> GetPrecios(string codlista, string linea)
         {
             List<ProductosComplementos> pc = new();
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));

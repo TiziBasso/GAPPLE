@@ -45,6 +45,22 @@ namespace GAPPLE.Client.Services
                 return await HttpClient.GetFromJsonAsync<List<Orden>>(uri, cancellationToken.Token);
         }
 
+        public async ValueTask<List<Orden>> GetOrdenesPendientes(DateTime desde, DateTime hasta, int idUsuario, CancellationTokenSource cancellationToken)
+        {
+            string uri = $"{URI_BASE}/listaconpendientes";
+            Dictionary<string, object> query = new();
+            query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
+            query["hastaStr"] = WebUtility.UrlEncode(hasta.AddHours(23).AddMinutes(59).AddSeconds(59).ToString()!);
+            query["idUsuario"] = idUsuario;
+
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+
+            if (cancellationToken == null)
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
+            else
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri, cancellationToken.Token);
+        }
+
         public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
         {
             string uri = $"{URI_BASE}";
@@ -55,6 +71,12 @@ namespace GAPPLE.Client.Services
             uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
             return await HttpClient.GetFromJsonAsync<Orden?>(uri);
+        }
+
+        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetaLLE(string codOrden)
+        {
+            string uri = $"{URI_BASE}/ordenconpendiente/{codOrden}";
+            return await HttpClient.GetFromJsonAsync<List<OrdenDetalle>>(uri);
         }
 
         public async ValueTask<List<Transporte>> GetTransportes()

@@ -1,0 +1,141 @@
+﻿@page "/ordenes/pendientes"
+@using GAPPLE.Client.Components.Ordenes
+@using GAPPLE.Client.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject OrdenesService OrdenesService
+@inject DialogCustom DialogCustom
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject AuthenticationStateProvider AutenticacionProvider
+
+<RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Ordenes con pendientes" class="mb-3" />
+
+<RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End">
+
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Desde:" Component="desde" />
+        <RadzenDatePicker @bind-Value="desde" DateFormat="dd/MM/yyyy" Name="desde" Style="width:8rem" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenLabel Text="Hasta:" Component="hasta" />
+        <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" Style="width:8rem" />
+    </RadzenStack>
+    <RadzenButton Click="FillOrdenes" ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />
+
+</RadzenStack>
+
+<RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
+AllowColumnResize=true Density="Density.Compact" AllowVirtualization=true
+EmptyText="" Style="height:60vh;margin-top:15px;" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+    <Columns>
+        <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
+            <FilterTemplate>
+                <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Cód." Property="@nameof(Orden.CodigoOrden)" Width="150px" FilterValue="codOrdenFilter" Resizable=false>
+            <FilterTemplate>
+                <RadzenNumeric @bind-Value=codOrdenFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="120px" TextAlign="TextAlign.Center" Filterable=false Resizable=false>
+            <Template>
+                <RadzenCheckBox Value="context.Presupuesto" ReadOnly=true />
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="180px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
+
+        <RadzenDataGridColumn Title="Cód.Cliente" Property="@nameof(Orden.CodCliente)" Width="110px" />
+
+        <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="120px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter" Resizable=false>
+            <FilterTemplate>
+                <RadzenDatePicker @bind-Value=creacionFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.NROTANGO)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+            <Template>
+                @(context.NROTANGO != null ? context.NROTANGO : "NO")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Unidad" Property="@nameof(Orden.Unidades)" Width="90px" TextAlign="TextAlign.Right" FilterValue="unidadesFilter" Resizable=false>
+            <FilterTemplate>
+                <RadzenNumeric @bind-Value=unidadesFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="Orden" Title="Aprobado" Property="@nameof(Orden.FechaEntrega)" Width="120px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" FilterValue="entregaFilter" Resizable=false>
+            <FilterTemplate>
+                <RadzenDatePicker @bind-Value=entregaFilter AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+        TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+            <Template Context="orden">
+                <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                Click="@(() => VerOrden(orden))" @onclick:stopPropagation="true" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    RadzenDataGrid<Orden> grid;
+    List<Orden> lstOrdenes = new();
+    int? idFilter, unidadesFilter;
+    DateTime? creacionFilter, entregaFilter;
+    List<string> zonasFilter = new(), estadosFilter = new();
+    string? zonaFilter, estadoFilter, codOrdenFilter;
+    DateTime desde = DateTime.Today.AddDays(-7), hasta = DateTime.Today;
+    CancellationTokenSource cancellationToken = new();
+    int render;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // await SeguridadService.ValidatePageAccess();
+        // permisos = await SeguridadService.GetPermisos("ordenes");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+            await FillOrdenes();
+    }
+
+    private async Task FillOrdenes()
+    {
+        if (desde > hasta)
+            NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, "La fecha hasta no puede ser mayor a la fecha desde");
+        else
+        {
+            DialogCustom.OpenBusyWithLoader("Cargando...");
+            var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
+            var auth = await autenticacionExt.GetAuthenticationStateAsync();
+            lstOrdenes = await OrdenesService.GetOrdenesPendientes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59), int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
+            DialogCustom.CloseDialog();
+            StateHasChanged();
+            await grid.Reload();
+
+            if (!lstOrdenes.Any())
+                NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, MensajesHelper.EmptyResponse);
+            else
+            {
+                zonasFilter = lstOrdenes.Where(x => x.Zona != null).Select(x => x.Zona!).Distinct().ToList();
+                estadosFilter = lstOrdenes.Where(x => x.DescripcionEstado != null).Select(x => x.DescripcionEstado!).Distinct().ToList();
+            }
+        }
+    }
+
+    private async Task VerOrden(Orden orden)
+    {
+        await DialogService.OpenAsync<OrdenesConPendientesGrid>($"Orden {orden.CodigoOrden}",new(){ { "Orden",orden} },new(){ShowClose=true});
+    }
+}

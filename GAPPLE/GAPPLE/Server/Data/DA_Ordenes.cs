@@ -41,6 +41,26 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
+        public DataTable ObtenerOrdenesConPendientes(DateTime? desde, DateTime? hasta, int idUsuario)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_ordenesconpendientes"
+                };
+                cmd.Parameters.AddWithValue("@pDesde", desde);
+                cmd.Parameters.AddWithValue("@pHasta", hasta);
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
         public DataTable ObtenerOrden(string? codOrden, int? idPedido, SqlTransaction? trans = null)
         {
             DataTable dt = new DataTable();
@@ -96,6 +116,24 @@ namespace GAPPLE.Server.Data
                     CommandText = "prc_get_PedidosDetalle"
                 };
                 cmd.Parameters.AddWithValue("@pCodOrden", codOrden);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
+        }
+
+        public DataTable ObtenerOrdenConPendienteDetalle(string codOrden)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_OrdenesConPendienteDetalle"
+                };
+                cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
                 SqlDataAdapter da = new(cmd);
                 da.Fill(dt);
             }

@@ -53,7 +53,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable GetProductosParaOfertas(string linea)
+        public DataTable GetProductosParaOfertas(string linea, string codListaPrecios)
         {
             SqlConnection cnn;
             SqlCommand cmd = new();
@@ -64,6 +64,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_get_ProductosParaOfertas";
             cmd.Parameters.AddWithValue("@pLinea", linea);
+            if(codListaPrecios != null) cmd.Parameters.AddWithValue("@pCodListaPrecio", codListaPrecios);
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);
             return dt;

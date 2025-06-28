@@ -134,6 +134,7 @@ namespace GAPPLE.Shared.Model
         public int IdProducto { get; set; }
 
         public string? CodProducto { get; set; }
+        public decimal Precio { get; set; }
 
         public int Cantidad { get; set; }
 
