@@ -22,6 +22,9 @@ namespace GAPPLE.Shared.Model
         public string? Observaciones { get; set; }
         public string? CodListaPrecioDefault { get; set; }
         public string? CondVentaDefault { get; set; }
+        public string? Domicilio { get; set; }
+        public string? CodigoPostal { get; set; }
+        public string? Localidad { get; set; }
         public string? ZonaDefault { get; set; }
     }
 }

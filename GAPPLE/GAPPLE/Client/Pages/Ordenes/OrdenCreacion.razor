@@ -498,6 +498,14 @@ else
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
 
+
+        if(sucursalesPorClientes.Count == 0)
+        {
+            Console.WriteLine("entro");
+            var cliente = clientes.Find(x => x.CodigoCliente == orden.CodCliente);
+            orden.Entrega = $"{cliente.Domicilio}, {cliente.Localidad}, {cliente.CodigoPostal}";
+        }
+
         foreach (var product in lstProductos)
         {
             if (!product.ModificadoManual)
