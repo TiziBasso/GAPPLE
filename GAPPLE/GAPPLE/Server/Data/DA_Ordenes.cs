@@ -258,7 +258,7 @@ namespace GAPPLE.Server.Data
 
         public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
-                                            string observaciones, DateTime? fechaEntrega, string edicionUsuario, string? observacionesZentra, SqlTransaction transaction)
+                                            string observaciones, DateTime? fechaEntrega, string edicionUsuario, string? observacionesZentra, string codOrdenCambiar, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -280,6 +280,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", edicionUsuario);
+            if(codOrdenCambiar != null) cmd.Parameters.AddWithValue("@pCodigoOrdenCambiar", codOrdenCambiar);
             if (!string.IsNullOrEmpty(observacionesZentra)) cmd.Parameters.AddWithValue("@pObservacionesZentra", observacionesZentra);
             cmd.ExecuteNonQuery();
         }
