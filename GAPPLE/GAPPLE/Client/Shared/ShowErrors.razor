@@ -4,12 +4,11 @@
 {
     <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" ShowIcon="false"
                  Style="margin-top:0; margin-top:15px;">
-        <RadzenText Text="Errores:" TextStyle="TextStyle.Subtitle1" class="rz-color-danger" />
-        <RadzenStack Style="height:25vh; overflow:scroll; width:100%;">
+        <RadzenStack JustifyContent=JustifyContent.Left Style="height:25vh; overflow:auto; width:100%;">
             <dl>
                 @foreach (var key in lstErrores.Keys)
                 {
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Style="width:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Left" Style="width:100%">
                         <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
                             <dt style="margin-left:5px;">
                                 @key:
@@ -69,3 +68,8 @@ else
     }
 }
 
+<style>
+    .rz-alert-content {
+        width: 100% !important;
+    }
+</style>

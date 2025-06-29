@@ -1,8 +1,12 @@
 ﻿using GAPPLE.Server.Data;
+using GAPPLE.Server.Tools;
 using GAPPLE.Shared.Model;
+using Integra.Web.Server.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace GAPPLE.Server.Controllers
 {
@@ -12,10 +16,13 @@ namespace GAPPLE.Server.Controllers
     {
         private IConfiguration Configuration { get; }
         private Usuario Usuario { get; }
+        private readonly IHubContext<SignalRController> HubContext;
 
-        public ProductosController(IConfiguration configuration)
+
+        public ProductosController(IConfiguration configuration, IHubContext<SignalRController> hub = null)
         {
             Configuration = configuration;
+            HubContext = hub;
         }
 
         [HttpGet]
@@ -196,5 +203,90 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
+        [HttpPost("procesar")]
+        public async Task<IActionResult> ProcesarArchivo(ByteArrayRequest req)
+        {
+            try
+            {
+                List<ProductoOrden> productos = new();
+                SignalRController srC = new();
+                DataTable dt = ManejoDeArchivos.ExcelToDataTable(req.File, false, true);
+                int i = 0;
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        ProductoOrden p = null;
+                        if (!string.IsNullOrEmpty(row["0"].ToString().Trim()))
+                        {
+                            var cod = row["0"].ToString().Trim();
+                            p = GetProductoOrden($"%{cod}", req.CodListaPrecio);
+                            if (p == null)
+                                ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El código {cod} no sé encontró");
+                            else
+                            {
+                                if (int.TryParse(row["1"].ToString(), out int cant))
+                                    p.CantidadSeleccionada = cant;
+
+                                if (int.TryParse(row["2"].ToString(), out int prob))
+                                    p.CantidadProbador = prob;
+
+                                if (p.CantidadProbador == 0 && p.CantidadSeleccionada == 0)
+                                    ModelState.AddModelError($"En la fila {row["originalRow"]}", "No hay cantidades cargadas");
+                            }
+                        }
+                        else
+                            ModelState.AddModelError($"En la fila {row["originalRow"]}", "La columna codigo producto está vacía");
+
+                        if (p != null && (p.CantidadSeleccionada > 0 || p.CantidadProbador > 0))
+                            productos.Add(p);
+
+                        i++;
+                        await srC.CambiarPorcentajeTarea(HubContext.Clients, req.ConnectionId, (i * 100 / dt.Rows.Count));
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("El archivo", "Se encuentra vacío o no se pudo leer");
+                }
+
+                if (ModelState.ErrorCount > 0)
+                    return BadRequest(ModelState);
+                else
+                    return Ok(productos);
+            }
+            catch (Exception ex)
+            {
+                //log
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        internal ProductoOrden GetProductoOrden(string codProducto, string codListaPrecio)
+        {
+            ProductoOrden p = null;
+            DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, null, null, null))
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    p = new()
+                    {
+                        CodigoProducto = row["CodigoProducto"].ToString()!,
+                        Descripcion = row["Descripcion"].ToString()!,
+                    };
+
+                    using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, p.CodigoProducto))
+                    {
+                        if (dtP.Rows.Count > 0)
+                            p.Precio = decimal.Parse(dtP.Rows[0]["Precio"].ToString());
+                    }
+                }
+            }
+
+            return p;
+        }
     }
 }

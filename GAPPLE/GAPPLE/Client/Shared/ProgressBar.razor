@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+@inject SignalRService SignalRService
+
+<RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Class="rz-p-12">
+    <RadzenText TextStyle="TextStyle.H6">@Text</RadzenText>
+    <RadzenProgressBar Value="Porcentaje"
+                       ProgressBarStyle="ProgressBarStyle.Secondary"
+                       Mode="ProgressBarMode.Determinate"
+                       Style="width:60vw; color:#000000" />
+</RadzenStack>
+
+@code {
+    [Parameter] public double Porcentaje { get; set; }
+    [Parameter] public string Text { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SignalRService.StartConnection();
+        SignalRService.ReceivePercent(Cambio);
+        SignalRService.ReceiveText(Cambio);
+    }
+
+    private void Cambio(int p)
+    {
+        Porcentaje = p;
+        StateHasChanged();
+    }
+
+    private void Cambio(string t)
+    {
+        Porcentaje = 0;
+        Text = t;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await SignalRService.StopConnection();
+    }
+}
