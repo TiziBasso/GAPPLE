@@ -11,12 +11,19 @@
         private int _cantidadSeleccionada;
 
         public decimal Precio { get; set; }
+        public decimal PrecioConDescuento
+        {
+            get
+            {
+                return Precio * (1 - DescuentoFinal / 100);
+            }
+        }
+        public decimal DescuentoFinal { get; set; }
 
         public int CantidadSeleccionadaAnterior { get; set; }
 
         public int CantidadSeleccionada { get; set; }
 
-        public decimal DescuentoFinal { get; set; }
         public string Sinonimo { get; set; }
         public string? CodigoComplemento { get; set; }
 

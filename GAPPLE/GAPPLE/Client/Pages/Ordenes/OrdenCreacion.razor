@@ -209,7 +209,7 @@
                                             value="@product.CantidadSeleccionada"
                                             @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
                                             @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
-                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.Precio.ToString("N2")</label>
+                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">

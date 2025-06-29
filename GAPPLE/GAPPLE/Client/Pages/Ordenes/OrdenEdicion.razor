@@ -203,7 +203,7 @@
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
                                             <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
                                                    class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product))" />
-                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.Precio.ToString("N2")</label>
+                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
