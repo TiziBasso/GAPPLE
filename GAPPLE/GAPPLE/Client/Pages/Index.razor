@@ -58,32 +58,63 @@
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
-
-                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                    <RadzenCard Style="width:290px;height:fit-content">
-                        <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
-                            <strong>Cantidad de productos aprobados del mes</strong>
-                        </div>
-                        <hr />
-                        <div style="width:100%;display:flex; align-items:center; justify-content:center">
-                            <h5 class="DashBoardH5">@cantidadesProductos.CantidadAprobada.ToString("N0", new CultureInfo("es-AR"))</h5>
-                        </div>
-                    </RadzenCard>
-                </RadzenColumn>
-
-                <RadzenColumn Size="12" SizeMD="4" SizeXL="12">
-                    <RadzenCard Style="width:290px;height:fit-content">
-                        <div style="display:flex; align-items:center; justify-content:center; overflow:visible;text-align:center">
-                            <strong>Cantidad de productos pendientes del mes</strong>
-                        </div>
-                        <hr />
-                        <div style="width:100%;display:flex; align-items:center; justify-content:center">
-                            <h5 class="DashBoardH5">@cantidadesProductos.CantidadPendiente.ToString("N0", new CultureInfo("es-AR"))</h5>
-                        </div>
-                    </RadzenCard>
-                </RadzenColumn>
-
             </RadzenRow>
+
+            <RadzenCard Style="width:450px;height:fit-content">
+                <table border="0" id="tablaIndicadores">
+                    <tbody>
+                        <tr>
+                            <td><strong>Pedidos ingresados</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.PedidosIngresados</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Pedidos aprobados</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.PedidosAprobados</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Pedidos preparados</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.PedidosPreparados</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Productos ingresados</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.CantidadesIngresadas</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Productos aprobados</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.CantidadesAprobadas</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Productos pendientes</strong></td>
+                            <td class="tdSpanIndicador"><span>@indicadores.CantidadesPendientes</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Precio de productos</strong></td>
+                            <td class="tdSpanIndicador"><span>$ @indicadores.TotalPrecioConPendientes.ToString("N2", new CultureInfo("es-AR"))</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Precio de productos pendientes</strong></td>
+                            <td class="tdSpanIndicador"><span>$ @indicadores.TotalPrecioPendientes.ToString("N2", new CultureInfo("es-AR"))</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Precio de productos aprobados</strong></td>
+                            <td class="tdSpanIndicador"><span>$ @indicadores.TotalPrecioNoPendientes.ToString("N2", new CultureInfo("es-AR"))</span></td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Precio de productos en tango</strong></td>
+                            <td class="tdSpanIndicador"><span>$ @indicadores.TotalPrecioEnTango.ToString("N2", new CultureInfo("es-AR"))</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
 }
@@ -116,6 +147,8 @@
     IEnumerable<OrdenDashboard> closedIssues;
 
     CantidadesProductosDashboard cantidadesProductos = new();
+
+    Indicadores indicadores = new();
 
     bool showHome;
     int idUsuario;
@@ -151,6 +184,7 @@
                 await Task.Delay(100);
                 cantidadesProductos = await OrdenesService.GetCantidadesDeProductos(idUsuario);
                 issues = await OrdenesService.GetOrdenDashboard(idUsuario);
+                indicadores = await OrdenesService.GetIndicadores(idUsuario);
                 openIssues = issues.Where(x => x.AltaRegistro != null);
                 closedIssues = issues.Where(x => x.FechaAprobacion != null);
 
@@ -195,3 +229,17 @@
 
 
 }
+
+<style>
+    .tdSpanIndicador{
+        text-align:end;
+    }
+
+    #tablaIndicadores {
+        width:100%;
+    }
+
+    #tablaIndicadores>tbody>tr:nth-child(2n) {
+            background: #f1f1f1;
+    }
+</style>
