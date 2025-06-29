@@ -63,15 +63,24 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
         {
-            string uri = $"{URI_BASE}";
-            Dictionary<string, object> query = new();
-            query["codOrden"] = codOrden;
-            query["conDetalle"] = conDetalle;
+            string uri = $"{URI_BASE}?{string.Join("&", new Dictionary<string, object>
+            {
+                ["codOrden"] = codOrden,
+                ["conDetalle"] = conDetalle
+            }.Select(x => $"{x.Key}={x.Value}"))}";
 
-            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+            var httpResponse = await HttpClient.GetAsync(uri);
 
-            return await HttpClient.GetFromJsonAsync<Orden?>(uri);
+            if (!httpResponse.IsSuccessStatusCode)
+                return null;
+
+            if (httpResponse.Content.Headers.ContentLength == 0)
+                return null;
+
+            var response = await httpResponse.Content.ReadFromJsonAsync<Orden>();
+            return response;
         }
+
 
         public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetaLLE(string codOrden)
         {

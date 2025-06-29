@@ -107,7 +107,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden? GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction? trans)
+        public Orden GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction? trans)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;
@@ -155,14 +155,16 @@ namespace GAPPLE.Server.Controllers
                     if (row["CodTransporte"] != DBNull.Value) orden.CodTransporte = row["CodTransporte"].ToString();
                     if (row["DescripcionTransporte"] != DBNull.Value) orden.Transporte = row["DescripcionTransporte"].ToString();
                 }
-
-                using (DataTable dt2 = daO.ObtenerOrden(codOrden.StartsWith("X-") ? "F" + codOrden.Substring(1) : "X" + codOrden.Substring(1), idPedido, trans))
+                if (orden != null)
                 {
-                    if (dt2.Rows.Count > 0)
+                    using (DataTable dt2 = daO.ObtenerOrden(codOrden.StartsWith("X-") ? "F" + codOrden.Substring(1) : "X" + codOrden.Substring(1), idPedido, trans))
                     {
-                        var row = dt2.Rows[0];
-                        if (row["IdEstado"].ToString() == "1")
-                            orden.TieneOrdenDoble = dt2.Rows.Count > 0;
+                        if (dt2.Rows.Count > 0)
+                        {
+                            var row = dt2.Rows[0];
+                            if (row["IdEstado"].ToString() == "1")
+                                orden.TieneOrdenDoble = dt2.Rows.Count > 0;
+                        }
                     }
                 }
             }
@@ -186,7 +188,8 @@ namespace GAPPLE.Server.Controllers
                                 Descripcion = dr["Descripcion"].ToString(),
                                 Cantidad = (int)dr["Cantidad"],
                                 CantidadAprobada = (int)dr["CantidadAprobada"],
-                                CantidadCancelada = (int)dr["CantidadCancelada"]
+                                CantidadCancelada = (int)dr["CantidadCancelada"],
+                                Precio = (decimal)dr["Precio"]
                             };
                             if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
                             if (detalle.CantidadProbador > 0) detalle.Probador = true;
@@ -207,22 +210,22 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<OrdenDetalle> orden = new();
-                using (DataTable dt = daO.ObtenerOrdenConPendienteDetalle(codOrden))
+            using (DataTable dt = daO.ObtenerOrdenConPendienteDetalle(codOrden))
+            {
+                if (dt.Rows.Count > 0) //siempre deberia tener pero por las dudas
                 {
-                    if (dt.Rows.Count > 0) //siempre deberia tener pero por las dudas
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        foreach (DataRow dr in dt.Rows)
+                        OrdenDetalle detalle = new()
                         {
-                            OrdenDetalle detalle = new()
-                            {
-                                CodProducto = dr["CodProducto"].ToString(),
-                                Cantidad = (int)dr["Cantidad"],
-                                CantidadAprobada = (int)dr["CantidadAprobada"],
-                            };
-                            orden.Add(detalle);
-                        }
+                            CodProducto = dr["CodProducto"].ToString(),
+                            Cantidad = (int)dr["Cantidad"],
+                            CantidadAprobada = (int)dr["CantidadAprobada"],
+                        };
+                        orden.Add(detalle);
                     }
                 }
+            }
 
             return orden;
         }
@@ -411,19 +414,23 @@ namespace GAPPLE.Server.Controllers
                     cnn.Open();
                     trans = cnn.BeginTransaction();
 
+                    string codOrdenAux = null;
+
                     if (pedido.Factura)
                     {
-                        daO.UpdatePedidoCabecera(pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
+                        if (pedido.CodigoOrdenOriginal.Contains("X")) codOrdenAux = "F" + pedido.CodigoOrdenOriginal.Substring(1);
+                        daO.UpdatePedidoCabecera(pedido.CodigoOrdenOriginal, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, pedido.Factura, false,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, codOrdenAux, trans);
                     }
                     else
                     {
-                        daO.UpdatePedidoCabecera(pedido.CodigoOrden, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
+                        if (pedido.CodigoOrdenOriginal.Contains("F")) codOrdenAux = "X" + pedido.CodigoOrdenOriginal.Substring(1);
+                        daO.UpdatePedidoCabecera(pedido.CodigoOrdenOriginal, pedido.Linea!, pedido.CodCliente!, pedido.Detalle!.Sum(x => x.Cantidad), (int)pedido.IdEstado!,
                                                             pedido.Zona!, pedido.CodListaPrecio, false, pedido.Presupuesto,
                                                             pedido.CodTransporte!, pedido.CondicionVenta!, pedido.Entrega!,
-                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, trans);
+                                                            pedido.Notas!, pedido.FechaEntrega != null ? pedido.FechaEntrega!.Value : null, pedido.Usuario, pedido.ObservacionesZentra, codOrdenAux, trans);
                     }
 
                     daO.EliminarPedidoDetalle(pedido.CodigoOrden, trans);
@@ -431,7 +438,7 @@ namespace GAPPLE.Server.Controllers
                     foreach (var item in pedido.Detalle!)
                     {
                         numLinea++;
-                        daO.PersistirPedidoDetalle(pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador ? item.CantidadProbador : 0, item.Descuento, trans);
+                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador ? item.CantidadProbador : 0, item.Descuento, trans);
                         item.CantidadProbador = 0;
                     }
 

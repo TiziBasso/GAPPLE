@@ -93,7 +93,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
-                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact"
+                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1" || string.IsNullOrEmpty(valorAux))" Density="Density.Compact"
                         TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true" Change="BuscarProductos">
                             <Columns>
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4rem" />
@@ -209,7 +209,7 @@
                                             value="@product.CantidadSeleccionada"
                                             @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
                                             @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
-                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.Precio.ToString("N2")</label>
+                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
                                             @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                             {
                                                 <div style="background:yellow; display:flex;">
@@ -720,7 +720,7 @@ else
                 if (orden.Usuario == null) return;
             }
 
-            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
                 DialogCustom.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PostPedido(orden);
