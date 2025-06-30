@@ -7,7 +7,8 @@
         {
             GetData(i);
             <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
-                  Detalle="detalle" />
+                  Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
+                  ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0)) />
         }
     </div>
 }
@@ -17,25 +18,39 @@
     [Parameter] public EventCallback Imprimir { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
-    List<OrdenExpedicionDetalle>? detalle = new();
+    List<OrdenExpedicionDetalle> detalle = new();
 
 
     bool showModal, test;
-    int cantPages = 0, lineasXPag = 48;
+    int cantPages = 1, lineasXPag0 = 46, lineasXPagN = 50;
 
     protected override async Task OnInitializedAsync()
     {
         int sumLineas = Orden.Detalle!.Count + 1;
 
-        cantPages = sumLineas / lineasXPag;
-        if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
+        if (sumLineas / lineasXPag0 > 0)
+        {
+            var aux = ((sumLineas - lineasXPag0) / lineasXPagN);
+            if (((sumLineas - lineasXPag0) % lineasXPagN) > 0) aux++;
+            cantPages += aux;
+        }
 
         showModal = true;
     }
 
     private void GetData(int page)
     {
-        int showed = page * lineasXPag, remaining = lineasXPag;
+        int showed, remaining;
+        if (page == 0)
+        {
+            showed = 0;
+            remaining = lineasXPag0;
+        }
+        else
+        {
+            showed = lineasXPag0 + (lineasXPagN * (page - 1));
+            remaining = lineasXPagN;
+        }
 
         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
         remaining -= detalle!.Count;

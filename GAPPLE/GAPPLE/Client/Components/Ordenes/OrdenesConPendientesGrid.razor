@@ -1,0 +1,26 @@
+﻿@inject OrdenesService OrdenesService
+
+<RadzenDataGrid Data="detalles" AllowSorting="true"
+                AllowColumnResize=true Density="Density.Compact" AllowVirtualization=true
+                EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+    <Columns>
+        <RadzenDataGridColumn Title="Cod. Producto" Property="@nameof(OrdenDetalle.CodProducto)" />
+        <RadzenDataGridColumn Title="Cant. pedida" Property="@nameof(OrdenDetalle.Cantidad)" />
+        <RadzenDataGridColumn Title="Cant. aprobada" Property="@nameof(OrdenDetalle.CantidadAprobada)" />
+        <RadzenDataGridColumn Title="Cant. pendiente">
+            <Template>
+                <span>@(context.Cantidad - context.CantidadAprobada)</span>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter] public Orden Orden { get; set; }
+    List<OrdenDetalle> detalles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        detalles = await OrdenesService.GetOrdenConPendienteDetaLLE(Orden.CodigoOrden);
+    }
+}

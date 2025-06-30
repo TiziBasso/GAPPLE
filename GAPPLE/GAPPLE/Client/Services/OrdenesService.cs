@@ -45,16 +45,47 @@ namespace GAPPLE.Client.Services
                 return await HttpClient.GetFromJsonAsync<List<Orden>>(uri, cancellationToken.Token);
         }
 
-        public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
+        public async ValueTask<List<Orden>> GetOrdenesPendientes(DateTime desde, DateTime hasta, int idUsuario, CancellationTokenSource cancellationToken)
         {
-            string uri = $"{URI_BASE}";
+            string uri = $"{URI_BASE}/listaconpendientes";
             Dictionary<string, object> query = new();
-            query["codOrden"] = codOrden;
-            query["conDetalle"] = conDetalle;
+            query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
+            query["hastaStr"] = WebUtility.UrlEncode(hasta.AddHours(23).AddMinutes(59).AddSeconds(59).ToString()!);
+            query["idUsuario"] = idUsuario;
 
             uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
-            return await HttpClient.GetFromJsonAsync<Orden?>(uri);
+            if (cancellationToken == null)
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri);
+            else
+                return await HttpClient.GetFromJsonAsync<List<Orden>>(uri, cancellationToken.Token);
+        }
+
+        public async ValueTask<Orden?> GetOrden(string codOrden, bool conDetalle = true)
+        {
+            string uri = $"{URI_BASE}?{string.Join("&", new Dictionary<string, object>
+            {
+                ["codOrden"] = codOrden,
+                ["conDetalle"] = conDetalle
+            }.Select(x => $"{x.Key}={x.Value}"))}";
+
+            var httpResponse = await HttpClient.GetAsync(uri);
+
+            if (!httpResponse.IsSuccessStatusCode)
+                return null;
+
+            if (httpResponse.Content.Headers.ContentLength == 0)
+                return null;
+
+            var response = await httpResponse.Content.ReadFromJsonAsync<Orden>();
+            return response;
+        }
+
+
+        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetaLLE(string codOrden)
+        {
+            string uri = $"{URI_BASE}/ordenconpendiente/{codOrden}";
+            return await HttpClient.GetFromJsonAsync<List<OrdenDetalle>>(uri);
         }
 
         public async ValueTask<List<Transporte>> GetTransportes()
@@ -87,7 +118,8 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                pedido.Usuario = SesionDTO.Nombre;
+                if (pedido.Usuario == null)
+                    pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
                 if (response.IsSuccessStatusCode)
                 {
@@ -179,6 +211,25 @@ namespace GAPPLE.Client.Services
                 return new(false);
             }
         }
+        
+        public async ValueTask<Response> RevertirOrden(string id)
+        {
+            try
+            {
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{SesionDTO.Nombre}", id);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "CambioEstadoPedidos");
+                return new(false);
+            }
+        }
 
         public async ValueTask<List<OrdenExpedicion>> GetOrdenesExpediciones()
         {
@@ -192,7 +243,7 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<OrdenExpedicion> GetOrdenExpedicionImprimir(string idOrden)
         {
-            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir?idOrden={idOrden}");
+            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir/{SesionDTO.Nombre}?idOrden={idOrden}");
         }
 
         public async ValueTask<Response> PostExpedicionDetalle(OrdenExpedicion orden)
@@ -236,6 +287,11 @@ namespace GAPPLE.Client.Services
         public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos(int idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos?idUsuario={idUsuario}");
+        }
+
+        public async ValueTask<Indicadores> GetIndicadores(int idUsuario)
+        {
+            return await HttpClient.GetFromJsonAsync<Indicadores>($"{URI_BASE}/indicadores?idUsuario={idUsuario}");
         }
 
         public async ValueTask<Response> PasarATango(Orden order)

@@ -1,21 +1,21 @@
 ﻿<table style="border-collapse: collapse;width: 100%;">
     <thead style="font-style: italic;">
         <tr>
-            <th style="border:1px solid;border-right: none; padding: 5px;">#</th>
-            <th style="border:1px solid;border-right: none; padding: 5px;">ID</th>
-            <th style="border:1px solid;border-right: none;padding: 5px;">Producto</th>
+            <th style="border:1px solid;border-right: none; padding: 5px; width:10%;">#</th>
+            <th style="border:1px solid;border-right: none; padding: 5px; width:20%;">ID</th>
+            <th style="border:1px solid;border-right: none;padding: 5px; width:30%;">Producto</th>
             @if (ShowF)
             {
-                <th style="border:1px solid;border-right: none;padding: 5px;">F</th>
+                <th style="border:1px solid;border-right: none;padding: 5px; width:10%;">F</th>
             }
             @if (ShowX)
             {
-                <th style="border:1px solid;border-right:none;padding: 5px;">X</th>
+                <th style="border:1px solid;border-right:none;padding: 5px; width:10%;">X</th>
             }
-            <th style="border:1px solid;border-right:none;padding: 5px;">T</th>
+            <th style="border:1px solid;border-right:none;padding: 5px; width:10%;">T</th>
             @if (ShowPX || ShowPF)
             {
-                <th style="border:1px solid;padding: 5px;">Probador</th>
+                <th style="border:1px solid;padding: 5px; width:10%;">Probador</th>
             }
         </tr>
     </thead>
@@ -23,25 +23,25 @@
         @foreach (var item in Detalle)
         {
             <tr style="border-bottom:1px solid">
-                <td style="text-align: end;">@item.NumLinea</td>
-                <td style="text-align: center;">@item.CodProducto</td>
-                <td>@item.DescripcionProducto</td>
+                <td style="text-align: end;padding:1px;">@item.NumLinea</td>
+                <td style="text-align: center;padding:1px;">@item.CodProducto</td>
+                <td style="padding:1px;">@item.DescripcionProducto</td>
                 @if (ShowF)
                 {
-                    <td style="text-align: end;">@item.CantidadF</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadF</td>
                 }
                 @if (ShowX)
                 {
-                    <td style="text-align: end;">@item.CantidadX</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadX</td>
                 }
-                <td style="text-align:end">@item.Cantidad</td>
+                <td style="text-align:end;padding:1px;">@item.Cantidad</td>
                 @if (ShowPF)
                 {
-                    <td style="text-align: end;">@item.CantidadProbadorF</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadProbadorF</td>
                 }
                 @if (ShowPX)
                 {
-                    <td style="text-align: end;">@item.CantidadProbadorX</td>
+                    <td style="text-align: end;padding:1px;">@item.CantidadProbadorX</td>
                 }
                 <td></td>
             </tr>

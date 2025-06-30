@@ -1,28 +1,39 @@
 ﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 30cm; break-after:page">
+
     <div>
         <strong>@(Orden.Fecha.Value.ToString("dd/MM/yyyy"))</strong>
     </div>
-    <div style="display: grid;gap: 10px;margin-top: 10px;">
-        <div style="display: flex;justify-content: space-between;">
-            <strong style="width: fit-content;">Cliente: (@Orden.CodCliente) @Orden.RazonSocial</strong>
-            <strong style="width: fit-content;">CUIT: @Orden.CUIT</strong>
-            <strong style="width: fit-content;">@Orden.CondicionIVA</strong>
-        </div>
-        <div style="display: flex;justify-content: space-between;">
-            <strong style="width: fit-content;">Fecha de entrega: @(Orden.FechaEntrega != null ? Orden.FechaEntrega.Value.ToString("dd/MM/yyyy") : "")</strong>
-            <strong style="width: fit-content;">Entregar En: @Orden.EntregarEn</strong>
-        </div>
-        <div style="display: flex;justify-content: space-between;">
-            <strong style="width: fit-content;">Orden: @Orden.Orden</strong>
-            <strong style="width: fit-content;">O.C.: @Orden.OrdenCompra</strong>
-        </div>
-        <span>
-            <strong style="width: fit-content;">Observaciones:</strong> @Orden.ObservacionesZentra
-        </span>
+    <div style="display: flex;justify-content: space-between;">
+        <strong style="width: fit-content;">Orden: @Orden.Orden</strong>
+        <strong style="width: fit-content;">O.C.: @Orden.OrdenCompra</strong>
     </div>
-    <div style="margin-top: 10px;height: 25cm;">
-        <PageData Detalle="Detalle" ShowF=@(Detalle.Sum(x=>x.CantidadF) > 0) ShowX=@(Detalle.Sum(x=>x.CantidadX) > 0) ShowPF=@(Detalle.Sum(x=>x.CantidadProbadorF) > 0) ShowPX=@(Detalle.Sum(x=>x.CantidadProbadorX) > 0) />
-    </div>
+    @if (PageNum == 1)
+    {
+        <div style="display: grid;gap: 10px;margin-top: 10px;">
+            <div style="display: flex;justify-content: space-between;">
+                <strong style="width: fit-content;">Cliente: (@Orden.CodCliente) @Orden.RazonSocial</strong>
+                <strong style="width: fit-content;">CUIT: @Orden.CUIT</strong>
+                <strong style="width: fit-content;">@Orden.CondicionIVA</strong>
+            </div>
+            <div style="display: flex;justify-content: space-between;">
+                <strong style="width: fit-content;">Fecha de entrega: @(Orden.FechaEntrega != null ? Orden.FechaEntrega.Value.ToString("dd/MM/yyyy") : "")</strong>
+                <strong style="width: fit-content;">Entregar En: @Orden.EntregarEn</strong>
+            </div>
+            <span>
+                <strong style="width: fit-content;">Observaciones:</strong> @Orden.ObservacionesZentra
+            </span>
+        </div>
+        <div style="margin-top: 10px;height: 25cm;">
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX />
+        </div>
+    }
+    else
+    {
+        <div style="margin-top: 10px;height: 28cm;">
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX />
+        </div>
+    }
+
     <div style="width: 100%;margin-top: 10px;">
         <span style="text-align: end;width: 100%;display: block;">Página @PageNum de @CantPages</span>
     </div>
@@ -35,6 +46,10 @@
     [Parameter, EditorRequired] public int PageNum { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
     [Parameter, EditorRequired] public List<OrdenExpedicionDetalle> Detalle { get; set; }
+    [Parameter] public bool ShowX { get; set; }
+    [Parameter] public bool ShowF { get; set; }
+    [Parameter] public bool ShowPF { get; set; }
+    [Parameter] public bool ShowPX { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

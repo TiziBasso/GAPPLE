@@ -28,6 +28,8 @@
 
         public static string SaveSuccess(string value) => $"{value} se ha guardado correctamente!";
 
+        public static string SaveSuccess(string value, string operacion) => $"{value} {operacion} correctamente!";
+
         public static string Confirm() => "¿Desea confirmar la operación?";
 
         public static string Confirm(string operacion) => $"¿Desea {operacion} la operación?";

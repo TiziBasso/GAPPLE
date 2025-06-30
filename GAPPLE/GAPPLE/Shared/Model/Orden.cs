@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GAPPLE.Shared.Model
 {
@@ -20,6 +15,7 @@ namespace GAPPLE.Shared.Model
         public int? ID_STA22 { get; set; } = 11;
 
         public string? CodigoOrden { get; set; }
+        public string? CodigoOrdenOriginal { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar una linea")]
         public string? Linea { get; set; }
@@ -95,7 +91,7 @@ namespace GAPPLE.Shared.Model
 
         public bool Aprobado { get; set; }
 
-        public string? Usuario { get; set; }
+        public string Usuario { get; set; } = null;
 
         public bool AprobadoVentas { get; set; }
 
@@ -135,6 +131,7 @@ namespace GAPPLE.Shared.Model
         public int IdProducto { get; set; }
 
         public string? CodProducto { get; set; }
+        public decimal Precio { get; set; }
 
         public int Cantidad { get; set; }
 

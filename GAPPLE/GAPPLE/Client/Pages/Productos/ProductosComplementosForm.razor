@@ -1,0 +1,81 @@
+﻿@page "/productos/complementos"
+@using GAPPLE.Client.Components.Productos
+
+@inject SeguridadService SeguridadService
+@inject ProductosService ProductosService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject NotificationService NotificationService
+
+@if (showPage)
+{
+    <div style="display:grid; grid-template-rows:auto 1fr; height:100%">
+        <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Productos complemento" class="rz-mb-3" />
+
+        <RadzenDataGrid @ref=grid Data="productosComplementos" @bind-Value=selected SelectionMode=DataGridSelectionMode.Multiple
+                        Density="Density.Compact" Style="display:grid; height:100%;grid-template-rows:auto 1fr;">
+            <HeaderTemplate>
+                <RadzenButton Click="OnInsert" Text="Agregar complemento" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" />
+                <RadzenButton Click="OnDelete" Text="Eliminar complemento" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled=@(!selected.Any()) />
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(ProductosComplementos.LineaPrincipal)" Title="Linea" />
+                <RadzenDataGridColumn Property="@nameof(ProductosComplementos.CodigoPrincipal)" Title="Cód. principal" />
+                <RadzenDataGridColumn Property="@nameof(ProductosComplementos.DescripcionPrincipal)" Title="Producto principal" />
+                <RadzenDataGridColumn Property="@nameof(ProductosComplementos.CodigoRelacionado)" Title="Cód complemento" />
+                <RadzenDataGridColumn Property="@nameof(ProductosComplementos.DescripcionRelacionado)" Title="Producto complemento" />
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage;
+    List<ProductosComplementos> productosComplementos = new();
+    IList<ProductosComplementos> selected = new List<ProductosComplementos>();
+    RadzenDataGrid<ProductosComplementos> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        productosComplementos = await ProductosService.GetProductosComplementos();
+        showPage = true;
+    }
+
+    private async Task OnDelete()
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("borrar", "los complementos de los productos"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Borrando...");
+            var response = await ProductosService.DeleteProductosComplementos(selected.ToList());
+            DialogCustom.CloseDialog();
+            if (response)
+            {
+                productosComplementos.RemoveAll(x => selected.Any(y => y.CodigoPrincipal == x.CodigoPrincipal && y.CodigoRelacionado == x.CodigoRelacionado));
+                await grid.Reload();
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            }
+        }
+    }
+
+    private async Task OnInsert()
+    {
+        await DialogService.OpenAsync<SeleccionComplemento>("Nuevo producto complemento",
+                                                        new() { { "InsertCallback", EventCallback.Factory.Create<List<ProductosComplementos>>(this, InsertCallback) } },
+                                                        new() { Height = "fit-content", ShowClose = false, CloseDialogOnEsc = false });
+    }
+
+    private async Task InsertCallback(List<ProductosComplementos> complementos)
+    {
+        DialogService.Close();
+        productosComplementos.AddRange(complementos);
+        await grid.Reload();
+    }
+}

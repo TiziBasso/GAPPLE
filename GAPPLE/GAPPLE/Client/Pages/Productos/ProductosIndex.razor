@@ -192,7 +192,7 @@ else
         if (!string.IsNullOrWhiteSpace(descripcion)) parametros.Add("descripcion", descripcion.Trim());
         if (clasificacion != null) parametros.Add("clasificacion", clasificacion);
 
-        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, pasivo, cancellationToken);
+        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, pasivo, null, cancellationToken);
 
         isLoading = false;
 

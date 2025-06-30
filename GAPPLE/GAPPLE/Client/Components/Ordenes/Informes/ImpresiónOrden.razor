@@ -25,8 +25,14 @@
 
     protected override void OnInitialized()
     {
+        Console.WriteLine("CanDetalle " + Detalle.Count);
+
         detalleCompleto!.AddRange(Detalle);
-        if (Pendientes != null) detalleCompleto.AddRange(Pendientes);
+        if (Pendientes != null)
+        {
+            detalleCompleto.AddRange(Pendientes);
+            Console.WriteLine("CanPendientes " + Pendientes.Count);
+        }
 
         int sumLineas = detalleCompleto.Count + 1;
         if (Pendientes != null && Pendientes.Any()) sumLineas++;

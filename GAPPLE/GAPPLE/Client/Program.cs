@@ -40,4 +40,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<JSFunction>();
     services.AddScoped<IJSFunction, JSFunction>();
     services.AddSingleton<SesionDTO>();
+    services.AddSingleton<SignalRService>();
 }

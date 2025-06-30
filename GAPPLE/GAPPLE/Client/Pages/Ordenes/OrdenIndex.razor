@@ -6,16 +6,16 @@
 
 @implements IDisposable
 
-@inject SeguridadService SeguridadService
-@inject DialogService DialogService
-@inject DialogCustom DialogCustom
 @inject OrdenesService OrdenesService
-@inject ProductosService ProductosService
+@inject DialogCustom DialogCustom
+@inject DialogService DialogService
 @inject NotificationService NotificationService
+@inject AuthenticationStateProvider AutenticacionProvider
+@inject SeguridadService SeguridadService
+@inject ProductosService ProductosService
 @inject NavigationManager NavigationManager
 @inject DialogCustom DialogCustom
 @inject IJSFunction JSFunction
-@inject AuthenticationStateProvider AutenticacionProvider
 
 @if (showPage)
 {
@@ -85,6 +85,7 @@
 
     <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
         <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevaOrden" Visible=@(permisos.Contains("alta")) />
+        <RadzenButton Text="Agregar orden por excel" Icon="attach_file_add" ButtonStyle="ButtonStyle.Info" Size=ButtonSize.Small Click="NuevaOrdenPorArchivo" Visible=@(permisos.Contains("alta")) />
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
@@ -200,6 +201,13 @@
                                   @onclick:stopPropagation="true" Click="@(() => CancelarOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
+                                  @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
+                </Template>
+            </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 
@@ -208,7 +216,7 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
-                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
+                                    Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
@@ -323,6 +331,23 @@ else
         }
     }
 
+    async Task RevertirConfirmacionOrden(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("Revertir", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            var response = await OrdenesService.RevertirOrden(order.Id.ToString());
+            if (response.IsSuccessStatusCode)
+            {
+                order.IdEstado = 1;
+                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 1).Descripcion;
+
+                await grid.Reload();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
+    }
+
     async Task AprobarOrden(Orden order)
     {
         var idEstadoAnt = order.IdEstado;
@@ -360,6 +385,11 @@ else
         NavigationManager.NavigateTo("/orden/creacion");
     }
 
+    void NuevaOrdenPorArchivo()
+    {
+        NavigationManager.NavigateTo("/orden/creacion/excel");
+    }
+
     void EditarOrden(Orden orden)
     {
         NavigationManager.NavigateTo($"/orden/edicion/{orden.CodigoOrden}");
@@ -374,7 +404,6 @@ else
             NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         else
         {
-            Resumen.Detalle!.RemoveAll(x => x.Cantidad == x.CantidadCancelada);
             DialogCustom.OpenBusyWithLoader("Imprimiendo...");
             showResumen = true;
         }
