@@ -63,29 +63,38 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
-                        <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
-                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                                TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
-                                                AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
-                            <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
-                                    <Template Context="sucCliente">
-                                        @if (sucCliente.Habitual)
-                                        {
-                                            <span>SÍ</span>
-                                        }
-                                        else
-                                        {
-                                            <span>NO</span>
-                                        }
-                                    </Template>
-                                </RadzenDropDownDataGridColumn>
-                            </Columns>
-                        </RadzenDropDownDataGrid>
-                        <ValidationMessage For="@(() => orden.Entrega)" />
+                        @if (!unico)
+                        {
+
+                            <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
+                                                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                                                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
+                                        <Template Context="sucCliente">
+                                            @if (sucCliente.Habitual)
+                                            {
+                                                <span>SÍ</span>
+                                            }
+                                            else
+                                            {
+                                                <span>NO</span>
+                                            }
+                                        </Template>
+                                    </RadzenDropDownDataGridColumn>
+                                </Columns>
+                            </RadzenDropDownDataGrid>
+                            <ValidationMessage For="@(() => orden.Entrega)" />
+                        }
+                        else
+                        {
+                            <RadzenTextBox Disabled="sucursalesPorClientes.Count() == 0 || sucursalesPorClientes.Count() == 1" @bind-Value=entrega />
+                        } 
+
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -275,83 +284,83 @@ else
 
 <script>
     document.addEventListener('keydown', function (event) {
-            if (event.target.classList.contains('product-input')) {
-                    if (event.key === 'Enter') {
-                            event.preventDefault(); // Evita el submit del formulario
-                    }
-                    const currentInput = event.target;
-                    const inputs = Array.from(document.querySelectorAll('.product-input'));
-                    const currentCard = currentInput.closest('.card');
-                    const allCards = Array.from(document.querySelectorAll('.card'));
-                    const inputsInCurrentCard = Array.from(currentCard.querySelectorAll('.product-input'));
-
-                    const inputIndexInCard = inputsInCurrentCard.findIndex(input => input === currentInput);
-                    const currentCardRect = currentCard.getBoundingClientRect();
-
-                    // Manejo de teclas
-                    if (event.key === 'ArrowUp') {
-                            if (inputIndexInCard > 0) {
-                                    inputsInCurrentCard[inputIndexInCard - 1].focus();
-                                    setTimeout(() => inputsInCurrentCard[inputIndexInCard - 1].select(), 0);
-                            } else {
-                                    const targetCard = findCardAbove(allCards, currentCardRect);
-                                    if (targetCard) {
-                                            const targetInputs = targetCard.querySelectorAll('.product-input');
-                                            const targetInput = targetInputs[targetInputs.length - 1];
-                                            targetInput.focus();
-                                            setTimeout(() => targetInput.select(), 0);
-                                    }
-                            }
-                    } else if (event.key === 'ArrowDown' || event.key === 'Enter') {
-                            if (inputIndexInCard < inputsInCurrentCard.length - 1) {
-                                    inputsInCurrentCard[inputIndexInCard + 1].focus();
-                                    setTimeout(() => inputsInCurrentCard[inputIndexInCard + 1].select(), 0);
-                            } else {
-                                    const targetCard = findCardBelow(allCards, currentCardRect);
-                                    if (targetCard) {
-                                            const targetInputs = targetCard.querySelectorAll('.product-input');
-                                            const targetInput = targetInputs[0];
-                                            targetInput.focus();
-                                            setTimeout(() => targetInput.select(), 0);
-                                    }
-                            }
-                    } else if (event.key === 'ArrowLeft') {
-                            const currentCardIndex = allCards.findIndex(card => card === currentCard);
-                            if (currentCardIndex > 0) {
-                                    const previousCard = allCards[currentCardIndex - 1];
-                                    const inputsInPreviousCard = previousCard.querySelectorAll('.product-input');
-                                    const targetInput = inputsInPreviousCard[inputIndexInCard] || inputsInPreviousCard[inputsInPreviousCard.length - 1];
-                                    targetInput.focus();
-                                    setTimeout(() => targetInput.select(), 0);
-                            }
-                    } else if (event.key === 'ArrowRight') {
-                            const currentCardIndex = allCards.findIndex(card => card === currentCard);
-                            if (currentCardIndex < allCards.length - 1) {
-                                    const nextCard = allCards[currentCardIndex + 1];
-                                    const inputsInNextCard = nextCard.querySelectorAll('.product-input');
-                                    const targetInput = inputsInNextCard[inputIndexInCard] || inputsInNextCard[inputsInNextCard.length - 1];
-                                    targetInput.focus();
-                                    setTimeout(() => targetInput.select(), 0);
-                            }
-                    }
+        if (event.target.classList.contains('product-input')) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Evita el submit del formulario
             }
+            const currentInput = event.target;
+            const inputs = Array.from(document.querySelectorAll('.product-input'));
+            const currentCard = currentInput.closest('.card');
+            const allCards = Array.from(document.querySelectorAll('.card'));
+            const inputsInCurrentCard = Array.from(currentCard.querySelectorAll('.product-input'));
+
+            const inputIndexInCard = inputsInCurrentCard.findIndex(input => input === currentInput);
+            const currentCardRect = currentCard.getBoundingClientRect();
+
+            // Manejo de teclas
+            if (event.key === 'ArrowUp') {
+                if (inputIndexInCard > 0) {
+                    inputsInCurrentCard[inputIndexInCard - 1].focus();
+                    setTimeout(() => inputsInCurrentCard[inputIndexInCard - 1].select(), 0);
+                } else {
+                    const targetCard = findCardAbove(allCards, currentCardRect);
+                    if (targetCard) {
+                        const targetInputs = targetCard.querySelectorAll('.product-input');
+                        const targetInput = targetInputs[targetInputs.length - 1];
+                        targetInput.focus();
+                        setTimeout(() => targetInput.select(), 0);
+                    }
+                }
+            } else if (event.key === 'ArrowDown' || event.key === 'Enter') {
+                if (inputIndexInCard < inputsInCurrentCard.length - 1) {
+                    inputsInCurrentCard[inputIndexInCard + 1].focus();
+                    setTimeout(() => inputsInCurrentCard[inputIndexInCard + 1].select(), 0);
+                } else {
+                    const targetCard = findCardBelow(allCards, currentCardRect);
+                    if (targetCard) {
+                        const targetInputs = targetCard.querySelectorAll('.product-input');
+                        const targetInput = targetInputs[0];
+                        targetInput.focus();
+                        setTimeout(() => targetInput.select(), 0);
+                    }
+                }
+            } else if (event.key === 'ArrowLeft') {
+                const currentCardIndex = allCards.findIndex(card => card === currentCard);
+                if (currentCardIndex > 0) {
+                    const previousCard = allCards[currentCardIndex - 1];
+                    const inputsInPreviousCard = previousCard.querySelectorAll('.product-input');
+                    const targetInput = inputsInPreviousCard[inputIndexInCard] || inputsInPreviousCard[inputsInPreviousCard.length - 1];
+                    targetInput.focus();
+                    setTimeout(() => targetInput.select(), 0);
+                }
+            } else if (event.key === 'ArrowRight') {
+                const currentCardIndex = allCards.findIndex(card => card === currentCard);
+                if (currentCardIndex < allCards.length - 1) {
+                    const nextCard = allCards[currentCardIndex + 1];
+                    const inputsInNextCard = nextCard.querySelectorAll('.product-input');
+                    const targetInput = inputsInNextCard[inputIndexInCard] || inputsInNextCard[inputsInNextCard.length - 1];
+                    targetInput.focus();
+                    setTimeout(() => targetInput.select(), 0);
+                }
+            }
+        }
     });
 
 
     // Función para encontrar la tarjeta en la fila superior
     function findCardAbove(cards, currentRect) {
-            return cards.reverse().find(card => {
-                    const rect = card.getBoundingClientRect();
-                    return rect.bottom <= currentRect.top && rect.left < currentRect.right && rect.right > currentRect.left;
-            });
+        return cards.reverse().find(card => {
+            const rect = card.getBoundingClientRect();
+            return rect.bottom <= currentRect.top && rect.left < currentRect.right && rect.right > currentRect.left;
+        });
     }
 
     // Función para encontrar la tarjeta en la fila inferior
     function findCardBelow(cards, currentRect) {
-            return cards.find(card => {
-                    const rect = card.getBoundingClientRect();
-                    return rect.top >= currentRect.bottom && rect.left < currentRect.right && rect.right > currentRect.left;
-            });
+        return cards.find(card => {
+            const rect = card.getBoundingClientRect();
+            return rect.top >= currentRect.bottom && rect.left < currentRect.right && rect.right > currentRect.left;
+        });
     }
 </script>
 
@@ -364,13 +373,14 @@ else
     List<string> lstLineas = new();
     List<string> lstLineasDif = new();
     string? valorAux;
+    string entrega;
     EditContext editContext;
     private List<Card> Cards = new();
     CustomValidation customValidation;
 
     Dictionary<string, decimal> descuentosPersonalizados = new();
 
-    bool showForm, showCards;
+    bool showForm, showCards, unico;
 
     List<Transporte> transportes = new();
     List<ListaDePrecios> listasDePrecio = new();
@@ -497,14 +507,26 @@ else
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CondicionVenta)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
+        orden.Entrega = null;
 
-
-        if(sucursalesPorClientes.Count == 0)
+        if (sucursalesPorClientes.Count() == 0)
         {
-            Console.WriteLine("entro");
+            unico = true;
             var cliente = clientes.Find(x => x.CodigoCliente == orden.CodCliente);
-            orden.Entrega = $"{cliente.Domicilio}, {cliente.Localidad}, {cliente.CodigoPostal}";
+            entrega = $"{cliente.Domicilio}, {cliente.Localidad}, {cliente.CodigoPostal}";
+            orden.Entrega = entrega;
         }
+        else if (sucursalesPorClientes.Count() == 1)
+        {
+            unico = true;
+            entrega = sucursalesPorClientes.First().DireccionCompleta;
+            orden.Entrega = entrega;
+        }
+        else
+        {
+            unico = false;
+        }
+
 
         foreach (var product in lstProductos)
         {
@@ -645,16 +667,16 @@ else
                         });
             }
             if (lstLineasDif.Any())
-                orden.Linea = string.Join(',', lstLineasDif.Distinct());           
+                orden.Linea = string.Join(',', lstLineasDif.Distinct());
 
-                if (!orden.Detalle.Any())
-                {
+            if (!orden.Detalle.Any())
+            {
 
-                    NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
-                    error = true;
+                NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
+                error = true;
 
-                }
-            
+            }
+
         }
 
         return !error;
