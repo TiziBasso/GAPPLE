@@ -8,8 +8,6 @@
         public bool Probador { get; set; }
         public bool ModificadoManual { get; set; }
         public int CantidadProbador { get; set; }
-        private int _cantidadSeleccionada;
-
         public decimal Precio { get; set; }
         public decimal PrecioConDescuento
         {
@@ -19,13 +17,10 @@
             }
         }
         public decimal DescuentoFinal { get; set; }
-
         public int CantidadSeleccionadaAnterior { get; set; }
-
         public int CantidadSeleccionada { get; set; }
-
         public string Sinonimo { get; set; }
-        public string? CodigoComplemento { get; set; }
+        public string CodigoComplemento { get; set; }
 
         public object Clone() => MemberwiseClone();
     }

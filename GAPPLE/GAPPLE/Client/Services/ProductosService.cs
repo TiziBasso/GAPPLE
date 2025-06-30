@@ -15,7 +15,7 @@ namespace GAPPLE.Client.Services
 
         public ProductosService(HttpClient httpClient, ILogger<ProductosService> logger) => (HttpClient, Logger) = (httpClient, logger);
 
-        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea, 
+        public async ValueTask<List<Producto>> GetProductos(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea,
             CancellationTokenSource? cancellationToken = null)
         {
             Dictionary<string, object> query = new();
@@ -138,6 +138,25 @@ namespace GAPPLE.Client.Services
                 return true;
             else
                 return false;
+        }
+
+        public async ValueTask<Response> ProcesarArchivo(ByteArrayRequest req)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/procesar", req);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(true, await response.Content.ReadFromJsonAsync<List<ProductoOrden>>());
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new(false);
+            }
         }
     }
 }

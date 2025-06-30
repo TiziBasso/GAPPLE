@@ -64,7 +64,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_get_ProductosParaOfertas";
             cmd.Parameters.AddWithValue("@pLinea", linea);
-            if(codListaPrecios != null) cmd.Parameters.AddWithValue("@pCodListaPrecio", codListaPrecios);
+            if (codListaPrecios != null) cmd.Parameters.AddWithValue("@pCodListaPrecio", codListaPrecios);
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);
             return dt;
@@ -121,6 +121,27 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodigoPrincipal", codPrincipal);
             cmd.Parameters.AddWithValue("@pCodigoRelacionado", codRelacionado);
             cmd.ExecuteNonQuery();
+        }
+
+        public DataTable ObtenerPrecio(string codLista, string linea, string codProducto)
+        {
+            DataTable dt = new();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                using (SqlCommand cmd = cnn.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "prc_get_Precios";
+                    cmd.Parameters.AddWithValue("@pCodLista", codLista);
+                    if (!string.IsNullOrEmpty(linea)) cmd.Parameters.AddWithValue("@pLinea", linea);
+                    if (!string.IsNullOrEmpty(codProducto)) cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
+                    SqlDataAdapter da = new(cmd);
+                    da.Fill(dt);
+                    da.Dispose();
+                }
+            }
+
+            return dt;
         }
     }
 }

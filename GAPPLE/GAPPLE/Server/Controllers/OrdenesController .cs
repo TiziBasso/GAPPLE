@@ -188,9 +188,9 @@ namespace GAPPLE.Server.Controllers
                                 Descripcion = dr["Descripcion"].ToString(),
                                 Cantidad = (int)dr["Cantidad"],
                                 CantidadAprobada = (int)dr["CantidadAprobada"],
-                                CantidadCancelada = (int)dr["CantidadCancelada"],
-                                Precio = (decimal)dr["Precio"]
+                                CantidadCancelada = (int)dr["CantidadCancelada"]
                             };
+                            if (dr["precio"] != DBNull.Value) detalle.Precio = (decimal)dr["Precio"];
                             if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
                             if (detalle.CantidadProbador > 0) detalle.Probador = true;
                             if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());

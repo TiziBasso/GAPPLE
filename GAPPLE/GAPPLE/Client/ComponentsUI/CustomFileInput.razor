@@ -1,0 +1,108 @@
+﻿@using GAPPLE.Shared.Helpers
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation=Orientation.Vertical JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+    <div class="@("rz-fileupload " + (BytesFile == null ? "rz-state-empty":null))">
+        <div class="rz-fileupload-buttonbar" style="text-align:center;">
+            <span class="rz-fileupload-choose rz-button rz-secondary" style="display:block">
+                <InputFile OnChange="CargarArchivo" AdditionalAttributes=@(new Dictionary<string, object>(){{"accept",Accept}, {"style", "display:block;width:100%;height:100%;"}}) />
+                <span class="rz-button-text" style="padding:10px">Seleccionar archivo</span>
+            </span>
+        </div>
+        <div class="rz-fileupload-content rz-corner-bottom">
+            @if (BytesFile != null)
+            {
+                <div class="rz-fileupload-files">
+                    <div class="rz-fileupload-row">
+                        <div>
+                            <span>@nombreArchivo</span>
+                        </div>
+
+                        <div tabindex="0">
+                            <RadzenButton Click="@(()=>Reset())" title="Borrar" Size="ButtonSize.Small" Icon="close" ButtonStyle="ButtonStyle.Light" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public byte[] BytesFile
+    {
+        get => bytesFile;
+        set
+        {
+            if (value == bytesFile)
+                return;
+            bytesFile = value;
+            if (BytesFileChanged.HasDelegate)
+                BytesFileChanged.InvokeAsync(value);
+        }
+    }
+    [Parameter] public EventCallback<byte[]> BytesFileChanged { get; set; }
+    private byte[] bytesFile;
+    /// <summary>
+    /// Especifica los tipos de archivos permitidos para la operación.
+    /// Se pueden combinar múltiples valores utilizando operadores bitwise (|).
+    /// </summary>
+    /// /// <value>Por defecto: <see cref="FileTypes.XLSX"/>.</value>
+    [Parameter] public FilesHelper.Types Types { get; set; } = FilesHelper.Types.XLSX;
+    /// <summary>
+    /// Tamaño máximo de archivo permitido en bytes.
+    /// Se divide 2 veces por 1024 para el mensaje de error;
+    /// </summary>
+    /// <value>Por defecto 5242880, 5MB.</value>
+    [Parameter] public long MaxSize { get; set; } = 5242880;
+
+    /// <summary>
+    /// Atributo para el FileInput, en el dialog muestra solo estos archivos inicialmente.
+    /// </summary>
+    /// <value>Por defecto ".xlsx", para más de uno van separados por ','</value>
+    [Parameter] public string Accept { get; set; } = ".xlsx";
+
+    [Parameter] public EventCallback ChangeFile { get; set; }
+
+    string nombreArchivo;
+
+    private async Task CargarArchivo(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            if (!Types.HasFlag(FilesHelper.GetTypeFromMime(e.File.ContentType)))
+            {
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorFileType);
+                return;
+            }
+
+            if (e.File.Size > MaxSize)
+            {
+                string mb = ((MaxSize / 1024) / 1024).ToString() + "MB";
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorFileSize(mb));
+                return;
+            }
+
+            if (ChangeFile.HasDelegate)
+                await ChangeFile.InvokeAsync();
+
+            var file = e.File;
+            nombreArchivo = e.File.Name;
+            var fileContent = new StreamContent(e.File.OpenReadStream());
+            byte[] bytes = await fileContent.ReadAsByteArrayAsync();
+            BytesFile = bytes;
+        }
+        catch
+        {
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        }
+    }
+
+    public void Reset()
+    {
+        BytesFile = null;
+        if (ChangeFile.HasDelegate)
+            _ = ChangeFile.InvokeAsync();
+    }
+}

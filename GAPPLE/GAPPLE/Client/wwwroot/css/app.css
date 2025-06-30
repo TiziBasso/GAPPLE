@@ -170,3 +170,8 @@ li[expand="1"] {
         transform: rotate(360deg);
     }
 }
+
+.rz-numeric-button.rz-numeric-up,
+.rz-numeric-button.rz-numeric-down {
+    display: none !important;
+}
