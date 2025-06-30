@@ -680,8 +680,17 @@ else
 
     void ModificarDescuento(decimal e, ProductoParaOfertas p)
     {
-        p.DescuentoFinal = Math.Round(e, 2);
-        p.ModificadoManual = true;
+        DialogCustom.OpenBusyWithLoader("aplicando descuentos");
+
+        foreach(var item in Cards.Where(x => x.FamilyName == p.Familia).ToList())
+        {
+            foreach (var producto in item.Products)
+            {
+                producto.DescuentoFinal = Math.Round(e, 2);
+                p.ModificadoManual = true;
+            }
+        }
+        DialogCustom.CloseDialog();
     }
 
     async Task Guardar()

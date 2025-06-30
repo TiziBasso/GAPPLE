@@ -289,6 +289,11 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos?idUsuario={idUsuario}");
         }
 
+        public async ValueTask<Indicadores> GetIndicadores(int idUsuario)
+        {
+            return await HttpClient.GetFromJsonAsync<Indicadores>($"{URI_BASE}/indicadores?idUsuario={idUsuario}");
+        }
+
         public async ValueTask<Response> PasarATango(Orden order)
         {
             try

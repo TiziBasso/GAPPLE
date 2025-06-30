@@ -471,7 +471,7 @@ namespace GAPPLE.Server.Controllers
                 trans = cnn.BeginTransaction();
                 foreach (var id in idPedidos)
                 {
-                    daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, trans);
+                    daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, pedido.Usuario, trans);
 
                     if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
                     {
@@ -872,6 +872,30 @@ namespace GAPPLE.Server.Controllers
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("indicadores")]
+        public Indicadores GetIndicadores(int idUsuario)
+        {
+            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daO.ObtenerIndicadores(idUsuario))
+            {
+                Indicadores oDash = new Indicadores();
+                foreach (DataRow row in dt.Rows)
+                {
+                    if (row["PedidosIngresados"] != DBNull.Value) oDash.PedidosIngresados = int.Parse(row["PedidosIngresados"].ToString());
+                    if (row["PedidosAprobados"] != DBNull.Value) oDash.PedidosAprobados = int.Parse(row["PedidosAprobados"].ToString());
+                    if (row["PedidosPreparados"] != DBNull.Value) oDash.PedidosPreparados = int.Parse(row["PedidosPreparados"].ToString());
+                    if (row["CantidadesIngresadas"] != DBNull.Value) oDash.CantidadesIngresadas = int.Parse(row["CantidadesIngresadas"].ToString());
+                    if (row["CantidadesAprobadas"] != DBNull.Value) oDash.CantidadesAprobadas = int.Parse(row["CantidadesAprobadas"].ToString());
+                    if (row["CantidadesPendientes"] != DBNull.Value) oDash.CantidadesPendientes = int.Parse(row["CantidadesPendientes"].ToString());
+                    if (row["TotalPrecioConPendientes"] != DBNull.Value) oDash.TotalPrecioConPendientes = decimal.Parse(row["TotalPrecioConPendientes"].ToString());
+                    if (row["TotalPrecioPendientes"] != DBNull.Value) oDash.TotalPrecioPendientes = decimal.Parse(row["TotalPrecioPendientes"].ToString());
+                    if (row["TotalPrecioNoPendientes"] != DBNull.Value) oDash.TotalPrecioNoPendientes = decimal.Parse(row["TotalPrecioNoPendientes"].ToString());
+                    if (row["TotalPrecioEnTango"] != DBNull.Value) oDash.TotalPrecioEnTango = decimal.Parse(row["TotalPrecioEnTango"].ToString());
+                }
+                return oDash;
             }
         }
     }

@@ -332,7 +332,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_upd_PedidosCabecera";
             cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
             cmd.Parameters.AddWithValue("@pIdEstado", estado);
-            cmd.Parameters.AddWithValue("@pEdicionUsuario",nombreUsuario );
+            cmd.Parameters.AddWithValue("@pEdicionUsuario",nombreUsuario);
             cmd.ExecuteNonQuery();
         }
 
@@ -348,7 +348,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoAprobacion(int idPedido, bool finanzas, bool ventas, bool contaduria, SqlTransaction? trans = null)
+        public void PersistirPedidoAprobacion(int idPedido, bool finanzas, bool ventas, bool contaduria, string usuario, SqlTransaction? trans = null)
         {
             SqlConnection cnn;
             SqlCommand cmd;
@@ -369,6 +369,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pAprobadoFinanzas", finanzas);
             cmd.Parameters.AddWithValue("@pAprobadoVentas", ventas);
             cmd.Parameters.AddWithValue("@pAprobadoContaduria", contaduria);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", usuario);
             if (trans == null)
             {
                 cnn.Open();
@@ -500,6 +501,24 @@ namespace GAPPLE.Server.Data
                 cmd.ExecuteNonQuery();
                 cnn.Close();
             }
+        }
+
+        public DataTable ObtenerIndicadores(int idUsuario)
+        {
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = new()
+                {
+                    Connection = cnn,
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = "prc_get_EstadisticasMesActual"
+                };
+                cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+            return dt;
         }
     }
 }
