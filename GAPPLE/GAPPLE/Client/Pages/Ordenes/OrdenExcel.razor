@@ -20,7 +20,8 @@
 
 @if (showPage)
 {
-    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext" Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
+    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext"
+                        Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
 
@@ -174,7 +175,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Ofertas:" />
-                        <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas"
+                        <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas" Change="RecalcularOfertas"
                                         TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
                                         Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
                     </RadzenStack>
@@ -182,12 +183,13 @@
             </RadzenRow>
         </RadzenFieldset>
 
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0">
             <CustomFileInput @ref=refFileInput @bind-BytesFile=request.File ChangeFile="ClearGrid" />
+            <RadzenIcon Icon="question_mark" @onclick="ShowFormat" Style="margin-right:5px; height:10px; cursor:default;font-size:medium;" title="Formato de excel" />
             <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Procesar" Icon="upload" Click="ProcesarArchivo" Size="ButtonSize.Small" Disabled=isLoading />
         </RadzenStack>
 
-        <RadzenDataGrid @ref=refGrid Data="lstProductos" Style="display:grid" ShowEmptyMessage=false ColumnWidth="200px"
+        <RadzenDataGrid @ref=refGrid Data="lstProductos" Style="display:grid; min-height:30rem;" ShowEmptyMessage=false ColumnWidth="200px"
                         Density="Density.Compact"
                         AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
             <Columns>
@@ -195,8 +197,9 @@
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant." Width="50px" TextAlign="TextAlign.Right" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="50px" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descuento)" Title="Descuento" Width="50px" FormatString="{0:P2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descuento)" Title="Descuento" Width="50px" FormatString="{0:N2}%" TextAlign="TextAlign.Right" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Title="Total" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
                     <FooterTemplate>
                         <strong>
@@ -226,7 +229,7 @@ else
 
 @code {
     bool showPage, seleccionaVendedor, isLoading;
-    Orden orden = new() { IdEstado = 1 };
+    Orden orden = new() { IdEstado = 1, Linea = "excel" };
     EditContext editContext;
     CustomValidation customValidation;
 
@@ -237,10 +240,12 @@ else
     List<Cliente> clientes = new();
     List<ArticulosPorCliente> articulosPorClientes = new();
     List<SucursalesPorCliente> sucursalesPorClientes = new();
+
     List<int> ofertasSeleccionadas = new();
     List<ProductoOrden> lstProductos = new();
     RadzenDataGrid<ProductoOrden> refGrid;
     List<Oferta> ofertas = new();
+    Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
     CustomFileInput refFileInput;
     ByteArrayRequest request = new();
@@ -266,6 +271,39 @@ else
 
     private async Task Guardar()
     {
+        if (Validar())
+        {
+            if (seleccionaVendedor)
+            {
+                orden.Usuario = await DialogService.OpenAsync<SeleccionVendedor>("Seleccionar vendedor", new() { { "Confirma", false } }, new()
+                    {
+                        CloseDialogOnEsc = false,
+                        ShowClose = false,
+                        CloseDialogOnOverlayClick = false,
+                        Style = "max-height:90vh; max-width:60vw;",
+                        Height = "fit-content",
+                        Width = "fit-content"
+                    });
+                if (orden.Usuario == null) return;
+            }
+
+            if (await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            {
+                DialogCustom.OpenBusyWithLoader("Guardando...");
+                var result = await OrdenesService.PostPedido(orden);
+                DialogCustom.CloseDialog();
+                if (result.IsSuccessStatusCode)
+                {
+                    //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
+                    NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
+                    NavigationManager.NavigateTo("ordenes");
+                }
+                else
+                    NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            }
+        }
+        else
+            Console.WriteLine("No valido");
     }
 
     private async Task Cancelar()
@@ -308,6 +346,7 @@ else
             if (response.IsSuccessStatusCode)
             {
                 lstProductos = (List<ProductoOrden>)response.Data;
+                await RecalcularOfertas();
             }
             else if (response.Errors != null && response.Errors.Count > 0)
                 DialogCustom.ShowErrors(response.Errors);
@@ -343,8 +382,92 @@ else
         await refGrid.Reload();
     }
 
+    Oferta GetOfertaConMayorDescuento(string codigoProducto)
+    {
+        codigosEnOfertas.TryGetValue(codigoProducto, out var ofertasDondeSeEncuentra);
+        return ofertasDondeSeEncuentra.OrderByDescending(o => o.Descuento).FirstOrDefault();
+    }
+
+    private async Task RecalcularOfertas()
+    {
+        orden.Ofertas.Clear();
+        orden.Ofertas.AddRange(ofertasSeleccionadas);
+
+        if (orden.Ofertas != null && orden.Ofertas.Any())
+        {
+            var ofertasFiltradas = ofertas.Where(o => orden.Ofertas!.Contains(o.IdOferta));
+
+            codigosEnOfertas = ofertasFiltradas
+                .SelectMany(o => o.Inclusiones.Split('|').Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
+                .GroupBy(x => x.CodigoProducto)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
+        }
+        else
+            codigosEnOfertas.Clear();
+
+        foreach (var product in lstProductos)
+        {
+            if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                product.Descuento = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
+            else
+                product.Descuento = 0;
+
+            if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+            {
+                var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
+                product.Descuento = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+            }
+            else
+                product.Descuento = 0;
+        }
+
+        await refGrid.Reload();
+    }
+
     public async ValueTask DisposeAsync()
     {
         await SignalRService.StopConnection();
+    }
+
+    bool Validar()
+    {
+        bool error = false;
+
+        if (!orden.Factura && !orden.Presupuesto)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe ingrear al menos 1 tipo de pedido");
+            error = true;
+        }
+
+        if (!error)
+        {
+            orden.Detalle!.Clear();
+            foreach (var product in lstProductos)
+            {
+                orden.Detalle!.Add(new OrdenDetalle()
+                    {
+                        Cantidad = product.CantidadSeleccionada,
+                        CantidadProbador = product.CantidadProbador,
+                        CodProducto = product.CodigoProducto,
+                        Descuento = product.Descuento,
+                        Probador = product.CantidadProbador > 0,
+                        Precio = product.Precio
+                    });
+            }
+
+            if (!orden.Detalle.Any())
+            {
+                NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
+                error = true;
+            }
+
+        }
+
+        return !error;
+    }
+
+    private async Task ShowFormat()
+    {
+        await DialogService.OpenAsync<FormatoExcel>("Formato de carga del excel", null, new() { Width = "fit-content", Height = "fit-content", Style = "max-width:60vw;", ShowClose = true, CloseDialogOnEsc = true });
     }
 }

@@ -218,6 +218,7 @@ namespace GAPPLE.Server.Controllers
                     foreach (DataRow row in dt.Rows)
                     {
                         ProductoOrden p = null;
+                        bool carga = false;
                         if (!string.IsNullOrEmpty(row["0"].ToString().Trim()))
                         {
                             var cod = row["0"].ToString().Trim();
@@ -232,14 +233,18 @@ namespace GAPPLE.Server.Controllers
                                 if (int.TryParse(row["2"].ToString(), out int prob))
                                     p.CantidadProbador = prob;
 
-                                if (p.CantidadProbador == 0 && p.CantidadSeleccionada == 0)
+                                if (p.CantidadProbador < 0 || p.CantidadSeleccionada < 0)
+                                    ModelState.AddModelError($"En la fila {row["originalRow"]}", "Hay cantidades negativas cargadas");
+                                else if (p.CantidadProbador == 0 && p.CantidadSeleccionada == 0)
                                     ModelState.AddModelError($"En la fila {row["originalRow"]}", "No hay cantidades cargadas");
+                                else
+                                    carga = true;
                             }
                         }
                         else
                             ModelState.AddModelError($"En la fila {row["originalRow"]}", "La columna codigo producto está vacía");
 
-                        if (p != null && (p.CantidadSeleccionada > 0 || p.CantidadProbador > 0))
+                        if (carga)
                             productos.Add(p);
 
                         i++;

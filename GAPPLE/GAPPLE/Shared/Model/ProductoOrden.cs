@@ -8,6 +8,8 @@
         public int CantidadSeleccionada { get; set; }
         public decimal Descuento { get; set; }
         public decimal Precio { get; set; }
-        public decimal PrecioTotal { get => Precio * CantidadSeleccionada; }
+        public decimal PrecioConDescuento { get => Precio * (1 - Descuento / 100); }
+        public decimal PrecioTotal { get => PrecioConDescuento * CantidadSeleccionada; }
+
     }
 }

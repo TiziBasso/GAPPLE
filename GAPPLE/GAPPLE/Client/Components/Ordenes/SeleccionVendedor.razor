@@ -20,6 +20,7 @@ else
 }
 
 @code {
+    [Parameter] public bool Confirma { get; set; } = true;
     bool showModal;
     List<Usuario> lstVendedores;
     Usuario selected = new();
@@ -31,7 +32,7 @@ else
 
     private async Task Guardar()
     {
-        if (await DialogService.Confirm("¿Confirma el pedido con el vendedor " + selected.ApellidoYNombre + "?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (!Confirma || await DialogService.Confirm("¿Confirma el pedido con el vendedor " + selected.ApellidoYNombre + "?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             DialogService.Close(selected.NombreUsuario);
     }
 
