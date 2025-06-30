@@ -93,7 +93,7 @@
                         }
                         else
                         {
-                            <RadzenTextBox Disabled="sucursalesPorClientes.Count() == 0 || sucursalesPorClientes.Count() == 1" @bind-Value=entrega />
+                            <RadzenTextBox Disabled="unico" @bind-Value=entrega />
                         } 
 
                     </RadzenStack>
@@ -409,7 +409,7 @@ else
         if (!permisos.Contains("alta"))
             NavigationManager.NavigateTo(Variables.ErrorPages.Desautorizado);
 
-        seleccionaVendedor = permisos.Contains("seleccionaVendedor");
+        //seleccionaVendedor = permisos.Contains("seleccionaVendedor");
 
         lstLineas = await ProductosService.GetLineas();
         clientes = await ClientesService.GetClientes(null, null, null, null);
@@ -745,7 +745,7 @@ else
                 if (!valid) return;
             }
 
-            if (seleccionaVendedor)
+           /* if (seleccionaVendedor)
             {
                 orden.Usuario = await DialogService.OpenAsync<SeleccionVendedor>("Seleccionar vendedor", null, new()
                     {
@@ -757,7 +757,7 @@ else
                         Width = "fit-content"
                     });
                 if (orden.Usuario == null) return;
-            }
+            }*/
 
             if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
