@@ -64,29 +64,38 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
-                        <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
-                        AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                        TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
-                        AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
-                            <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
-                                    <Template Context="sucCliente">
-                                        @if (sucCliente.Habitual)
-                                        {
-                                            <span>SÍ</span>
-                                        }
-                                        else
-                                        {
-                                            <span>NO</span>
-                                        }
-                                    </Template>
-                                </RadzenDropDownDataGridColumn>
-                            </Columns>
-                        </RadzenDropDownDataGrid>
-                        <ValidationMessage For="@(() => orden.Entrega)" />
+                        @if (!unico)
+                        {
+
+                            <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
+                                                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                                                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
+                                        <Template Context="sucCliente">
+                                            @if (sucCliente.Habitual)
+                                            {
+                                                <span>SÍ</span>
+                                            }
+                                            else
+                                            {
+                                                <span>NO</span>
+                                            }
+                                        </Template>
+                                    </RadzenDropDownDataGridColumn>
+                                </Columns>
+                            </RadzenDropDownDataGrid>
+                            <ValidationMessage For="@(() => orden.Entrega)" />
+                        }
+                        else
+                        {
+                            <RadzenTextBox Disabled="unico" @bind-Value=entrega />
+                        } 
+
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -371,14 +380,15 @@ else
     Orden orden = new() { IdEstado = 1 };
     List<string> lstLineas = new();
     List<string> lstLineasDif = new();
-    string valorAux;
+    string? valorAux;
+    string entrega;
     EditContext editContext;
     private List<Card> Cards = new();
     CustomValidation customValidation;
 
     Dictionary<string, decimal> descuentosPersonalizados = new();
 
-    bool showForm, showCards, seleccionaVendedor;
+    bool showForm, showCards, unico, seleccionaVendedor;
 
     List<Transporte> transportes = new();
     List<ListaDePrecios> listasDePrecio = new();
@@ -514,6 +524,26 @@ else
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CondicionVenta)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
+        orden.Entrega = null;
+
+        if (sucursalesPorClientes.Count() == 0)
+        {
+            unico = true;
+            var cliente = clientes.Find(x => x.CodigoCliente == orden.CodCliente);
+            entrega = $"{cliente.Domicilio}, {cliente.Localidad}, {cliente.CodigoPostal}";
+            orden.Entrega = entrega;
+        }
+        else if (sucursalesPorClientes.Count() == 1)
+        {
+            unico = true;
+            entrega = sucursalesPorClientes.First().DireccionCompleta;
+            orden.Entrega = entrega;
+        }
+        else
+        {
+            unico = false;
+        }
+
 
         foreach (var product in lstProductos)
         {
@@ -715,7 +745,7 @@ else
                 if (!valid) return;
             }
 
-            if (seleccionaVendedor)
+           if (seleccionaVendedor)
             {
                 orden.Usuario = await DialogService.OpenAsync<SeleccionVendedor>("Seleccionar vendedor", null, new()
                     {

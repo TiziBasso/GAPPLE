@@ -62,6 +62,8 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
+                        @if(!unico){
+
                         <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
                         AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
                         TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
@@ -84,7 +86,12 @@
                                 </RadzenDropDownDataGridColumn>
                             </Columns>
                         </RadzenDropDownDataGrid>
-                        <ValidationMessage For="@(() => orden.Entrega)" />
+                            <ValidationMessage For="@(() => orden.Entrega)" />
+                        }
+                        else
+                        {
+                            <RadzenTextBox Disabled="unico" @bind-Value=entrega />
+                        }
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -363,13 +370,14 @@ else
     List<string> lstLineas = new();
     List<string> lstLineasDif = new();
     string? valorAux;
+    string entrega;
     EditContext editContext;
     private List<Card> Cards = new();
     CustomValidation customValidation;
 
     bool esPresupuestoOriginal;
 
-    bool showForm, showCards;
+    bool showForm, showCards, unico;
 
     List<int> ofertasSeleccionadas = new();
 
@@ -531,6 +539,27 @@ else
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CondicionVenta)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.CodListaPrecio)));
         editContext.NotifyFieldChanged(editContext.Field(nameof(Orden.Zona)));
+        orden.Entrega = null;
+
+        if (sucursalesPorClientes.Count() == 0)
+        {
+            unico = true;
+            var cliente = clientes.Find(x => x.CodigoCliente == orden.CodCliente);
+            entrega = $"{cliente.Domicilio}, {cliente.Localidad}, {cliente.CodigoPostal}";
+            orden.Entrega = entrega;
+        }
+        else if (sucursalesPorClientes.Count() == 1)
+        {
+            unico = true;
+            entrega = sucursalesPorClientes.First().DireccionCompleta;
+            orden.Entrega = entrega;
+        }
+        else
+        {
+            unico = false;
+        }
+
+        
         foreach (var product in lstProductos)
         {
             if (!product.ModificadoManual)
