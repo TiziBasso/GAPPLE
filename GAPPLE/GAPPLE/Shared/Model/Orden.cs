@@ -60,6 +60,7 @@ namespace GAPPLE.Shared.Model
         public string CodListaPrecio { get; set; }
 
         public string? Zona { get; set; }
+        public string? ZonaDescripcion { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar una condición de venta")]
         public string? CondicionVenta { get; set; }

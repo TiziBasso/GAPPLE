@@ -216,7 +216,7 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/{SesionDTO.Nombre}", id);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}",id);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)

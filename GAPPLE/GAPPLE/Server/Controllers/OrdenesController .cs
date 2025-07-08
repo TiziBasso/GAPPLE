@@ -48,7 +48,8 @@ namespace GAPPLE.Server.Controllers
                         CodCliente = row["CodigoCliente"].ToString(),
                         Linea = row["Linea"].ToString(),
                         Creacion = (DateTime)row["AltaRegistro"],
-                        Zona = row["DescripcionZona"].ToString(),
+                        Zona = row["Zona"].ToString(),
+                        ZonaDescripcion = row["DescripcionZona"].ToString(),
                         IdEstado = int.Parse(row["IdEstado"].ToString()!),
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NumeroFactura = row["NumFactura"].ToString(),
@@ -131,7 +132,8 @@ namespace GAPPLE.Server.Controllers
                         Notas = row["Observaciones"].ToString(),
                         Linea = row["Linea"].ToString(),
                         Creacion = DateTime.Parse(row["AltaRegistro"].ToString()!),
-                        Zona = row["DescripcionZona"].ToString(),
+                        Zona = row["Zona"].ToString(),
+                        ZonaDescripcion = row["DescripcionZona"].ToString(),
                         IdEstado = (int)row["IdEstado"],
                         DescripcionEstado = row["DescripcionEstado"].ToString(),
                         NROTANGO = row["NroPedidoTango"].ToString(),
@@ -860,7 +862,7 @@ namespace GAPPLE.Server.Controllers
             return c;
         }
 
-        [HttpPut("revertirorden/{nombreUsuario}")]
+        [HttpPut("revertirorden/{idOrden}/{nombreUsuario}")]
         public IActionResult RevertirOrden(string idOrden, string nombreUsuario)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
