@@ -281,6 +281,7 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = row["Descripcion"].ToString()!,
+                        Linea = row["Linea"].ToString()
                     };
 
                     using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, p.CodigoProducto))
