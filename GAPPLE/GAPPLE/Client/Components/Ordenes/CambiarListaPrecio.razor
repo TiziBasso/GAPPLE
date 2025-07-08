@@ -1,0 +1,79 @@
+﻿@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject OrdenesService OrdenesService
+@inject NotificationService NotificationService
+
+@if (showForm)
+{
+    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+        <RadzenLabel Text="Lista de precios original:" />
+        <RadzenTextBox Value="@descripOrig" ReadOnly=true Style="width:100%;" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mt-2">
+        <RadzenLabel Text="Lista de precios:" />
+        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="listaNew" Density="Density.Compact" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)"
+                                AllowVirtualization="true">
+            <Columns>
+                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4.5rem" />
+                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
+            </Columns>
+        </RadzenDropDownDataGrid>
+    </RadzenStack>
+
+    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-4">
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
+    </RadzenStack>
+}
+else
+{
+    <Loader />
+}
+
+
+@code {
+    [Parameter] public Orden Orden { get; set; }
+    bool showForm;
+    string codListaOrig, descripOrig, listaNew;
+    List<ListaDePrecios> listasDePrecio = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        listasDePrecio = await OrdenesService.GetListasDePrecio();
+        codListaOrig = Orden.CodListaPrecio;
+        descripOrig = listasDePrecio.First(x => x.CodigoTango == codListaOrig).Descripcion;
+        listasDePrecio.RemoveAll(x => x.CodigoTango == codListaOrig);
+        showForm = true;
+    }
+
+    private void Cancelar()
+    {
+        DialogService.Close();
+    }
+
+    private async Task Guardar()
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Cargando...");
+            Orden.CodListaPrecio = listaNew;
+            var response = await OrdenesService.CambiarListaPrecio(Orden);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
+                DialogService.Close();
+            }
+            else
+            {
+                Orden.CodListaPrecio = codListaOrig;
+                if (response.Errors != null && response.Errors.Any())
+                    DialogCustom.ShowErrors(response.Errors["error"]);
+                else
+                    NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+            }
+        }
+    }
+}

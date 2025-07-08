@@ -187,6 +187,15 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
+                    <RadzenButton Icon="edit_note" ButtonStyle="ButtonStyle.Warning" title="Cambiar lista de precio" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Visible=@(orden.IdEstado != 2 && orden.IdEstado != 5 && permisos.Contains("cambiaLista"))
+                                  Click="@(()=> OnCambiarListaOrden(orden))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
                     <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat"
                                   Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4 && permisos.Contains("tango"))
                                   Click="@(() => PasarATango(orden))" @onclick:stopPropagation="true" />
@@ -215,7 +224,7 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
-                                    Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
+                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
@@ -230,7 +239,7 @@ else
     List<string> lineas = new();
     List<Opcion> estados = new();
     List<Orden> lstOrdenes = new();
-    Orden? Resumen = null;
+    Orden Resumen = null;
     bool isLoading, showPage, showResumen;
     CancellationTokenSource cancellationToken = new();
 
@@ -238,7 +247,7 @@ else
     int? idPedido;
     object idEstado;
     bool? presupuesto;
-    string? razonSocial, linea, codTango, codOrden;
+    string razonSocial, linea, codTango, codOrden;
 
     //List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
     List<string> permisos;
@@ -248,7 +257,7 @@ else
     int? idFilter, unidadesFilter;
     DateTime? creacionFilter, entregaFilter;
     List<string> zonasFilter = new(), estadosFilter = new();
-    string? zonaFilter, estadoFilter, codOrdenFilter;
+    string zonaFilter, estadoFilter, codOrdenFilter;
     int render;
 
     protected override async Task OnInitializedAsync()
@@ -427,6 +436,13 @@ else
         //                                                                 .Select(c => c.Property.Contains(".") ? $"{c.Property} as {c.Property.Replace(".", "_")}" : c.Property))
         //     });
         // DialogCustom.CloseDialog();
+    }
+
+    public async Task OnCambiarListaOrden(Orden orden)
+    {
+        var response = await DialogService.OpenAsync<CambiarListaPrecio>($"Cambiar lista de precio orden {orden.Id}",
+                                                                        new() { { "Orden", orden } },
+                                                                        new() { ShowClose = false, AutoFocusFirstElement = false, Height = "fit-content", Width = "40rem" });
     }
 
     public void Dispose()

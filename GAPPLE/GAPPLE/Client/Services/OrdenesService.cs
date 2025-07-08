@@ -211,12 +211,12 @@ namespace GAPPLE.Client.Services
                 return new(false);
             }
         }
-        
+
         public async ValueTask<Response> RevertirOrden(string id)
         {
             try
             {
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}",id);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}", id);
                 if (response.IsSuccessStatusCode)
                     return new(true);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -321,6 +321,33 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Pasar a tango");
+                return new(false);
+            }
+        }
+
+        public async ValueTask<Response> CambiarListaPrecio(Orden orden)
+        {
+            try
+            {
+                var aux = orden.Usuario;
+                orden.Usuario = SesionDTO.Nombre;
+                orden.CondicionVenta = "asd"; //para pasar validacion
+                orden.Entrega = "asd";
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/lista", orden);
+                if (response.IsSuccessStatusCode)
+                    return new(true);
+                else
+                {
+                    orden.Usuario = aux;
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return new(false, await response.Content.ReadAsStringAsync());
+                    else
+                        throw new Exception(await response.Content.ReadAsStringAsync());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Cambiar lista de precio");
                 return new(false);
             }
         }

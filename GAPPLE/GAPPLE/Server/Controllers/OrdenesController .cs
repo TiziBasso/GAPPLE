@@ -24,8 +24,8 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("lista")]
-        public List<Orden> GetOrdenes(string? desdeStr, string? hastaStr, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario)
+        public List<Orden> GetOrdenes(string desdeStr, string hastaStr, int? idPedido, string codOrden, bool? presupuesto, string razonSocial,
+                                        string linea, string zona, int? idEstado, string codTango, int idUsuario)
         {
             DateTime? desde = null, hasta = null;
             if (desdeStr != null && hastaStr != null)
@@ -898,6 +898,21 @@ namespace GAPPLE.Server.Controllers
                     if (row["TotalPrecioEnTango"] != DBNull.Value) oDash.TotalPrecioEnTango = decimal.Parse(row["TotalPrecioEnTango"].ToString());
                 }
                 return oDash;
+            }
+        }
+
+        [HttpPut("lista")]
+        public IActionResult CambiarListaPrecio(Orden orden)
+        {
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                daO.UpdatePedidoCabecera(orden.CodigoOrden, orden.Linea, null, (int)orden.IdEstado, orden.CodListaPrecio, orden.Factura, orden.Presupuesto, orden.Usuario);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
     }

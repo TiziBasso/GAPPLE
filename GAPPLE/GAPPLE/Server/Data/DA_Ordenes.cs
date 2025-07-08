@@ -1,4 +1,5 @@
-﻿using GAPPLE.Shared.Model;
+﻿using GAPPLE.Client.Pages;
+using GAPPLE.Shared.Model;
 using Microsoft.Extensions.Hosting;
 using Radzen.Blazor.Rendering;
 using System.Data;
@@ -256,7 +257,7 @@ namespace GAPPLE.Server.Data
             return id;
         }
 
-        public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int cantLineas, int idEstado, string zona, string listaPrecio,
+        public void UpdatePedidoCabecera(string codOrden, string linea, string codigoCliente, int? cantLineas, int idEstado, string zona, string listaPrecio,
                                             bool factura, bool presupuesto, string codTransporte, string condicionVenta, string entregarEn,
                                             string observaciones, DateTime? fechaEntrega, string edicionUsuario, string? observacionesZentra, string codOrdenCambiar, SqlTransaction transaction)
         {
@@ -268,7 +269,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
             cmd.Parameters.AddWithValue("@pLinea", linea);
             cmd.Parameters.AddWithValue("@pCodigoCliente", codigoCliente);
-            cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
+            if (cantLineas != null) cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
             cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
             cmd.Parameters.AddWithValue("@pZona", zona);
             cmd.Parameters.AddWithValue("@pListaDePrecios", listaPrecio);
@@ -280,9 +281,30 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pObservaciones", observaciones);
             cmd.Parameters.AddWithValue("@pFechaEntrega", fechaEntrega);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", edicionUsuario);
-            if(codOrdenCambiar != null) cmd.Parameters.AddWithValue("@pCodigoOrdenCambiar", codOrdenCambiar);
+            if (codOrdenCambiar != null) cmd.Parameters.AddWithValue("@pCodigoOrdenCambiar", codOrdenCambiar);
             if (!string.IsNullOrEmpty(observacionesZentra)) cmd.Parameters.AddWithValue("@pObservacionesZentra", observacionesZentra);
             cmd.ExecuteNonQuery();
+        }
+
+        public void UpdatePedidoCabecera(string codOrden, string linea, int? cantLineas, int idEstado, string listaPrecio, bool factura, bool presupuesto, string edicionUsuario)
+        {
+            using (SqlConnection cnn = new(ConnectionString))
+            {
+                SqlCommand cmd = cnn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_upd_PedidoCabeceraCompleto";
+                cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+                cmd.Parameters.AddWithValue("@pLinea", linea);
+                if (cantLineas != null) cmd.Parameters.AddWithValue("@pCantidadLineas", cantLineas);
+                cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+                cmd.Parameters.AddWithValue("@pListaDePrecios", listaPrecio);
+                cmd.Parameters.AddWithValue("@pFactura", factura);
+                cmd.Parameters.AddWithValue("@pPresupuesto", presupuesto);
+                cmd.Parameters.AddWithValue("@pEdicionUsuario", edicionUsuario);
+                cnn.Open();
+                cmd.ExecuteNonQuery();
+                cnn.Close();
+            }
         }
 
         public void EliminarPedidoCabecera(string codOrden, SqlTransaction transaction)
@@ -323,7 +345,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoEstado(string idPedido, int estado,string nombreUsuario , SqlTransaction transaction)
+        public void PersistirPedidoEstado(string idPedido, int estado, string nombreUsuario, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -332,7 +354,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_upd_PedidosCabecera";
             cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
             cmd.Parameters.AddWithValue("@pIdEstado", estado);
-            cmd.Parameters.AddWithValue("@pEdicionUsuario",nombreUsuario);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
             cmd.ExecuteNonQuery();
         }
 
