@@ -58,31 +58,32 @@
 
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        @if(!unico){
 
                         <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
-                        <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
-                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                                TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
-                                                AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
-                            <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
-                                    <Template Context="sucCliente">
-                                        @if (sucCliente.Habitual)
-                                        {
-                                            <span>SÍ</span>
-                                        }
-                                        else
-                                        {
-                                            <span>NO</span>
-                                        }
-                                    </Template>
-                                </RadzenDropDownDataGridColumn>
-                            </Columns>
-                        </RadzenDropDownDataGrid>
+                        @if (!unico)
+                        {
+                            <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
+                                                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                                                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
+                                        <Template Context="sucCliente">
+                                            @if (sucCliente.Habitual)
+                                            {
+                                                <span>SÍ</span>
+                                            }
+                                            else
+                                            {
+                                                <span>NO</span>
+                                            }
+                                        </Template>
+                                    </RadzenDropDownDataGridColumn>
+                                </Columns>
+                            </RadzenDropDownDataGrid>
                         }
                         else
                         {
@@ -215,10 +216,10 @@
                     </FooterTemplate>
                 </RadzenDataGridColumn>
                 @* <RadzenDataGridColumn Width="20px" Frozen=true FrozenPosition="FrozenColumnPosition.Right" Resizable=false TextAlign="TextAlign.Center">
-                    <Template Context="data">
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.ExtraSmall" Click="@(()=>DeleteRow(data))" />
-                    </Template>
-                </RadzenDataGridColumn> *@
+            <Template Context="data">
+            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.ExtraSmall" Click="@(()=>DeleteRow(data))" />
+            </Template>
+            </RadzenDataGridColumn> *@
             </Columns>
         </RadzenDataGrid>
 
