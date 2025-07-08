@@ -122,7 +122,7 @@
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.Zona)" Width="120px" FilterOperator="FilterOperator.Contains" FilterValue="zonaFilter" MinWidth="20px">
+            <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.ZonaDescripcion)" Width="120px" FilterOperator="FilterOperator.Contains" FilterValue="zonaFilter" MinWidth="20px">
                 <FilterTemplate>
                     <RadzenDropDown Data="zonasFilter" @bind-Value=zonaFilter AllowClear=true Style="width:100%" />
                 </FilterTemplate>
@@ -159,7 +159,6 @@
             <RadzenDataGridColumn TItem="Orden" Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" Width="200px" MinWidth="10px" />
 
             <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" Width="150px" MinWidth="10px" />
-
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
