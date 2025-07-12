@@ -43,8 +43,6 @@
         int showed = page == 0 ? 0 : lineasXPag0 +(lineasXPagN * (page -1)), 
             remaining = page == 0 ? lineasXPag0 : lineasXPagN;
 
-        Console.WriteLine($"Página: {page}, Skip: {showed}, Take: {remaining}, Detalle.Count: {detalle.Count}");
-
         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
         // remaining -= detalle!.Count;
         // if (detalle.Count > 0) showed -= detalle.Count;
