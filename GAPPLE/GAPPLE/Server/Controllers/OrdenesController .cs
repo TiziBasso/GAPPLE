@@ -521,9 +521,7 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                    response = PostTangoProbadores(pedido,trans);
                 }
-
 
                 if (ModelState.ErrorCount > 0)
                 {
@@ -533,6 +531,11 @@ namespace GAPPLE.Server.Controllers
                 }
                 else
                 {
+                    trans.Commit();
+                    cnn.Close();
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    response = PostTangoProbadores(pedido,trans);
                     trans.Commit();
                     cnn.Close();
                     return Ok(pedido);

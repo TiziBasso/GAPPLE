@@ -303,7 +303,8 @@ namespace GAPPLE.Client.Services
                 order.CondicionVenta = "asd";          //para que no salte validacion
                 order.Entrega = "asd";                 //para que no salte validacion
                 order.FechaEntrega = DateTime.Today;   //para que no salte validacion
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", order);
+                var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4)); // timeout de 2 minutos (120s)
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", order, cts.Token);
                 order.FechaEntrega = null;             //para que no modifique grilla
                 if (response.IsSuccessStatusCode)
                 {
