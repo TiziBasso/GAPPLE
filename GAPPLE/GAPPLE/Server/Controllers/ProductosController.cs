@@ -230,7 +230,8 @@ namespace GAPPLE.Server.Controllers
                                 if (int.TryParse(row["1"].ToString(), out int cant))
                                     p.CantidadSeleccionada = cant;
 
-                                if (int.TryParse(row["2"].ToString(), out int prob))
+                                //mayor a 3 porque existe la columna "originalRow"
+                                if (dt.Columns.Count > 3 && int.TryParse(row["2"].ToString(), out int prob)) 
                                     p.CantidadProbador = prob;
 
                                 if (p.CantidadProbador < 0 || p.CantidadSeleccionada < 0)

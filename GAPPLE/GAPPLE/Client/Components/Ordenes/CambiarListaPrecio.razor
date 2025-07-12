@@ -13,6 +13,7 @@
     <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mt-2">
         <RadzenLabel Text="Lista de precios:" />
         <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="listaNew" Density="Density.Compact" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                AllowFilteringByAllStringColumns=true FilterOperator="StringFilterOperator.Contains"
                                 TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)"
                                 AllowVirtualization="true">
             <Columns>

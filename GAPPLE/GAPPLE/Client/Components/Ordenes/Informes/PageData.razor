@@ -61,7 +61,7 @@
                     <td style="text-align: end;">@item.CodProducto</td>
                     <td>@item.Descripcion</td>
                     <td style="text-align: end;">@item.CantidadPendiente</td>
-                    <td></td>
+                    <td style="text-align: end;">@item.Descuento %</td>
                     @if (ShowProbadores)
                     {
                         <td style="text-align: end;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
@@ -72,8 +72,8 @@
     }
 </table>
 @code {
-    [Parameter] public List<OrdenDetalle>? Detalle { get; set; } = null;
-    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public List<OrdenDetalle> Detalle { get; set; } = null;
+    [Parameter] public List<OrdenDetalle> Pendientes { get; set; } = null;
     [Parameter] public bool ShowProbadores { get; set; } = false;
 
     int i = 0;

@@ -5,7 +5,7 @@
         {
             GetData(i);
             <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-                  Detalle="detalle" ShowProbadores=showProbadores />
+            Detalle="detalle" ShowProbadores=showProbadores />
         }
     </div>
 }
@@ -50,12 +50,17 @@
 
     private void GetData(int page)
     {
-        // int showed = page * lineasXPag, remaining = lineasXPag;
-
         detalle = detalleCompleto!.Skip(page * lineasXPag)?.Take(lineasXPag).ToList();
-        // al trabajar con 1 sola List<T> es innecesario guardar los valores en variables extras
-        // remaining -= detalleCompleto!.Count;
-        // if (detalleCompleto.Count > 0) showed -= detalleCompleto.Count;
-        // else showed -= detalleCompleto!.Count;
     }
+
+    // private void GetData(int page)
+    // {
+    //     // int showed = page * lineasXPag, remaining = lineasXPag;
+
+    //     detalle = detalleCompleto!.Skip(page * lineasXPag)?.Take(lineasXPag).ToList();
+    //     // al trabajar con 1 sola List<T> es innecesario guardar los valores en variables extras
+    //     // remaining -= detalleCompleto!.Count;
+    //     // if (detalleCompleto.Count > 0) showed -= detalleCompleto.Count;
+    //     // else showed -= detalleCompleto!.Count;
+    // }
 }
