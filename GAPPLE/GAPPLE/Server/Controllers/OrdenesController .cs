@@ -521,7 +521,9 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
+                    response = PostTangoProbadores(pedido,trans);
                 }
+
 
                 if (ModelState.ErrorCount > 0)
                 {
@@ -593,6 +595,90 @@ namespace GAPPLE.Server.Controllers
                     renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadAprobada;
                     renglonDTO.ID_STA11 = detalle.ID_STA11;
                     renglonDTO.PORCENTAJE_BONIFICACION = detalle.Descuento;
+                    pedido.RENGLON_DTO.Add(renglonDTO);
+                }
+            }
+
+            request.AddBody(pedido);
+
+            var response = restClient.Execute(request);
+            using JsonDocument doc = JsonDocument.Parse(response.Content);
+            JsonElement root = doc.RootElement;
+            if (response.IsSuccessStatusCode)
+            {
+                if (root.TryGetProperty("exceptionInfo", out var exceptionInfo) && exceptionInfo.ValueKind != JsonValueKind.Null)
+                {
+                    var messages = exceptionInfo.GetProperty("messages");
+                    if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
+                    {
+                        string? firstErrorMessage = messages[0].GetString();
+                        return new(false, firstErrorMessage);
+                    }
+                }
+
+                if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
+                {
+                    int savedId = savedIdElement.GetInt32();
+                    return new(true, savedId.ToString());
+                }
+            }
+            else
+            {
+                return new(false, "Error inesperado");
+            }
+
+            return new(true);
+        }
+
+        private Response PostTangoProbadores(Orden orden, SqlTransaction trans)
+        {
+            var options = new RestClientOptions("http://192.168.10.10:17000/Api")
+            {
+                ThrowOnAnyError = true,
+                MaxTimeout = 300000
+            };
+            RestClient restClient = new RestClient(options);
+
+            restClient.AddDefaultHeader("ApiAuthorization", "35639960-b67a-41f0-bb7b-b38b1355ff0d");
+            restClient.AddDefaultHeader("Company", "7");
+
+            RestRequest request = new RestRequest("Create?process=19845", Method.Post);
+
+            PedidoDTO pedido = new PedidoDTO();
+
+            Orden ordenFull = GetOrden(orden.CodigoOrden, true, null, trans)!;
+
+            if (!ordenFull.Detalle.Any())
+                return new(false, "La orden debe poseer al menos 1 producto");
+
+            pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
+            pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
+            pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
+            pedido.ESTADO = 2;
+            pedido.ES_CLIENTE_HABITUAL = true;
+            pedido.ID_GVA01 = ordenFull.ID_GVA01;
+            pedido.ID_GVA14 = ordenFull.ID_GVA14;
+            pedido.ID_GVA24 = ordenFull.ID_GVA24;
+            pedido.ID_GVA10 = ordenFull.ID_GVA10;
+            pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
+            pedido.ID_STA22 = 23;
+            pedido.FECHA_PEDIDO = orden.Creacion.Value;
+            pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
+            pedido.ID_MONEDA = "1";
+            pedido.COTIZACION = 1;
+            pedido.ID_ASIENTO_MODELO_GV = "14";
+            pedido.LEYENDA_1 = ordenFull.Entrega!;
+            pedido.LEYENDA_2 = ordenFull.Notas!;
+
+            pedido.RENGLON_DTO = new();
+            foreach (var detalle in ordenFull.Detalle)
+            {
+                if (detalle.Probador && detalle.CantidadProbadorAprobada > 0)
+                {
+                    RenglonDTO renglonDTO = new();
+                    renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadProbadorAprobada;
+                    renglonDTO.ID_STA11 = detalle.ID_STA11;
+                    renglonDTO.PORCENTAJE_BONIFICACION = 99.9m;
                     pedido.RENGLON_DTO.Add(renglonDTO);
                 }
             }
