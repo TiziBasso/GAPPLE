@@ -210,8 +210,10 @@ namespace GAPPLE.Server.Controllers
             {
                 List<ProductoOrden> productos = new();
                 SignalRController srC = new();
+                ClientesController cC = new(Configuration);
                 DataTable dt = ManejoDeArchivos.ExcelToDataTable(req.File, false, true);
                 int i = 0;
+                List<ArticulosPorCliente> prodCliente = cC.GetArticulosPorCliente(req.CodCliente);
 
                 if (dt.Rows.Count > 0)
                 {
@@ -246,7 +248,10 @@ namespace GAPPLE.Server.Controllers
                             ModelState.AddModelError($"En la fila {row["originalRow"]}", "La columna codigo producto está vacía");
 
                         if (carga)
+                        {
+                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.Descuento = prodCliente.First(x=>x.CodProducto == p.CodigoProducto).Descuento;
                             productos.Add(p);
+                        }
 
                         i++;
                         await srC.CambiarPorcentajeTarea(HubContext.Clients, req.ConnectionId, (i * 100 / dt.Rows.Count));
