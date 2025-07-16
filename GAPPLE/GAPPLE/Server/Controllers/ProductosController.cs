@@ -249,7 +249,7 @@ namespace GAPPLE.Server.Controllers
 
                         if (carga)
                         {
-                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.Descuento = prodCliente.First(x=>x.CodProducto == p.CodigoProducto).Descuento;
+                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.DescuentoCliente = prodCliente.First(x=>x.CodProducto == p.CodigoProducto).Descuento;
                             productos.Add(p);
                         }
 

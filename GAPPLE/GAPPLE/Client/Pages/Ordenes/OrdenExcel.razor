@@ -206,16 +206,16 @@
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant." Width="50px" TextAlign="TextAlign.Right" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="50px" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descuento)" Title="Descuento" Width="50px" FormatString="{0:N2}%" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" Width="50px" FormatString="{0:N2}%" TextAlign="TextAlign.Right">
                     <Template Context="data">
                         @if (esAdmin)
                         {
-                            <RadzenNumeric @bind-Value=data.Descuento Min="0" Max="(decimal)99.9" TValue="decimal" Change="@(args => ChangeDescuento(data))"
+                            <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="(decimal)99.9" TValue="decimal" Change="@(args => ChangeDescuento(data))"
                                            ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" />
                         }
                         else
                         {
-                            @data.Descuento
+                            @data.DescuentoTotal
                         }
                     </Template>
                 </RadzenDataGridColumn>
@@ -260,7 +260,6 @@ else
     List<CondicionDeVenta> condicionesDeVenta = new();
     List<Zonas> zonas = new();
     List<Cliente> clientes = new();
-    List<ArticulosPorCliente> articulosPorClientes = new();
     List<SucursalesPorCliente> sucursalesPorClientes = new();
 
     List<int> ofertasSeleccionadas = new();
@@ -383,7 +382,6 @@ else
     async Task AsignarVariables()
     {
         DialogCustom.OpenBusyWithLoader("Cargando...");
-        articulosPorClientes = await ClientesService.GetArticulosPorCliente(orden.CodCliente);
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
@@ -448,14 +446,13 @@ else
 
         foreach (var product in lstProductos)
         {
-            if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
-                product.Descuento = articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento;
-
             if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
             {
                 var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
-                product.Descuento = 100 * (1 - (1 - ofertaConDescuentoMasAlto.Descuento / 100) * (1 - (articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto) ? articulosPorClientes.Find(x => x.CodProducto == product.CodigoProducto).Descuento : 0) / 100));
+                product.DescuentoOferta = ofertaConDescuentoMasAlto.Descuento;
             }
+            else
+                product.DescuentoOferta = 0;
         }
 
         await refGrid.Reload();
@@ -491,7 +488,7 @@ else
                         Cantidad = product.CantidadSeleccionada,
                         CantidadProbador = product.CantidadProbador,
                         CodProducto = product.CodigoProducto,
-                        Descuento = product.Descuento,
+                        Descuento = product.DescuentoTotal,
                         Probador = product.CantidadProbador > 0,
                         Precio = product.Precio,
                     });
