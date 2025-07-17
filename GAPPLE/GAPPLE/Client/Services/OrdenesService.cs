@@ -26,7 +26,7 @@ namespace GAPPLE.Client.Services
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
             query["desdeStr"] = WebUtility.UrlEncode(desde.ToString()!);
-            query["hastaStr"] = WebUtility.UrlEncode(hasta.AddHours(23).AddMinutes(59).AddSeconds(59).ToString()!);
+            query["hastaStr"] = WebUtility.UrlEncode(hasta.ToString()!);
             if (idPedido != null) query["idPedido"] = idPedido;
             if (presupuesto != null) query["presupuesto"] = presupuesto;
             if (!string.IsNullOrWhiteSpace(razonSocial)) query["razonSocial"] = razonSocial;
