@@ -456,7 +456,6 @@ else
             orden.Linea = valorAux;
 
             lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!, orden.CodListaPrecio);
-            lstProductos = lstProductos.OrderBy(x => x.Familia).ToList();
             foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
             {
                 lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
