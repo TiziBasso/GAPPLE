@@ -278,7 +278,7 @@ namespace GAPPLE.Server.Controllers
         {
             ProductoOrden p = null;
             DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, null, null, null))
+            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, false, null, null))
             {
                 if (dt.Rows.Count > 0)
                 {
