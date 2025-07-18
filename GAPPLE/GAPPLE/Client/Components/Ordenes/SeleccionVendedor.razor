@@ -6,7 +6,7 @@
     <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
         <RadzenLabel Text="Vendedor:" Component="vendedor" />
         <RadzenDropDown Data="lstVendedores" @bind-Value=selected AllowFiltering=true AllowVirtualization=true
-                        TextProperty="@nameof(Usuario.ApellidoYNombre)" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" />
+                        TextProperty="@nameof(Usuario.ApellidoYNombre)" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
     </RadzenStack>
 
     <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">

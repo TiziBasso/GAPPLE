@@ -32,6 +32,7 @@
         public decimal Precio { get; set; }
         public decimal PrecioConDescuento { get => Precio * (1 - DescuentoTotal / 100); }
         public decimal PrecioTotal { get => PrecioConDescuento * CantidadSeleccionada; }
-
+        public bool Pasivo { get; set; }
+        public string CodComplemento { get; set; }
     }
 }

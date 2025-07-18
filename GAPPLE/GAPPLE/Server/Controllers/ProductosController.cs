@@ -227,13 +227,15 @@ namespace GAPPLE.Server.Controllers
                             p = GetProductoOrden($"%{cod}", req.CodListaPrecio);
                             if (p == null)
                                 ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El código {cod} no sé encontró");
+                            else if (p.Pasivo)
+                                ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El producto {cod} se encuentra pasivo");
                             else
                             {
                                 if (int.TryParse(row["1"].ToString(), out int cant))
                                     p.CantidadSeleccionada = cant;
 
                                 //mayor a 3 porque existe la columna "originalRow"
-                                if (dt.Columns.Count > 3 && int.TryParse(row["2"].ToString(), out int prob)) 
+                                if (dt.Columns.Count > 3 && int.TryParse(row["2"].ToString(), out int prob))
                                     p.CantidadProbador = prob;
 
                                 if (p.CantidadProbador < 0 || p.CantidadSeleccionada < 0)
@@ -249,9 +251,31 @@ namespace GAPPLE.Server.Controllers
 
                         if (carga)
                         {
-                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.DescuentoCliente = prodCliente.First(x=>x.CodProducto == p.CodigoProducto).Descuento;
+                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.DescuentoCliente = prodCliente.First(x => x.CodProducto == p.CodigoProducto).Descuento;
                             productos.Add(p);
+                            if (p.CodComplemento != null)
+                            {
+                                var aux = GetProductoOrden(p.CodComplemento, req.CodListaPrecio);
+                                if (aux.Pasivo) //puede pasar?
+                                    ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El producto complemento {p.CodComplemento} se encuentra pasivo");
+                                else
+                                {
+                                    if (productos.Exists(x => x.CodigoProducto == aux.CodigoProducto))
+                                    {
+                                        productos.First(x => x.CodigoProducto == aux.CodigoProducto).CantidadSeleccionada += p.CantidadSeleccionada;
+                                        productos.First(x => x.CodigoProducto == aux.CodigoProducto).CantidadProbador += p.CantidadProbador;
+                                    }
+                                    else
+                                    {
+                                        aux.CantidadSeleccionada = p.CantidadSeleccionada;
+                                        aux.CantidadProbador = p.CantidadProbador;
+                                        productos.Add(aux);
+                                    }
+                                }
+                            }
+
                         }
+
 
                         i++;
                         await srC.CambiarPorcentajeTarea(HubContext.Clients, req.ConnectionId, (i * 100 / dt.Rows.Count));
@@ -278,7 +302,7 @@ namespace GAPPLE.Server.Controllers
         {
             ProductoOrden p = null;
             DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, false, null, null))
+            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, null, null, null))
             {
                 if (dt.Rows.Count > 0)
                 {
@@ -287,8 +311,10 @@ namespace GAPPLE.Server.Controllers
                     {
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = row["Descripcion"].ToString()!,
-                        Linea = row["Linea"].ToString()
+                        Linea = row["Linea"].ToString(),
+                        Pasivo = bool.Parse(row["Pasivo"].ToString())
                     };
+                    if (row["CodigoRelacionado"] != DBNull.Value) p.CodComplemento = row["CodigoRelacionado"].ToString();
 
                     using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, p.CodigoProducto))
                     {
