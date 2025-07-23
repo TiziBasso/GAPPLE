@@ -253,7 +253,9 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<Response> SincronizarTodo()
         {
-            var response = await HttpClient.GetAsync($"{URI_BASE}/sincronizar");
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"{URI_BASE}/sincronizar");
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8)); // tu timeout deseado
+            using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
             if (response.IsSuccessStatusCode)
                 return new(response.IsSuccessStatusCode);
             else

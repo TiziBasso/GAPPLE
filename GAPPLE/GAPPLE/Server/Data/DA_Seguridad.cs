@@ -246,6 +246,7 @@ namespace GAPPLE.Server.Data
                 SqlCommand cmd = cnn.CreateCommand();
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "prc_sinc_Todo";
+                cmd.CommandTimeout = 0; // No timeout
                 cnn.Open();
                 cmd.ExecuteNonQuery();
                 cnn.Close();
