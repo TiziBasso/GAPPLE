@@ -65,6 +65,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
                     if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();
+                    if (row["FechaEntrega"] != DBNull.Value) o.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
 
                     lstOrdenes.Add(o);
                 }
