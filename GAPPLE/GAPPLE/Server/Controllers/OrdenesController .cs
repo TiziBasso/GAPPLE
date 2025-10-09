@@ -460,7 +460,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut("aprobacion/{idUsuario:int}")]
-        public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] Orden pedido)
+        public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] OrdenDTO pedido)
         {
             SqlTransaction? trans = null;
             try
@@ -497,7 +497,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut("tango")]
-        public IActionResult PasarATango(Orden pedido)
+        public IActionResult PasarATango(OrdenDTO pedido)
         {
             SqlTransaction? trans = null;
             try
@@ -550,7 +550,7 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        private Response PostTango(Orden orden, SqlTransaction trans)
+        private Response PostTango(OrdenDTO orden, SqlTransaction trans)
         {
             var options = new RestClientOptions("http://192.168.10.10:17000/Api")
             {
@@ -634,7 +634,7 @@ namespace GAPPLE.Server.Controllers
             return new(true);
         }
 
-        private Response PostTangoProbadores(Orden orden, SqlTransaction trans)
+        private Response PostTangoProbadores(OrdenDTO orden, SqlTransaction trans)
         {
             var options = new RestClientOptions("http://192.168.10.10:17000/Api")
             {
@@ -992,7 +992,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut("lista")]
-        public IActionResult CambiarListaPrecio(Orden orden)
+        public IActionResult CambiarListaPrecio(OrdenDTO orden)
         {
             try
             {

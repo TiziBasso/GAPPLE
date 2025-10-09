@@ -168,17 +168,13 @@ namespace GAPPLE.Client.Services
             try
             {
                 pedido.Usuario = SesionDTO.Nombre;
-                pedido.CodCliente = "asd";              //para que no salte validacion
-                pedido.CondicionVenta = "asd";          //para que no salte validacion
-                pedido.Entrega = "asd";                 //para que no salte validacion
-                pedido.FechaEntrega = DateTime.Today;   //para que no salte validacion
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion/{SesionDTO.IdUsuario}", pedido);
-                pedido.FechaEntrega = null;             //para que no modifique grilla
+                OrdenDTO aux = new(pedido);
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion/{SesionDTO.IdUsuario}", aux);
                 if (response.IsSuccessStatusCode)
                 {
-                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
-                    pedido.IdEstado = p.IdEstado;
-                    pedido.DescripcionEstado = p.DescripcionEstado;
+                    OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
+                    pedido.IdEstado = r.IdEstado;
+                    pedido.DescripcionEstado = r.DescripcionEstado;
                     return new(true);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -299,18 +295,14 @@ namespace GAPPLE.Client.Services
             try
             {
                 order.Usuario = SesionDTO.Nombre;
-                order.CodCliente = "asd";              //para que no salte validacion
-                order.CondicionVenta = "asd";          //para que no salte validacion
-                order.Entrega = "asd";                 //para que no salte validacion
-                order.FechaEntrega = DateTime.Today;   //para que no salte validacion
+                OrdenDTO aux = new(order);
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4)); // timeout de 2 minutos (120s)
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", order, cts.Token);
-                order.FechaEntrega = null;             //para que no modifique grilla
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", aux, cts.Token);
                 if (response.IsSuccessStatusCode)
                 {
-                    Orden p = await response.Content.ReadFromJsonAsync<Orden>();
-                    order.IdEstado = p.IdEstado;
-                    order.DescripcionEstado = p.DescripcionEstado;
+                    OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
+                    order.IdEstado = r.IdEstado;
+                    order.DescripcionEstado = r.DescripcionEstado;
                     return new(true);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -330,21 +322,15 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                var aux = orden.Usuario;
-                orden.Usuario = SesionDTO.Nombre;
-                orden.CondicionVenta = "asd"; //para pasar validacion
-                orden.Entrega = "asd";
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/lista", orden);
+                OrdenDTO aux = new(orden);
+                aux.Usuario = SesionDTO.Nombre;
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/lista", aux);
                 if (response.IsSuccessStatusCode)
                     return new(true);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadAsStringAsync());
                 else
-                {
-                    orden.Usuario = aux;
-                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return new(false, await response.Content.ReadAsStringAsync());
-                    else
-                        throw new Exception(await response.Content.ReadAsStringAsync());
-                }
+                    throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
