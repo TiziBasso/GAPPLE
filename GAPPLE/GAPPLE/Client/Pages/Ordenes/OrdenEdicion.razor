@@ -715,13 +715,6 @@ else
 
                 foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0 || x.Probador || x.CantidadObsequio > 0))
                 {
-                    int cantProv = 0;
-                    var prod = lstProductosDifLinea.FirstOrDefault(x => x.CodigoProducto == product.CodigoProducto);
-                    if (prod != null)
-                    {
-                        cantProv = prod.CantidadProbador;
-                    }
-
                     orden.Detalle!.Add(new OrdenDetalle()
                         {
                             Cantidad = product.CantidadSeleccionada,
@@ -729,7 +722,7 @@ else
                             Descuento = product.DescuentoFinal,
                             Probador = product.Probador,
                             Precio = product.Precio,
-                            CantidadProbador = cantProv,
+                            CantidadProbador = product.CantidadProbador,
                             CantidadObsequio = product.CantidadObsequio,
                             TieneObsequio = product.CantidadObsequio > 0,
                         });
