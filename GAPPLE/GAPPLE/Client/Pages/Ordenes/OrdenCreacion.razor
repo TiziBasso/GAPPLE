@@ -16,20 +16,12 @@
 
 @if (showForm)
 {
-    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext" Style="display: grid;grid-template-rows: auto 1fr auto;height: calc(100vh - 83px);">
+    <RadzenTemplateForm Data="orden" TItem="Orden" Submit="Guardar" EditContext="editContext" Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px);">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
 
         <RadzenFieldset AllowCollapse="true" Text="@($"Orden cabecera" + orden != null && orden.CodCliente != null ? clientes.Find(x => x.CodigoCliente == orden.CodCliente)!.RazonSocial : "Seleccionar cliente")">
             <RadzenRow Style="margin-top:10px;">
-                <RadzenColumn Size="4">
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        <RadzenLabel Text="Línea:" />
-                        <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
-                        <ValidationMessage For="@(() => orden.Linea)" />
-                    </RadzenStack>
-                </RadzenColumn>
-
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Cliente:" />
@@ -199,6 +191,13 @@
         <RadzenRow Style="margin-top:10px;">
             <RadzenColumn Size="4">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Línea:" />
+                    <RadzenDropDown Data="lstLineas" @bind-Value="valorAux" Change="BuscarProductos" />
+                    <ValidationMessage For="@(() => orden.Linea)" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="3">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                     <RadzenLabel Text="Tipo cantidad:" />
                     <RadzenDropDown AllowVirtualization="true" Data="propiedades" @bind-Value="propiedad" Change="BuscarProductos"
                                     TextProperty="@nameof(Opcion.Descripcion)" ValueProperty="@nameof(Opcion.Id)" />
@@ -223,14 +222,14 @@
                                         <div class="product">
                                             <label style="width:65px;">@product.CodigoProducto</label>
                                             <label style="font-size: 14px;width: 50px;font-weight: 900;">@product.Sinonimo</label>
-                                            <input id="input-@product.CodigoProducto"
-                                                   type="text"
-                                                   class="product-input"
-                                                   value="@product.CantidadSeleccionada"
-                                                   @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
-                                                   @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
                                             @if (propiedad == 0)
                                             {
+                                                <input id="input-@product.CodigoProducto"
+                                                       type="text"
+                                                       class="product-input"
+                                                       value="@product.CantidadSeleccionada"
+                                                       @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
+                                                       @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
                                                 <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
                                                 @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                                 {
@@ -281,6 +280,14 @@
                                                     <strong>%</strong>
                                                 }
                                                 <RadzenCheckBox @bind-Value=product.Probador />
+                                            }
+                                            else
+                                            {
+                                                <input id="input-@product.CodigoProducto"
+                                                       type="text"
+                                                       class="product-input"
+                                                       value="@product.CantidadObsequio"
+                                                       @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
                                             }
                                         </div>
                                     }
@@ -441,12 +448,15 @@ else
     {
         foreach (var card in Cards)
         {
-            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0 || x.Probador))
+            foreach (var product in card.Products.Where(x => x.CantidadSeleccionada > 0 || x.Probador || x.CantidadObsequio > 0))
             {
                 if (lstProductosDifLinea.Exists(x => x.CodigoProducto == product.CodigoProducto))
                 {
-                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
-                    lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                    var ln = lstProductosDifLinea.First(x => x.CodigoProducto == product.CodigoProducto);
+                    ln.CantidadSeleccionada = product.CantidadSeleccionada;
+                    ln.CantidadObsequio = product.CantidadObsequio;
+                    ln.Probador = product.Probador;
+                    ln.TieneObsequio = ln.CantidadObsequio > 0;
                 }
                 else
                     lstProductosDifLinea!.Add((ProductoParaOfertas)product.Clone());
@@ -473,9 +483,11 @@ else
             lstProductos = await ProductosService.GetProductosParaOfertas(orden.Linea!, orden.CodListaPrecio);
             foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
             {
-                lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
-                lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadObsequio = product.CantidadObsequio;
-                lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
+                var ln = lstProductos.First(x => x.CodigoProducto == product.CodigoProducto);
+                ln.CantidadSeleccionada = product.CantidadSeleccionada;
+                ln.CantidadObsequio = product.CantidadObsequio;
+                ln.Probador = product.Probador;
+                ln.TieneObsequio = ln.CantidadObsequio > 0;
             }
 
             var grouped = lstProductos.GroupBy(p => p.Familia);
@@ -688,13 +700,15 @@ else
             {
                 foreach (var product in card.Products)
                 {
-                    if (product.CantidadSeleccionada > 0 || product.Probador)
+                    if (product.CantidadSeleccionada > 0 || product.Probador || product.CantidadObsequio > 0)
                         orden.Detalle!.Add(new OrdenDetalle()
                             {
                                 Cantidad = product.CantidadSeleccionada,
                                 CodProducto = product.CodigoProducto,
                                 Descuento = product.DescuentoFinal,
                                 Probador = product.Probador,
+                                CantidadObsequio = product.CantidadObsequio,
+                                TieneObsequio = product.CantidadObsequio > 0,
                                 Precio = product.Precio
                             });
                 }
@@ -708,6 +722,8 @@ else
                             CodProducto = product.CodigoProducto,
                             Descuento = product.DescuentoFinal,
                             Probador = product.Probador,
+                            CantidadObsequio = product.CantidadObsequio,
+                            TieneObsequio = product.CantidadObsequio > 0,
                             Precio = product.Precio
                         });
             }
@@ -716,10 +732,8 @@ else
 
             if (!orden.Detalle.Any())
             {
-
                 NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 producto");
                 error = true;
-
             }
 
         }
@@ -747,7 +761,7 @@ else
         if (Validar())
         {
             bool valid = false;
-            if (orden.Detalle!.Any(x => x.Probador))
+            if (orden.Detalle!.Any(x => x.Probador || x.TieneObsequio))
             {
                 valid = await DialogService.OpenAsync<ModalCantidadesProbadores>("Seleccionar cantidad de probadores", new()
                 {

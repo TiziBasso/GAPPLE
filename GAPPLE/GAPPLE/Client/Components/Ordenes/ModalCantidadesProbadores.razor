@@ -2,17 +2,17 @@
 @inject NotificationService NotificationService
 
 
-<RadzenDataGrid TItem="OrdenDetalle" Data="Detalle!.Where(x=>x.Probador || x.CantidadObsequio > 0)" Density="Density.Compact">
+<RadzenDataGrid TItem="OrdenDetalle" Data="Detalle!.Where(x=>x.Probador || x.TieneObsequio)" Density="Density.Compact">
     <Columns>
         <RadzenDataGridColumn TItem="OrdenDetalle" Property="@nameof(OrdenDetalle.CodProducto)" Title="Producto" />
         <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. probador">
             <Template>
-                <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" />
+                <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" Disabled=@(!context.Probador) InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. obsequio">
             <Template>
-                <RadzenNumeric @bind-Value=context.CantidadObsequio ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" />
+                <RadzenNumeric @bind-Value=context.CantidadObsequio ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
             </Template>
         </RadzenDataGridColumn>
     </Columns>
@@ -31,7 +31,7 @@
     {
         bool valido = true;
 
-        if (Detalle.Any(x => x.CantidadProbador == 0 && x.CantidadObsequio == 0))
+        if (Detalle.Where(x => x.Probador || x.TieneObsequio).Any(x => x.CantidadProbador == 0 && x.CantidadObsequio == 0))
         {
             NotificationService.Notify(NotificationSeverity.Info, "Hay productos sin cantidades", "Revise los datos cargados");
             valido = false;

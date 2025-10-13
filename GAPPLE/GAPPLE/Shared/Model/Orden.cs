@@ -155,5 +155,7 @@ namespace GAPPLE.Shared.Model
         public int CantidadObsequioAprobada { get; set; }
 
         public int CantidadObsequioPendiente => CantidadObsequio - CantidadObsequioAprobada;
+
+        public bool TieneObsequio { get; set; }
     }
 }

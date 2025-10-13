@@ -329,7 +329,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, decimal descuento, SqlTransaction transaction)
+        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, int obsequio, decimal descuento, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -342,6 +342,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
             cmd.Parameters.AddWithValue("@pDescuento", descuento);
             if (probador != 0) cmd.Parameters.AddWithValue("@pProbador", probador);
+            if(obsequio != 0 ) cmd.Parameters.AddWithValue("@pObsequios", obsequio);
             cmd.ExecuteNonQuery();
         }
 

@@ -197,7 +197,7 @@ namespace GAPPLE.Server.Controllers
                             detalle.Probador = detalle.CantidadProbador > 0;
                             if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
                             if (dr["CantidadObsequios"] != DBNull.Value) detalle.CantidadObsequio = int.Parse(dr["CantidadObsequios"].ToString());
-                            if (dr["CantidadObsequiosAprobados"] != DBNull.Value) detalle.CantidadObsequio = int.Parse(dr["CantidadObsequiosAprobados"].ToString());
+                            if (dr["CantidadObsequiosAprobados"] != DBNull.Value) detalle.CantidadObsequioAprobada = int.Parse(dr["CantidadObsequiosAprobados"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }
@@ -372,7 +372,7 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.CantidadObsequio, item.Descuento, trans);
                             item.CantidadProbador = 0;
                         }
                     }
@@ -387,7 +387,7 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.CantidadObsequio, item.Descuento, trans);
                         }
                     }
 
@@ -441,7 +441,8 @@ namespace GAPPLE.Server.Controllers
                     foreach (var item in pedido.Detalle!)
                     {
                         numLinea++;
-                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador ? item.CantidadProbador : 0, item.Descuento, trans);
+                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, 
+                                                    item.Probador ? item.CantidadProbador : 0, item.CantidadObsequio, item.Descuento, trans);
                         item.CantidadProbador = 0;
                     }
 

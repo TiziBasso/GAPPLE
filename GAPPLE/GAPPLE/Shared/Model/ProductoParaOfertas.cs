@@ -16,7 +16,7 @@
         public int CantidadObsequio { get; set; }
         public string Sinonimo { get; set; }
         public string CodigoComplemento { get; set; }
-
+        public bool TieneObsequio { get; set; }
         public object Clone() => MemberwiseClone();
     }
 }
