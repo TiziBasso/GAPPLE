@@ -204,14 +204,14 @@
             <Columns>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="80px" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" />
-                <RadzenDataGridColumn Context="fac" Title="Cant. Facturado" Width="30px">
+                <RadzenDataGridColumn Context="fac" Title="Cant. Facturado" FilterMode="FilterMode.Simple" Width="30px">
                     <Template >
-                        <RadzenNumeric Value="cantidadFacturada(fac)"/>
+                        <RadzenNumeric Value="@cantidadFacturada(fac)" ReadOnly="true"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Context="pres" Title="Cant. Presupuestado" Width="30px">  
+                <RadzenDataGridColumn Context="pres" Title="Cant. Presupuestado" FilterMode="FilterMode.Simple" Width="30px">  
                     <Template>
-                        <RadzenNumeric Value="cantidadPresupuestada(pres)"/>
+                        <RadzenNumeric Value="@cantidadPresupuestada(pres)" ReadOnly="true"/>
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. Total" Width="40px" TextAlign="TextAlign.Right" />
@@ -231,6 +231,16 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Title="Total facturado" Context="totFac"  >  
+                    <Template >
+                        <RadzenTextBox Value="@((cantidadFacturada(totFac) * totFac.PrecioConDescuento).ToString())" FormatString="${0:N2}" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Total presupuestado" Context="totPres">
+                    <Template>
+                        <RadzenTextBox Value="@((cantidadPresupuestada(totPres) * totPres.PrecioConDescuento).ToString())" FormatString="${0:N2}" />
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Title="Total" Width="px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
                     <FooterTemplate>
                         <strong>
