@@ -190,14 +190,14 @@ namespace GAPPLE.Server.Controllers
                                 CodProducto = dr["CodProducto"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 Cantidad = (int)dr["Cantidad"],
-                                CantidadAprobada = (int)dr["CantidadAprobada"],
-                                CantidadCancelada = (int)dr["CantidadCancelada"]
+                                CantidadAprobada = (int)dr["CantidadAprobada"]
                             };
                             if (dr["precio"] != DBNull.Value) detalle.Precio = (decimal)dr["Precio"];
                             if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
-                            if (detalle.CantidadProbador > 0) detalle.Probador = true;
+                            detalle.Probador = detalle.CantidadProbador > 0;
                             if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
-                            if (dr["CantidadProbadorCancelada"] != DBNull.Value) detalle.CantidadProbadorCancelada = int.Parse(dr["CantidadProbadorCancelada"].ToString());
+                            if (dr["CantidadObsequios"] != DBNull.Value) detalle.CantidadObsequio = int.Parse(dr["CantidadObsequios"].ToString());
+                            if (dr["CantidadObsequiosAprobados"] != DBNull.Value) detalle.CantidadObsequio = int.Parse(dr["CantidadObsequiosAprobados"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }
@@ -536,7 +536,7 @@ namespace GAPPLE.Server.Controllers
                     cnn.Close();
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    response = PostTangoProbadores(pedido,trans);
+                    response = PostTangoProbadores(pedido, trans);
                     trans.Commit();
                     cnn.Close();
                     return Ok(pedido);

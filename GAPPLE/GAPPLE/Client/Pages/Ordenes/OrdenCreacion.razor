@@ -196,6 +196,16 @@
             </RadzenRow>
         </RadzenFieldset>
 
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Tipo cantidad:" />
+                    <RadzenDropDown AllowVirtualization="true" Data="propiedades" @bind-Value="propiedad" Change="BuscarProductos"
+                                    TextProperty="@nameof(Opcion.Descripcion)" ValueProperty="@nameof(Opcion.Id)" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
         <RadzenRow Style="margin-top:10px;max-height: 100%;overflow: auto;">
             <RadzenColumn Size="12">
                 <RadzenFieldset Text="Selección de productos">
@@ -219,29 +229,12 @@
                                                    value="@product.CantidadSeleccionada"
                                                    @onfocus="@(() => product.CantidadSeleccionadaAnterior = product.CantidadSeleccionada)"
                                                    @onchange="@(async e => await OnCantidadChanged(e.Value?.ToString(), product))" />
-                                            <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
-                                            @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                                            @if (propiedad == 0)
                                             {
-                                                <div style="background:yellow; display:flex;">
-                                                    @if (SesionDTO.Rol == "1")
-                                                    {
-                                                        <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
-                                                        @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>@product.DescuentoFinal</span>
-                                                    }
-
-                                                    <strong>%</strong>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
+                                                <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
+                                                @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                                                 {
-
-                                                    <div style="display:flex;">
+                                                    <div style="background:yellow; display:flex;">
                                                         @if (SesionDTO.Rol == "1")
                                                         {
                                                             <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
@@ -249,26 +242,46 @@
                                                         }
                                                         else
                                                         {
-
                                                             <span>@product.DescuentoFinal</span>
                                                         }
+
+                                                        <strong>%</strong>
                                                     </div>
                                                 }
                                                 else
                                                 {
-                                                    @if (SesionDTO.Rol == "1")
+                                                    @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
                                                     {
-                                                        <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
-                                                        @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+
+                                                        <div style="display:flex;">
+                                                            @if (SesionDTO.Rol == "1")
+                                                            {
+                                                                <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                                @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <span>@product.DescuentoFinal</span>
+                                                            }
+                                                        </div>
                                                     }
                                                     else
                                                     {
-                                                        <span>0</span>
+                                                        @if (SesionDTO.Rol == "1")
+                                                        {
+                                                            <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
+                                                            @* <input style="padding: 0;width: 32px;border: none;" type="number" value="@product.DescuentoFinal" @onchange="@((e) => ModificarDescuento(e, product))" /> *@
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>0</span>
+                                                        }
                                                     }
+                                                    <strong>%</strong>
                                                 }
-                                                <strong>%</strong>
+                                                <RadzenCheckBox @bind-Value=product.Probador />
                                             }
-                                            <RadzenCheckBox @bind-Value=product.Probador />
                                         </div>
                                     }
                                 </div>
@@ -381,7 +394,7 @@ else
     Orden orden = new() { IdEstado = 1 };
     List<string> lstLineas = new();
     List<string> lstLineasDif = new();
-    string? valorAux;
+    string valorAux;
     string entrega;
     EditContext editContext;
     private List<Card> Cards = new();
@@ -390,6 +403,7 @@ else
     Dictionary<string, decimal> descuentosPersonalizados = new();
 
     bool showForm, showCards, unico, seleccionaVendedor;
+    int propiedad = 0;
 
     List<Transporte> transportes = new();
     List<ListaDePrecios> listasDePrecio = new();
@@ -399,6 +413,7 @@ else
     List<Oferta> ofertas = new();
     List<ArticulosPorCliente> articulosPorClientes = new();
     List<SucursalesPorCliente> sucursalesPorClientes = new();
+    List<Opcion> propiedades = [new(0, "Normal"), new(1, "Obsequio")];
 
     Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
@@ -459,6 +474,7 @@ else
             foreach (var product in lstProductosDifLinea.Where(x => lstProductos.Exists(y => y.CodigoProducto == x.CodigoProducto)))
             {
                 lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadSeleccionada = product.CantidadSeleccionada;
+                lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).CantidadObsequio = product.CantidadObsequio;
                 lstProductos.First(x => x.CodigoProducto == product.CodigoProducto).Probador = product.Probador;
             }
 
@@ -787,7 +803,12 @@ else
 
     private async Task OnCantidadChanged(string? nuevoValor, ProductoParaOfertas product)
     {
-        if (int.TryParse(nuevoValor, out var cantidad))
+        int cantidad = 0;
+
+        if (!int.TryParse(nuevoValor, out cantidad))
+            cantidad = 0;
+
+        if (propiedad == 0)
         {
             if (cantidad != product.CantidadSeleccionada)
             {
@@ -795,9 +816,10 @@ else
                 await AgregarComplemento(product);
             }
         }
-        else
+        else if (propiedad == 1)
         {
-            product.CantidadSeleccionada = 0;
+            if (cantidad != product.CantidadObsequio)
+                product.CantidadObsequio = cantidad;
         }
     }
 

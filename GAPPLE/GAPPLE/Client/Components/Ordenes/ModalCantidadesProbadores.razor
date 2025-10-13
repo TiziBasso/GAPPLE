@@ -1,48 +1,48 @@
 ﻿@inject DialogService DialogService
+@inject NotificationService NotificationService
 
-@if (showComponent)
-{
-    <RadzenDataGrid TItem="OrdenDetalle" Data="Detalle!.Where(x=>x.Probador)" Density="Density.Compact">
-        <Columns>
-            <RadzenDataGridColumn TItem="OrdenDetalle" Property="@nameof(OrdenDetalle.CodProducto)" Title="Producto" />
-            <RadzenDataGridColumn TItem="OrdenDetalle" Width="80px" Title="Cantidad">
-                <Template>
-                    <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="1" Style="width:100%" TextAlign="TextAlign.Right" />
-                </Template>
-            </RadzenDataGridColumn>
-        </Columns>
-    </RadzenDataGrid>
 
-    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
-        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
-        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
-    </RadzenStack>
+<RadzenDataGrid TItem="OrdenDetalle" Data="Detalle!.Where(x=>x.Probador || x.CantidadObsequio > 0)" Density="Density.Compact">
+    <Columns>
+        <RadzenDataGridColumn TItem="OrdenDetalle" Property="@nameof(OrdenDetalle.CodProducto)" Title="Producto" />
+        <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. probador">
+            <Template>
+                <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. obsequio">
+            <Template>
+                <RadzenNumeric @bind-Value=context.CantidadObsequio ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
 
-}
-else
-{
-    <Loader />
-}
+<RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar" Click="Guardar" />
+</RadzenStack>
 
 
 @code {
     [Parameter, EditorRequired] public List<OrdenDetalle> Detalle { get; set; }
 
-    bool showComponent;
-
-    protected override void OnInitialized()
+    private bool Validar()
     {
-        foreach (var item in Detalle!.Where(x => x.Probador))
+        bool valido = true;
+
+        if (Detalle.Any(x => x.CantidadProbador == 0 && x.CantidadObsequio == 0))
         {
-            if (item.CantidadProbador == 0)
-                item.CantidadProbador = 1;
+            NotificationService.Notify(NotificationSeverity.Info, "Hay productos sin cantidades", "Revise los datos cargados");
+            valido = false;
         }
-        showComponent = true;
+
+        return valido;
     }
 
     private async Task Guardar()
     {
-        if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        if (Validar() && await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             DialogService.Close(true);
     }
 
