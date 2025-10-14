@@ -659,7 +659,7 @@ namespace GAPPLE.Server.Controllers
 
             pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
             pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
-            pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
+            pedido.ID_GVA43_TALON_PED = 35;
             pedido.ESTADO = 2;
             pedido.ES_CLIENTE_HABITUAL = true;
             pedido.ID_GVA01 = ordenFull.ID_GVA01;
@@ -684,7 +684,7 @@ namespace GAPPLE.Server.Controllers
                     RenglonDTO renglonDTO = new();
                     renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadProbadorAprobada;
                     renglonDTO.ID_STA11 = detalle.ID_STA11;
-                    renglonDTO.PORCENTAJE_BONIFICACION = 99.9m;
+                    renglonDTO.PORCENTAJE_BONIFICACION = 100;
                     pedido.RENGLON_DTO.Add(renglonDTO);
                 }
             }
