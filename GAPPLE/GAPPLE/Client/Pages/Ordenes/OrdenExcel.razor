@@ -202,11 +202,17 @@
                         Density="Density.Compact"
                         AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="80px" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant." Width="50px" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="50px" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" Width="50px" FormatString="{0:N2}%" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="45px" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="50px"  />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto) />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Factura) />
+                <RadzenDataGridColumn Title="Cant. T" Width="50px" TextAlign="TextAlign.Right" Visible=@(orden.Factura && orden.Presupuesto)>
+                    <Template Context="data">
+                        @(data.CantidadSeleccionada * 2)
+                    </Template>
+                </RadzenDataGridColumn >                
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="40px"  TextAlign="TextAlign.Right" />                
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento"  FormatString="{0:N2}%" TextAlign="TextAlign.Right">
                     <Template Context="data">
                         @if (esAdmin)
                         {
@@ -219,13 +225,48 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Title="Total" Width="90px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="55px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                    <Template>
+                        @if (orden.Presupuesto && orden.Factura)
+                        {
+                            <span>
+                                $@((precio.PrecioTotal * 2).ToString("N2"))
+                            </span>
+                        }
+                        else if (orden.Presupuesto || orden.Factura)
+                        {
+                            <span>
+                                $@precio.PrecioTotal.ToString("N2")
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                $@((0).ToString("N2"))
+                            </span>
+                        }
+                    </Template>
                     <FooterTemplate>
-                        <strong>
-                            Total: $@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))
-                        </strong>
+                        @if (orden.Presupuesto && orden.Factura)
+                        {
+                            <strong>
+                                Total: $@(lstProductos.Sum(x => x.PrecioTotal * 2).ToString("N2"))
+                            </strong>
+                        }
+                        else if (orden.Presupuesto || orden.Factura)
+                        {
+                            <strong>
+                                Total: $@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))
+                            </strong>
+                        }
+                        else
+                        {
+                            <strong>
+                                Total: $@((0).ToString("N2"))
+                            </strong>
+                        }
                     </FooterTemplate>
                 </RadzenDataGridColumn>
                 @* <RadzenDataGridColumn Width="20px" Frozen=true FrozenPosition="FrozenColumnPosition.Right" Resizable=false TextAlign="TextAlign.Center">
@@ -379,6 +420,8 @@ else
         }
     }
 
+
+
     async Task AsignarVariables()
     {
         DialogCustom.OpenBusyWithLoader("Cargando...");
@@ -506,6 +549,40 @@ else
         }
 
         return !error;
+    }
+
+    int cantidadFacturada(ProductoOrden productoOrden)
+    {
+        int cantidadFacturado = 0;
+        int resto = productoOrden.CantidadSeleccionada % 2;
+        if (orden.Factura && orden.Presupuesto)
+        {
+            cantidadFacturado = productoOrden.CantidadSeleccionada / 2;
+            if (resto != 0)
+                cantidadFacturado += resto;
+
+        }
+        else if (orden.Factura)
+        {
+            cantidadFacturado = productoOrden.CantidadSeleccionada;
+        }
+        return cantidadFacturado;
+    }
+
+    int cantidadPresupuestada(ProductoOrden productoOrden)
+    {
+        int cantidadPresupuestado = 0;
+        if (orden.Factura && orden.Presupuesto)
+        {
+            cantidadPresupuestado = productoOrden.CantidadSeleccionada / 2;
+
+        }
+        else if (orden.Presupuesto)
+        {
+            cantidadPresupuestado = productoOrden.CantidadSeleccionada;
+        }
+        return cantidadPresupuestado;
+
     }
 
     private async Task ShowFormat()
