@@ -222,9 +222,9 @@
     @if (showResumen)
     {
         <ImpresiónOrden Pedido=Resumen
-                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
-                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
-                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList())"
+                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0) ?
+                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 ||x.CantidadObsequioPendiente > 0 ).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }

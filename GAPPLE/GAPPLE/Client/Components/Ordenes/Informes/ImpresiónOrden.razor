@@ -5,7 +5,7 @@
         {
             GetData(i);
             <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-            Detalle="detalle" ShowProbadores=showProbadores />
+            Detalle="detalle" ShowProbadores=showProbadores ShowObsequios="showObsequios"/>
         }
     </div>
 }
@@ -20,24 +20,25 @@
     List<OrdenDetalle>? detalleCompleto = new();
     List<OrdenDetalle>? detalle = new();
 
-    bool showModal, showProbadores;
+    bool showModal, showProbadores, showObsequios;
     int cantPages = 0, lineasXPag = 49, aux;
 
     protected override void OnInitialized()
     {
         detalleCompleto!.AddRange(Detalle);
         if (Pendientes != null)
-        {
             detalleCompleto.AddRange(Pendientes);
-        }
 
         int sumLineas = detalleCompleto.Count + 1;
         if (Pendientes != null && Pendientes.Any()) sumLineas++;
 
-        bool anyDetalle = Detalle?.Any(x => x.CantidadProbador > 0) ?? false;
-        bool anyPendiente = Pendientes?.Any(x => x.CantidadProbador > 0) ?? false;
+        bool anyDetalleProb = Detalle?.Any(x => x.CantidadProbador > 0) ?? false;
+        bool anyPendienteProb = Pendientes?.Any(x => x.CantidadProbador > 0) ?? false;
+        showProbadores = anyDetalleProb || anyPendienteProb;
 
-        showProbadores = anyDetalle || anyPendiente;
+        bool anyDetalleObs = Detalle?.Any(x => x.CantidadObsequio > 0) ?? false;
+        bool anyPendienteObs = Pendientes?.Any(x => x.CantidadObsequio > 0) ?? false;
+        showObsequios = anyDetalleObs || anyPendienteObs;
 
         cantPages = sumLineas / lineasXPag;
         if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;

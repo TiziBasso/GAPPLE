@@ -22,8 +22,9 @@
         }
     </div>
     <div style="margin-top: 10px;height: 60rem;">
-        <PageData Detalle="Detalle.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList()" 
-                    Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList()" ShowProbadores=ShowProbadores />
+        <PageData Detalle="Detalle.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList()"
+                  Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList()" 
+                  ShowProbadores=ShowProbadores ShowObsequios=ShowObsequios/>
     </div>
     <div>
         <div style="display: flex;justify-content: space-between;">
@@ -50,6 +51,7 @@
     [Parameter] public bool ShouldPrint { get; set; } = true;
     [Parameter, EditorRequired] public List<OrdenDetalle> Detalle { get; set; }
     [Parameter] public bool ShowProbadores { get; set; } = false;
+    [Parameter] public bool ShowObsequios { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

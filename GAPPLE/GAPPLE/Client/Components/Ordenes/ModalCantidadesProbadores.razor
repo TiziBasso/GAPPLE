@@ -7,12 +7,14 @@
         <RadzenDataGridColumn TItem="OrdenDetalle" Property="@nameof(OrdenDetalle.CodProducto)" Title="Producto" />
         <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. probador">
             <Template>
-                <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="0" Style="width:100%;padding-right:10px;" TextAlign="TextAlign.Right" Disabled=@(!context.Probador) InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
+                <RadzenNumeric @bind-Value=context.CantidadProbador ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right"
+                               Disabled=@(!context.Probador) InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="OrdenDetalle" Width="140px" Title="Cant. obsequio">
             <Template>
-                <RadzenNumeric @bind-Value=context.CantidadObsequio ShowUpDown=false Min="0" Style="width:100%;padding-right:10px;" TextAlign="TextAlign.Right" InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
+                <RadzenNumeric @bind-Value=context.CantidadObsequio ShowUpDown=false Min="0" Style="width:100%" TextAlign="TextAlign.Right"
+                               Disabled=@(!context.TieneObsequio) InputAttributes="@(new Dictionary<string, object>() { { "style", "width:100% !important;" } })" />
             </Template>
         </RadzenDataGridColumn>
     </Columns>

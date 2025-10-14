@@ -464,7 +464,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void UpdatePedidoDetalle(string codOrden, string codProducto, int cantidadAprobada, int? probadorAprobada, SqlTransaction transaction)
+        public void UpdatePedidoDetalle(string codOrden, string codProducto, int cantidadAprobada, int? probadorAprobada, int? obsequioAprobada, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -475,6 +475,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
             cmd.Parameters.AddWithValue("@pCantidadAprobada", cantidadAprobada);
             if (probadorAprobada != null) cmd.Parameters.AddWithValue("@pProbadorAprobada", probadorAprobada);
+            if (obsequioAprobada != null) cmd.Parameters.AddWithValue("@pObsequioAprobada", obsequioAprobada);
             cmd.ExecuteNonQuery();
         }
         public void PersistirPedidoImpresion(string idPedido, string nombreUsuario)
