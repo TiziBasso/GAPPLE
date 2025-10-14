@@ -221,26 +221,6 @@
                                             @if (propiedad == 0)
                                             {
                                                 <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
-                                                class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product))" />
-                                                <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
-                                                @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
-                                                <div style="background:yellow; display:flex;">
-                                                    @if (SesionDTO.Rol == "1")
-                                                    {
-                                                        <RadzenNumeric Min="0" TValue="decimal" Style="padding: 0;width: 32px;border: none;" ValueChanged="@((e) => ModificarDescuento(e, product))" Value="@product.DescuentoFinal" ShowUpDown="false"></RadzenNumeric>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>@product.DescuentoFinal</span>
-                                                    }
-
-                                                    <strong>%</strong>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                @if (articulosPorClientes.Any() && articulosPorClientes.Exists(x => x.CodProducto == product.CodigoProducto))
-                                                <input id="input-@product.CodigoProducto" type="text" data-code="@product.CodigoProducto"
                                                        class="product-input" @bind-value="product.CantidadSeleccionada" @onfocusout="@(() => AgregarComplemento(product))" />
                                                 <label style="font-size: 12px;width: 90px;font-weight: 600;">$ @product.PrecioConDescuento.ToString("N2")</label>
                                                 @if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
@@ -288,7 +268,6 @@
                                                     }
                                                     <strong>%</strong>
                                                 }
-                                                <strong>%</strong>
                                                 <RadzenCheckBox @bind-Value=product.Probador Disabled=@(orden.Presupuesto && orden.TieneOrdenDoble) />
                                             }
                                             else

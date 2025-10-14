@@ -374,6 +374,7 @@ namespace GAPPLE.Server.Controllers
                             numLinea++;
                             daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.CantidadObsequio, item.Descuento, trans);
                             item.CantidadProbador = 0;
+                            item.CantidadObsequio = 0;
                         }
                     }
 
@@ -441,7 +442,7 @@ namespace GAPPLE.Server.Controllers
                     foreach (var item in pedido.Detalle!)
                     {
                         numLinea++;
-                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, 
+                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad,
                                                     item.Probador ? item.CantidadProbador : 0, item.CantidadObsequio, item.Descuento, trans);
                         item.CantidadProbador = 0;
                     }
@@ -780,7 +781,7 @@ namespace GAPPLE.Server.Controllers
         {
             OrdenExpedicion orden = new()
             {
-                Detalle = new()
+                Detalle = []
             };
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             using (DataTable dt = daO.ObtenerOrdenExpediciones(idOrden, idEstado, trans))
@@ -820,16 +821,16 @@ namespace GAPPLE.Server.Controllers
                         NumLinea = i,
                         CantidadF = int.Parse(row["CantidadF"].ToString()),
                         CantidadX = int.Parse(row["CantidadX"].ToString()),
-                        //CantidadCanceladaF = int.Parse(row["CantidadCanceladaF"].ToString()),
-                        //CantidadCanceladaX = int.Parse(row["CantidadCanceladaX"].ToString()),
                         CantidadAprobadaF = int.Parse(row["CantidadAprobadaF"].ToString()),
                         CantidadAprobadaX = int.Parse(row["CantidadAprobadaX"].ToString()),
                         CantidadProbadorF = int.Parse(row["CantidadProbadorF"].ToString()),
                         CantidadProbadorX = int.Parse(row["CantidadProbadorX"].ToString()),
                         CantidadProbadorAprobadaF = int.Parse(row["CantidadProbadorAprobadaF"].ToString()),
                         CantidadProbadorAprobadaX = int.Parse(row["CantidadProbadorAprobadaX"].ToString()),
-                        //CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
-                        //CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
+                        CantidadObsequioF = int.Parse(row["CantidadObsequiosF"].ToString()),
+                        CantidadObsequioX = int.Parse(row["CantidadObsequiosX"].ToString()),
+                        CantidadObsequioAprobadaF = int.Parse(row["CantidadObsequiosAprobadoF"].ToString()),
+                        CantidadObsequioAprobadaX = int.Parse(row["CantidadObsequiosAprobadoX"].ToString()),
                     };
 
                     orden.Detalle.Add(linea);
