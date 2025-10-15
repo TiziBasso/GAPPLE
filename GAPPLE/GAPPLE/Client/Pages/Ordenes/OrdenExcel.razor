@@ -204,12 +204,29 @@
             <Columns>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="45px" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="50px"  />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto) />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Factura) />
-                <RadzenDataGridColumn Title="Cant. T" Width="50px" TextAlign="TextAlign.Right" Visible=@(orden.Factura && orden.Presupuesto)>
-                    <Template Context="data">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto) >
+                    <FooterTemplate>
+                        <strong>
+                            Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
+                        </strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Factura) >
+                    <FooterTemplate>
+                        <strong>
+                            Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
+                        </strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Cant. T" Width="50px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
+                    <Template >
                         @(data.CantidadSeleccionada * 2)
                     </Template>
+                    <FooterTemplate>
+                        <strong>
+                            Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())
+                        </strong>
+                    </FooterTemplate>
                 </RadzenDataGridColumn >                
                 <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="40px"  TextAlign="TextAlign.Right" />                
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento"  FormatString="{0:N2}%" TextAlign="TextAlign.Right">
