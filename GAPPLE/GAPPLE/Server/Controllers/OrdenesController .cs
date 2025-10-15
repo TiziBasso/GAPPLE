@@ -510,24 +510,22 @@ namespace GAPPLE.Server.Controllers
                 cnn.Open();
                 trans = cnn.BeginTransaction();
 
-                //var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
-                //var response = PostTango(pedido, trans);
-                //if (!response.IsSuccessStatusCode)
-                //{
-                //    if (response.Message != null)
-                //        return BadRequest(response.Message);
-                //    else
-                //        throw new Exception();
-                //}
-                //else
-                //{
-                //    pedido.IdEstado = 5;
-                //    pedido.DescripcionEstado = "EN TANGO";
-                //    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
-                //    daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                //}
-
-                                
+                var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
+                var response = PostTango(pedido, trans);
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.Message != null)
+                        return BadRequest(response.Message);
+                    else
+                        throw new Exception();
+                }
+                else
+                {
+                    pedido.IdEstado = 5;
+                    pedido.DescripcionEstado = "EN TANGO";
+                    daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
+                    daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
+                }
 
                 if (ModelState.ErrorCount > 0)
                 {
@@ -1132,7 +1130,7 @@ namespace GAPPLE.Server.Controllers
                         cnn.Close();
                     }
 
-                    return Ok(orden);
+                    return Ok(aux);
                 }
                 else
                     return BadRequest(ModelState);
