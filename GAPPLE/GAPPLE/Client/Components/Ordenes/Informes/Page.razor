@@ -11,6 +11,10 @@
         </div>
         <div style="display: flex;justify-content: space-between;">
             <strong style="width: fit-content;">Entregar En: @Pedido.Entrega</strong>
+            @if (Pedido.FechaEntrega != null)
+            {
+                <strong style="width: fit-content;">Fecha de entrega: @Pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</strong>
+            }
             <strong style="width: fit-content;">O.C.: @Pedido.Notas</strong>
         </div>
         <strong style="width: fit-content;">Domicilio: @Pedido.DomicilioCliente</strong>
@@ -23,8 +27,8 @@
     </div>
     <div style="margin-top: 10px;height: 60rem;">
         <PageData Detalle="Detalle.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList()"
-                  Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList()" 
-                  ShowProbadores=ShowProbadores ShowObsequios=ShowObsequios/>
+                  Pendientes="Detalle.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList()"
+                  ShowProbadores=ShowProbadores ShowObsequios=ShowObsequios />
     </div>
     <div>
         <div style="display: flex;justify-content: space-between;">
