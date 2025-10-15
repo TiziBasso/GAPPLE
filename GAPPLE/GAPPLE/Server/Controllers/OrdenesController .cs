@@ -1007,5 +1007,47 @@ namespace GAPPLE.Server.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpPut("revertirestado")]
+        public IActionResult RevertirEstadoOrden(OrdenDTO orden)
+        {
+            SqlTransaction trans = null;
+            try
+            {
+                var aux = GetOrden(orden.CodigoOrden, true, null, null);
+                if (aux == null)
+                    ModelState.AddModelError("Realice la busqueda nuevamente.", "No se encontró la orden");
+                else if (aux.IdEstado != 4 || aux.IdEstado != orden.IdEstado)
+                    ModelState.AddModelError("Realice la busqueda nuevamente.", "El estado de la orden ha cambiado");
+
+                if (ModelState.ErrorCount == 0)
+                {
+                    aux.IdEstado = 1;
+                    aux.DescripcionEstado = "PENDIENTE";
+                    using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                    {
+                        DA_Ordenes daO = new(cnn.ConnectionString);
+                        cnn.Open();
+                        trans = cnn.BeginTransaction();
+                        daO.PersistirPedidoEstado(aux.Id.ToString(), (int)aux.IdEstado, orden.Usuario, trans);
+                        foreach (var linea in aux.Detalle)
+                        {
+                            daO.UpdatePedidoDetalle(aux.CodigoOrden, linea.CodProducto, linea.Cantidad, linea.CantidadProbador, linea.CantidadObsequio, trans);
+                        }
+                        trans.Commit();
+                        cnn.Close();
+                    }
+
+                    return Ok(orden);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null) trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
