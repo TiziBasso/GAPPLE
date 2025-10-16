@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Net;
 using GAPPLE.Client.Tools;
 using System.ComponentModel.Design.Serialization;
+using System.Runtime.Intrinsics.X86;
 
 namespace GAPPLE.Client.Services
 {
@@ -322,8 +323,10 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                OrdenDTO aux = new(orden);
-                aux.Usuario = SesionDTO.Nombre;
+                OrdenDTO aux = new(orden)
+                {
+                    Usuario = SesionDTO.Nombre
+                };
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/lista", aux);
                 if (response.IsSuccessStatusCode)
                     return new(true);
@@ -335,6 +338,34 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Cambiar lista de precio");
+                return new(false);
+            }
+        }
+
+        public async ValueTask<Response> RevertirEstadoOrden(Orden order)
+        {
+            try
+            {
+                OrdenDTO orden = new(order)
+                {
+                    Usuario = SesionDTO.Nombre
+                };
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirestado", orden);
+                if (response.IsSuccessStatusCode)
+                {
+                    OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
+                    order.IdEstado = r.IdEstado;
+                    order.DescripcionEstado = r.DescripcionEstado;
+                    return new(true);
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "RevertirEstadoOrden");
                 return new(false);
             }
         }

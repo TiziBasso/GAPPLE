@@ -233,7 +233,7 @@
                     <Template Context="data">
                         @if (esAdmin)
                         {
-                            <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="(decimal)99.9" TValue="decimal" Change="@(args => ChangeDescuento(data))"
+                            <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
                                            ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" />
                         }
                         else

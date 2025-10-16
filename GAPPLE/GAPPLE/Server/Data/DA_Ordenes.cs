@@ -329,7 +329,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, decimal descuento, SqlTransaction transaction)
+        public void PersistirPedidoDetalle(string codOrden, int numLinea, string codProducto, int cantidad, int probador, int obsequio, decimal descuento, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -342,6 +342,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
             cmd.Parameters.AddWithValue("@pDescuento", descuento);
             if (probador != 0) cmd.Parameters.AddWithValue("@pProbador", probador);
+            if(obsequio != 0 ) cmd.Parameters.AddWithValue("@pObsequios", obsequio);
             cmd.ExecuteNonQuery();
         }
 
@@ -463,7 +464,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void UpdatePedidoDetalle(string codOrden, string codProducto, int cantidadAprobada, int? probadorAprobada, SqlTransaction transaction)
+        public void UpdatePedidoDetalle(string codOrden, string codProducto, int cantidadAprobada, int? probadorAprobada, int? obsequioAprobada, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -474,6 +475,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
             cmd.Parameters.AddWithValue("@pCantidadAprobada", cantidadAprobada);
             if (probadorAprobada != null) cmd.Parameters.AddWithValue("@pProbadorAprobada", probadorAprobada);
+            if (obsequioAprobada != null) cmd.Parameters.AddWithValue("@pObsequioAprobada", obsequioAprobada);
             cmd.ExecuteNonQuery();
         }
         public void PersistirPedidoImpresion(string idPedido, string nombreUsuario)

@@ -24,13 +24,13 @@
             </span>
         </div>
         <div style="margin-top: 10px;height: 25cm;">
-            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX />
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX />
         </div>
     }
     else
     {
         <div style="margin-top: 10px;height: 28cm;">
-            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX />
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX />
         </div>
     }
 
@@ -50,6 +50,8 @@
     [Parameter] public bool ShowF { get; set; }
     [Parameter] public bool ShowPF { get; set; }
     [Parameter] public bool ShowPX { get; set; }
+    [Parameter] public bool ShowOF { get; set; }
+    [Parameter] public bool ShowOX { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

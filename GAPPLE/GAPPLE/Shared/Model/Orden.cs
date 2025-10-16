@@ -138,9 +138,7 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadAprobada { get; set; }
 
-        public int CantidadCancelada { get; set; }
-
-        public int CantidadPendiente => Cantidad - CantidadAprobada - CantidadCancelada;
+        public int CantidadPendiente => Cantidad - CantidadAprobada;
 
         public bool Probador { get; set; }
 
@@ -148,11 +146,16 @@ namespace GAPPLE.Shared.Model
 
         public int CantidadProbadorAprobada { get; set; }
 
-        public int CantidadProbadorCancelada { get; set; }
-
-        public int CantidadProbadorPendiente => CantidadProbador - CantidadProbadorAprobada - CantidadProbadorCancelada;
+        public int CantidadProbadorPendiente => CantidadProbador - CantidadProbadorAprobada;
 
         public decimal Descuento { get; set; }
 
+        public int CantidadObsequio { get; set; }
+
+        public int CantidadObsequioAprobada { get; set; }
+
+        public int CantidadObsequioPendiente => CantidadObsequio - CantidadObsequioAprobada;
+
+        public bool TieneObsequio { get; set; }
     }
 }

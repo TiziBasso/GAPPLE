@@ -84,92 +84,92 @@
     </RadzenStack>
 
     <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1 rz-mt-3">
-        <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevaOrden" Visible=@(permisos.Contains("alta")) />
-        <RadzenButton Text="Agregar orden por excel" Icon="attach_file_add" ButtonStyle="ButtonStyle.Info" Size=ButtonSize.Small Click="NuevaOrdenPorArchivo" Visible=@(permisos.Contains("alta")) />
+        <RadzenButton Text="Agregar orden" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevaOrden" Visible=@(alta) />
+        <RadzenButton Text="Agregar orden por excel" Icon="attach_file_add" ButtonStyle="ButtonStyle.Info" Size=ButtonSize.Small Click="NuevaOrdenPorArchivo" Visible=@(alta) />
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
                     AllowColumnResize=true Density="Density.Compact" AllowVirtualization=true
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
         <Columns>
-            <RadzenDataGridColumn TItem="Orden" Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
+            <RadzenDataGridColumn Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Cód." Property="@nameof(Orden.CodigoOrden)" Width="150px" FilterValue="codOrdenFilter" Resizable=false>
+            <RadzenDataGridColumn Title="Cód." Property="@nameof(Orden.CodigoOrden)" Width="150px" FilterValue="codOrdenFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=codOrdenFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="120px" TextAlign="TextAlign.Center" Filterable=false Resizable=false>
+            <RadzenDataGridColumn Title="Presupuesto" Property="@nameof(Orden.Presupuesto)" Width="120px" TextAlign="TextAlign.Center" Filterable=false Resizable=false>
                 <Template>
                     <RadzenCheckBox Value="context.Presupuesto" ReadOnly=true />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Cliente" Property="@nameof(Orden.Cliente)" Width="180px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
+            <RadzenDataGridColumn Title="Cliente" Property="@nameof(Orden.Cliente)" Width="180px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
 
             <RadzenDataGridColumn Title="Cód.Cliente" Property="@nameof(Orden.CodCliente)" Width="110px" />
 
-            @* <RadzenDataGridColumn TItem="Orden" Title="Línea" Property="@nameof(Orden.Linea)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px" /> *@
+            @* <RadzenDataGridColumn Title="Línea" Property="@nameof(Orden.Linea)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px" /> *@
 
-            <RadzenDataGridColumn TItem="Orden" Title="Creación" Property="@nameof(Orden.Creacion)" Width="120px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter" Resizable=false>
+            <RadzenDataGridColumn Title="Creación" Property="@nameof(Orden.Creacion)" Width="120px" TextAlign="TextAlign.Center" FormatString="{0:dd/MM/yyyy}" FilterValue="creacionFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=creacionFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Zona" Property="@nameof(Orden.ZonaDescripcion)" Width="120px" FilterOperator="FilterOperator.Contains" FilterValue="zonaFilter" MinWidth="20px">
+            <RadzenDataGridColumn Title="Zona" Property="@nameof(Orden.ZonaDescripcion)" Width="120px" FilterOperator="FilterOperator.Contains" FilterValue="zonaFilter" MinWidth="20px">
                 <FilterTemplate>
                     <RadzenDropDown Data="zonasFilter" @bind-Value=zonaFilter AllowClear=true Style="width:100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TextAlign="TextAlign.Center" TItem="Orden" Title="Estado" Property="@nameof(Orden.DescripcionEstado)" Width="130px" FilterValue="estadoFilter" MinWidth="20px">
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Title="Estado" Property="@nameof(Orden.DescripcionEstado)" Width="130px" FilterValue="estadoFilter" MinWidth="20px">
                 <FilterTemplate>
                     <RadzenDropDown Data="estadosFilter" @bind-Value=estadoFilter AllowClear=true Style="width:100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Tango" Property="@nameof(Orden.NROTANGO)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+            <RadzenDataGridColumn Title="Tango" Property="@nameof(Orden.NROTANGO)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
                 <Template>
                     @(context.NROTANGO != null ? context.NROTANGO : "NO")
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Factura" Property="@nameof(Orden.NumeroFactura)" Width="120px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
+            <RadzenDataGridColumn Title="Factura" Property="@nameof(Orden.NumeroFactura)" Width="120px" FilterOperator="FilterOperator.Contains" MinWidth="20px" />
 
-            <RadzenDataGridColumn TItem="Orden" Title="Unidad" Property="@nameof(Orden.Unidades)" Width="90px" TextAlign="TextAlign.Right" FilterValue="unidadesFilter" Resizable=false>
+            <RadzenDataGridColumn Title="Unidad" Property="@nameof(Orden.Unidades)" Width="90px" TextAlign="TextAlign.Right" FilterValue="unidadesFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=unidadesFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="120px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" FilterValue="entregaFilter" Resizable=false>
+            <RadzenDataGridColumn Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="120px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" FilterValue="entregaFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=entregaFilter AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="Orden" Title="O.C." Property="@nameof(Orden.Notas)" Width="120px" MinWidth="10px" />
+            <RadzenDataGridColumn Title="O.C." Property="@nameof(Orden.Notas)" Width="120px" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="Orden" Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" Width="200px" MinWidth="10px" />
+            <RadzenDataGridColumn Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" Width="200px" MinWidth="10px" />
 
             <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" Width="150px" MinWidth="10px" />
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
-                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && permisos.Contains("alta"))
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && alta)
                                   Click="@(() => EditarOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
-                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                                   Click="@(() => VerOrden(orden))" @onclick:stopPropagation="true" />
@@ -177,7 +177,7 @@
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
-                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && aprueba)
                                   Click="@(() => AprobarOrden(orden))" @onclick:stopPropagation="true" />
@@ -185,35 +185,43 @@
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
-                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="edit_note" ButtonStyle="ButtonStyle.Warning" title="Cambiar lista de precio" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  Visible=@(orden.IdEstado != 2 && orden.IdEstado != 5 && permisos.Contains("cambiaLista"))
+                                  Visible=@(orden.IdEstado != 2 && orden.IdEstado != 5 && cambiaLista)
                                   Click="@(()=> OnCambiarListaOrden(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
-                                  TItem="Orden" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat"
-                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4 && permisos.Contains("tango"))
+                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4 && tango)
                                   Click="@(() => PasarATango(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar)
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
                                   @onclick:stopPropagation="true" Click="@(() => CancelarOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" TItem="Orden" Visible=@(permisos.Contains("eliminar"))
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar)
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
                                   @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(true || revertir)
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="undo" ButtonStyle="ButtonStyle.Danger" title="Volver a pendiente" Variant="Variant.Flat"
+                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                                  @onclick:stopPropagation="true" Click="@(() => RevertirEstadoOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -222,9 +230,9 @@
     @if (showResumen)
     {
         <ImpresiónOrden Pedido=Resumen
-                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0).ToList())"
-                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ?
-                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList() : null)
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList())"
+                        Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0) ?
+                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 ||x.CantidadObsequioPendiente > 0 ).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
@@ -250,8 +258,8 @@ else
     string razonSocial, linea, codTango, codOrden;
 
     //List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
-    List<string> permisos;
-    bool aprueba; //variable auxiliar para no hacer la consulta en cada row
+    //List<string> permisos;
+    bool aprueba, alta, eliminar, cambiaLista, tango, revertir, finanzas, ventas, contaduria; //variables auxiliares para no hacer la consulta en cada row
 
     //filters variables
     int? idFilter, unidadesFilter;
@@ -263,8 +271,17 @@ else
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
-        permisos = await SeguridadService.GetPermisos("ordenes");
-        aprueba = permisos.Contains("finanzas") || permisos.Contains("contaduria") || permisos.Contains("ventas");
+        var permisos = await SeguridadService.GetPermisos("ordenes");
+        finanzas = permisos.Contains("finanzas");
+        contaduria = permisos.Contains("contaduria");
+        ventas = permisos.Contains("ventas");
+        aprueba = finanzas || contaduria || ventas;
+        alta = permisos.Contains("alta");
+        eliminar = permisos.Contains("eliminar");
+        cambiaLista = permisos.Contains("cambiaLista");
+        tango = permisos.Contains("tango");
+        revertir = permisos.Contains("revertir");
+
         lineas = await ProductosService.GetLineas();
         estados = await OrdenesService.GetEstados();
         idEstado = estados[1].Id;
@@ -360,7 +377,7 @@ else
     {
         var idEstadoAnt = order.IdEstado;
         await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
-                                                        new() { { "Permisos", permisos }, { "Orden", order } },
+                                                        new() { { "PermisoVentas", ventas }, { "PermisoContaduria", contaduria }, { "PermisoFinanzas", finanzas }, { "Orden", order } },
                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
         var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == idEstadoAnt);
         if (o != null)
@@ -443,6 +460,26 @@ else
         var response = await DialogService.OpenAsync<CambiarListaPrecio>($"Cambiar lista de precio orden {orden.Id}",
                                                                         new() { { "Orden", orden } },
                                                                         new() { ShowClose = false, AutoFocusFirstElement = false, Height = "fit-content", Width = "40rem" });
+    }
+
+    public async Task RevertirEstadoOrden(Orden orden)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("volver a estado pendiente", $"la orden con id {orden.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Revirtiendo...");
+            var response = await OrdenesService.RevertirEstadoOrden(orden);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, "Estado cambiado correctamente");
+                StateHasChanged();
+                await grid.Reload();
+            }
+            else if (response.Errors != null && response.Errors.Count > 0)
+                DialogCustom.ShowErrors(response.Errors, MensajesHelper.Title);
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
     }
 
     public void Dispose()

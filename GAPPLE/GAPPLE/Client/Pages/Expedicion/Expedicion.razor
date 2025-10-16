@@ -26,42 +26,41 @@
             <RadzenButton Size="ButtonSize.Small" Text="Despachar seleccionados" Icon="send" Click="Despachar" ButtonStyle="ButtonStyle.Success" Disabled=@(!selected.Any()) />
         </HeaderTemplate>
         <Columns>
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Orden)" Title="Cód. orden" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.Orden)" Title="Cód. orden" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.IdPedidos)" Title="Id orden" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.IdPedidos)" Title="Id orden" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Fecha)" Title="Fecha" FormatString="{0:dd/MM/yyyy HH:mm}"
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.Fecha)" Title="Fecha" FormatString="{0:dd/MM/yyyy HH:mm}"
                                   Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.FechaEntrega)" Title="Fecha entrega" FormatString="{0:dd/MM/yyyy}"
                                   Filterable=false TextAlign="TextAlign.Center" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.Linea)" Title="Linea" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.CodCliente)" Title="Cliente" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.CodCliente)" Title="Cliente" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.RazonSocial)" Title="Razón social" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.RazonSocial)" Title="Razón social" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.Articulos)" Title="Artículos" FilterValue="articulosFilter" MinWidth="10px">
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.Articulos)" Title="Artículos" FilterValue="articulosFilter" MinWidth="10px">
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=articulosFilter TextAlign=TextAlign.Right Style="width:100%" ShowUpDown=false />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Property="@nameof(OrdenExpedicion.ObservacionesZentra)" Title="Observaciones" MinWidth="10px" />
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicion.ObservacionesZentra)" Title="Observaciones" MinWidth="10px" />
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Title="Ver" Width="35px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+            <RadzenDataGridColumn Title="Ver" Width="35px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton ButtonStyle="ButtonStyle.Warning" Icon="edit" Click="@(()=>VerPedido(context))" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation=true />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="OrdenExpedicion" Title="Impreso" Width="60px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+            <RadzenDataGridColumn Title="Impreso" Width="60px" TextAlign=TextAlign.Center Resizable=false Filterable=false Sortable=false Frozen=true FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenCheckBox Value="context.Impreso" ReadOnly=true @onclick:stopPropagation=true />
                 </Template>
             </RadzenDataGridColumn>
-
         </Columns>
     </RadzenDataGrid>
 

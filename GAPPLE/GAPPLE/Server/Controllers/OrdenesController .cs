@@ -149,6 +149,7 @@ namespace GAPPLE.Server.Controllers
                             .ToList();
                     }
                     if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
+                    if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                     if (row["GVA_CONDVENTA"] != DBNull.Value) orden.ID_GVA01 = int.Parse(row["GVA_CONDVENTA"].ToString());
                     if (row["GVA_LISTAPRECIO"] != DBNull.Value) orden.ID_GVA10 = int.Parse(row["GVA_LISTAPRECIO"].ToString());
                     if (row["GVA_CLIENTE"] != DBNull.Value) orden.ID_GVA14 = int.Parse(row["GVA_CLIENTE"].ToString());
@@ -190,14 +191,14 @@ namespace GAPPLE.Server.Controllers
                                 CodProducto = dr["CodProducto"].ToString(),
                                 Descripcion = dr["Descripcion"].ToString(),
                                 Cantidad = (int)dr["Cantidad"],
-                                CantidadAprobada = (int)dr["CantidadAprobada"],
-                                CantidadCancelada = (int)dr["CantidadCancelada"]
+                                CantidadAprobada = (int)dr["CantidadAprobada"]
                             };
                             if (dr["precio"] != DBNull.Value) detalle.Precio = (decimal)dr["Precio"];
                             if (dr["CantidadProbador"] != DBNull.Value) detalle.CantidadProbador = int.Parse(dr["CantidadProbador"].ToString());
-                            if (detalle.CantidadProbador > 0) detalle.Probador = true;
+                            detalle.Probador = detalle.CantidadProbador > 0;
                             if (dr["CantidadProbadorAprobada"] != DBNull.Value) detalle.CantidadProbadorAprobada = int.Parse(dr["CantidadProbadorAprobada"].ToString());
-                            if (dr["CantidadProbadorCancelada"] != DBNull.Value) detalle.CantidadProbadorCancelada = int.Parse(dr["CantidadProbadorCancelada"].ToString());
+                            if (dr["CantidadObsequios"] != DBNull.Value) detalle.CantidadObsequio = int.Parse(dr["CantidadObsequios"].ToString());
+                            if (dr["CantidadObsequiosAprobados"] != DBNull.Value) detalle.CantidadObsequioAprobada = int.Parse(dr["CantidadObsequiosAprobados"].ToString());
                             if (dr["ID_STA"] != DBNull.Value) detalle.ID_STA11 = int.Parse(dr["ID_STA"].ToString());
                             orden.Detalle.Add(detalle);
                         }
@@ -372,8 +373,9 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("F-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.CantidadObsequio, item.Descuento, trans);
                             item.CantidadProbador = 0;
+                            item.CantidadObsequio = 0;
                         }
                     }
 
@@ -387,7 +389,7 @@ namespace GAPPLE.Server.Controllers
                         foreach (var item in pedido.Detalle!)
                         {
                             numLinea++;
-                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.Descuento, trans);
+                            daO.PersistirPedidoDetalle("X-" + pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.CantidadProbador, item.CantidadObsequio, item.Descuento, trans);
                         }
                     }
 
@@ -441,7 +443,8 @@ namespace GAPPLE.Server.Controllers
                     foreach (var item in pedido.Detalle!)
                     {
                         numLinea++;
-                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad, item.Probador ? item.CantidadProbador : 0, item.Descuento, trans);
+                        daO.PersistirPedidoDetalle(codOrdenAux != null ? codOrdenAux : pedido.CodigoOrden, numLinea, item.CodProducto!, item.Cantidad,
+                                                    item.Probador ? item.CantidadProbador : 0, item.CantidadObsequio, item.Descuento, trans);
                         item.CantidadProbador = 0;
                     }
 
@@ -507,7 +510,7 @@ namespace GAPPLE.Server.Controllers
                 cnn.Open();
                 trans = cnn.BeginTransaction();
 
-                //var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
+                var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
                 var response = PostTango(pedido, trans);
                 if (!response.IsSuccessStatusCode)
                 {
@@ -536,7 +539,8 @@ namespace GAPPLE.Server.Controllers
                     cnn.Close();
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    response = PostTangoProbadores(pedido,trans);
+                    PostTangoProbadores(pedido, trans);
+                    PostTangoObsequios(pedido, trans);
                     trans.Commit();
                     cnn.Close();
                     return Ok(pedido);
@@ -652,67 +656,157 @@ namespace GAPPLE.Server.Controllers
 
             Orden ordenFull = GetOrden(orden.CodigoOrden, true, null, trans)!;
 
-            if (!ordenFull.Detalle.Any())
-                return new(false, "La orden debe poseer al menos 1 producto");
-
-            pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
-            pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
-            pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
-            pedido.ESTADO = 2;
-            pedido.ES_CLIENTE_HABITUAL = true;
-            pedido.ID_GVA01 = ordenFull.ID_GVA01;
-            pedido.ID_GVA14 = ordenFull.ID_GVA14;
-            pedido.ID_GVA24 = ordenFull.ID_GVA24;
-            pedido.ID_GVA10 = ordenFull.ID_GVA10;
-            pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
-            pedido.ID_STA22 = 23;
-            pedido.FECHA_PEDIDO = orden.Creacion.Value;
-            pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
-            pedido.ID_MONEDA = "1";
-            pedido.COTIZACION = 1;
-            pedido.ID_ASIENTO_MODELO_GV = "14";
-            pedido.LEYENDA_1 = ordenFull.Entrega!;
-            pedido.LEYENDA_2 = ordenFull.Notas!;
-
-            pedido.RENGLON_DTO = new();
-            foreach (var detalle in ordenFull.Detalle)
+            if (ordenFull.Detalle.Exists(x => x.Probador))
             {
-                if (detalle.Probador && detalle.CantidadProbadorAprobada > 0)
-                {
-                    RenglonDTO renglonDTO = new();
-                    renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadProbadorAprobada;
-                    renglonDTO.ID_STA11 = detalle.ID_STA11;
-                    renglonDTO.PORCENTAJE_BONIFICACION = 99.9m;
-                    pedido.RENGLON_DTO.Add(renglonDTO);
-                }
-            }
+                if (!ordenFull.Detalle.Any())
+                    return new(false, "La orden debe poseer al menos 1 producto");
 
-            request.AddBody(pedido);
+                pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
+                pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
+                pedido.ID_GVA43_TALON_PED = 35;
+                pedido.ESTADO = 2;
+                pedido.ES_CLIENTE_HABITUAL = true;
+                pedido.ID_GVA01 = ordenFull.ID_GVA01;
+                pedido.ID_GVA14 = ordenFull.ID_GVA14;
+                pedido.ID_GVA24 = ordenFull.ID_GVA24;
+                pedido.ID_GVA10 = ordenFull.ID_GVA10;
+                pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
+                pedido.ID_STA22 = 23;
+                pedido.FECHA_PEDIDO = orden.Creacion.Value;
+                pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
+                pedido.ID_MONEDA = "1";
+                pedido.COTIZACION = 1;
+                pedido.ID_ASIENTO_MODELO_GV = "14";
+                pedido.LEYENDA_1 = "Probadores";
+                pedido.LEYENDA_2 = ordenFull.Notas!;
 
-            var response = restClient.Execute(request);
-            using JsonDocument doc = JsonDocument.Parse(response.Content);
-            JsonElement root = doc.RootElement;
-            if (response.IsSuccessStatusCode)
-            {
-                if (root.TryGetProperty("exceptionInfo", out var exceptionInfo) && exceptionInfo.ValueKind != JsonValueKind.Null)
+                pedido.RENGLON_DTO = new();
+                foreach (var detalle in ordenFull.Detalle)
                 {
-                    var messages = exceptionInfo.GetProperty("messages");
-                    if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
+                    if (detalle.Probador && detalle.CantidadProbadorAprobada > 0)
                     {
-                        string? firstErrorMessage = messages[0].GetString();
-                        return new(false, firstErrorMessage);
+                        RenglonDTO renglonDTO = new();
+                        renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadProbadorAprobada;
+                        renglonDTO.ID_STA11 = detalle.ID_STA11;
+                        renglonDTO.PORCENTAJE_BONIFICACION = 100;
+                        pedido.RENGLON_DTO.Add(renglonDTO);
                     }
                 }
 
-                if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
+                request.AddBody(pedido);
+
+                var response = restClient.Execute(request);
+                using JsonDocument doc = JsonDocument.Parse(response.Content);
+                JsonElement root = doc.RootElement;
+                if (response.IsSuccessStatusCode)
                 {
-                    int savedId = savedIdElement.GetInt32();
-                    return new(true, savedId.ToString());
+                    if (root.TryGetProperty("exceptionInfo", out var exceptionInfo) && exceptionInfo.ValueKind != JsonValueKind.Null)
+                    {
+                        var messages = exceptionInfo.GetProperty("messages");
+                        if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
+                        {
+                            string? firstErrorMessage = messages[0].GetString();
+                            return new(false, firstErrorMessage);
+                        }
+                    }
+
+                    if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
+                    {
+                        int savedId = savedIdElement.GetInt32();
+                        return new(true, savedId.ToString());
+                    }
+                }
+                else
+                {
+                    return new(false, "Error inesperado");
                 }
             }
-            else
+
+            return new(true);
+        }
+
+        private Response PostTangoObsequios(OrdenDTO orden, SqlTransaction trans)
+        {
+            var options = new RestClientOptions("http://192.168.10.10:17000/Api")
             {
-                return new(false, "Error inesperado");
+                ThrowOnAnyError = true,
+                MaxTimeout = 300000
+            };
+            RestClient restClient = new RestClient(options);
+
+            restClient.AddDefaultHeader("ApiAuthorization", "35639960-b67a-41f0-bb7b-b38b1355ff0d");
+            restClient.AddDefaultHeader("Company", "7");
+
+            RestRequest request = new RestRequest("Create?process=19845", Method.Post);
+
+            PedidoDTO pedido = new PedidoDTO();
+
+            Orden ordenFull = GetOrden(orden.CodigoOrden, true, null, trans)!;
+
+            if (ordenFull.Detalle.Exists(x => x.CantidadObsequioAprobada > 0))
+            {
+                if (!ordenFull.Detalle.Any())
+                    return new(false, "La orden debe poseer al menos 1 producto");
+
+                pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
+                pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
+                pedido.ID_GVA43_TALON_PED = 35;
+                pedido.ESTADO = 2;
+                pedido.ES_CLIENTE_HABITUAL = true;
+                pedido.ID_GVA01 = ordenFull.ID_GVA01;
+                pedido.ID_GVA14 = ordenFull.ID_GVA14;
+                pedido.ID_GVA24 = ordenFull.ID_GVA24;
+                pedido.ID_GVA10 = ordenFull.ID_GVA10;
+                pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
+                pedido.ID_STA22 = 23;
+                pedido.FECHA_PEDIDO = orden.Creacion.Value;
+                pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
+                pedido.ID_MONEDA = "1";
+                pedido.COTIZACION = 1;
+                pedido.ID_ASIENTO_MODELO_GV = "14";
+                pedido.LEYENDA_1 = "Obsequios";
+                pedido.LEYENDA_2 = ordenFull.Notas!;
+
+                pedido.RENGLON_DTO = new();
+                foreach (var detalle in ordenFull.Detalle)
+                {
+                    if (detalle.CantidadObsequioAprobada > 0)
+                    {
+                        RenglonDTO renglonDTO = new();
+                        renglonDTO.CANTIDAD_PEDIDA = detalle.CantidadObsequioAprobada;
+                        renglonDTO.ID_STA11 = detalle.ID_STA11;
+                        renglonDTO.PORCENTAJE_BONIFICACION = 100;
+                        pedido.RENGLON_DTO.Add(renglonDTO);
+                    }
+                }
+
+                request.AddBody(pedido);
+
+                var response = restClient.Execute(request);
+                using JsonDocument doc = JsonDocument.Parse(response.Content);
+                JsonElement root = doc.RootElement;
+                if (response.IsSuccessStatusCode)
+                {
+                    if (root.TryGetProperty("exceptionInfo", out var exceptionInfo) && exceptionInfo.ValueKind != JsonValueKind.Null)
+                    {
+                        var messages = exceptionInfo.GetProperty("messages");
+                        if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
+                        {
+                            string? firstErrorMessage = messages[0].GetString();
+                            return new(false, firstErrorMessage);
+                        }
+                    }
+
+                    if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
+                    {
+                        int savedId = savedIdElement.GetInt32();
+                        return new(true, savedId.ToString());
+                    }
+                }
+                else
+                {
+                    return new(false, "Error inesperado");
+                }
             }
 
             return new(true);
@@ -779,7 +873,7 @@ namespace GAPPLE.Server.Controllers
         {
             OrdenExpedicion orden = new()
             {
-                Detalle = new()
+                Detalle = []
             };
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             using (DataTable dt = daO.ObtenerOrdenExpediciones(idOrden, idEstado, trans))
@@ -819,16 +913,16 @@ namespace GAPPLE.Server.Controllers
                         NumLinea = i,
                         CantidadF = int.Parse(row["CantidadF"].ToString()),
                         CantidadX = int.Parse(row["CantidadX"].ToString()),
-                        //CantidadCanceladaF = int.Parse(row["CantidadCanceladaF"].ToString()),
-                        //CantidadCanceladaX = int.Parse(row["CantidadCanceladaX"].ToString()),
                         CantidadAprobadaF = int.Parse(row["CantidadAprobadaF"].ToString()),
                         CantidadAprobadaX = int.Parse(row["CantidadAprobadaX"].ToString()),
                         CantidadProbadorF = int.Parse(row["CantidadProbadorF"].ToString()),
                         CantidadProbadorX = int.Parse(row["CantidadProbadorX"].ToString()),
                         CantidadProbadorAprobadaF = int.Parse(row["CantidadProbadorAprobadaF"].ToString()),
                         CantidadProbadorAprobadaX = int.Parse(row["CantidadProbadorAprobadaX"].ToString()),
-                        //CantidadProbadorCanceladaF = int.Parse(row["CantidadProbadorCanceladaF"].ToString()),
-                        //CantidadProbadorCanceladaX = int.Parse(row["CantidadProbadorCanceladaF"].ToString())
+                        CantidadObsequioF = int.Parse(row["CantidadObsequiosF"].ToString()),
+                        CantidadObsequioX = int.Parse(row["CantidadObsequiosX"].ToString()),
+                        CantidadObsequioAprobadaF = int.Parse(row["CantidadObsequiosAprobadoF"].ToString()),
+                        CantidadObsequioAprobadaX = int.Parse(row["CantidadObsequiosAprobadoX"].ToString()),
                     };
 
                     orden.Detalle.Add(linea);
@@ -853,10 +947,10 @@ namespace GAPPLE.Server.Controllers
                     foreach (var linea in orden.Detalle.Where(x => x.HuboCambios))
                     {
                         if (orden.LetrasOrden.Contains("F"))
-                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF, trans);
+                            daO.UpdatePedidoDetalle("F-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaF, linea.CantidadProbadorAprobadaF, linea.CantidadObsequioAprobadaF, trans);
 
                         if (orden.LetrasOrden.Contains("X"))
-                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, trans);
+                            daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, linea.CantidadObsequioAprobadaX, trans);
                     }
                     trans.Commit();
                     cnn.Close();
@@ -1002,6 +1096,48 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex)
             {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("revertirestado")]
+        public IActionResult RevertirEstadoOrden(OrdenDTO orden)
+        {
+            SqlTransaction trans = null;
+            try
+            {
+                var aux = GetOrden(orden.CodigoOrden, true, null, null);
+                if (aux == null)
+                    ModelState.AddModelError("Realice la busqueda nuevamente.", "No se encontró la orden");
+                else if (aux.IdEstado != 4 || aux.IdEstado != orden.IdEstado)
+                    ModelState.AddModelError("Realice la busqueda nuevamente.", "El estado de la orden ha cambiado");
+
+                if (ModelState.ErrorCount == 0)
+                {
+                    aux.IdEstado = 1;
+                    aux.DescripcionEstado = "PENDIENTE";
+                    using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
+                    {
+                        DA_Ordenes daO = new(cnn.ConnectionString);
+                        cnn.Open();
+                        trans = cnn.BeginTransaction();
+                        daO.PersistirPedidoEstado(aux.Id.ToString(), (int)aux.IdEstado, orden.Usuario, trans);
+                        foreach (var linea in aux.Detalle)
+                        {
+                            daO.UpdatePedidoDetalle(aux.CodigoOrden, linea.CodProducto, linea.Cantidad, linea.CantidadProbador, linea.CantidadObsequio, trans);
+                        }
+                        trans.Commit();
+                        cnn.Close();
+                    }
+
+                    return Ok(aux);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null) trans.Rollback();
                 return StatusCode(500, ex.Message);
             }
         }

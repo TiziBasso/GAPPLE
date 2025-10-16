@@ -17,6 +17,10 @@
             {
                 <th style="border:1px solid;padding: 5px; width:10%;">Probador</th>
             }
+            @if (ShowOX || ShowOF)
+            {
+                <th style="border:1px solid;padding: 5px; width:10%;">Obsequio</th>
+            }
         </tr>
     </thead>
     <tbody style="font-size: 11pt;">
@@ -43,6 +47,14 @@
                 {
                     <td style="text-align: end;padding:1px;">@item.CantidadProbadorX</td>
                 }
+                @if (ShowOF)
+                {
+                    <td style="text-align: end;padding:1px;">@item.CantidadObsequioF</td>
+                }
+                @if (ShowOX)
+                {
+                    <td style="text-align: end;padding:1px;">@item.CantidadObsequioX</td>
+                }
                 <td></td>
             </tr>
         }
@@ -66,6 +78,14 @@
             {
                 <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadProbadorX)</strong></td>
             }
+            @if (ShowOF)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadObsequioF)</strong></td>
+            }
+            @if (ShowOX)
+            {
+                <td style="text-align: end;"><strong>@Detalle.Sum(x => x.CantidadObsequioX)</strong></td>
+            }
         </tr>
     </tbody>
 </table>
@@ -75,4 +95,6 @@
     [Parameter] public bool ShowF { get; set; }
     [Parameter] public bool ShowPF { get; set; }
     [Parameter] public bool ShowPX { get; set; }
+    [Parameter] public bool ShowOF { get; set; }
+    [Parameter] public bool ShowOX { get; set; }
 }
