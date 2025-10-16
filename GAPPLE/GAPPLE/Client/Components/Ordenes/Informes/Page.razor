@@ -1,7 +1,7 @@
 ﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 29.7cm; break-after:page">
     <div style="display: flex;justify-content: space-between;">
-        <div style="display: flex;">
-            <strong>@(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
+        <div style="display: flex;gap:7px;">
+            <strong>F.C: @(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
             @if (Pedido.FechaEntrega != null)
             {
                 <strong style="width: fit-content;">F.E: @Pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</strong>
