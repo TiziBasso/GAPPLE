@@ -1,6 +1,12 @@
 ﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 29.7cm; break-after:page">
     <div style="display: flex;justify-content: space-between;">
-        <strong>@(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
+        <div style="display: flex;">
+            <strong>@(Pedido.Creacion!.Value.ToString("dd/MM/yyyy"))</strong>
+            @if (Pedido.FechaEntrega != null)
+            {
+                <strong style="width: fit-content;">F.E: @Pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</strong>
+            }
+        </div>
         <strong>@(Pedido.CodigoOrden)</strong>
     </div>
     <div style="display: grid;gap: 10px;margin-top: 10px;">
@@ -11,10 +17,6 @@
         </div>
         <div style="display: flex;justify-content: space-between;">
             <strong style="width: fit-content;">Entregar En: @Pedido.Entrega</strong>
-            @if (Pedido.FechaEntrega != null)
-            {
-                <strong style="width: fit-content;">Fecha de entrega: @Pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</strong>
-            }
             <strong style="width: fit-content;">O.C.: @Pedido.Notas</strong>
         </div>
         <strong style="width: fit-content;">Domicilio: @Pedido.DomicilioCliente</strong>
