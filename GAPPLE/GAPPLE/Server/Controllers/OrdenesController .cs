@@ -510,7 +510,6 @@ namespace GAPPLE.Server.Controllers
                 cnn.Open();
                 trans = cnn.BeginTransaction();
 
-                var orden = GetOrdenExpedicion(pedido.CodigoOrden, 4, trans);
                 var response = PostTango(pedido, trans);
                 if (!response.IsSuccessStatusCode)
                 {
