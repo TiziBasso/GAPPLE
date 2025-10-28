@@ -976,7 +976,10 @@ namespace GAPPLE.Server.Controllers
                 foreach (var orden in ordenes)
                 {
                     var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
-                    if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 || int.Parse(x["CantidadAprobadaX"].ToString()) != 0))
+                    if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadAprobadaX"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadObsequiosAprobadoF"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadObsequiosAprobadoX"].ToString()) != 0))
                         ordenesAux.Add(orden);
                     else
                     {
@@ -986,20 +989,18 @@ namespace GAPPLE.Server.Controllers
 
                 if (ordenesAux.Any())
                 {
-                    using (SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+                    SqlConnection cnn = new SqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var orden in ordenesAux)
                     {
-                        cnn.Open();
-                        trans = cnn.BeginTransaction();
-                        foreach (var orden in ordenesAux)
+                        foreach (var id in orden.IdPedidos.Split(","))
                         {
-                            foreach (var id in orden.IdPedidos.Split(","))
-                            {
-                                daO.PersistirPedidoEstado(id, 4, nombreUsuario, trans);
-                            }
+                            daO.PersistirPedidoEstado(id, 4, nombreUsuario, trans);
                         }
-                        trans.Commit();
-                        cnn.Close();
                     }
+                    trans.Commit();
+                    cnn.Close();
                 }
 
                 if (ModelState.ErrorCount == 0)
@@ -1009,8 +1010,7 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex)
             {
-                if (trans != null)
-                    trans.Rollback();
+                if (trans != null && trans.Connection != null) trans.Rollback();
                 return StatusCode(500, ex.Message);
             }
         }
