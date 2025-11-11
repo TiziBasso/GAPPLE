@@ -26,10 +26,10 @@
     <tbody style="font-size: 11pt;">
         @foreach (var item in Detalle)
         {
-            <tr style="border-bottom:1px solid">
+            <tr style="border-bottom:1px solid; margin-bottom:5px; margin-top:5px; line-height:1.5;">
                 <td style="text-align: end;padding:1px;">@item.NumLinea</td>
                 <td style="text-align: center;padding:1px;">@item.CodProducto</td>
-                <td style="padding:1px;">@item.DescripcionProducto</td>
+                <td style="padding:1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@item.DescripcionProducto</td>
                 @if (ShowF)
                 {
                     <td style="text-align: end;padding:1px;">@item.CantidadF</td>
