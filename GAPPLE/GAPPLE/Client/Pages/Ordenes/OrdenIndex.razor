@@ -6,6 +6,7 @@
 
 @implements IDisposable
 
+@inject ContextMenuService ContextMenuService
 @inject OrdenesService OrdenesService
 @inject DialogCustom DialogCustom
 @inject DialogService DialogService
@@ -89,7 +90,7 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
-                    AllowColumnResize=true Density="Density.Compact" AllowVirtualization=true
+                    AllowColumnResize=true Density="Density.Compact" AllowVirtualization="true" TItem="Orden" CellContextMenu="OnCellContextMenu"
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
         <Columns>
             <RadzenDataGridColumn Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
@@ -232,8 +233,8 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0) ?
-                Resumen.Detalle!.Where(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 ||x.CantidadObsequioPendiente > 0 ).ToList() : null)
-                        Imprimir="@(async()=>await Imprimir())" />
+                                        Resumen.Detalle!.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList() : null)
+                Imprimir="@(async()=>await Imprimir())" />
     }
 }
 else
@@ -479,6 +480,69 @@ else
                 DialogCustom.ShowErrors(response.Errors, MensajesHelper.Title);
             else
                 NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        }
+    }
+
+    private async Task OnCellContextMenu(DataGridCellMouseEventArgs<Orden> args)
+    {
+        List<ContextMenuItem> menuItems = new();
+        if (args.Data.IdEstado == 4 && tango)
+        {
+            menuItems.Add(new ContextMenuItem
+            {
+                Text = "Enviar pedido de obsequios",
+                Icon = "featured_seasonal_and_gifts",
+                Value = 1
+            });
+            menuItems.Add(new ContextMenuItem
+            {
+                Text = "Enviar pedido de probadores",
+                Icon = "specific_gravity",
+                Value = 2
+            });
+        }
+
+        ContextMenuService.Open(args, menuItems,
+           async (e) =>
+           {
+               switch (int.Parse(e.Value.ToString()))
+               {
+                   case 1:
+                       await EnviarObsequios(args.Data);
+                       break;
+                   case 2:
+                       await EnviarProbadores(args.Data);
+                       break;
+               }
+               ContextMenuService.Close();
+           });
+    }
+
+    async Task EnviarObsequios(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("exportar obsequios a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Exportando...");
+            var response = await OrdenesService.PasarATangoObsequios(order);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+                StateHasChanged();
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, response.Message);
+        }
+    }
+
+    async Task EnviarProbadores(Orden order)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm("exportar probadores a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Exportando...");
+            var response = await OrdenesService.PasarATangoProbadores(order);
+            DialogCustom.CloseDialog();
+            if (response.IsSuccessStatusCode)
+                StateHasChanged();
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, response.Message);
         }
     }
 
