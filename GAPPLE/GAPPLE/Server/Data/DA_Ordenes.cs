@@ -342,7 +342,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCantidad", cantidad);
             cmd.Parameters.AddWithValue("@pDescuento", descuento);
             if (probador != 0) cmd.Parameters.AddWithValue("@pProbador", probador);
-            if(obsequio != 0 ) cmd.Parameters.AddWithValue("@pObsequios", obsequio);
+            if (obsequio != 0) cmd.Parameters.AddWithValue("@pObsequios", obsequio);
             cmd.ExecuteNonQuery();
         }
 
@@ -355,6 +355,20 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_upd_PedidosCabecera";
             cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
             cmd.Parameters.AddWithValue("@pIdEstado", estado);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void PersistirPedidoEstado(string idPedido, int estado, string observacionCancelacion, string nombreUsuario, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pIdEstado", estado);
+            if (!string.IsNullOrWhiteSpace(observacionCancelacion)) cmd.Parameters.AddWithValue("@pObservacionesCancelacion", observacionCancelacion);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
             cmd.ExecuteNonQuery();
         }

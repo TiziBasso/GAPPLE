@@ -159,6 +159,8 @@
 
             <RadzenDataGridColumn Title="Observaciones" Property="@nameof(Orden.ObservacionesZentra)" Width="200px" MinWidth="10px" />
 
+            <RadzenDataGridColumn Title="Motivo cancelación" Property="@nameof(Orden.ObservacionesCancelacion)" Width="200px" MinWidth="10px" />
+
             <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" Width="150px" MinWidth="10px" />
 
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
@@ -233,8 +235,8 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0) ?
-                                        Resumen.Detalle!.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList() : null)
-                Imprimir="@(async()=>await Imprimir())" />
+                Resumen.Detalle!.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList() : null)
+                        Imprimir="@(async()=>await Imprimir())" />
     }
 }
 else
@@ -340,23 +342,33 @@ else
         }
     }
 
-    async Task CancelarOrden(Orden order)
+    async Task OnCancelar(OrdenDTO orden)
     {
-        if (await DialogService.Confirm(MensajesHelper.Confirm("cancelar", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+        DialogService.Close();
+        DialogCustom.OpenBusyWithLoader("Cancelando");
+        var response = await OrdenesService.CambiarEstadoPedidos(orden);
+        DialogCustom.CloseDialog();
+        if (response.IsSuccessStatusCode)
         {
-            var response = await OrdenesService.CambiarEstadoPedidos(order.Id.ToString(), 2);
-            if (response.IsSuccessStatusCode)
-            {
-                order.IdEstado = 2;
-                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
+            var order = lstOrdenes.First(o => o.Id == orden.Id);
+            order.IdEstado = 2;
+            order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
+            order.ObservacionesCancelacion = orden.ObservacionCancelacion;
 
-                await grid.Reload();
-            }
-            else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+            await grid.Reload();
         }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
     }
 
+    async Task CancelarOrden(Orden order)
+    {
+        OrdenDTO ordenDTO = new() { Id = order.Id, IdEstado = 2, ObservacionCancelacion = null };
+        await DialogService.OpenAsync<CancelacionOrden>(MensajesHelper.Confirm("cancelar", $"la orden con id {order.Id}"),
+                                                                        new() { { "OrdenCancelar", ordenDTO },
+                                                                        { "Return", EventCallback.Factory.Create<OrdenDTO>(this, OnCancelar) } },
+                                                                        new() { ShowClose = false });
+    }
     async Task RevertirConfirmacionOrden(Orden order)
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("Revertir", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
@@ -377,9 +389,10 @@ else
     async Task AprobarOrden(Orden order)
     {
         var idEstadoAnt = order.IdEstado;
-        await DialogService.OpenAsync<OrdenAprobacion>($"Aprobar orden {order.Id}",
-                                                        new() { { "PermisoVentas", ventas }, { "PermisoContaduria", contaduria }, { "PermisoFinanzas", finanzas }, { "Orden", order } },
-                                                        new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
+        await DialogService.OpenAsync<OrdenAprobacion>
+            ($"Aprobar orden {order.Id}",
+            new() { { "PermisoVentas", ventas }, { "PermisoContaduria", contaduria }, { "PermisoFinanzas", finanzas }, { "Orden", order } },
+            new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
         var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == idEstadoAnt);
         if (o != null)
         {
@@ -458,9 +471,10 @@ else
 
     public async Task OnCambiarListaOrden(Orden orden)
     {
-        var response = await DialogService.OpenAsync<CambiarListaPrecio>($"Cambiar lista de precio orden {orden.Id}",
-                                                                        new() { { "Orden", orden } },
-                                                                        new() { ShowClose = false, AutoFocusFirstElement = false, Height = "fit-content", Width = "40rem" });
+        var response = await DialogService.OpenAsync<CambiarListaPrecio>
+            ($"Cambiar lista de precio orden {orden.Id}",
+            new() { { "Orden", orden } },
+            new() { ShowClose = false, AutoFocusFirstElement = false, Height = "fit-content", Width = "40rem" });
     }
 
     public async Task RevertirEstadoOrden(Orden orden)
@@ -483,39 +497,41 @@ else
         }
     }
 
-    private async Task OnCellContextMenu(DataGridCellMouseEventArgs<Orden> args)
+    private async Task OnCellContextMenu(DataGridCellMouseEventArgs<Orden>
+        args)
     {
-        List<ContextMenuItem> menuItems = new();
+        List<ContextMenuItem>
+            menuItems = new();
         if (args.Data.IdEstado == 5 && tango)
         {
             menuItems.Add(new ContextMenuItem
-            {
-                Text = "Enviar pedido de obsequios",
-                Icon = "featured_seasonal_and_gifts",
-                Value = 1
-            });
+                {
+                    Text = "Enviar pedido de obsequios",
+                    Icon = "featured_seasonal_and_gifts",
+                    Value = 1
+                });
             menuItems.Add(new ContextMenuItem
-            {
-                Text = "Enviar pedido de probadores",
-                Icon = "specific_gravity",
-                Value = 2
-            });
+                {
+                    Text = "Enviar pedido de probadores",
+                    Icon = "specific_gravity",
+                    Value = 2
+                });
         }
 
         ContextMenuService.Open(args, menuItems,
-           async (e) =>
-           {
-               switch (int.Parse(e.Value.ToString()))
-               {
-                   case 1:
-                       await EnviarObsequios(args.Data);
-                       break;
-                   case 2:
-                       await EnviarProbadores(args.Data);
-                       break;
-               }
-               ContextMenuService.Close();
-           });
+        async (e) =>
+        {
+            switch (int.Parse(e.Value.ToString()))
+            {
+                case 1:
+                    await EnviarObsequios(args.Data);
+                    break;
+                case 2:
+                    await EnviarProbadores(args.Data);
+                    break;
+            }
+            ContextMenuService.Close();
+        });
     }
 
     async Task EnviarObsequios(Orden order)

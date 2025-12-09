@@ -102,6 +102,7 @@ namespace GAPPLE.Shared.Model
 
         public bool TieneOrdenDoble { get; set; }
         public string? ObservacionesZentra { get; set; }
+        public string? ObservacionesCancelacion { get; set; }
     }
     public class NotEmptyAttribute : ValidationAttribute
     {

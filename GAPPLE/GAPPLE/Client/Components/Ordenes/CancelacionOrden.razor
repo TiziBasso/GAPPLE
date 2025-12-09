@@ -1,0 +1,29 @@
+﻿@inject DialogService DialogService
+
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+        <RadzenLabel Text="Motivo:" />
+        <RadzenTextArea @bind-Value="OrdenCancelar.ObservacionCancelacion" MaxLength="100" Placeholder="Cancelar sin observación..." />
+    </RadzenStack>
+
+    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cerrar" Click="Cancelar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="arrow_forward" Text="Continuar" Click="Submit" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public OrdenDTO OrdenCancelar { get; set; }
+    [Parameter] public EventCallback<OrdenDTO> Return { get; set; }
+
+    private async Task Cancelar()
+    {
+        if (await DialogService.Confirm(MensajesHelper.Cancel()) == true)
+            DialogService.Close();
+    }
+
+    private async Task Submit()
+    {
+        await Return.InvokeAsync(OrdenCancelar);
+    }
+}

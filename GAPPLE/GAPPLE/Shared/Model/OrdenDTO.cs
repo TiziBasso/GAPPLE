@@ -32,8 +32,10 @@
         public DateTime? FechaEntrega { get; set; }
         public string Linea { get; set; }
         public string CodListaPrecio { get; set; }
+        public string ObservacionCancelacion { get; set; }
         public bool Factura { get; set; }
         public bool Presupuesto { get; set; }
+        public string EdicionUsuario { get; set; }
 
         //public string TipoIVA { get; set; } = "RI";
         //public string CUITCliente { get; set; }
