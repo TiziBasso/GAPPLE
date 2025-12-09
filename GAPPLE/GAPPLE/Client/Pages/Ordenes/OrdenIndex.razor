@@ -486,7 +486,7 @@ else
     private async Task OnCellContextMenu(DataGridCellMouseEventArgs<Orden> args)
     {
         List<ContextMenuItem> menuItems = new();
-        if (args.Data.IdEstado == 4 && tango)
+        if (args.Data.IdEstado == 5 && tango)
         {
             menuItems.Add(new ContextMenuItem
             {
