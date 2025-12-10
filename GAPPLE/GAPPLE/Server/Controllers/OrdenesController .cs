@@ -617,6 +617,18 @@ namespace GAPPLE.Server.Controllers
             if (!ordenFull.Detalle.Any())
                 return new(false, "La orden debe poseer al menos 1 producto");
 
+            if (!ordenFull.Detalle.Exists(x => x.CantidadAprobada > 0))
+            {
+                if (!ordenFull.Detalle.Exists(x => x.CantidadProbadorAprobada > 0))
+                {
+                    return new(true, "Orden con probadores");
+                }
+                else
+                {
+                    return new(true, "Orden con obsequios");
+                }
+            }
+
             pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
             pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
             pedido.ID_GVA43_TALON_PED = ordenFull.Presupuesto ? 23 : 26;
