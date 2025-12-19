@@ -103,6 +103,9 @@ namespace GAPPLE.Shared.Model
         public bool TieneOrdenDoble { get; set; }
         public string? ObservacionesZentra { get; set; }
         public string? ObservacionesCancelacion { get; set; }
+        public string CodigoTangoNormal { get; set; }
+        public string CodigoTangoProbador { get; set; }
+        public string CodigoTangoObsequio { get; set; }
     }
     public class NotEmptyAttribute : ValidationAttribute
     {
