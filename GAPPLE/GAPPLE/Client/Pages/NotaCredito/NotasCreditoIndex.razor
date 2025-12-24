@@ -1,0 +1,19 @@
+﻿@page "/notascredito"
+
+@if (showPage)
+{
+
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        showPage = true;
+    }
+}
