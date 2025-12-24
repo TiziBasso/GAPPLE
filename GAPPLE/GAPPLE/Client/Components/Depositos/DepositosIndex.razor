@@ -1,0 +1,12 @@
+﻿@page "/depositos"
+
+@inject OfertasService OfertasService
+
+<h3>DepositosIndex</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await OfertasService.GetDepositos();
+    }
+}

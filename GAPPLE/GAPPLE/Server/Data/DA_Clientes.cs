@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.SqlClient;
-
 
 namespace GAPPLE.Server.Data
 {
@@ -11,10 +9,8 @@ namespace GAPPLE.Server.Data
 
         public DA_Clientes(string connectionString) => ConnectionString = connectionString;
 
-
         public DataTable ObtenerClientes(string? codCliente, string? razonSocial, string? cuit, bool? clienteEspecial, int? idUsuario, SqlTransaction? transaction = null)
         {
-
             SqlConnection cnn;
             SqlCommand cmd = new();
 
