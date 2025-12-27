@@ -1,4 +1,5 @@
-﻿using GAPPLE.Client.Entities;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using GAPPLE.Client.Entities;
 using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -66,7 +67,9 @@ namespace GAPPLE.Server.Controllers
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
                     if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();
                     if (row["ObservacionesCancelacion"] != DBNull.Value) o.ObservacionesCancelacion = row["ObservacionesCancelacion"].ToString();
-                    if (row["FechaEntrega"] != DBNull.Value) o.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
+                    if (row["CodigoTangoNormal"] != DBNull.Value) o.CodigoTangoNormal = row["CodigoTangoNormal"].ToString();
+                    if (row["CodigoTangoObsequio"] != DBNull.Value) o.CodigoTangoObsequio = row["CodigoTangoObsequio"].ToString();
+                    if (row["CodigoTangoProbador"] != DBNull.Value) o.CodigoTangoProbador = row["CodigoTangoProbador"].ToString();
 
                     lstOrdenes.Add(o);
                 }
@@ -567,6 +570,7 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
+                    daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
                 }
 
                 if (ModelState.ErrorCount > 0)
@@ -694,6 +698,8 @@ namespace GAPPLE.Server.Controllers
 
         private Response PostTangoProbadores(OrdenDTO orden, SqlTransaction? trans)
         {
+            SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+            DA_Ordenes daO = new(cnn.ConnectionString);
             var options = new RestClientOptions("http://192.168.10.10:17000/Api")
             {
                 ThrowOnAnyError = true,
@@ -767,6 +773,7 @@ namespace GAPPLE.Server.Controllers
                     if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
                     {
                         int savedId = savedIdElement.GetInt32();
+                        daO.PersistirPedidoTangoZentra(orden.CodigoOrden, savedId.ToString(), "P", trans);
                         return new(true, savedId.ToString());
                     }
                 }
@@ -781,6 +788,8 @@ namespace GAPPLE.Server.Controllers
 
         private Response PostTangoObsequios(OrdenDTO orden, SqlTransaction? trans)
         {
+            SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+            DA_Ordenes daO = new(cnn.ConnectionString);
             var options = new RestClientOptions("http://192.168.10.10:17000/Api")
             {
                 ThrowOnAnyError = true,
@@ -854,6 +863,7 @@ namespace GAPPLE.Server.Controllers
                     if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
                     {
                         int savedId = savedIdElement.GetInt32();
+                        daO.PersistirPedidoTangoZentra(orden.CodigoOrden, savedId.ToString(), "O", trans);
                         return new(true, savedId.ToString());
                     }
                 }

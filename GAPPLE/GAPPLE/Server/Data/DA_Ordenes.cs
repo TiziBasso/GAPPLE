@@ -385,6 +385,19 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
+        public void PersistirPedidoTangoZentra(string CodigoOrden, string CodigoTango, string tipoPedido, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_PedidosTangoZentra";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", CodigoOrden);
+            cmd.Parameters.AddWithValue("@pCodigoTango", CodigoTango);
+            cmd.Parameters.AddWithValue("@pTipoPedido", tipoPedido);
+            cmd.ExecuteNonQuery();
+        }
+
         public void PersistirPedidoAprobacion(int idPedido, bool finanzas, bool ventas, bool contaduria, string usuario, SqlTransaction? trans = null)
         {
             SqlConnection cnn;

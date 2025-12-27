@@ -135,9 +135,19 @@
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Title="Tango" Property="@nameof(Orden.NROTANGO)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+            <RadzenDataGridColumn Title="Tango Normal" Property="@nameof(Orden.CodigoTangoNormal)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
                 <Template>
-                    @(context.NROTANGO != null ? context.NROTANGO : "NO")
+                    @(context.CodigoTangoNormal != null ? context.CodigoTangoNormal : "NO")
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Tango Probador" Property="@nameof(Orden.CodigoTangoProbador)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+                <Template>
+                    @(context.CodigoTangoProbador != null ? context.CodigoTangoProbador : "NO")
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Tango Obsequio" Property="@nameof(Orden.CodigoTangoObsequio)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
+                <Template>
+                    @(context.CodigoTangoObsequio != null ? context.CodigoTangoObsequio : "NO")
                 </Template>
             </RadzenDataGridColumn>
 
@@ -504,18 +514,24 @@ else
             menuItems = new();
         if (args.Data.IdEstado == 5 && tango)
         {
-            menuItems.Add(new ContextMenuItem
-                {
-                    Text = "Enviar pedido de obsequios",
-                    Icon = "featured_seasonal_and_gifts",
-                    Value = 1
-                });
-            menuItems.Add(new ContextMenuItem
-                {
-                    Text = "Enviar pedido de probadores",
-                    Icon = "specific_gravity",
-                    Value = 2
-                });
+            if (string.IsNullOrEmpty(args.Data.CodigoTangoObsequio))
+            {
+                menuItems.Add(new ContextMenuItem
+                    {
+                        Text = "Enviar pedido de obsequios",
+                        Icon = "featured_seasonal_and_gifts",
+                        Value = 1
+                    });
+            }
+            if (string.IsNullOrEmpty(args.Data.CodigoTangoProbador))
+            {
+                menuItems.Add(new ContextMenuItem
+                    {
+                        Text = "Enviar pedido de probadores",
+                        Icon = "specific_gravity",
+                        Value = 2
+                    });
+            }
         }
 
         ContextMenuService.Open(args, menuItems,
