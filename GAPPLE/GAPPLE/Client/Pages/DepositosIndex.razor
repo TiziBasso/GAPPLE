@@ -1,0 +1,95 @@
+﻿@page "/depositos"
+
+@inject SeguridadService SeguridadService
+@inject DepositoService DepositoService
+@inject DialogService DialogService
+@inject DialogCustom DialogCustom
+@inject NotificationService NotificationService
+
+@if (showPage)
+{
+    <RadzenText Text="Depósitos"
+                TextAlign="TextAlign.Center"
+                TextStyle="TextStyle.DisplayH4"
+                class="rz-mb-3" />
+
+    <RadzenDataGrid @ref="refGrid"
+                    Data="lstDepositos"
+                    AllowSorting="true"
+                    Density="Density.Compact"
+                    Style="height:65vh">
+        <Columns>
+            <RadzenDataGridColumn Title="Id"
+                                  Property="@nameof(Deposito.IdDeposito)"
+                                  Width="100px" 
+                                  TextAlign="TextAlign.Right" />
+
+            <RadzenDataGridColumn Title="Código"
+                                  Property="@nameof(Deposito.CodigoTango)"
+                                  Width="250px" />
+
+            <RadzenDataGridColumn Title="Descripción"
+                                  Property="@nameof(Deposito.Descripcion)"
+                                  Width="500px" />
+
+            <RadzenDataGridColumn Title="Visible" Property="@nameof(Deposito.Visible)" TextAlign="TextAlign.Center" Width="100px">
+                <Template>
+                    <RadzenCheckBox @bind-Value="context.Visible" ReadOnly="true" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable="false" Width="35px" Visible=permiteEditar>
+                <Template>
+                    <RadzenButton Icon="edit"
+                                  Size="ButtonSize.ExtraSmall"
+                                  ButtonStyle="ButtonStyle.Warning"
+                                  title="Cambiar visibilidad"
+                                  Click="@(() => Editar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+
+    RadzenDataGrid<Deposito> refGrid;
+    List<Deposito> lstDepositos = new();
+    bool permiteEditar, showPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos("Depositos");
+        permiteEditar = permisos.Contains("editar");
+
+        lstDepositos = await DepositoService.GetDepositos();
+
+        showPage = true;
+    }
+
+    async Task Editar(Deposito deposito)
+    {
+        if (await DialogService.Confirm(MensajesHelper.Confirm(deposito.Visible ? "quitar visibilidad" : "dar visibilidad", $"al depósito {deposito.Descripcion}"),
+                                        MensajesHelper.Title, new() { ShowClose = false, OkButtonText = "Sí", CancelButtonText = "No", CloseDialogOnEsc = false }) == true)
+        {
+            DialogCustom.OpenBusyWithLoader("Cambiando...");
+            var response = await DepositoService.PutDepositoVisibilidad(deposito);
+            DialogCustom.CloseDialog();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var index = lstDepositos.FindIndex(x => x.IdDeposito == deposito.IdDeposito);
+                lstDepositos[index].Visible = !lstDepositos[index].Visible;
+                await refGrid.Reload();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
+        }
+    }
+}
+

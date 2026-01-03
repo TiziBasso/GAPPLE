@@ -40,12 +40,13 @@ namespace GAPPLE.Server.Controllers
             return depositos;
         }
 
-        [HttpPut]
-        public IActionResult PutDeposito(Deposito deposito)
+        [HttpPut("visibilidad")]
+        public IActionResult PutDepositoVisibilidad(Deposito deposito)
         {
             try
             {
-
+                DA_Depositos daD = new(Configuration.GetConnectionString("DefaultConnection"));
+                daD.EditarDepositos(deposito.IdDeposito, !deposito.Visible);
                 return Ok();
             }
             catch

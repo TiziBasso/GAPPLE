@@ -26,5 +26,21 @@ namespace GAPPLE.Server.Data
 
             return dt;
         }
+
+        public void EditarDepositos(int idDeposito, bool visible)
+        {
+            SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = new()
+            {
+                Connection = cnn,
+                CommandType = CommandType.StoredProcedure,
+                CommandText = "prc_upd_Depositos"
+            };
+            cmd.Parameters.AddWithValue("@pIdDeposito", idDeposito);
+            cmd.Parameters.AddWithValue("@pVisible", visible);
+            cnn.Open();
+            cmd.ExecuteNonQuery();
+            cnn.Close();
+        }
     }
 }
