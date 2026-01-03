@@ -15,7 +15,7 @@ namespace GAPPLE.Server.Tools
             {
                 // 1) Buscamos si la propiedad tiene atributo ColumnName
                 var colAttr = prop.GetCustomAttribute<ColumnNameAttribute>();
-                string columnName = colAttr?.Name ?? prop.Name;
+                string columnName = colAttr?.Name;
 
                 // 2) Si la columna no existe, seguimos
                 if (!row.Table.Columns.Contains(columnName))

@@ -1,5 +1,5 @@
 ﻿@inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject OrdenesService OrdenesService
 @inject NotificationService NotificationService
 
@@ -58,10 +58,10 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Cargando...");
+            RadzenDialogService.OpenBusyWithLoader("Cargando...");
             Orden.CodListaPrecio = listaNew;
             var response = await OrdenesService.CambiarListaPrecio(Orden);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
@@ -71,7 +71,7 @@ else
             {
                 Orden.CodListaPrecio = codListaOrig;
                 if (response.Errors != null && response.Errors.Any())
-                    DialogCustom.ShowErrors(response.Errors["error"]);
+                    RadzenDialogService.ShowAlert(response.Errors["error"]);
                 else
                     NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
             }

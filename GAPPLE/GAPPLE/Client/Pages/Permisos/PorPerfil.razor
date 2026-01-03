@@ -3,7 +3,7 @@
 @inject SeguridadService SeguridadService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
 @attribute [Authorize]
@@ -84,13 +84,13 @@ else
 
     public async Task SeleccionPerfil()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         permisos = await SeguridadService.GetPermisosTotal(null, idPerfil);
         permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
         usuarios = await SeguridadService.GetUsuariosPorPerfil((int)idPerfil);
         await grilla.Reload();
         await grilla.ExpandRows(permisosPadre);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
@@ -133,7 +133,7 @@ else
 
             if (result != null && result == true)
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
 
                 foreach (var item in lstCambios)
                 {
@@ -151,7 +151,7 @@ else
                 {
                     ShowNotification(NotificationSeverity.Error, 3500, "Se ha producido un error inesperado!");
                 }
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
             }
         }
     }

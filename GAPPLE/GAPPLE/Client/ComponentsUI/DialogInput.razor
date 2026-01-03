@@ -1,0 +1,37 @@
+﻿@inject RadzenDialogService RadzenDialogService
+
+<RadzenTemplateForm Data="@Value" TItem="TValue" Submit="OnSubmit">
+    <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" Gap="0">
+        <RadzenLabel Text="@($"{Label}:")" Component="valor" />
+        <RadzenTextBox @bind-Value="Value.Value" Style="width: 100%;" AutoCompleteType="AutoCompleteType.Off" Name="valor" />
+        <RadzenRequiredValidator Component="valor" Text="Debe completar el campo" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" class="rz-mt-5">
+        <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Icon="cancel" Click="CloseModal" />
+        <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Success" Text="Guardar" Icon="save" />
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public string Label { get; set; }
+    TValue Value = new();
+
+    private async Task CloseModal()
+    {
+        if (await RadzenDialogService.CancelOperation())
+        {
+            RadzenDialogService.CloseDialog();
+        }
+    }
+
+    private void OnSubmit()
+    {
+        RadzenDialogService.CloseDialog(Value.Value);
+    }
+
+    private class TValue
+    {
+        public string Value { get; set; }
+    }
+}

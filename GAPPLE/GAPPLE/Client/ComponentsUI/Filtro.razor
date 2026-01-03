@@ -1,0 +1,11 @@
+﻿<RadzenStack Orientation="Orientation.Vertical" Gap="0">
+    <RadzenLabel Text="@Label" Component="@Label" />
+
+    @ChildContent
+
+</RadzenStack>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public RenderFragment ChildContent { get; set; }
+}

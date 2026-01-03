@@ -8,7 +8,7 @@
 @inject OfertasService OfertasService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject SesionDTO SesionDTO
 @using System.Linq
 @using GAPPLE.Client.Components.Ordenes
@@ -496,7 +496,7 @@ else
     {
         if (!string.IsNullOrEmpty(valorAux))
         {
-            DialogCustom.OpenBusy("Cargando...");
+            RadzenDialogService.OpenBusy("Cargando...");
             showCards = false;
             orden.Linea = valorAux;
             GuardarProductosDiferenteLinea();
@@ -556,13 +556,13 @@ else
 
 
             showCards = true;
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
         }
     }
 
     async Task AsignarVariables()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         articulosPorClientes = await ClientesService.GetArticulosPorCliente(orden.CodCliente);
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
@@ -625,7 +625,7 @@ else
 
         ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
         await RecalcularOfertas();
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     async Task RecalcularOfertas()
@@ -785,9 +785,9 @@ else
 
             if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PutPedido(orden);
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
                 if (result.IsSuccessStatusCode)
                 {
                     //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados

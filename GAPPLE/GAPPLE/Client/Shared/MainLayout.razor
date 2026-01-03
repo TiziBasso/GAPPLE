@@ -9,7 +9,7 @@
 @inject NavigationManager navManager
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject SeguridadService SeguridadService
 
 <AuthorizeView>
@@ -114,9 +114,9 @@
     {
         if (await DialogService.Confirm("La operación de sincronización puede requerir varios minutos. ¿Continuar?", MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Sincronizando");
+            RadzenDialogService.OpenBusyWithLoader("Sincronizando");
             var response = await SeguridadService.SincronizarTodo();
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
                 NotificationService.Notify(NotificationSeverity.Success, "Datos sincronizados correctamente");
             else

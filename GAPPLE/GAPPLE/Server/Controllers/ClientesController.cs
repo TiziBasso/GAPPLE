@@ -18,25 +18,27 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null,string domicilio = null,string? cPostal = null,string localidad = null , int? idUsuario = null)
+        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null, string domicilio = null, string? cPostal = null, string localidad = null, int? idUsuario = null)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Cliente> lst = new();
             foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, idUsuario, null).Rows)
             {
-                Cliente c = new Cliente();
-                c.IdCliente = int.Parse(row["IdCliente"].ToString()!);
-                c.CodigoCliente = row["CodigoCliente"].ToString()!;
-                c.RazonSocial = row["RazonSocial"].ToString()!;
-                c.Observaciones = row["Observaciones"].ToString()!;
-                c.ClienteEspecial = bool.Parse(row["ClienteEspecial"].ToString()!);
-                c.CUIT = row["CUIT"].ToString()!;
-                c.CodListaPrecioDefault = row["IdListaDePrecio"].ToString()!;
-                c.CondVentaDefault = row["CondVenta"].ToString()!;
-                c.Domicilio = row["Domicilio"].ToString()!;
-                c.CodigoPostal = row["CPostal"].ToString();
-                c.Localidad = row["Localidad"].ToString();  
-                c.ZonaDefault = row["Zona"].ToString()!;
+                Cliente c = new()
+                {
+                    IdCliente = int.Parse(row["IdCliente"].ToString()!),
+                    CodigoCliente = row["CodigoCliente"].ToString()!,
+                    RazonSocial = row["RazonSocial"].ToString()!,
+                    Observaciones = row["Observaciones"].ToString()!,
+                    ClienteEspecial = bool.Parse(row["ClienteEspecial"].ToString()!),
+                    CUIT = row["CUIT"].ToString()!,
+                    CodListaPrecioDefault = row["IdListaDePrecio"].ToString()!,
+                    CondVentaDefault = row["CondVenta"].ToString()!,
+                    Domicilio = row["Domicilio"].ToString()!,
+                    CodigoPostal = row["CPostal"].ToString(),
+                    Localidad = row["Localidad"].ToString(),
+                    ZonaDefault = row["Zona"].ToString()!
+                };
                 if (row["ID_GVA"] != DBNull.Value) c.Id_GVA = int.Parse(row["ID_GVA"].ToString());
                 lst.Add(c);
             }
@@ -58,9 +60,11 @@ namespace GAPPLE.Server.Controllers
             List<ArticulosPorCliente> lst = new();
             foreach (DataRow row in daC.GetArticulosPorCliente(codCliente).Rows)
             {
-                ArticulosPorCliente c = new ArticulosPorCliente();
-                c.CodProducto = row["CodProducto"].ToString()!;
-                c.Descuento = decimal.Parse(row["Bonificacion"].ToString()!);
+                ArticulosPorCliente c = new()
+                {
+                    CodProducto = row["CodProducto"].ToString()!,
+                    Descuento = decimal.Parse(row["Bonificacion"].ToString()!)
+                };
                 lst.Add(c);
             }
             return lst;
@@ -70,7 +74,7 @@ namespace GAPPLE.Server.Controllers
         public List<SucursalesPorCliente> GetSucursalesPorCliente(string codCliente)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-            List<SucursalesPorCliente> lst = new();
+            List<SucursalesPorCliente> lst = [];
             foreach (DataRow row in daC.GetSucursalesPorCliente(codCliente).Rows)
             {
                 SucursalesPorCliente c = new SucursalesPorCliente();
@@ -81,7 +85,7 @@ namespace GAPPLE.Server.Controllers
                 c.Habitual = Convert.ToBoolean(row["Habitual"].ToString());
                 lst.Add(c);
             }
-            return lst.OrderByDescending(x => x.Habitual).ToList();
+            return [.. lst.OrderByDescending(x => x.Habitual)];
         }
     }
 }

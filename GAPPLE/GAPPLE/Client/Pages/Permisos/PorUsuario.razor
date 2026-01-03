@@ -1,6 +1,6 @@
 ﻿@page "/permisos/usuario"
 @inject SeguridadService SeguridadService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @using Microsoft.AspNetCore.Authorization;
@@ -99,12 +99,12 @@ else
 
     private async Task SeleccionUsuario()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         permisos = await SeguridadService.GetPermisosTotal(idUsuario, null);
         permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
         await grilla.Reload();
         await grilla.ExpandRows(permisosPadre);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
@@ -174,7 +174,7 @@ else
 
             if (result != null && result == true)
             {
-                DialogCustom.OpenBusyWithLoader();
+                RadzenDialogService.OpenBusyWithLoader();
 
                 foreach (var item in lstCambios)
                 {
@@ -206,7 +206,7 @@ else
                     permisos.Clear();
                     await grilla.Reload();
                 }
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
             }
         }
 

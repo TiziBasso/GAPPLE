@@ -7,10 +7,10 @@
 @inject SeguridadService SeguridadService
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject NavigationManager navigationManager
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject RadzenCustom RadzenCustom
 
 @if (showPage)
@@ -211,7 +211,7 @@ else
 
     private async Task VerProducto(Producto producto)
     {
-        DialogCustom.OpenBusy("Cargando...");
+        RadzenDialogService.OpenBusy("Cargando...");
         await refGrid.SelectRow(producto);
         GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
         navigationManager.NavigateTo($"producto/ver/{producto.IdProducto}");
@@ -219,13 +219,13 @@ else
 
     private async Task ModificarProducto(Producto producto)
     {
-        DialogCustom.OpenBusy("Cargando...");
+        RadzenDialogService.OpenBusy("Cargando...");
         await refGrid.SelectRow(producto);
     }
 
     private async Task VerProductoSku(Producto producto)
     {
-        DialogCustom.OpenBusy("Cargando...");
+        RadzenDialogService.OpenBusy("Cargando...");
         await refGrid.SelectRow(producto);
         GuardarParametrosDeConsulta(productos.FindIndex(x => x == selectedProduct.FirstOrDefault()));
         navigationManager.NavigateTo($"skus/{producto.IdProducto}");
@@ -249,14 +249,14 @@ else
 
     // public async Task Export()
     // {
-    //     DialogCustom.OpenBusy("Exportando...");
+    //     RadzenDialogService.OpenBusy("Exportando...");
     //     await ExcelService.ExportProductos(productos, new Query()
     //         {
     //             OrderBy = refGrid.Query.OrderBy,
     //             Filter = refGrid.Query.Filter,
     //             Select = string.Join(",", refGrid.ColumnsCollection.Where(c => c.GetVisible() && !string.IsNullOrEmpty(c.Property)).Select(c => c.Property.Contains(".") ? $"{c.Property} as {c.Property.Replace(".", "_")}" : c.Property))
     //         });
-    //     DialogCustom.CloseDialog();
+    //     RadzenDialogService.CloseDialog();
     // }
 
     public void Dispose()

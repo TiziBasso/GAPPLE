@@ -13,13 +13,13 @@
         public static string Escape => "Escape";
         public static string Dot => ".";
         public static string Comma => ",";
-        public static List<string> Numbers => new List<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-        public static List<string> Arrows => new List<string>() { Up, Down, Right, Left };
+        public static List<string> Numbers => ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+        public static List<string> Arrows => [Up, Down, Right, Left];
         public static string Backspace => "Backspace";
         public static string Shift => "Shift";
         public static string Tab => "Tab";
         public static string Ctrl => "Control";
-        public static List<string> Special => new List<string>() { Ctrl, "c", "v", Tab, Backspace, Shift };
+        public static List<string> Special => [Ctrl, "c", "v", Tab, Backspace, Shift];
         public static string Space => "Space";
     }
 }

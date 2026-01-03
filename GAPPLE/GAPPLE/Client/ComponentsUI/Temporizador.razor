@@ -1,0 +1,49 @@
+﻿@using System.Timers
+
+<span style="@Style">@formattedTime</span>
+
+@code {
+    [Parameter] public double Minutos { get; set; } = 30;
+    [Parameter] public EventCallback FinTemporizador { get; set; }
+    [Parameter] public string Style { get; set; }
+
+    private Timer _timer;
+    private TimeSpan _timeLeft;
+    private string formattedTime;
+
+    protected override void OnInitialized()
+    {
+        _timeLeft = TimeSpan.FromMinutes(Minutos);
+        UpdateFormattedTime();
+
+        _timer = new Timer(1000);
+        _timer.Elapsed += UpdateTime;
+        _timer.AutoReset = true;
+        _timer.Enabled = true;
+    }
+
+    private async void UpdateTime(object sender, ElapsedEventArgs e)
+    {
+        if (_timeLeft.TotalSeconds > 0)
+        {
+            _timeLeft = _timeLeft.Subtract(TimeSpan.FromSeconds(1));
+            UpdateFormattedTime();
+            await InvokeAsync(() => StateHasChanged());
+        }
+        else
+        {
+            _timer.Stop();
+            await InvokeAsync(() => FinTemporizador.InvokeAsync());
+        }
+    }
+
+    private void UpdateFormattedTime()
+    {
+        formattedTime = $"{_timeLeft.Minutes:00}:{_timeLeft.Seconds:00}";
+    }
+
+    public void Dispose()
+    {
+        _timer.Dispose();
+    }
+}

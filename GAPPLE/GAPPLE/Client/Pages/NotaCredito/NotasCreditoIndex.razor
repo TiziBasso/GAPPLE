@@ -1,8 +1,74 @@
 ﻿@page "/notascredito"
 
+@using GAPPLE.Shared.Helpers
+
+@inject ToolsService ToolsService
+
 @if (showPage)
 {
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Notas de crédito" class="mb-3" />
 
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End">
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Desde:" Component="desde" />
+            <RadzenDatePicker @bind-Value="request.FechaDesde" DateFormat="dd/MM/yyyy" Name="desde" Style="width:8rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Hasta:" Component="hasta" />
+            <RadzenDatePicker @bind-Value="request.FechaHasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" Style="width:8rem" />
+        </RadzenStack>
+@* 
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="ID:" Component="id" />
+            <input @ref="refIdOrden" type="number" @bind-value="@idPedido" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 5rem; text-align:right" disabled="@(isLoading)" id="id" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="cod" />
+            <input type="text" @bind-value="@codOrden" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 9rem;" disabled="@(isLoading)" id="cod" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cliente:" Component="cliente" />
+            <input type="text" @bind-value="@razonSocial" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 15rem" disabled="@(isLoading)" id="cliente" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="estado" />
+            <RadzenDropDown Data=@estados @bind-Value=@idEstado Name="estado"
+                            ValueProperty=@nameof(Estado<int?>.Id) TextProperty=@nameof(Estado<int?>.Descripcion)
+                            AllowClear=true Placeholder="(Todos)"
+                            Disabled="@isLoading" Style="width: 9rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Presupuesto:" Component="presup" />
+            <RadzenDropDown Data=@Variables.EstadosSiNo @bind-Value=@presupuesto Name="presup"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            Placeholder="(Todos)" AllowClear=true
+                            Disabled="@isLoading" Style="width: 7rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Linea:" Component="linea" />
+            <RadzenDropDown Data=@lineas @bind-Value=@linea Name="linea" AllowClear=true
+                            Disabled="@isLoading" Style="width: 15rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cód. tango:" Component="codTango" />
+            <input type="text" @bind-value="@codTango" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
+                   class="rz-textbox" style="width: 8rem" disabled="@(isLoading)" id="codTango" />
+        </RadzenStack>
+
+        <RadzenButton Click="FillOrdenes" IsBusy=isLoading ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />
+ *@
+    </RadzenStack>
 }
 else
 {
@@ -11,9 +77,19 @@ else
 
 @code {
     bool showPage;
+    List<ComprobanteCabecera> comprobantes = [];
+    ComprobanteCabeceraRequest request = new()
+        {
+            FechaDesde = DateTime.Today.AddDays(-15),
+            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+            IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+        };
+
+    List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
     protected override async Task OnInitializedAsync()
     {
+        estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
         showPage = true;
     }
 }

@@ -1,11 +1,8 @@
 ﻿using GAPPLE.Client.Entities;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http.Json;
 using System.Net;
-using GAPPLE.Client.Tools;
-using System.ComponentModel.Design.Serialization;
-using System.Runtime.Intrinsics.X86;
+using System.Net.Http.Json;
 
 namespace GAPPLE.Client.Services
 {
@@ -108,11 +105,6 @@ namespace GAPPLE.Client.Services
         public async ValueTask<List<Zonas>> GetZonas()
         {
             return await HttpClient.GetFromJsonAsync<List<Zonas>>($"{URI_BASE}/zonas");
-        }
-
-        public async ValueTask<List<Opcion>> GetEstados()
-        {
-            return await HttpClient.GetFromJsonAsync<List<Opcion>>($"{URI_BASE}/estados");
         }
 
         public async ValueTask<Response> PostPedido(Orden pedido)

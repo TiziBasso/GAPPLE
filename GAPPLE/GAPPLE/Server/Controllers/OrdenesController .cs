@@ -258,29 +258,6 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpGet("estados")]
-        public List<Opcion> GetEstados()
-        {
-            List<Opcion> estados = new() { new((int?)null, "(Todos)") };
-            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
-
-            using (DataTable dt = daO.ObtenerEstados("Pedidos"))
-            {
-                foreach (DataRow row in dt.Rows)
-                {
-                    Opcion estado = new Opcion()
-                    {
-                        Id = int.Parse(row["IdEstado"].ToString()!),
-                        Descripcion = row["Descripcion"].ToString()!
-                    };
-
-                    estados.Add(estado);
-                }
-            }
-
-            return estados;
-        }
-
         [HttpGet("ordenDashboard")]
         public List<OrdenDashboard> GetOrdenesDashboard(int idUsuario)
         {
@@ -570,7 +547,7 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                    daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
+                    daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N", trans);
                 }
 
                 if (ModelState.ErrorCount > 0)

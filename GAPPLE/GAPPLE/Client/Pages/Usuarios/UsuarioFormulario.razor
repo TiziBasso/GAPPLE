@@ -3,7 +3,7 @@
 
 @inject SeguridadService SeguridadService
 @inject DialogService DialogService
-@inject RadzenCustom DialogCustom
+@inject RadzenCustom RadzenDialogService
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
 @inject SesionDTO SesionDTO
@@ -215,14 +215,14 @@ else
             {
                 customValidation?.ClearErrors();
                 Response response;
-                DialogCustom.OpenBusyWithLoader();
+                RadzenDialogService.OpenBusyWithLoader();
 
                 if (operacion == Operaciones.Alta)
                     response = await SeguridadService.PostUsuario(Usuario);
                 else
                     response = await SeguridadService.PutUsuario(Usuario);
 
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
 
                 if (!response.IsSuccessStatusCode)
                 {

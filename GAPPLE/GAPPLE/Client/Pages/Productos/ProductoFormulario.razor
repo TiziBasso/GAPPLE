@@ -9,7 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject ToolsHelpers ToolsHelpers
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 
 @if (editContext != null)
 {
@@ -274,14 +274,14 @@ else
         {
             if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 Response response;
                 if (operacion == Operaciones.Alta)
                     response = await ProductosService.PostProducto(Producto);
                 else
                     response = await ProductosService.PutProducto(Producto);
 
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -333,7 +333,7 @@ else
         invalidFamilia = editContext.GetValidationMessages(editContext.Field(nameof(Producto.Clasificacion))).Any();
         editContext.Validate();
         var errors = editContext.GetValidationMessages().ToList();
-        DialogCustom.ShowErrors(errors);
+        RadzenDialogService.ShowAlert(errors);
     }
 
     // private void AddProveedor(ProductoProveedor proveedor)

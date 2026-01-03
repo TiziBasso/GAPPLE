@@ -1,0 +1,133 @@
+﻿@using Microsoft.JSInterop
+@typeparam TItem
+@inject IJSRuntime jsRuntime
+
+<RadzenStack class="stepSelector" Orientation="Orientation.Vertical" Gap="1px" JustifyContent="JustifyContent.Center" Style="@("width:fit-content;max-height:65vh;" + "height:" + Height)">
+    @foreach (var item in valores)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" class="bloqueConLabel" @onclick="@(() => Seleccionar((int)ValueField(item)))">
+            @if (valores.FindIndex(x => (int)ValueField(x) == (int)ValueField(item)) == 0)
+            {
+                <div class="bloquePasos primerBloque" id="@($"inpBloque_{valores.FindIndex(x => ValueField(x) == ValueField(item))}")"></div>
+            }
+            else if (valores.FindIndex(x => (int)ValueField(x) == (int)ValueField(item)) < valores.Count - 1)
+            {
+                <div class="bloquePasos" id="@($"inpBloque_{valores.FindIndex(x => ValueField(x) == ValueField(item))}")"></div>
+            }
+            else
+            {
+                <div class="bloquePasos ultimoBloque" id="@($"inpBloque_{valores.FindIndex(x => ValueField(x) == ValueField(item))}")"></div>
+            }
+            <div class="contenedorStrongBloque">
+                <span style="font-family: arial;font-weight: 400;font-size: 0.875rem;cursor:pointer">@TextField(item)</span>
+            </div>
+        </RadzenStack>
+    }
+</RadzenStack>
+
+<script>
+    function Pintar(aPintar)
+    {
+    aPintar.forEach(subIndice => {
+    var elemento = document.getElementById(`inpBloque_${subIndice}`);
+    if (elemento) {
+    elemento.style.backgroundColor = "var(--rz-checkbox-checked-background-color)";
+    }
+    });
+    }
+
+    function DesPintar(aDesPintar)
+    {
+    aDesPintar.forEach(subIndice => {
+    var elemento = document.getElementById(`inpBloque_${subIndice}`);
+    if (elemento) {
+    elemento.style.backgroundColor = "#b9c4c7";
+    }
+    });
+    }
+</script>
+
+@code {
+    [Parameter] public List<TItem> valores { get; set; }
+    [Parameter] public Func<TItem, string> TextField { get; set; }
+    [Parameter] public Func<TItem, object> ValueField { get; set; }
+    [Parameter] public List<object> SelectedValues { get; set; }
+    [Parameter] public string Height { get; set; }
+
+    List<int> valoresSeleccionadosPaint = new();
+    List<int> valoresSeleccionadosNoPaint = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && SelectedValues != null && SelectedValues.Any())
+        {
+            int indexInicio = valores.FindIndex(x => (int)ValueField(x) == (int)SelectedValues.First());
+            int indexFin = valores.FindIndex(x => (int)ValueField(x) == (int)SelectedValues.Last());
+
+            valoresSeleccionadosPaint.Clear();
+            if (indexInicio < indexFin)
+            {
+                for (int i = indexInicio; i <= indexFin; i++)
+                {
+                    valoresSeleccionadosPaint.Add(i);
+                }
+            }
+            await jsRuntime.InvokeVoidAsync("Pintar", valoresSeleccionadosPaint);
+        }
+    }
+
+    void Seleccionar(int key)
+    {
+        if (!SelectedValues.Exists(x => (int)x == key) || (SelectedValues.Exists(x => (int)x == key) && SelectedValues.Count > 1))
+        {
+            if (SelectedValues.Count < 1)
+            {
+                SelectedValues.Add(key);
+                valoresSeleccionadosPaint.Add(valores.FindIndex(x => (int)ValueField(x) == key));
+                jsRuntime.InvokeVoidAsync("Pintar", valoresSeleccionadosPaint);
+            }
+            else if (SelectedValues.Count == 1)
+            {
+                SelectedValues.Add(key);
+                valoresSeleccionadosPaint.Add(valores.FindIndex(x => (int)ValueField(x) == key));
+                int indexInicio = valores.FindIndex(x => (int)ValueField(x) == (int)SelectedValues.First());
+                int indexFin = valores.FindIndex(x => (int)ValueField(x) == (int)SelectedValues.Last());
+
+                valoresSeleccionadosPaint.Clear();
+                if (indexInicio < indexFin)
+                {
+                    for (int i = indexInicio; i <= indexFin; i++)
+                    {
+                        valoresSeleccionadosPaint.Add(i);
+                    }
+                }
+                else
+                {
+                    for (int i = indexFin; i <= indexInicio; i++)
+                    {
+                        valoresSeleccionadosPaint.Add(i);
+                    }
+                }
+                jsRuntime.InvokeVoidAsync("Pintar", valoresSeleccionadosPaint);
+            }
+            else
+            {
+                SelectedValues.Clear();
+                valoresSeleccionadosPaint.Clear();
+                valoresSeleccionadosNoPaint.Clear();
+                SelectedValues.Add(key);
+                valoresSeleccionadosPaint.Add(valores.FindIndex(x => (int)ValueField(x) == key));
+                jsRuntime.InvokeVoidAsync("Pintar", valoresSeleccionadosPaint);
+
+                for (int i = 0; i < valores.Count; i++)
+                {
+                    if (!valoresSeleccionadosPaint.Exists(v => v == i))
+                        valoresSeleccionadosNoPaint.Add(i);
+                }
+
+                jsRuntime.InvokeVoidAsync("Pintar", valoresSeleccionadosPaint);
+                jsRuntime.InvokeVoidAsync("DesPintar", valoresSeleccionadosNoPaint);
+            }
+        }
+    }
+}

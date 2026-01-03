@@ -44,7 +44,7 @@ namespace GAPPLE.Client.Helpers
         {
             operation = operation.ToLower();
             if (operation == "ver") operation = "lectura";
-            return operaciones.Find(x => x.ToString().ToLower() == operation);
+            return operaciones.Find(x => x.ToString().Equals(operation, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public void ClearValidationMessages(EditContext editContext, bool revalidate = false, bool markAsUnmodified = false)

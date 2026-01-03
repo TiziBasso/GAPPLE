@@ -1,0 +1,80 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<label style="margin:0;display: inline-block;padding: 4px 20px;font-size: 14px;color: #fff;background-color: #35a0d7;border: none;border-radius: 5px;cursor: pointer;text-align: center;" for="@guid">Cargar</label>
+
+<InputFile OnChange="OnInputFileChange" accept="image/*" id="@guid" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0);" />
+
+@if (!string.IsNullOrEmpty(ImageBase64))
+{
+    <div style="display: flex; width: 100%; justify-content: space-evenly; align-items: center; margin-top: 5px;">
+        <img src="@ImageBase64" style="height: 10rem; width: 15rem;" />
+        <RadzenButton ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" Icon="close" Style="height: fit-content; padding:10px;" Click="Borrar" title="Borrar" />
+    </div>
+}
+
+@code {
+    [Parameter] public string ImageString { get; set; }
+    [Parameter] public EventCallback<string> ImageStringChanged { get; set; }
+
+    [Parameter] public byte[] ImageBytes { get; set; }
+    [Parameter] public EventCallback<byte[]> ImageBytesChanged { get; set; }
+
+    [Parameter] public long MaxFileSize { get; set; } = 5 * 1024 * 1024;
+
+    [Parameter]
+    public EventCallback Error { get; set; }
+
+
+    private string ImageBase64 { get; set; }
+
+    private Guid guid = Guid.NewGuid();
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(ImageString))
+        {
+            ImageBase64 = ImageString;
+        }
+        else if (ImageBytes != null)
+        {
+            ImageBase64 = $"data:image/png;base64,{Convert.ToBase64String(ImageBytes)}";
+        }
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+
+        if (archivo.Size > MaxFileSize)
+        {
+            await Error.InvokeAsync();
+            return;
+        }
+
+        using var stream = archivo.OpenReadStream(MaxFileSize);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var bytes = ms.ToArray();
+
+        var base64 = Convert.ToBase64String(bytes);
+        var contentType = archivo.ContentType;
+        ImageBase64 = $"data:{contentType};base64,{base64}";
+
+        if (ImageStringChanged.HasDelegate)
+            await ImageStringChanged.InvokeAsync(ImageBase64);
+
+        if (ImageBytesChanged.HasDelegate)
+            await ImageBytesChanged.InvokeAsync(bytes);
+    }
+
+    private async Task Borrar()
+    {
+        ImageBase64 = null;
+
+        if (ImageStringChanged.HasDelegate)
+            await ImageStringChanged.InvokeAsync(ImageBase64);
+
+        if (ImageBytesChanged.HasDelegate)
+            await ImageBytesChanged.InvokeAsync(null);
+    }
+}

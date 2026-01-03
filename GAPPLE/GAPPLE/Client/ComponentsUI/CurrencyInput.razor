@@ -1,0 +1,127 @@
+﻿@using System.Globalization
+@using GAPPLE.Client.Enums
+@using Microsoft.AspNetCore.Components.Forms
+
+@typeparam TValue
+@inherits InputBase<TValue>
+
+<input @ref="elementReference" @bind="currentValue" @bind:event="oninput"
+       @onchange="HandleOnChange" @onblur="FormatValue" @onkeydown="HandleOnKeyDown" @onfocus="HandleOnFocus"
+       class="rz-textbox @(CssClass) @(Class)" style="text-align: right; @(Style)" onclick="this.select()"
+       name="@NameAttributeValue" @attributes="@AdditionalAttributes" autocomplete="off" step="any" />
+
+@code
+{
+    [Parameter] public string Class { get; set; }
+    [Parameter] public string Style { get; set; }
+    [Parameter] public CurrencyInputEnum InputFormat { get; set; } = CurrencyInputEnum.C;
+
+    [Parameter] public EventCallback<decimal> OnChange { get; set; }
+    [Parameter] public EventCallback<string> OnKeyDown { get; set; }
+    [Parameter] public EventCallback OnFocus { get; set; }
+
+    private string currentValue;
+    private bool change;
+    ElementReference elementReference;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        FormatValue();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        FormatValue();
+    }
+
+    protected override bool TryParseValueFromString(string value, out TValue result, out string validationErrorMessage)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                if (typeof(TValue) == typeof(int) || typeof(TValue) == typeof(int?))
+                    result = (TValue)(object)int.Parse(value);
+                else if (typeof(TValue) == typeof(decimal) || typeof(TValue) == typeof(decimal?))
+                    result = (TValue)(object)decimal.Parse(value);
+                else if (typeof(TValue) == typeof(double) || typeof(TValue) == typeof(double?))
+                    result = (TValue)(object)double.Parse(value);
+                else
+                    result = (TValue)(object)value;
+            }
+            else
+                result = default(TValue);
+
+            validationErrorMessage = null;
+            return true;
+        }
+        catch
+        {
+            result = default;
+            validationErrorMessage = $"El valor '{value}' no es válido para {typeof(TValue).Name}.";
+            return false;
+        }
+    }
+
+    private void FormatValue()
+    {
+        var decimalValue = decimal.Parse(Value.ToString());
+        currentValue = FormatCurrency(decimalValue);
+    }
+
+    private string FormatCurrency(decimal value)
+    {
+        if (InputFormat == CurrencyInputEnum.F1)
+            return $"{value.ToString(InputFormat.ToString(), CultureInfo.CurrentCulture)}%";
+        else
+            return value.ToString(InputFormat.ToString(), CultureInfo.CurrentCulture);
+    }
+
+    private async Task HandleOnChange(ChangeEventArgs e)
+    {
+        var inputValue = e.Value?.ToString() ?? string.Empty;
+        currentValue = inputValue;
+
+        if (!change)
+            await ValueChange();
+
+        if (OnChange.HasDelegate)
+            await OnChange.InvokeAsync(decimal.Parse(currentValue));
+    }
+
+    private async Task ValueChange()
+    {
+        if (TryParseValueFromString(currentValue, out var parsedValue, out _))
+        {
+            Value = parsedValue;
+            await ValueChanged.InvokeAsync(Value);
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+        }
+    }
+
+    private async Task HandleOnKeyDown(KeyboardEventArgs args)
+    {
+        change = false;
+
+        if (KeyboardKeys.Arrows.Contains(args.Key))
+        {
+            await ValueChange();
+            await Task.Delay(1);
+            await OnKeyDown.InvokeAsync(args.Key);
+        }
+        else if (args.Key == KeyboardKeys.Enter | args.Key == KeyboardKeys.NumpadEnter)
+        {
+            await ValueChange();
+            await Task.Delay(1);
+            await OnKeyDown.InvokeAsync(KeyboardKeys.Enter);
+        }
+    }
+
+    private async Task HandleOnFocus()
+    {
+        if (OnFocus.HasDelegate)
+            await OnFocus.InvokeAsync();
+    }
+}

@@ -1,0 +1,131 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq.Expressions
+@using System.Globalization
+
+@typeparam TValue
+
+<input @ref="_elementReference" type="text"
+       @bind-value="_currentValueAsString" @bind-value:event="oninput"
+       @onkeydown="HandleOnKeyDown" @onfocus="HandleOnFocus" @onblur="HandleOnBlur"
+       class="rz-textbox @(_fieldCssClasses) @(Class)" style="text-align: right; @(Style)"
+       data-validate="number" step="any" autocomplete="off"
+       @attributes="AdditionalAttributes" />
+
+@code {
+    [CascadingParameter] private EditContext EditContext { get; set; }
+
+    [Parameter, EditorRequired] public TValue Value { get => _value; set => _value = value; }
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<TValue>> ValueExpression { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
+    [Parameter] public string Class { get; set; }
+    [Parameter] public string Style { get; set; }
+    [Parameter] public FormatType FormatType { get; set; } = FormatType.None;
+    [Parameter] public string FormatString { get; set; }
+    [Parameter] public EventCallback<string> OnKeyDown { get; set; }
+    [Parameter] public EventCallback<TValue> OnChange { get; set; }
+    [Parameter] public EventCallback OnBlur { get; set; }
+    [Parameter] public EventCallback OnFocus { get; set; }
+
+    private string _currentValueAsString;
+    private TValue _value;
+    private TValue _lastParameterValue;
+    private FieldIdentifier _fieldIdentifier;
+    private ElementReference _elementReference;
+
+    private string _fieldCssClasses => EditContext?.FieldCssClass(_fieldIdentifier) ?? "";
+
+    protected override void OnInitialized()
+    {
+        if (ValueExpression != null)
+            _fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+        else
+            _fieldIdentifier = default;
+        FormatValueAsString();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (!EqualityComparer<TValue>.Default.Equals(Value, _lastParameterValue))
+        {
+            _lastParameterValue = Value;
+            FormatValueAsString();
+        }
+    }
+
+    private bool TryParseValueFromString(string value, out TValue result) =>
+        BindConverter.TryConvertTo<TValue>(value, CultureInfo.CurrentCulture, out result);
+
+    private void FormatValueAsString()
+    {
+        if (Value == null)
+        {
+            _currentValueAsString = string.Empty;
+            return;
+        }
+
+        _currentValueAsString = FormatType switch
+        {
+            FormatType.Currency => string.Format(CultureInfo.CurrentCulture, "{0:C}", Value),
+            FormatType.Percentage => $"{string.Format(CultureInfo.CurrentCulture, "{0:N2}", Value)} %",
+            _ => FormatString == null
+                            ? Value.ToString()
+                            : string.Format(CultureInfo.CurrentCulture, FormatString, Value)
+        };
+    }
+
+    private async Task ValueChange(string value)
+    {
+        if (!TryParseValueFromString(value, out var parsedValue))
+            return;
+
+        if (typeof(TValue) == typeof(string) && parsedValue.ToString() == "")
+            parsedValue = (TValue)(object)null;
+
+        if (EqualityComparer<TValue>.Default.Equals(_value, parsedValue))
+            return;
+
+        _value = parsedValue;
+
+        await ValueChanged.InvokeAsync(_value);
+        EditContext?.NotifyFieldChanged(_fieldIdentifier);
+        _lastParameterValue = _value;
+
+        if (OnChange.HasDelegate)
+            await OnChange.InvokeAsync(_value);
+    }
+
+    private async Task HandleOnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == KeyboardKeys.Enter)
+        {
+            await ValueChange(_currentValueAsString);
+            FormatValueAsString();
+        }
+
+        if (OnKeyDown.HasDelegate)
+            await OnKeyDown.InvokeAsync(args.Key);
+    }
+
+    private async Task HandleOnFocus()
+    {
+        if (FormatType != FormatType.None)
+            _currentValueAsString = Value?.ToString();
+
+        if (OnFocus.HasDelegate)
+            await OnFocus.InvokeAsync();
+    }
+
+    private async Task HandleOnBlur()
+    {
+        await ValueChange(_currentValueAsString);
+        FormatValueAsString();
+
+        if (OnBlur.HasDelegate)
+            await OnBlur.InvokeAsync();
+    }
+
+    public async Task FocusAsync() => await _elementReference.FocusAsync();
+}

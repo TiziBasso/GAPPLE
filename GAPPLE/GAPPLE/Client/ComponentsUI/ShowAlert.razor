@@ -1,0 +1,81 @@
+@inject DialogService dialogService
+
+@if (Dictionary != null)
+{
+	<RadzenAlert AlertStyle=@AlertStyle Variant=@Variant Shade=@Shade AllowClose="false" ShowIcon="false"
+				 Style="margin-top:0; margin-top:15px;">
+		<RadzenStack Style="height:25vh; overflow:auto; width:100%;" AlignItems="AlignItems.Start">
+			<dl>
+				@foreach (var key in Dictionary.Keys)
+				{
+					<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Style="width:100%">
+						<RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+							<dt style="margin-left:5px;">
+								@key:
+							</dt>
+							@foreach (var error in Dictionary[key])
+							{
+								<dd style="margin-left:15px;">
+									@((MarkupString)error)
+								</dd>
+							}
+						</RadzenStack>
+						@if (ShowDeleteMessage)
+						{
+							<RadzenIcon Icon="clear" @onclick=@(() => DeleteError(key)) class="ClearButton" />
+						}
+					</RadzenStack>
+				}
+			</dl>
+		</RadzenStack>
+	</RadzenAlert>
+}
+else if (Messages != null)
+{
+	<RadzenAlert AlertStyle=@AlertStyle Variant=@Variant Shade=@Shade AllowClose="false" ShowIcon="false">
+		<ul>
+			@foreach (var item in Messages)
+			{
+				<li>
+					<strong>@item</strong>
+				</li>
+			}
+		</ul>
+	</RadzenAlert>
+}
+else
+{
+	<RadzenAlert AlertStyle=@AlertStyle Variant=@Variant Shade=@Shade AllowClose="false" ShowIcon="false">
+		<ul>
+			Ha ocurrido un error inesperado!
+		</ul>
+	</RadzenAlert>
+}
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Normal" JustifyContent="JustifyContent.Center">
+	<RadzenButton Click="@(() => dialogService.Close())">Cerrar</RadzenButton>
+</RadzenStack>
+
+@code {
+	[Parameter] public List<string> Messages { get; set; } = null;
+	[Parameter] public Dictionary<string, List<string>> Dictionary { get; set; } = null;
+	[Parameter] public bool ShowDeleteMessage { get; set; } = false;
+	[Parameter] public AlertStyle AlertStyle { get; set; } = AlertStyle.Danger;
+	[Parameter] public Variant Variant { get; set; } = Variant.Flat;
+	[Parameter] public Shade Shade { get; set; } = Shade.Lighter;
+	[Parameter] public bool OnlyClose { get; set; } = true;
+
+	private void DeleteError(string key)
+	{
+		Dictionary.Remove(key);
+		StateHasChanged();
+	}
+}
+
+<style>
+	.rz-alert-content {
+		display: flex;
+		width: 100%;
+		align-items: start;
+	}
+</style>

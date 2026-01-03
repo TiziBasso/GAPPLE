@@ -3,7 +3,7 @@
 @inject SeguridadService SeguridadService
 @inject DepositoService DepositoService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject NotificationService NotificationService
 
 @if (showPage)
@@ -77,9 +77,9 @@ else
         if (await DialogService.Confirm(MensajesHelper.Confirm(deposito.Visible ? "quitar visibilidad" : "dar visibilidad", $"al depósito {deposito.Descripcion}"),
                                         MensajesHelper.Title, new() { ShowClose = false, OkButtonText = "Sí", CancelButtonText = "No", CloseDialogOnEsc = false }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Cambiando...");
+            RadzenDialogService.OpenBusyWithLoader("Cambiando...");
             var response = await DepositoService.PutDepositoVisibilidad(deposito);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
 
             if (response.IsSuccessStatusCode)
             {

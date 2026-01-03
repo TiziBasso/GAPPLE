@@ -31,7 +31,7 @@ static void Services(IServiceCollection services)
     services.AddScoped<OfertasService>();
     services.AddScoped<SeguridadService>();
     services.AddScoped<DialogService>();
-    services.AddScoped<DialogCustom>();
+    services.AddScoped<RadzenDialogService>();
     services.AddScoped<ProductosService>();
     services.AddScoped<ToolsHelpers>();
     services.AddScoped<ClientesService>();
@@ -42,4 +42,5 @@ static void Services(IServiceCollection services)
     services.AddSingleton<SesionDTO>();
     services.AddSingleton<SignalRService>();
     services.AddScoped<DepositoService>();
+    services.AddScoped<ToolsService>();
 }

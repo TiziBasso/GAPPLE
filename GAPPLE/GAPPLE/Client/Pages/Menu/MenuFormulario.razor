@@ -2,7 +2,7 @@
 @inject SeguridadService SeguridadService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject IJSRuntime JSRuntime
 
 @if (!loaderContainerVisible)
@@ -152,7 +152,7 @@ else
         DialogService.Close();
         if (nodo != null)
         {
-            DialogCustom.OpenBusyWithLoader();
+            RadzenDialogService.OpenBusyWithLoader();
             if (operacion == Operaciones.Alta)
             {
                 nodo = await SeguridadService.PostPermiso(nodo);
@@ -171,7 +171,7 @@ else
             await grilla.Reload();
 
             NotificationService.Notify(NotificationSeverity.Success, "El campo se guardo con exito");
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
         }
     }
 
@@ -189,14 +189,14 @@ else
     {
         if ((await DialogService.Confirm($"¿Desea eliminar el nodo \"{nodo.Nombre}\"?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" })).Value)
         {
-            DialogCustom.OpenBusyWithLoader("Eliminando...");
+            RadzenDialogService.OpenBusyWithLoader("Eliminando...");
             await SeguridadService.DeletePermiso(nodo.IdPermiso);
             Data.Remove(nodo);
 
             if (Data.FindAll(x => x.IdPadre == nodo.IdPadre).Count == 0)
                 Data.Find(x => x.IdPermiso == nodo.IdPadre).TieneHijos = false;
             NotificationService.Notify(NotificationSeverity.Success, "El campo se elimino con exito");
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
         }
     }
 

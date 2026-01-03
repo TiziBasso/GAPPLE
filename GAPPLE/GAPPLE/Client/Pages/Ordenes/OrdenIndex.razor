@@ -2,21 +2,22 @@
 @using GAPPLE.Client.Components.Ordenes
 @using GAPPLE.Client.Components.Ordenes.Informes
 @using GAPPLE.Client.Extensiones
+@using GAPPLE.Shared.Helpers
 @using Microsoft.AspNetCore.Components.Authorization
 
 @implements IDisposable
 
 @inject ContextMenuService ContextMenuService
 @inject OrdenesService OrdenesService
-@inject DialogCustom DialogCustom
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject AuthenticationStateProvider AutenticacionProvider
 @inject SeguridadService SeguridadService
 @inject ProductosService ProductosService
 @inject NavigationManager NavigationManager
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject IJSFunction JSFunction
+@inject ToolsService ToolsService
 
 @if (showPage)
 {
@@ -55,7 +56,7 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="estado" />
             <RadzenDropDown Data=@estados @bind-Value=@idEstado Name="estado"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            ValueProperty=@nameof(Estado<int?>.Id) TextProperty=@nameof(Estado<int?>.Descripcion)
                             AllowClear=true Placeholder="(Todos)"
                             Disabled="@isLoading" Style="width: 9rem;" />
         </RadzenStack>
@@ -258,15 +259,14 @@ else
     ElementReference refIdOrden;
     RadzenDataGrid<Orden> grid;
     List<string> lineas = new();
-    List<Opcion> estados = new();
+    List<Estado<int?>> estados = new();
     List<Orden> lstOrdenes = new();
     Orden Resumen = null;
     bool isLoading, showPage, showResumen;
     CancellationTokenSource cancellationToken = new();
 
     DateTime desde = DateTime.Today.AddDays(-7), hasta = DateTime.Today;
-    int? idPedido;
-    object idEstado;
+    int? idPedido, idEstado;
     bool? presupuesto;
     string razonSocial, linea, codTango, codOrden;
 
@@ -296,7 +296,7 @@ else
         revertir = permisos.Contains("revertir");
 
         lineas = await ProductosService.GetLineas();
-        estados = await OrdenesService.GetEstados();
+        estados = await ToolsService.GetEstados<int?>(new() { ShowNull = true, Seccion = SeccionesEstado.Pedidos });
         idEstado = estados[1].Id;
         //Parametros de consulta
         showPage = true;
@@ -330,15 +330,14 @@ else
             zonaFilter = null;
             estadoFilter = null;
 
-            DialogCustom.OpenBusyWithLoader("Cargando...");
+            RadzenDialogService.OpenBusyWithLoader("Cargando...");
             //parametrosconsulta
             var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
             var auth = await autenticacionExt.GetAuthenticationStateAsync();
             lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59),
                                                         idPedido, codOrden, presupuesto, razonSocial, linea, null,
-                                                        idEstado != null ? int.Parse(idEstado.ToString()!) : null,
-                                                        codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
-            DialogCustom.CloseDialog();
+                                                        idEstado, codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
+            RadzenDialogService.CloseDialog();
             StateHasChanged();
             await grid.Reload();
 
@@ -355,14 +354,14 @@ else
     async Task OnCancelar(OrdenDTO orden)
     {
         DialogService.Close();
-        DialogCustom.OpenBusyWithLoader("Cancelando");
+        RadzenDialogService.OpenBusyWithLoader("Cancelando");
         var response = await OrdenesService.CambiarEstadoPedidos(orden);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
         if (response.IsSuccessStatusCode)
         {
             var order = lstOrdenes.First(o => o.Id == orden.Id);
             order.IdEstado = 2;
-            order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 2).Descripcion;
+            order.DescripcionEstado = estados.First(x => x.Id == (int)PedidosEstadoEnum.Cancelado).Descripcion;
             order.ObservacionesCancelacion = orden.ObservacionCancelacion;
 
             await grid.Reload();
@@ -387,7 +386,7 @@ else
             if (response.IsSuccessStatusCode)
             {
                 order.IdEstado = 1;
-                order.DescripcionEstado = estados.First(x => x.Id != null && int.Parse(x.Id.ToString()!) == 1).Descripcion;
+                order.DescripcionEstado = estados.First(x => x.Id == (int)PedidosEstadoEnum.Pendiente).Descripcion;
 
                 await grid.Reload();
             }
@@ -419,9 +418,9 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("exportar a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Exportando...");
+            RadzenDialogService.OpenBusyWithLoader("Exportando...");
             var response = await OrdenesService.PasarATango(order);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
                 StateHasChanged();
             else
@@ -446,14 +445,14 @@ else
 
     async Task VerOrden(Orden orden)
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         Resumen = await OrdenesService.GetOrden(orden.CodigoOrden!);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
         if (Resumen == null)
             NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         else
         {
-            DialogCustom.OpenBusyWithLoader("Imprimiendo...");
+            RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
             showResumen = true;
         }
     }
@@ -462,13 +461,13 @@ else
     {
         await JSFunction.Imprimir(id);
         showResumen = false;
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
         Resumen = null;
     }
 
     public async Task Export()
     {
-        // DialogCustom.OpenBusy("Exportando...");
+        // RadzenDialogService.OpenBusy("Exportando...");
         // await ExcelService.ExportProductos(productos, new Query()
         //     {
         //         OrderBy = refGrid.Query.OrderBy,
@@ -476,7 +475,7 @@ else
         //         Select = string.Join(",", refGrid.ColumnsCollection.Where(c => c.GetVisible() && !string.IsNullOrEmpty(c.Property))
         //                                                                 .Select(c => c.Property.Contains(".") ? $"{c.Property} as {c.Property.Replace(".", "_")}" : c.Property))
         //     });
-        // DialogCustom.CloseDialog();
+        // RadzenDialogService.CloseDialog();
     }
 
     public async Task OnCambiarListaOrden(Orden orden)
@@ -491,9 +490,9 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("volver a estado pendiente", $"la orden con id {orden.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Revirtiendo...");
+            RadzenDialogService.OpenBusyWithLoader("Revirtiendo...");
             var response = await OrdenesService.RevertirEstadoOrden(orden);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, "Estado cambiado correctamente");
@@ -501,7 +500,7 @@ else
                 await grid.Reload();
             }
             else if (response.Errors != null && response.Errors.Count > 0)
-                DialogCustom.ShowErrors(response.Errors, MensajesHelper.Title);
+                RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
             else
                 NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
         }
@@ -554,9 +553,9 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("exportar obsequios a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Exportando...");
+            RadzenDialogService.OpenBusyWithLoader("Exportando...");
             var response = await OrdenesService.PasarATangoObsequios(order);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
                 StateHasChanged();
             else
@@ -568,9 +567,9 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("exportar probadores a tango", $"la orden con id {order.Id}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Exportando...");
+            RadzenDialogService.OpenBusyWithLoader("Exportando...");
             var response = await OrdenesService.PasarATangoProbadores(order);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response.IsSuccessStatusCode)
                 StateHasChanged();
             else
