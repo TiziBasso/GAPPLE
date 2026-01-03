@@ -1,10 +1,11 @@
 ﻿namespace GAPPLE.Shared.Model
 {
-    public class CondicionDeVenta
+    public class Deposito
     {
-        public int Id_GVA { get; set; }
-        public int IdCondicionVenta { get; set; }
+        public int IdDeposito { get; set; }
         public string CodigoTango { get; set; }
         public string Descripcion { get; set; }
+        public bool Visible { get; set; }
+
     }
 }

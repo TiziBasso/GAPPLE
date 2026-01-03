@@ -30,10 +30,25 @@
 
         public static string SaveSuccess(string value, string operacion) => $"{value} {operacion} correctamente!";
 
+        /// <summary>
+        /// "¿Desea confirmar la operación?"
+        /// </summary>
+        /// <returns></returns>
         public static string Confirm() => "¿Desea confirmar la operación?";
 
+        /// <summary>
+        /// "¿Desea {operacion} la operación?"
+        /// </summary>
+        /// <param name="operacion"></param>
+        /// <returns></returns>
         public static string Confirm(string operacion) => $"¿Desea {operacion} la operación?";
 
+        /// <summary>
+        /// "¿Desea {operacion} {value}?"
+        /// </summary>
+        /// <param name="operacion"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string Confirm(string operacion, string value) => $"¿Desea {operacion} {value}?";
 
         public static string Cancel() => "¿Desea cancelar la operación?";
