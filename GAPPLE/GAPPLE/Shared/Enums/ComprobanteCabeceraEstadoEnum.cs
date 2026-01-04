@@ -3,6 +3,8 @@
     public enum ComprobanteCabeceraEstadoEnum
     {
         Pendiente = 20,
-        Aprobado = 21
+        Aprobado = 21,
+        Cancelado = 22
+
     }
 }

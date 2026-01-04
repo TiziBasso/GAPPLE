@@ -62,7 +62,7 @@ else
             Orden.CodListaPrecio = listaNew;
             var response = await OrdenesService.CambiarListaPrecio(Orden);
             RadzenDialogService.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            if (response.IsOk)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();

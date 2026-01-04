@@ -27,20 +27,31 @@ namespace GAPPLE.Server.Controllers
         {
             try
             {
-                List<Estado<int?>> estados = [];
-
-                if (request.ShowNull)
-                    estados.Add(new Estado<int?> { Id = null, Descripcion = "Todos" });
-
-                foreach (DataRow row in new DA_Tools(ConnectionString).ObtenerEstados(request.Seccion).Rows)
-                    estados.Add(DataRowHelper.MapDataRowTo<Estado<int?>>(row));
-
-                return Ok(estados);
+                return Ok(ObtenerEstado<int?>(request));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// T puede ser un Enum, si no queres crearlo mandale int?
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public List<Estado<T>> ObtenerEstado<T>(EstadoRequest request)
+        {
+            List<Estado<T>> estados = [];
+
+            if (request.ShowNull && Nullable.GetUnderlyingType(typeof(T)) != null)
+                estados.Add(new Estado<T> { Id = default, Descripcion = "(Todos)" });
+
+            foreach (DataRow row in new DA_Tools(ConnectionString).ObtenerEstados(request.Seccion).Rows)
+                estados.Add(DataRowHelper.MapDataRowTo<Estado<T>>(row));
+
+            return estados;
         }
     }
 }

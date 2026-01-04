@@ -8,12 +8,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion(1, "Ambos"),
                     new Opcion(2, "Activo"),
                     new Opcion(3, "Pasivo")
-                };
+                ];
             }
         }
 
@@ -21,12 +21,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion(1, "Ambos"),
                     new Opcion(2, "Visible"),
                     new Opcion(3, "Invisible")
-                };
+                ];
             }
         }
 
@@ -34,12 +34,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion((object)null, "Todos"),
                     new Opcion(false, "Activo"),
                     new Opcion(true, "Pasivo")
-                };
+                ];
             }
         }
 
@@ -47,12 +47,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion((object)null, "Ambos"),
                     new Opcion(false, "Sí"),
                     new Opcion(true, "No")
-                };
+                ];
             }
         }
 
@@ -60,12 +60,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion((object)null, "Todos"),
                     new Opcion(true, "Sí"),
                     new Opcion(false, "No")
-                };
+                ];
             }
         }
 

@@ -2,6 +2,7 @@
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Components;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace GAPPLE.Client.Services
@@ -12,13 +13,11 @@ namespace GAPPLE.Client.Services
         private HttpClient HttpClient { get; }
         [Inject]
         private SesionDTO SesionDTO { get; }
-        private NavigationManager NavigationManager { get; }
         private const string URI_BASE = "api/tools";
 
-        public ToolsService(HttpClient httpClient, NavigationManager navigationManager, SesionDTO sesionDTO)
+        public ToolsService(HttpClient httpClient, SesionDTO sesionDTO)
         {
             HttpClient = httpClient;
-            NavigationManager = navigationManager;
             SesionDTO = sesionDTO;
         }
 
@@ -26,7 +25,7 @@ namespace GAPPLE.Client.Services
         {
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/estados/obtener", request);
             
-            if (response.IsSuccessStatusCode)
+            if (response.StatusCode == HttpStatusCode.OK)
                 return await response.Content.ReadFromJsonAsync<List<Estado<T>>>();
 
             return null;

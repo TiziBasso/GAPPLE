@@ -36,12 +36,12 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/visibilidad", deposito);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                return new(true);
+                return new(response.StatusCode);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
         }
 
     }

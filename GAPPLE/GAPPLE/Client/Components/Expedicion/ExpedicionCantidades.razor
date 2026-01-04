@@ -251,7 +251,7 @@ else
             RadzenDialogService.OpenBusyWithLoader("Guardando...");
             var response = await OrdenesService.PostExpedicionDetalle(orden);
             RadzenDialogService.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            if (response.IsOk)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();

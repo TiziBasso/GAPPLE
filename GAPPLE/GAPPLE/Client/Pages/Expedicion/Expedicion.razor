@@ -149,7 +149,7 @@ else
         RadzenDialogService.OpenBusyWithLoader("Despachando...");
         var response = await OrdenesService.DespacharOrdenes(selected.ToList());
         RadzenDialogService.CloseDialog();
-        if (response.IsSuccessStatusCode)
+        if (response.IsOk)
         {
             RadzenDialogService.Notify(NotificationSeverity.Success, "Ordenes despachadas correctamente");
             selected = new List<OrdenExpedicion>();

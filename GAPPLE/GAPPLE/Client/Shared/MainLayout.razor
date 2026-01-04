@@ -117,7 +117,7 @@
             RadzenDialogService.OpenBusyWithLoader("Sincronizando");
             var response = await SeguridadService.SincronizarTodo();
             RadzenDialogService.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            if (response.IsOk)
                 NotificationService.Notify(NotificationSeverity.Success, "Datos sincronizados correctamente");
             else
                 NotificationService.Notify(NotificationSeverity.Error, "Uno a más datos no pudieron ser sincronizados");

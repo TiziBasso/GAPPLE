@@ -114,7 +114,7 @@
             Orden.AprobadoVentas = ventas;
             var response = await OrdenesService.PutPedidoAprobacion(Orden);
             RadzenDialogService.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            if (response.IsOk)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();

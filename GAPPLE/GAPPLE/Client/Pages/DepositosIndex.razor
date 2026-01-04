@@ -81,7 +81,7 @@ else
             var response = await DepositoService.PutDepositoVisibilidad(deposito);
             RadzenDialogService.CloseDialog();
 
-            if (response.IsSuccessStatusCode)
+            if (response.IsOk)
             {
                 var index = lstDepositos.FindIndex(x => x.IdDeposito == deposito.IdDeposito);
                 lstDepositos[index].Visible = !lstDepositos[index].Visible;

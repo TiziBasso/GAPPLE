@@ -149,10 +149,8 @@ else
     {
         RadzenCustom.OpenBusyWithLoader();
         var response = await ProductosService.PutProducto(producto);
-        if (response.IsSuccessStatusCode)
-        {
+        if (response.IsOk)
             NotificationService.Notify(NotificationSeverity.Success, "Los datos se han guardado");
-        }
         RadzenCustom.CloseDialog();
     }
 

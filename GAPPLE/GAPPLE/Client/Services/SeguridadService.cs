@@ -85,12 +85,12 @@ namespace GAPPLE.Client.Services
         internal async ValueTask<Response> PostPermisosPorUsuario(List<Permiso> lstCambios)
         {
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/permisosUsuario", lstCambios);
-            if (response.IsSuccessStatusCode)
-                return new(response.IsSuccessStatusCode);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, null, await response.Content.ReadAsStringAsync());
+                return new(response.StatusCode, null, await response.Content.ReadAsStringAsync());
         }
 
         public async ValueTask<List<Usuario>> GetUsuarios(string nombreDeUsuario = null, string apellidoYNombre = null, string perfil = null, bool? pasivo = null, bool conDetalle = true)
@@ -130,12 +130,12 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/usuario", usuario);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                return new(true);
+                return new(response.StatusCode);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+                return new(response.StatusCode, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
 
         public async ValueTask<Response> PutUsuario(Usuario usuario)
@@ -143,12 +143,12 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/usuario", usuario);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                return new(true);
+                return new(response.StatusCode);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+                return new(response.StatusCode, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
 
         internal async ValueTask<Menu> PostPermiso(Menu permiso)
@@ -210,12 +210,12 @@ namespace GAPPLE.Client.Services
         internal async ValueTask<Response> PostPermisosPorPerfil(List<Permiso> lstCambios)
         {
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/permisosPerfil", lstCambios);
-            if (response.IsSuccessStatusCode)
-                return new(response.IsSuccessStatusCode);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, null, await response.Content.ReadAsStringAsync());
+                return new(response.StatusCode, null, await response.Content.ReadAsStringAsync());
         }
 
         internal async ValueTask<List<MenuNew>> GetMenu(int idUsuario)
@@ -227,23 +227,23 @@ namespace GAPPLE.Client.Services
         internal async ValueTask<Response> PostPerfil(PerfilUsuario perfilUsuario)
         {
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/Perfilusuario", perfilUsuario);
-            if (response.IsSuccessStatusCode)
-                return new(true, await response.Content.ReadAsStringAsync());
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadAsStringAsync());
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, null, await response.Content.ReadAsStringAsync());
+                return new(response.StatusCode, null, await response.Content.ReadAsStringAsync());
         }
 
         internal async ValueTask<Response> PutPerfil(PerfilUsuario perfilUsuario)
         {
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/Perfilusuario", perfilUsuario);
-            if (response.IsSuccessStatusCode)
-                return new(response.IsSuccessStatusCode);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, null, await response.Content.ReadAsStringAsync());
+                return new(response.StatusCode, null, await response.Content.ReadAsStringAsync());
         }
 
         public async ValueTask<List<Vendedor>> GetVendedores()
@@ -256,10 +256,10 @@ namespace GAPPLE.Client.Services
             using var request = new HttpRequestMessage(HttpMethod.Get, $"{URI_BASE}/sincronizar");
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8)); // tu timeout deseado
             using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-            if (response.IsSuccessStatusCode)
-                return new(response.IsSuccessStatusCode);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
             else
-                return new(false, await response.Content.ReadAsStringAsync());
+                return new(response.StatusCode, await response.Content.ReadAsStringAsync());
         }
     }
 }

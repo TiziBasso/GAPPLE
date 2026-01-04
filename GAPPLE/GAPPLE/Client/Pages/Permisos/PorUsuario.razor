@@ -190,7 +190,7 @@ else
 
                 response = await SeguridadService.PostPermisosPorUsuario(lstCambios);
 
-                if (response.IsSuccessStatusCode)
+                if (response.IsOk)
                 {
                     ShowNotification(NotificationSeverity.Success, 3500, "Se han guardado los datos correctamente");
                     idUsuario = null;
