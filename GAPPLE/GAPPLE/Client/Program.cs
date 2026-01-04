@@ -41,6 +41,7 @@ static void Services(IServiceCollection services)
     services.AddScoped<IJSFunction, JSFunction>();
     services.AddSingleton<SesionDTO>();
     services.AddSingleton<SignalRService>();
-    services.AddScoped<DepositoService>();
+    services.AddScoped<DepositosService>();
     services.AddScoped<ToolsService>();
+    services.AddScoped<MotivosService>();
 }

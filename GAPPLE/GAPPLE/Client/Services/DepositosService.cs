@@ -6,25 +6,25 @@ using System.Net;
 
 namespace GAPPLE.Client.Services
 {
-    public class DepositoService
+    public class DepositosService
     {
         [Inject]
         private HttpClient HttpClient { get; set; }
         private SesionDTO SesionDTO { get; }
         private const string URI_BASE = "api/depositos";
-        public DepositoService(HttpClient httpClient) => HttpClient = httpClient;
+        public DepositosService(HttpClient httpClient) => HttpClient = httpClient;
 
 
-        public async ValueTask<List<Deposito>> GetDepositos(string? CodigoTango = null, string? Descripcion = null, bool? Visible = null)
+        public async ValueTask<List<Deposito>> GetDepositos(string codigoTango = null, string descripcion = null, bool? visible = null)
         {
-            
+
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
-            if(CodigoTango != null) query ["CodigoTango"] = CodigoTango;
-            if(Descripcion != null) query ["Descripcion"] = Descripcion;
-            if(Visible != null) query ["Visible"] = Visible;
+            if (!string.IsNullOrWhiteSpace(codigoTango)) query["codigoTango"] = codigoTango;
+            if (!string.IsNullOrWhiteSpace(descripcion)) query["descripcion"] = descripcion;
+            if (visible != null) query["visible"] = visible;
 
-            if (query.Any())
+            if (query.Count != 0)
                 uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
             return await HttpClient.GetFromJsonAsync<List<Deposito>>(uri);

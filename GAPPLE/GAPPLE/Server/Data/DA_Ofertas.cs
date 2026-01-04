@@ -32,7 +32,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void PersistirOferta(string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones)
+        public void PersistirOferta(string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones, string altaUsuario)
         {
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
@@ -49,13 +49,13 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pHasta", hasta);
             cmd.Parameters.AddWithValue("@pActiva", 1);
             cmd.Parameters.AddWithValue("@pinclusiones", inclusiones);
-            cmd.Parameters.AddWithValue("@pAltaUsuario", "PRUEBAS");
+            cmd.Parameters.AddWithValue("@pAltaUsuario", altaUsuario);
             cnn.Open();
             cmd.ExecuteNonQuery();
             cnn.Close();
         }
 
-        public void EditarOferta(int idOferta,string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones)
+        public void EditarOferta(int idOferta,string? nombre, string? linea, string? descripcion, decimal descuento, DateTime? desde, DateTime? hasta, string inclusiones, string edicionUsuario)
         {
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
@@ -73,7 +73,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pHasta", hasta);
             cmd.Parameters.AddWithValue("@pActiva", 1);
             cmd.Parameters.AddWithValue("@pinclusiones", inclusiones);
-            cmd.Parameters.AddWithValue("@pAltaUsuario", "PRUEBAS");
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", edicionUsuario);
             cnn.Open();
             cmd.ExecuteNonQuery();
             cnn.Close();

@@ -486,7 +486,7 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 var response = PostTangoObsequios(pedido, null);
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsOk)
                 {
                     if (response.Message != null)
                         return BadRequest(response.Message);
@@ -507,7 +507,7 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 var response = PostTangoProbadores(pedido, null);
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsOk)
                 {
                     if (response.Message != null)
                         return BadRequest(response.Message);
@@ -534,7 +534,7 @@ namespace GAPPLE.Server.Controllers
                 trans = cnn.BeginTransaction();
 
                 var response = PostTango(pedido, trans);
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsOk)
                 {
                     if (response.Message != null)
                         return BadRequest(response.Message);
@@ -596,17 +596,17 @@ namespace GAPPLE.Server.Controllers
             Orden ordenFull = GetOrden(orden.CodigoOrden, true, null, trans)!;
 
             if (!ordenFull.Detalle.Any())
-                return new(false, "La orden debe poseer al menos 1 producto");
+                return new(HttpStatusCode.BadRequest, "La orden debe poseer al menos 1 producto");
 
             if (!ordenFull.Detalle.Exists(x => x.CantidadAprobada > 0))
             {
                 if (!ordenFull.Detalle.Exists(x => x.CantidadProbadorAprobada > 0))
                 {
-                    return new(true, "Orden con probadores");
+                    return new(HttpStatusCode.OK, "Orden con probadores");
                 }
                 else
                 {
-                    return new(true, "Orden con obsequios");
+                    return new(HttpStatusCode.OK, "Orden con obsequios");
                 }
             }
 
@@ -655,22 +655,22 @@ namespace GAPPLE.Server.Controllers
                     if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
                     {
                         string? firstErrorMessage = messages[0].GetString();
-                        return new(false, firstErrorMessage);
+                        return new(HttpStatusCode.BadRequest, firstErrorMessage);
                     }
                 }
 
                 if (root.TryGetProperty("savedId", out JsonElement savedIdElement) && savedIdElement.ValueKind == JsonValueKind.Number)
                 {
                     int savedId = savedIdElement.GetInt32();
-                    return new(true, savedId.ToString());
+                    return new(HttpStatusCode.OK, savedId.ToString());
                 }
             }
             else
             {
-                return new(false, "Error inesperado");
+                return new(HttpStatusCode.BadRequest, "Error inesperado");
             }
 
-            return new(true);
+            return new(HttpStatusCode.OK);
         }
 
         private Response PostTangoProbadores(OrdenDTO orden, SqlTransaction? trans)
@@ -696,7 +696,7 @@ namespace GAPPLE.Server.Controllers
             if (ordenFull.Detalle.Exists(x => x.Probador))
             {
                 if (!ordenFull.Detalle.Any())
-                    return new(false, "La orden debe poseer al menos 1 producto");
+                    return new(HttpStatusCode.BadRequest, "La orden debe poseer al menos 1 producto");
 
                 pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
                 pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
@@ -743,7 +743,7 @@ namespace GAPPLE.Server.Controllers
                         if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
                         {
                             string? firstErrorMessage = messages[0].GetString();
-                            return new(false, firstErrorMessage);
+                            return new(HttpStatusCode.BadRequest, firstErrorMessage);
                         }
                     }
 
@@ -751,16 +751,16 @@ namespace GAPPLE.Server.Controllers
                     {
                         int savedId = savedIdElement.GetInt32();
                         daO.PersistirPedidoTangoZentra(orden.CodigoOrden, savedId.ToString(), "P", trans);
-                        return new(true, savedId.ToString());
+                        return new(HttpStatusCode.OK, savedId.ToString());
                     }
                 }
                 else
                 {
-                    return new(false, "Error inesperado");
+                    return new(HttpStatusCode.BadRequest, "Error inesperado");
                 }
             }
 
-            return new(true);
+            return new(HttpStatusCode.OK);
         }
 
         private Response PostTangoObsequios(OrdenDTO orden, SqlTransaction? trans)
@@ -786,7 +786,7 @@ namespace GAPPLE.Server.Controllers
             if (ordenFull.Detalle.Exists(x => x.CantidadObsequioAprobada > 0))
             {
                 if (!ordenFull.Detalle.Any())
-                    return new(false, "La orden debe poseer al menos 1 producto");
+                    return new(HttpStatusCode.BadRequest, "La orden debe poseer al menos 1 producto");
 
                 pedido.NRO_ORDEN_COMPRA = ordenFull.Id.ToString();
                 pedido.FECHA_ORDEN_COMPRA = orden.Creacion.Value.AddDays(-1);
@@ -833,7 +833,7 @@ namespace GAPPLE.Server.Controllers
                         if (messages.ValueKind == JsonValueKind.Array && messages.GetArrayLength() > 0)
                         {
                             string? firstErrorMessage = messages[0].GetString();
-                            return new(false, firstErrorMessage);
+                            return new(HttpStatusCode.BadRequest, firstErrorMessage);
                         }
                     }
 
@@ -841,16 +841,16 @@ namespace GAPPLE.Server.Controllers
                     {
                         int savedId = savedIdElement.GetInt32();
                         daO.PersistirPedidoTangoZentra(orden.CodigoOrden, savedId.ToString(), "O", trans);
-                        return new(true, savedId.ToString());
+                        return new(HttpStatusCode.OK, savedId.ToString());
                     }
                 }
                 else
                 {
-                    return new(false, "Error inesperado");
+                    return new(HttpStatusCode.BadRequest, "Error inesperado");
                 }
             }
 
-            return new(true);
+            return new(HttpStatusCode.OK);
         }
 
         [HttpPut("estado")]

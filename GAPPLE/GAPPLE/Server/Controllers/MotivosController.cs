@@ -11,28 +11,46 @@ namespace GAPPLE.Server.Controllers
     {
         private IConfiguration Configuration { get; }
         private SesionDTO SesionDTO { get; }
+        private string DefaultConnection { get; }
 
         public MotivosController(IConfiguration configuration)
         {
             Configuration = configuration;
+            DefaultConnection = Configuration.GetConnectionString("DefaultConnection");
         }
 
         [HttpGet]
 
-        public List<Motivos> GetMotivos(string descripcion, bool pasivo, int? IdDeposito, string descripcionDeposito)
+        public IActionResult GetMotivos(int idMotivo, string descripcion, bool pasivo, int? IdDeposito)
         {
-            List<Motivos> motivos = [];
-            DA_Motivos daM = new(Configuration.GetConnectionString("DefaultConnection"));
-
-            foreach (DataRow row in daM.ObtenerMotivos(descripcion, pasivo, IdDeposito, descripcionDeposito).Rows)
+            try
             {
-                Motivos m = new()
+                return Ok(ObtenerMotivos(idMotivo, descripcion, pasivo, IdDeposito));
+            }
+            catch (Exception ex)
+            {
+                //log
+                return StatusCode(500);
+            }
+        }
+
+        internal List<Motivo> ObtenerMotivos(int idMotivo, string descripcion, bool pasivo, int? IdDeposito)
+        {
+            List<Motivo> motivos = [];
+            DA_Motivos daM = new(DefaultConnection);
+
+            foreach (DataRow row in daM.ObtenerMotivos(idMotivo, descripcion, pasivo, IdDeposito).Rows)
+            {
+                Motivo m = new()
                 {
                     Descripcion = Convert.ToString(row["Descripcion"]),
                     Pasivo = Convert.ToBoolean(row["Pasivo"]),
                     IdDeposito = Convert.ToInt32(row["IdDeposito"]),
-                    DescripcionDeposito = Convert.ToString(row["DescripcionDeposito"])
+                    DescripcionDeposito = Convert.ToString(row["DescripcionDeposito"]),
                 };
+
+                if (row["VisibleDeposito"] != DBNull.Value)
+                    m.VisibleDeposito = Convert.ToBoolean(row["VisibleDeposito"]);
 
                 motivos.Add(m);
             }
@@ -41,16 +59,38 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut]
-        public IActionResult PutMotivos(Motivos motivos)
+        public IActionResult PutMotivo(Motivo motivo)
         {
             try
             {
-                DA_Motivos daM = new(Configuration.GetConnectionString("DefaultConnection"));
-                daM.EditarMotivos(motivos.Descripcion, !motivos.Pasivo);
-                return Ok();
+                DA_Motivos daM = new(DefaultConnection);
+
+                daM.EditarMotivos(motivo);
+                motivo.EdicionRegistro = DateTime.Now;
+
+                return Ok(motivo);
             }
             catch
             {
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult PostMotivo(Motivo motivo)
+        {
+            try
+            {
+                DA_Motivos daM = new(DefaultConnection);
+
+                motivo.IdMotivo = daM.InsertarMotivo(motivo);
+                motivo.AltaRegistro = DateTime.Now;
+
+                return Ok(motivo);
+            }
+            catch (Exception ex)
+            {
+                //log
                 return StatusCode(500);
             }
         }

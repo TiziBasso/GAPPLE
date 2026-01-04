@@ -1,11 +1,11 @@
 namespace GAPPLE.Shared.Helpers
 {
-
     public static class Permisos
     {
         public static class Menu
         {
             public static string NotasCredito => "Notas de credito";
+            public static string Motivos => "Motivos";
         }
         public static string Alta => "alta";
         public static string Edicion => "edicion";

@@ -797,7 +797,7 @@ else
                 RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PostPedido(orden);
                 RadzenDialogService.CloseDialog();
-                if (result.IsSuccessStatusCode)
+                if (result.IsOk)
                 {
                     //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
                     NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());

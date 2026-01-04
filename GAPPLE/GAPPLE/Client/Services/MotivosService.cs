@@ -14,38 +14,47 @@ namespace GAPPLE.Client.Services
         private const string URI_BASE = "api/motivos";
         public MotivosService(HttpClient httpClient) => HttpClient = httpClient;
 
-        public async ValueTask<List<Motivos>> GetMotivos(string Descripcion = null, bool? Pasivo = null, int? IdDesposito = null, string DescripcionDesposito = null)
+        public async ValueTask<List<Motivo>> GetMotivos(int? idMotivo = null, string descripcion = null, bool? pasivo = null, int? idDesposito = null)
         {
 
             string uri = $"{URI_BASE}";
-            Dictionary<string, object> query = new();
-            if (Descripcion != null) query["Descripcion"] = Descripcion;
-            if (Pasivo != null) query["Pasivo"] = Pasivo;
-            if (IdDesposito != null) query["IdDeposito"] = IdDesposito;
-            if (DescripcionDesposito != null) query["DescripcionDeposito"] = DescripcionDesposito;
+            Dictionary<string, object> query = [];
+            if (idMotivo != null) query["idMotivo"] = idMotivo;
+            if (descripcion != null) query["descripcion"] = descripcion;
+            if (pasivo != null) query["pasivo"] = pasivo;
+            if (idDesposito != null) query["idDeposito"] = idDesposito;
 
-            if (query.Any())
+            if (query.Count != 0)
                 uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
-            return await HttpClient.GetFromJsonAsync<List<Motivos>>(uri);
-        }
+            var response = await HttpClient.GetAsync(uri);
 
-        public async ValueTask<Response> PutMotivos(Motivos motivos)
-        {
-
-            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", motivos);
             if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return new(true);
-            }
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
-            else
-                return new(false);
+                return await response.Content.ReadFromJsonAsync<List<Motivo>>();
+
+            return null;
         }
 
-      
+        public async ValueTask<Response> PutMotivo(Motivo motivo)
+        {
+            motivo.EdicionUsuario = SesionDTO.Nombre;
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", motivo);
 
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Motivo>());
 
+            return await Response.CreateAsync(response);
+        }
+
+        public async ValueTask<Response> PostMotivo(Motivo motivo)
+        {
+            motivo.AltaUsuario = SesionDTO.Nombre;
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", motivo);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Motivo>());
+
+            return await Response.CreateAsync(response);
+        }
     }
 }

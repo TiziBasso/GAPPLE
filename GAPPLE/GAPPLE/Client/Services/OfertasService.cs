@@ -10,9 +10,11 @@ namespace GAPPLE.Client.Services
     {
         [Inject]
         private HttpClient HttpClient { get; set; }
+        [Inject]
+        private SesionDTO SesionDTO { get; set; }
         private const string URI_BASE = "api/ofertas";
 
-        public OfertasService(HttpClient httpClient) => HttpClient = httpClient;
+        public OfertasService(HttpClient httpClient, SesionDTO sesionDTO) => (HttpClient, SesionDTO) = (httpClient, sesionDTO);
 
         public async ValueTask<List<Oferta>> GetOfertas(string? nombre, string? linea, DateTime? desde, DateTime? hasta, bool? activas = null)
         {
@@ -32,28 +34,26 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<Response> PostOferta(Oferta oferta)
         {
+            oferta.AltaUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", oferta);
             if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return new(true);
-            }
+                return new(response.StatusCode);
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+                return new(response.StatusCode, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
 
         public async ValueTask<Response> PutOferta(Oferta oferta)
         {
+            oferta.EdicionUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", oferta);
             if (response.StatusCode == HttpStatusCode.OK)
-            {
-                return new(true);
-            }
+                return new(response.StatusCode);
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+                return new(response.StatusCode, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
     }
 }

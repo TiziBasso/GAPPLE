@@ -1,0 +1,155 @@
+﻿@page "/motivos"
+
+@using GAPPLE.Shared.Helpers;
+
+@inject SeguridadService SeguridadService
+@inject RadzenDialogService RadzenDialogService
+@inject MotivosService MotivosService
+@inject DepositosService DepositosService
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Motivos" class="mb-3" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End">
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="codigo" />
+            <NumberInput @bind-Value=idMotivo id="codigo" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Descripción:" Component="descripcion" />
+            <TextAreaInput @bind-Value=descripcion id="descripcion" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="estado" />
+            <RadzenDropDown Data=@Variables.EstadosBool @bind-Value=@pasivo Name="estado"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            AllowClear=true Placeholder="(Todos)" Style="width: 9rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Depósito:" Component="deposito" />
+            <RadzenDropDown Data=depositos @bind-Value=@idDesposito Name="deposito"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" />
+        </RadzenStack>
+
+
+        <RadzenButton Click="FillMotivos" ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />
+
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenButton Icon="add" Text="Nueva nota de crédito" Size="ButtonSize.Small" Click="NuevoMotivo" Visible=permiteAlta />
+    </RadzenStack>
+
+    <RadzenDataGrid @ref=grid Data="motivos" AllowSorting=true AllowFiltering=true ColumnWidth="200px" Density="Density.Compact" AllowColumnResize=true>
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Motivo.IdMotivo)" Title="Cód." Width="100px" Filterable=false />
+            <RadzenDataGridColumn Property="@nameof(Motivo.Descripcion)" Title="Descripción" />
+            <RadzenDataGridColumn Property="@nameof(Motivo.Pasivo)" Title="Pasivo" Width="100px" TextAlign="TextAlign.Center">
+                <Template>
+                    <RadzenCheckBox Value="context.Pasivo" ReadOnly=true Style="cursor:default" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Motivo.DescripcionDeposito)" Title="Depósito" />
+            <RadzenDataGridColumn Property="@nameof(Motivo.VisibleDeposito)" Title="Depósito visible" TextAlign="TextAlign.Center">
+                <Template>
+                    <RadzenCheckBox Value="context.VisibleDeposito" ReadOnly=true Style="cursor:default" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Motivo.AltaUsuario)" Title="Alta usuario" />
+            <RadzenDataGridColumn Property="@nameof(Motivo.AltaRegistro)" Title="Alta registro" FormatString="{0:dd/MM/yyyy HH:mm}" />
+            <RadzenDataGridColumn Property="@nameof(Motivo.EdicionUsuario)" Title="Edición usuario" />
+            <RadzenDataGridColumn Property="@nameof(Motivo.EdicionRegistro)" Title="Edición registro" FormatString="{0:dd/MM/yyyy HH:mm}" />
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion>
+                <Template>
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(()=>EditarMotivo(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage, permiteAlta, permiteEdicion;
+
+    int? idMotivo, idDesposito;
+    string descripcion = null;
+    bool? pasivo = null;
+
+    List<Opcion> depositos = [new((int?)null, "(Todos)")];
+    List<Motivo> motivos = [];
+    RadzenDataGrid<Motivo> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos(GAPPLE.Shared.Helpers.Permisos.Menu.NotasCredito);
+        permiteAlta = permisos.Contains(GAPPLE.Shared.Helpers.Permisos.Alta);
+        permiteEdicion = permisos.Contains(GAPPLE.Shared.Helpers.Permisos.Edicion);
+
+        var aux = await DepositosService.GetDepositos();
+        depositos.AddRange(aux.Select(x => new Opcion(x.IdDeposito, x.Descripcion)));
+        showPage = true;
+    }
+
+    private async Task FillMotivos()
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        var response = await MotivosService.GetMotivos(idMotivo, string.IsNullOrWhiteSpace(descripcion) ? null : descripcion, pasivo, idDesposito);
+        RadzenDialogService.CloseDialog();
+
+        if (response == null)
+            RadzenDialogService.NotifyInternalServerError();
+        else
+        {
+            motivos = response;
+            await grid.Reload();
+        }
+    }
+
+    private async Task NuevoMotivo()
+    {
+        await RadzenDialogService.OpenAsync<MotivoForm>("Nuevo motivo", new() { { "AfterSave", EventCallback.Factory.Create<Motivo>(this, AfterPost) },
+                                                                                { "Motivo", new Motivo() },
+                                                                                { "TipoOperacion", TipoOperacionEnum.Alta} }, new() { Width = "20rem", Height = "25rem" });
+    }
+
+    private async Task AfterPost(Motivo motivo)
+    {
+        motivos.Add(motivo);
+        await grid.Reload();
+        RadzenDialogService.CloseDialog();
+    }
+
+    private async Task EditarMotivo(Motivo motivo)
+    {
+        await RadzenDialogService.OpenAsync<MotivoForm>($"Motivo {motivo.IdMotivo}: {motivo.Descripcion}",
+                                                        new() {{ "AfterSave", EventCallback.Factory.Create<Motivo>(this, AfterPut)},
+                                                                {"Motivo", motivo}, {"TipoOperacion", TipoOperacionEnum.Edicion } },
+                                                        new() { Width = "20rem", Height = "25rem" });
+    }
+
+    private async Task AfterPut(Motivo motivo)
+    {
+        var index = motivos.FindIndex(x => x.IdMotivo == motivo.IdMotivo);
+        motivos[index] = motivo;
+        await grid.Reload();
+        RadzenDialogService.CloseDialog();
+    }
+
+    private async Task OnKeyDown(string key)
+    {
+        if (key == KeyboardKeys.Enter)
+            await FillMotivos();
+    }
+}
