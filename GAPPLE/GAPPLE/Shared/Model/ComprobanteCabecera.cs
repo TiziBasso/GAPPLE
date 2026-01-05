@@ -1,5 +1,6 @@
 ﻿using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace GAPPLE.Shared.Model
 {
@@ -17,8 +18,11 @@ namespace GAPPLE.Shared.Model
         [ColumnName("TipoComprobante")]
         public string TipoComprobante { get; set; }
 
-        [ColumnName("IdCliente")]
+        [ColumnName("IdCliente"), Required(ErrorMessage = "Debe seleccionar un cliente")]
         public int? IdCliente { get; set; }
+
+        [ColumnName("CodCliente")]
+        public string CodCliente { get; set; }
 
         [ColumnName("ClienteRazonSocial")]
         public string ClienteRazonSocial { get; set; }
@@ -56,11 +60,24 @@ namespace GAPPLE.Shared.Model
         [ColumnName("Fecha")]
         public DateOnly FechaComprobante { get; set; }
 
-        [ColumnName("Observaciones")]
+        [ColumnName("Observaciones"), MaxLength(50, ErrorMessage ="La longitud máxima es de 50 caracteres")]
         public string Observaciones { get; set; }
 
         [ColumnName("ImporteTotal")]
         public decimal ImporteTotal { get; set; }
+
+        [ColumnName("IdListaPrecio"), Required(ErrorMessage = "Debe seleccionar una lista de precio")]
+        public int? IdListaPrecio { get; set; }
+
+        [ColumnName("CodListaPrecio")]
+        public string CodListaPrecio { get; set; }
+
+        [ColumnName("DescripcionListaPrecio")]
+        public string DescripcionListaPrecio { get; set; }
+
+        public bool Factura { get; set; }
+
+        public bool Presupuesto { get; set; }
 
         public List<ComprobanteDetalle> Detalle { get; set; }
     }

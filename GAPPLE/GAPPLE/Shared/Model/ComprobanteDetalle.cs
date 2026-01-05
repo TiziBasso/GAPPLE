@@ -13,6 +13,9 @@ namespace GAPPLE.Shared.Model
         [ColumnName("CodProducto")]
         public string CodProducto { get; set; }
 
+        [ColumnName("DescripcionProducto")]
+        public string DescripcionProducto { get; set; }
+
         [ColumnName("Cantidad")]
         public int Cantidad { get; set; }
 
@@ -21,6 +24,9 @@ namespace GAPPLE.Shared.Model
 
         [ColumnName("Descuento")]
         public decimal Descuento { get; set; }
+
+        public decimal PrecioConDescuento { get => Precio * (1 - Descuento / 100); }
+        public decimal PrecioTotal { get => PrecioConDescuento * Cantidad; }
 
         [ColumnName("Detalle")]
         public string Detalle { get; set; }

@@ -32,5 +32,6 @@ namespace GAPPLE.Shared.Helpers
         public static string ReenviarFactura => "ReenviarFactura";
         public static string GenerarRemito => "generarRemito";
         public static string SubEstados => "subEstados";
+        public static string ListaPrecio => "listaPrecioManual";
     }
 }

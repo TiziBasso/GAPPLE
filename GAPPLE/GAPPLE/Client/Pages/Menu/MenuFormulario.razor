@@ -102,7 +102,7 @@ else
     bool loaderContainerVisible = true;
     IList<Menu> selectedMenu;
     int render = 0;
-    Operaciones operacion;
+    TipoOperacionEnum operacion;
 
     protected override async Task OnInitializedAsync()
     {
@@ -138,7 +138,7 @@ else
 
     async Task OnAdd(Menu nodo)
     {
-        operacion = Operaciones.Alta;
+        operacion = TipoOperacionEnum.Alta;
         Menu permiso = new Menu() { IdPadre = nodo.IdPermiso, Tipo = 'M', Orden = Data.FindAll(x => x.IdPadre == nodo.IdPermiso).Count + 1 };
         permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
         {
@@ -153,7 +153,7 @@ else
         if (nodo != null)
         {
             RadzenDialogService.OpenBusyWithLoader();
-            if (operacion == Operaciones.Alta)
+            if (operacion == TipoOperacionEnum.Alta)
             {
                 nodo = await SeguridadService.PostPermiso(nodo);
                 Data.Add(nodo);
@@ -177,7 +177,7 @@ else
 
     async Task OnEdit(Menu nodo)
     {
-        operacion = Operaciones.Edicion;
+        operacion = TipoOperacionEnum.Edicion;
         var permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
         {
             {"permiso", nodo},

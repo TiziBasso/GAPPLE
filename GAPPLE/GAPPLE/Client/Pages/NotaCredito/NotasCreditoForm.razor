@@ -1,8 +1,274 @@
-﻿@page "/notascredito/{Operacion}"
+﻿@page "/notascredito/{OperacionQuery}"
+@page "/notascredito/{OperacionQuery}/{IdQuery:int}"
+
+@inject SeguridadService SeguridadService
+@inject NavigationManager NavigationManager
+@inject OrdenesService OrdenesService
+@inject RadzenDialogService RadzenDialogService
 
 @if (showPage)
 {
+    <RadzenTemplateForm Data="comprobante" TItem="ComprobanteCabecera" Submit="Guardar" EditContext="editContext"
+                        Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
+        <DataAnnotationsValidator />
+        <CustomValidation @ref="customValidation" />
 
+        <RadzenFieldset AllowCollapse="true" Text="@($"Datos de cabecera {comprobante.ClienteRazonSocial ?? "Seleccionar cliente"}")">
+            <RadzenRow Style="margin-top:10px;">
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Cliente:" />
+                        <RadzenDropDownDataGrid Data="clientes" @bind-Value="comprobante.IdCliente" AllowSorting=false
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.IdCliente)"
+                                                AllowVirtualization="true" Change="ChangeCliente" Name="clientes" Density="Density.Compact">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => comprobante.IdCliente)" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                @* <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Zona:" />
+                        <RadzenDropDownDataGrid Data="zonas" Disabled="true" @bind-Value="comprobante.Zona" AllowSorting=false
+                                                TextProperty="@nameof(Zonas.Descripcion)" ValueProperty="@nameof(Zonas.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Zonas.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Zonas.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.Zona)" />
+                    </RadzenStack>
+                </RadzenColumn> *@
+
+                @* <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+
+                        <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
+                        @if (!unico)
+                        {
+                            <RadzenDropDownDataGrid Data="sucursalesPorClientes" @bind-Value="orden.Entrega" AllowSorting=false
+                                                    AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                    TextProperty="@nameof(SucursalesPorCliente.DireccionCompleta)" ValueProperty="@nameof(SucursalesPorCliente.DireccionCompleta)"
+                                                    AllowVirtualization="true" Name="sucursalesporcliente" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Direccion)" Title="Dirección" Width="9rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Localidad)" Title="Localidad" Width="8rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.CodigoPostal)" Title="Cod.Postal" Width="5rem" />
+                                    <RadzenDropDownDataGridColumn Property="@nameof(SucursalesPorCliente.Habitual)" Title="Habitual" Width="4rem">
+                                        <Template Context="sucCliente">
+                                            @if (sucCliente.Habitual)
+                                            {
+                                                <span>SÍ</span>
+                                            }
+                                            else
+                                            {
+                                                <span>NO</span>
+                                            }
+                                        </Template>
+                                    </RadzenDropDownDataGridColumn>
+                                </Columns>
+                            </RadzenDropDownDataGrid>
+                        }
+                        else
+                        {
+                            <RadzenTextBox Disabled="unico" @bind-Value=entrega />
+                        }
+                        <ValidationMessage For="@(() => orden.Entrega)" />
+                    </RadzenStack>
+                </RadzenColumn> *@
+            </RadzenRow>
+
+            <RadzenRow Style="margin-top:10px;">
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Lista de precios:" />
+                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="comprobante.IdListaPrecio" Disabled="@(listaPrecioManual)" Density="Density.Compact" Change=ChangeListaPrecio
+                                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true FilterOperator="StringFilterOperator.Contains">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4.5rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => comprobante.IdListaPrecio)" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                @* <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Cond.Venta:" />
+                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                        <ValidationMessage For="@(() => orden.CondicionVenta)" />
+                    </RadzenStack>
+                </RadzenColumn> *@
+
+                @* <RadzenColumn Size="3">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="F.Entrega:" />
+                        <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
+                    </RadzenStack>
+                    <ValidationMessage For="@(() => orden.FechaEntrega)" />
+                </RadzenColumn> *@
+            </RadzenRow>
+
+            <RadzenRow Style="margin-top:10px;">
+                @* <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Transporte:" />
+                        <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
+                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
+                                                TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
+                            <Columns>
+                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código" Width="4rem" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción" />
+                            </Columns>
+                        </RadzenDropDownDataGrid>
+                    </RadzenStack>
+                </RadzenColumn> *@
+
+                <RadzenColumn Size="3">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Observaciones:" />
+                        <InputTextArea @bind-Value="comprobante.Observaciones" />
+                        <ValidationMessage For="@(() => comprobante.Observaciones)" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                <RadzenColumn Size="2">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenLabel Text="F:" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Factura" />
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenLabel Text="P:" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenFieldset>
+
+        <RadzenDataGrid @ref=grid Data="comprobante.Detalle" Style="display:grid; min-height:30rem;" ShowEmptyMessage=false ColumnWidth="200px"
+                        Density="Density.Compact"
+                        AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+            <HeaderTemplate>
+                <RadzenButton Disabled=@(editMode) Icon="add" Text="Agregar producto" Click="OnAddProducto" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Disabled=@(editMode) Icon="search" Text="Buscar productos" Click="OnBuscarProductos" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Disabled=@(editMode) Icon="add_notes" Text="Cargar excel" Click="OnCargarArchivo" Size="ButtonSize.Small" />
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.CodProducto)" Title="Cód." Width="45px" />
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.DescripcionProducto)" Title="Descripción" Width="50px" />
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.Cantidad)" Title="Cant. P" Width="25px" TextAlign="TextAlign.Right" Visible=@(comprobante.Presupuesto)>
+                    <FooterTemplate>
+                        <strong>
+                            Total P: @(comprobante.Detalle.Sum(x => x.Cantidad).ToString("N2"))
+                        </strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="25px" TextAlign="TextAlign.Right" Visible=@(comprobante.Factura)>
+                    <FooterTemplate>
+                        <strong>
+                            Total F: @(comprobante.Detalle.Sum(x => x.Cantidad).ToString("N2"))
+                        </strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Cant. T" Width="50px" TextAlign="TextAlign.Right" Context="data" Visible=@(comprobante.Factura && comprobante.Presupuesto)>
+                    <Template>
+                        @(data.Cantidad * 2)
+                    </Template>
+                    <FooterTemplate>
+                        <strong>
+                            Total: @((comprobante.Detalle.Sum(x => x.Cantidad) * 2).ToString("N2"))
+                        </strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                @* <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="40px" TextAlign="TextAlign.Right" /> *@
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.Descuento)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right">
+                    <Template Context="data">
+                        @if (descuentoManual)
+                        {
+                            <RadzenNumeric @bind-Value=data.Descuento Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
+                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" />
+                        }
+                        else
+                        {
+                            @data.Descuento
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.Precio)" Title="Unitario" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.PrecioConDescuento)" Title="Unit. c/desc" Width="55px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.PrecioTotal)" Context="precio" Title="Total" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                    <Template>
+                        @if (comprobante.Presupuesto && comprobante.Factura)
+                        {
+                            <span>
+                                $@((precio.PrecioTotal * 2).ToString("N2"))
+                            </span>
+                        }
+                        else if (comprobante.Presupuesto || comprobante.Factura)
+                        {
+                            <span>
+                                $@precio.PrecioTotal.ToString("N2")
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                $@((0).ToString("N2"))
+                            </span>
+                        }
+                    </Template>
+                    <FooterTemplate>
+                        @if (comprobante.Presupuesto && comprobante.Factura)
+                        {
+                            <strong>
+                                Total: $@((comprobante.Detalle.Sum(x => x.PrecioTotal) * 2).ToString("N2"))
+                            </strong>
+                        }
+                        else if (comprobante.Presupuesto || comprobante.Factura)
+                        {
+                            <strong>
+                                Total: $@(comprobante.Detalle.Sum(x => x.PrecioTotal).ToString("N2"))
+                            </strong>
+                        }
+                        else
+                        {
+                            <strong>
+                                Total: $@((0).ToString("N2"))
+                            </strong>
+                        }
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                @* <RadzenDataGridColumn Width="20px" Frozen=true FrozenPosition="FrozenColumnPosition.Right" Resizable=false TextAlign="TextAlign.Center">
+            <Template Context="data">
+            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.ExtraSmall" Click="@(()=>DeleteRow(data))" />
+            </Template>
+            </RadzenDataGridColumn> *@
+            </Columns>
+        </RadzenDataGrid>
+
+        <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
+            <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+            <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
+        </RadzenStack>
+
+    </RadzenTemplateForm>
 }
 else
 {
@@ -10,12 +276,99 @@ else
 }
 
 @code {
-    [Parameter] public string Operacion { get; set; }
+    [Parameter] public string OperacionQuery { get; set; }
+    [Parameter] public int? IdQuery { get; set; }
+    TipoOperacionEnum tipoOperacion;
 
-    bool showPage;
+    bool showPage, editMode;
+    ComprobanteCabecera comprobante;
+    EditContext editContext;
+    CustomValidation customValidation;
 
+    List<Cliente> clientes;
+    List<ListaDePrecios> listasDePrecio;
+    RadzenDataGrid<ComprobanteDetalle> grid;
+    bool listaPrecioManual, descuentoManual;
     protected override async Task OnInitializedAsync()
     {
+        var permisos = await SeguridadService.ValidatePageAccess(Permisos.Menu.NotasCredito);
+        ToolsHelpers tH = new(NavigationManager);
+        tH.Validate(OperacionQuery, IdQuery);
+        tipoOperacion = tH.ObtenerOperacion(OperacionQuery);
+
+        if (!permisos.Contains(tipoOperacion.ToString().ToLower()))
+        {
+            await RadzenDialogService.ShowAlertAsync("No tiene permiso para realizar la operación", MensajesHelper.Title);
+            BackPage();
+            return;
+        }
+        listaPrecioManual = permisos.Contains(Permisos.ListaPrecio);
+
+        if (tipoOperacion == TipoOperacionEnum.Alta)
+        {
+            comprobante = new();
+
+        }
+        else if (tipoOperacion == TipoOperacionEnum.Edicion)
+        {
+            comprobante = await OrdenesService.GetNotaCredito((int)IdQuery);
+            if (comprobante == null)
+            {
+                RadzenDialogService.NotifyInternalServerError();
+                BackPage();
+            }
+            else if (comprobante.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente)
+            {
+                await RadzenDialogService.ShowAlertAsync("La nota de crédito no se encuentra en estado \"Pendiente\" y no puede ser editada", MensajesHelper.Title);
+                BackPage();
+            }
+        }
+
+
+        editContext = new(comprobante);
         showPage = true;
+    }
+
+    private void BackPage() => NavigationManager.NavigateTo("notascredito");
+
+    private void ChangeDescuento(ComprobanteDetalle d)
+    {
+        grid.UpdateRow(d);
+    }
+
+    private async Task ChangeCliente()
+    {
+
+    }
+
+    private async Task ChangeListaPrecio()
+    {
+
+    }
+
+    private async Task OnCargarArchivo()
+    {
+
+    }
+
+    private async Task OnAddProducto()
+    {
+
+    }
+
+    private async Task OnBuscarProductos()
+    {
+
+    }
+
+    private async Task Guardar()
+    {
+
+    }
+
+    private async Task Cancelar()
+    {
+        if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
+            BackPage();
     }
 }
