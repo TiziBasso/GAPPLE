@@ -10,9 +10,10 @@ namespace GAPPLE.Client.Services
     {
         [Inject]
         private HttpClient HttpClient { get; set; }
+        [Inject]
         private SesionDTO SesionDTO { get; }
         private const string URI_BASE = "api/motivos";
-        public MotivosService(HttpClient httpClient) => HttpClient = httpClient;
+        public MotivosService(HttpClient httpClient, SesionDTO sesionDTO) => (HttpClient, SesionDTO) = (httpClient, sesionDTO);
 
         public async ValueTask<List<Motivo>> GetMotivos(int? idMotivo = null, string descripcion = null, bool? pasivo = null, int? idDesposito = null)
         {
@@ -49,7 +50,7 @@ namespace GAPPLE.Client.Services
         public async ValueTask<Response> PostMotivo(Motivo motivo)
         {
             motivo.AltaUsuario = SesionDTO.Nombre;
-            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", motivo);
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", motivo);
 
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Motivo>());

@@ -1,4 +1,5 @@
 ﻿using GAPPLE.Server.Data;
+using GAPPLE.Server.Tools;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -21,7 +22,7 @@ namespace GAPPLE.Server.Controllers
 
         [HttpGet]
 
-        public IActionResult GetMotivos(int idMotivo, string descripcion, bool pasivo, int? IdDeposito)
+        public IActionResult GetMotivos(int? idMotivo, string descripcion, bool? pasivo, int? IdDeposito)
         {
             try
             {
@@ -34,26 +35,13 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        internal List<Motivo> ObtenerMotivos(int idMotivo, string descripcion, bool pasivo, int? IdDeposito)
+        internal List<Motivo> ObtenerMotivos(int? idMotivo, string descripcion, bool? pasivo, int? IdDeposito)
         {
             List<Motivo> motivos = [];
             DA_Motivos daM = new(DefaultConnection);
 
             foreach (DataRow row in daM.ObtenerMotivos(idMotivo, descripcion, pasivo, IdDeposito).Rows)
-            {
-                Motivo m = new()
-                {
-                    Descripcion = Convert.ToString(row["Descripcion"]),
-                    Pasivo = Convert.ToBoolean(row["Pasivo"]),
-                    IdDeposito = Convert.ToInt32(row["IdDeposito"]),
-                    DescripcionDeposito = Convert.ToString(row["DescripcionDeposito"]),
-                };
-
-                if (row["VisibleDeposito"] != DBNull.Value)
-                    m.VisibleDeposito = Convert.ToBoolean(row["VisibleDeposito"]);
-
-                motivos.Add(m);
-            }
+                motivos.Add(DataRowHelper.MapDataRowTo<Motivo>(row));
 
             return motivos;
         }
