@@ -18,11 +18,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public List<Cliente> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null, string domicilio = null, string? cPostal = null, string localidad = null, int? idUsuario = null)
+        public List<Cliente> GetClientes(int? idCliente = null, string codCliente = null, string razonSocial = null, string cuit = null, bool? clienteEspecial = null, int? idUsuario = null)
         {
             DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Cliente> lst = new();
-            foreach (DataRow row in daC.ObtenerClientes(codCliente, razonSocial?.Trim(), cuit, clienteEspecial, idUsuario, null).Rows)
+            foreach (DataRow row in daC.ObtenerClientes(idCliente, codCliente, razonSocial?.Trim(), cuit, clienteEspecial, idUsuario, null).Rows)
             {
                 Cliente c = new()
                 {
@@ -40,6 +40,7 @@ namespace GAPPLE.Server.Controllers
                     ZonaDefault = row["Zona"].ToString()!
                 };
                 if (row["ID_GVA"] != DBNull.Value) c.Id_GVA = int.Parse(row["ID_GVA"].ToString());
+                if (row["CategoriaIVA"] != DBNull.Value) c.CategoriaIva = row["CategoriaIVA"].ToString();
                 lst.Add(c);
             }
             return lst;

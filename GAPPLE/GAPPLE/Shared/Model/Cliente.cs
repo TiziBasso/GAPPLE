@@ -26,5 +26,6 @@ namespace GAPPLE.Shared.Model
         public string? CodigoPostal { get; set; }
         public string? Localidad { get; set; }
         public string? ZonaDefault { get; set; }
+        public string CategoriaIva { get; set; }
     }
 }

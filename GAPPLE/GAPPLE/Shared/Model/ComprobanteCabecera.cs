@@ -63,6 +63,9 @@ namespace GAPPLE.Shared.Model
         [ColumnName("Observaciones"), MaxLength(50, ErrorMessage ="La longitud máxima es de 50 caracteres")]
         public string Observaciones { get; set; }
 
+        [ColumnName("ComprobanteReferencia"), MaxLength(20, ErrorMessage = "La longitud máxima es de 20 caracteres")]
+        public string ComprobanteReferencia { get; set; }
+
         [ColumnName("ImporteTotal")]
         public decimal ImporteTotal { get; set; }
 

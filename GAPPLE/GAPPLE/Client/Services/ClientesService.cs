@@ -20,7 +20,7 @@ namespace GAPPLE.Client.Services
             SesionDTO = sesionDTO;
         }
 
-        public async ValueTask<List<Cliente>> GetClientes(string? codCliente = null, string? razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
+        public async ValueTask<List<Cliente>> GetClientes(string codCliente = null, string razonSocial = null, string cuit = null, bool? clienteEspecial = null, int? idCliente = null)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
@@ -28,6 +28,7 @@ namespace GAPPLE.Client.Services
             if (codCliente != null) query["codCliente"] = codCliente;
             if (razonSocial != null) query["razonSocial"] = razonSocial.Trim();
             if (cuit != null) query["cuit"] = cuit;
+            if (idCliente != null) query["idCliente"] = idCliente;
             query["idUsuario"] = SesionDTO.IdUsuario;
 
 

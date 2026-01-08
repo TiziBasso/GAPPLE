@@ -1,4 +1,5 @@
 ﻿@page "/notascredito"
+@using GAPPLE.Client.Components.Cliente
 
 @inject ToolsService ToolsService
 @inject SeguridadService SeguridadService
@@ -196,7 +197,9 @@ else
 
     private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
 
-    private void NuevaNotaCredito() => NavigationManager.NavigateTo("notascredito/alta");
+    private async Task NuevaNotaCredito() => await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente", new() { { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) } }, new() { Width = "40rem", Height = "30rem" });
+
+    private void OnSelectCliente(Cliente cliente) => NavigationManager.NavigateTo($"notascredito/alta/{cliente.IdCliente}");
 
     private async Task OnKeyDown(string key)
     {

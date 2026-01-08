@@ -32,11 +32,11 @@ namespace GAPPLE.Client.Services
                 return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}?{stringJoin}", cancellationToken.Token);
         }
 
-        public async ValueTask<Producto> GetProducto(int? codigoInterno, int? idProducto = null)
+        public async ValueTask<Producto> GetProducto(string codigoProducto, int idListaPrecio)
         {
             Dictionary<string, object> query = new();
-            if (idProducto != null) query["idProducto"] = idProducto;
-            if (codigoInterno != null) query["codigoInterno"] = codigoInterno;
+            query["codigoProducto"] = codigoProducto;
+            query["idListaPrecio"] = idListaPrecio;
 
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 

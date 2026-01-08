@@ -1,0 +1,58 @@
+﻿@inject ClientesService ClientesService
+@inject RadzenDialogService RadzenDialogService
+
+@if (showModal)
+{
+    <RadzenDataGrid TItem="Cliente" Data="clientes" @bind-Value="selected" Style="width:100%; height:100%;"
+                    Density="Density.Compact" AllowFiltering=true AllowSorting="true" AllowColumnResize="true"
+                    SelectionMode="DataGridSelectionMode.Single" RowDoubleClick="@OnDoubleClick" ColumnWidth="150px">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Cód. cliente" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón social" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.NombreComercial)" Title="Nombre comercial" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CUIT)" Title="CUIT" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CategoriaIva)" Title="Tipo IVA" />
+
+            <RadzenDataGridColumn Width="35px" TextAlign="TextAlign.Center">
+                <Template>
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => Select(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public EventCallback<Cliente> OnSelect { get; set; }
+
+    bool showModal;
+
+    IList<Cliente> selected = [];
+    List<Cliente> clientes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientes = await ClientesService.GetClientes();
+        showModal = true;
+    }
+
+    private async Task OnDoubleClick(DataGridRowMouseEventArgs<Cliente> args)
+    {
+        selected = new List<Cliente>() { args.Data };
+        await Select();
+    }
+
+    private async Task Select(Cliente cliente)
+    {
+        if (await RadzenDialogService.ConfirmOperation("seleccionar el cliente", cliente.RazonSocial))
+            await OnSelect.InvokeAsync(cliente);
+    }
+
+    private async Task Select() =>
+        await Select(selected.First());
+
+}
