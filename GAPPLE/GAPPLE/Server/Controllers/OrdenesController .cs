@@ -570,7 +570,8 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                    daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
+                    if(!string.IsNullOrEmpty(response.Message))
+                        daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
                 }
 
                 if (ModelState.ErrorCount > 0)
@@ -625,11 +626,11 @@ namespace GAPPLE.Server.Controllers
             {
                 if (!ordenFull.Detalle.Exists(x => x.CantidadProbadorAprobada > 0))
                 {
-                    return new(true, "Orden con probadores");
+                    return new(true, string.Empty);
                 }
                 else
                 {
-                    return new(true, "Orden con obsequios");
+                    return new(true, string.Empty);
                 }
             }
 
