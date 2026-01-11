@@ -52,13 +52,13 @@ namespace GAPPLE.Shared.Model
         public string EstadoDescripcion { get; set; }
 
         /// <summary>
-        /// Null = No ingrsa, False = Pendiente de ingreso mercadería, True = Mercadería ingresada
+        /// Null = No ingresa, False = Pendiente de ingreso mercadería, True = Mercadería ingresada
         /// </summary>
         [ColumnName("MercaderiaIngresada")]
         public bool? MercaderiaIngresada { get; set; }
 
         [ColumnName("Fecha")]
-        public DateOnly FechaComprobante { get; set; }
+        public DateTime FechaComprobante { get; set; }
 
         [ColumnName("Observaciones"), MaxLength(50, ErrorMessage ="La longitud máxima es de 50 caracteres")]
         public string Observaciones { get; set; }

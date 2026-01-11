@@ -603,11 +603,11 @@ namespace GAPPLE.Server.Controllers
             {
                 if (!ordenFull.Detalle.Exists(x => x.CantidadProbadorAprobada > 0))
                 {
-                    return new(true, string.Empty);
+                    return new(HttpStatusCode.OK, string.Empty);
                 }
                 else
                 {
-                    return new(true, string.Empty);
+                    return new(HttpStatusCode.OK, string.Empty);
                 }
             }
 

@@ -2,11 +2,12 @@
 
 @inject SeguridadService SeguridadService
 @inject NavigationManager NavigationManager
-@inject OrdenesService OrdenesService
+@inject ComprobantesService ComprobantesService
 @inject RadzenDialogService RadzenDialogService
 @inject ClientesService ClientesService
 @inject MotivosService MotivosService
 @inject ProductosService ProductosService
+@inject OrdenesService OrdenesService
 @inject IJSFunction JSFunction
 
 @if (showPage)
@@ -111,115 +112,6 @@
             </RadzenRow>
         </RadzenFieldset>
 
-        <RadzenDataGrid @ref="grid" Data="comprobante.Detalle" TItem="ComprobanteDetalle" Style="min-height: 180px;"
-                        Density="Density.Compact" IsLoading="isLoading" AllowAlternatingRows="false" EmptyText="@string.Empty" class="rz-mt-1">
-            <HeaderTemplate>
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
-
-                        <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" />
-                        <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" />
-                        @* <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Button" Icon="grid_on" Text="Cargar Excel" Click="@OnCargarArchivo" Size="ButtonSize.Small" /> *@
-
-                        <RadzenButton ButtonStyle="ButtonStyle.Base" Icon="draw" IconColor="@Colors.Secondary" Text="Detalle libre" Size="ButtonSize.Small"
-                                      Click="HandleClickDetalleLibre" title="Detalle libre" />
-                    </RadzenStack>
-
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="5rem" Style="width: fit-content;">
-                        <RadzenLabel Style="text-wrap:nowrap">
-                            Total de líneas: <strong>@(comprobante.Detalle.Count)</strong>
-                        </RadzenLabel>
-
-                        <RadzenLabel Style="text-wrap: nowrap; margin-right: 1.5rem;">
-                            Total unidades: <strong>
-                                @(comprobante.Detalle.Sum(x => x.Cantidad) *
-                                                            (comprobante.Presupuesto && comprobante.Factura
-                                                            ? 2
-                                                            : comprobante.Presupuesto || comprobante.Factura
-                                                            ? 1
-                                                            : 0))
-                            </strong>
-                        </RadzenLabel>
-                    </RadzenStack>
-                </RadzenStack>
-            </HeaderTemplate>
-            <Columns>
-                <RadzenDataGridColumn Title="SKU" TextAlign="TextAlign.Right" Width="100px" OrderIndex="0">
-                    <Template Context="data">
-                        @if (data.CodProducto == null && data.Detalle == null)
-                        {
-                            <input id=@($"sku{data.NumeroLinea}") type="number" @bind-value="data.CodProducto" @bind-value:event="oninput"
-                                   @onkeydown="@(args => HandleSKUOnKeyDown(args, data))" @onfocusout="@(() => HandleSKUOnFocusOut(data))"
-                                   arrowKeyBlocker enterKeyBlocker readonly="@isLoading"
-                                   class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
-                        }
-                        else
-                        {
-                            <text>@data.CodProducto</text>
-                        }
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.DescripcionProducto)" Title="Descripción" TextAlign="TextAlign.Left" />
-                <RadzenDataGridColumn Title="Cant" TextAlign="TextAlign.Right" Width="65px">
-                    <Template Context="data">
-                        <input id=@($"cant{data.NumeroLinea}") type="number" @bind-value="data.Cantidad"
-                               @onkeydown="@(args => KeyDownCant(args, data))" @onfocusout="@(() => OnFocusOutCant(data))"
-                               arrowKeyBlocker enterKeyBlocker
-                               class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Unitario" TextAlign="TextAlign.Right" Width="110px">
-                    <Template Context="data">
-                        @if (permiteModificarPreciosUnitarios)
-                        {
-                            <input id=@($"unit{data.NumeroLinea}") type="number" @bind-value="data.PrecioFinalParaInput"
-                                   @onkeydown="@(args => KeyDownUnit(args, data))" @onfocusout="@(() => OnFocusOutUnit(data))"
-                                   arrowKeyBlocker enterKeyBlocker
-                                   class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
-                        }
-                        else
-                        {
-                            @data.PrecioFinalSinDescuentoNiRecargo.ToString("N2")
-                        }
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="% Dto" TextAlign="TextAlign.Right" Width="65px">
-                    <Template Context="data">
-                        @if (Comprobante.Remito == null)
-                        {
-                            <input id=@($"desc{data.NumeroLinea}") type="number" @bind-value="data.PorcentajeDescuentoLinea"
-                                   @onkeydown="@(args => KeyDownDesc(args, data))" @onfocusout="@(() => OnFocusOutDesc(data))"
-                                   arrowKeyBlocker enterKeyBlocker
-                                   class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
-                        }
-                        else
-                        {
-                            @data.PorcentajeDescuentoLinea.ToString()
-                        }
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ComprobanteLinea.PrecioFinalConDescuentoLinea)" Title="Unit. c/dto." TextAlign="TextAlign.Right" Width="110px">
-                    <Template Context="data">
-                        $@data.PrecioFinalConDescuentoLinea.ToString("N2", new CultureInfo("es-AR"))
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ComprobanteLinea.TotalLineaConImpuestos)" Title="Total" TextAlign="TextAlign.Right" Width="130px">
-                    <Template Context="data">
-                        $@data.TotalLineaConImpuestosSinPromociones.ToString("N2", new CultureInfo("es-AR"))
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
-                    <Template Context="data">
-                        @if ((TipoComprobante != TiposComprobante.Remito && TipoComprobante != TiposComprobante.GenerarFactura) && Comprobante.Remito == null)
-                        {
-                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall"
-                                          Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" title="Eliminar" />
-                        }
-                    </Template>
-                </RadzenDataGridColumn>
-            </Columns>
-        </RadzenDataGrid>
-
         <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
             <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
             <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
@@ -279,7 +171,7 @@ else
             var cliente = aux.First();
             comprobante = new()
             {
-                FechaComprobante = DateOnly.FromDateTime(DateTime.Today),
+                FechaComprobante = DateTime.Today,
                 IdCliente = cliente.IdCliente,
                 ClienteCategoriaIVA = cliente.CategoriaIva,
                 ClienteCuit = cliente.CUIT,
@@ -291,7 +183,7 @@ else
         }
         else if (tipoOperacion == TipoOperacionEnum.Edicion)
         {
-            comprobante = await OrdenesService.GetNotaCredito((int)IdQuery);
+            comprobante = await ComprobantesService.GetNotaCredito((int)IdQuery);
             if (comprobante == null)
             {
                 RadzenDialogService.NotifyInternalServerError();

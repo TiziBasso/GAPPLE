@@ -5,7 +5,7 @@
 @inject SeguridadService SeguridadService
 @inject NavigationManager NavigationManager
 @inject RadzenDialogService RadzenDialogService
-@inject OrdenesService OrdenesService
+@inject ComprobantesService ComprobantesService
 
 @if (showPage)
 {
@@ -28,11 +28,10 @@
             <NumberInput @bind-Value=request.CodigoOrden id="codigoOrden" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
-        @* //TODO: Stored no acepta razon social
-            <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cliente:" Component="cliente" />
-            <TextAreaInput @bind-Value=request.RazonSocialCliente id="cliente" OnKeyDown="OnKeyDown"/>
-        </RadzenStack> *@
+            <TextAreaInput @bind-Value=request.RazonSocialCliente id="cliente" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="estado" />
@@ -102,18 +101,15 @@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCuit)" Title="Cuit" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCategoriaIVA)" Title="Tipo IVA" Width="100px" Resizable=false />
-            @* 
-                //TODO: vendedor? altaUsuario?
-            *@
-            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion>
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => EditarNotaCredito(context))" Disabled=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.ExtraSmall" Click="@(() => EditarNotaCredito(context))" Disabled=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) />
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteCancelar>
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteCancelar Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))" Disabled=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) />
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))" Disabled=@(context.IdEstado != ComprobanteCabeceraEstadoEnum.Aprobado) />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -129,11 +125,11 @@ else
     RadzenDataGrid<ComprobanteCabecera> grid;
     List<ComprobanteCabecera> comprobantes = [];
     ComprobanteCabeceraRequest request = new()
-    {
-        FechaDesde = DateTime.Today.AddDays(-15),
-        FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
-        IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-    };
+        {
+            FechaDesde = DateTime.Today.AddDays(-15),
+            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+            IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+        };
 
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
@@ -156,7 +152,7 @@ else
     private async Task FillOrdenes()
     {
         RadzenDialogService.OpenBusyWithLoader("Cargando...");
-        var response = await OrdenesService.GetNotasCredito(request);
+        var response = await ComprobantesService.GetNotasCredito(request);
         RadzenDialogService.CloseDialog();
 
         if (response == null)
@@ -173,18 +169,15 @@ else
         if (await RadzenDialogService.ConfirmOperation("cancelar", $"la nota de crédito {nota.CodigoOrden}"))
         {
             RadzenDialogService.OpenBusyWithLoader("Cancelando...");
-            var response = await OrdenesService.CancelarNotaCredito(nota);
+            var response = await ComprobantesService.CancelarNotaCredito(nota.IdComprobante);
             RadzenDialogService.CloseDialog();
             if (response.IsOk)
             {
                 var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
                 var obj = comprobantes[index];
-                var aux = (ComprobanteCabecera)response.Data;
 
-                obj.IdEstado = aux.IdEstado;
-                obj.EstadoDescripcion = aux.EstadoDescripcion;
-                obj.EdicionRegistro = aux.EdicionRegistro;
-                obj.EdicionUsuario = aux.EdicionUsuario;
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Cancelado;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == ComprobanteCabeceraEstadoEnum.Cancelado).Descripcion;
 
                 await grid.Reload();
             }
