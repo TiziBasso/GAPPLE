@@ -176,46 +176,92 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRender) return;
+
+        fetchingData = true;
+        StateHasChanged(); // mostrar loader YA
+
+        try
         {
-            fetchingData = true;
-            try
-            {
-                await Task.Delay(100);
-                cantidadesProductos = await OrdenesService.GetCantidadesDeProductos(idUsuario);
-                issues = await OrdenesService.GetOrdenDashboard(idUsuario);
-                indicadores = await OrdenesService.GetIndicadores(idUsuario);
-                openIssues = issues.Where(x => x.AltaRegistro != null);
-                closedIssues = issues.Where(x => x.FechaAprobacion != null);
+            await Task.Delay(100);
+            var t1 = OrdenesService.GetCantidadesDeProductos(idUsuario);
+            var t2 = OrdenesService.GetOrdenDashboard(idUsuario);
+            var t3 = OrdenesService.GetIndicadores(idUsuario);
 
-                closeRatio = closedIssues.Count() / (double)issues.Count();
-                closeRatioPercentage = closeRatio * 100;
+            await Task.WhenAll(t1, t2, t3);
 
-                openIssuesByDate = openIssues.GroupBy(issue => issue.AltaRegistro.Value)
-                        .Select(group => new IssueGroup
-                            {
-                                Week = group.Key,
-                                Count = group.Count()
-                            });
+            cantidadesProductos = await t1;
+            issues = await t2;
+            indicadores = await t3;
 
-                closedIssuesByDate = closedIssues.GroupBy(issue => issue.FechaAprobacion.Value)
-                        .Select(group => new IssueGroup
-                            {
-                                Week = group.Key,
-                                Count = group.Count()
-                            });
+            openIssues = issues.Where(x => x.AltaRegistro != null);
+            closedIssues = issues.Where(x => x.FechaAprobacion != null);
 
-                error = null;
-                fetchingData = false;
-            }
-            catch (Exception ex)
-            {
-                error = ex.Message;
-            }
+            closeRatio = closedIssues.Count() / (double)issues.Count();
+            closeRatioPercentage = closeRatio * 100;
 
+            openIssuesByDate = openIssues
+                .GroupBy(x => x.AltaRegistro!.Value)
+                .Select(g => new IssueGroup { Week = g.Key, Count = g.Count() });
+
+            closedIssuesByDate = closedIssues
+                .GroupBy(x => x.FechaAprobacion!.Value)
+                .Select(g => new IssueGroup { Week = g.Key, Count = g.Count() });
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            fetchingData = false;
             StateHasChanged();
         }
     }
+
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         fetchingData = true;
+    //         try
+    //         {
+    //             await Task.Delay(100);
+    //             cantidadesProductos = await OrdenesService.GetCantidadesDeProductos(idUsuario);
+    //             issues = await OrdenesService.GetOrdenDashboard(idUsuario);
+    //             indicadores = await OrdenesService.GetIndicadores(idUsuario);
+    //             openIssues = issues.Where(x => x.AltaRegistro != null);
+    //             closedIssues = issues.Where(x => x.FechaAprobacion != null);
+
+    //             closeRatio = closedIssues.Count() / (double)issues.Count();
+    //             closeRatioPercentage = closeRatio * 100;
+
+    //             openIssuesByDate = openIssues.GroupBy(issue => issue.AltaRegistro.Value)
+    //                     .Select(group => new IssueGroup
+    //                         {
+    //                             Week = group.Key,
+    //                             Count = group.Count()
+    //                         });
+
+    //             closedIssuesByDate = closedIssues.GroupBy(issue => issue.FechaAprobacion.Value)
+    //                     .Select(group => new IssueGroup
+    //                         {
+    //                             Week = group.Key,
+    //                             Count = group.Count()
+    //                         });
+
+    //             error = null;
+    //             fetchingData = false;
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             error = ex.Message;
+    //         }
+
+    //         StateHasChanged();
+    //     }
+    // }
 
     IEnumerable<IssueGroup> openIssuesByDate;
     IEnumerable<IssueGroup> closedIssuesByDate;

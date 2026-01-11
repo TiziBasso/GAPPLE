@@ -91,7 +91,7 @@ namespace GAPPLE.Client.Services
         {
             return await HttpClient.GetFromJsonAsync<List<Transporte>>($"{URI_BASE}/transportes");
         }
-        public async ValueTask<List<OrdenDashboard>> GetOrdenDashboard(int idUsuario)
+        public async Task<List<OrdenDashboard>> GetOrdenDashboard(int idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<List<OrdenDashboard>>($"{URI_BASE}/ordenDashboard?idUsuario={idUsuario}");
         }
@@ -276,12 +276,12 @@ namespace GAPPLE.Client.Services
             }
         }
 
-        public async ValueTask<CantidadesProductosDashboard> GetCantidadesDeProductos(int idUsuario)
+        public async Task<CantidadesProductosDashboard> GetCantidadesDeProductos(int idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos?idUsuario={idUsuario}");
         }
 
-        public async ValueTask<Indicadores> GetIndicadores(int idUsuario)
+        public async Task<Indicadores> GetIndicadores(int idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<Indicadores>($"{URI_BASE}/indicadores?idUsuario={idUsuario}");
         }
