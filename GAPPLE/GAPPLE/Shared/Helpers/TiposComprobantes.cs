@@ -59,10 +59,10 @@ namespace GAPPLE.Shared.Helpers
             return ObtenerTiposComprobante().FirstOrDefault(x => x.IdTipoComprobante == value);
         }
 
-        //public static List<char> ObtenerLetras()
-        //{
-        //    return ['A', 'B', 'C', 'M', 'R'];
-        //}
+        public static List<char> ObtenerLetras()
+        {
+            return ['A', 'X'];
+        }
 
         //public static List<char> ObtenerLetrasPorCategoria(string tipoIVA)
         //{

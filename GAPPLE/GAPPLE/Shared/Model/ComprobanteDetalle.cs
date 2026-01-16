@@ -4,6 +4,9 @@ namespace GAPPLE.Shared.Model
 {
     public class ComprobanteDetalle
     {
+        [ColumnName("IdProducto")]
+        public int IdProducto { get; set; }
+
         [ColumnName("IdComprobante")]
         public int IdComprobante { get; set; }
 

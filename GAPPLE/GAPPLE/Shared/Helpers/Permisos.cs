@@ -34,5 +34,7 @@ namespace GAPPLE.Shared.Helpers
         public static string SubEstados => "subEstados";
         public static string ListaPrecio => "listaPrecioManual";
         public static string PreciosUnitarios => "preciosUnitariosManual";
+        public static string DescuentoManual => "descuentoManual";
+        public static string DepositoManual => "depositoManual";
     }
 }

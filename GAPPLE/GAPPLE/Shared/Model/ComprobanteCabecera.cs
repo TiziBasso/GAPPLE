@@ -33,14 +33,14 @@ namespace GAPPLE.Shared.Model
         [ColumnName("ClienteCategoriaIVA")]
         public string ClienteCategoriaIVA { get; set; }
 
-        [ColumnName("IdMotivo")]
+        [ColumnName("IdMotivo"), Required(ErrorMessage = "Debe seleccionar un motivo")]
         public int? IdMotivo { get; set; }
 
         [ColumnName("Motivo")]
         public string MotivoDescripcion { get; set; }
 
         [ColumnName("IdDeposito")]
-        public string IdDeposito { get; set; }
+        public int? IdDeposito { get; set; }
 
         [ColumnName("Deposito")]
         public string DepositoDescripcion { get; set; }
@@ -60,8 +60,11 @@ namespace GAPPLE.Shared.Model
         [ColumnName("Fecha")]
         public DateTime FechaComprobante { get; set; }
 
-        [ColumnName("Observaciones"), MaxLength(50, ErrorMessage ="La longitud máxima es de 50 caracteres")]
+        [ColumnName("Observaciones"), MaxLength(50, ErrorMessage = "La longitud máxima es de 50 caracteres")]
         public string Observaciones { get; set; }
+
+        [ColumnName("TipoComprobanteReferencia")]
+        public string TipoComprobanteReferencia { get; set; }
 
         [ColumnName("ComprobanteReferencia"), MaxLength(20, ErrorMessage = "La longitud máxima es de 20 caracteres")]
         public string ComprobanteReferencia { get; set; }

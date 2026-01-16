@@ -1,6 +1,7 @@
 ﻿@page "/notascredito/{OperacionQuery}/{IdQuery:int}"
 
 @inject SeguridadService SeguridadService
+@inject DepositosService DepositosService
 @inject NavigationManager NavigationManager
 @inject ComprobantesService ComprobantesService
 @inject RadzenDialogService RadzenDialogService
@@ -37,7 +38,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
-                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="comprobante.IdListaPrecio" Disabled="@(listaPrecioManual)" Density="Density.Compact" Change=ChangeListaPrecio
+                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="comprobante.IdListaPrecio" Disabled="@(!permisoListaPrecioManual)" Density="Density.Compact" Change=ChangeListaPrecio
                                                 TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true"
                                                 FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true FilterOperator="StringFilterOperator.Contains">
                             <Columns>
@@ -49,44 +50,28 @@
                     </RadzenStack>
                 </RadzenColumn>
 
-                @* <RadzenColumn Size="4">
+                <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        <RadzenLabel Text="Cond.Venta:" />
-                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
-                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                                TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
-                            <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.CodigoTango)" Title="Código" Width="4rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(CondicionDeVenta.Descripcion)" Title="Descripción" />
-                            </Columns>
-                        </RadzenDropDownDataGrid>
-                        <ValidationMessage For="@(() => orden.CondicionVenta)" />
+                        <RadzenLabel Text="Motivo:" />
+                        <RadzenDropDown Data="motivos" @bind-Value="comprobante.IdMotivo" Change=ChangeMotivo
+                                        TextProperty="@nameof(Motivo.Descripcion)" ValueProperty="@nameof(Motivo.IdMotivo)" AllowVirtualization="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
+                        <ValidationMessage For="@(() => comprobante.IdMotivo)" />
                     </RadzenStack>
-                </RadzenColumn> *@
+                </RadzenColumn>
 
-                @* <RadzenColumn Size="3">
+                <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        <RadzenLabel Text="F.Entrega:" />
-                        <RadzenDatePicker @bind-Value="orden.FechaEntrega" DateFormat="dd/MM/yyyy" Min="DateTime.Today" />
+                        <RadzenLabel Text="Deposito:" />
+                        <RadzenDropDown Data="depositos" @bind-Value="comprobante.IdDeposito" Disabled="@(!permisoDepositoManual)"
+                                        TextProperty="@nameof(Deposito.Descripcion)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
+                        <ValidationMessage For="@(() => comprobante.IdDeposito)" />
                     </RadzenStack>
-                    <ValidationMessage For="@(() => orden.FechaEntrega)" />
-                </RadzenColumn> *@
+                </RadzenColumn>
             </RadzenRow>
 
             <RadzenRow Style="margin-top:10px;">
-                @* <RadzenColumn Size="4">
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        <RadzenLabel Text="Transporte:" />
-                        <RadzenDropDownDataGrid Data="transportes" @bind-Value="orden.CodTransporte" Density="Density.Compact" AllowSorting=false
-                                                AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
-                                                TextProperty="@nameof(Transporte.Descripcion)" ValueProperty="@nameof(Transporte.CodigoTango)" AllowVirtualization="true">
-                            <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.CodigoTango)" Title="Código" Width="4rem" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(Transporte.Descripcion)" Title="Descripción" />
-                            </Columns>
-                        </RadzenDropDownDataGrid>
-                    </RadzenStack>
-                </RadzenColumn> *@
 
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
@@ -112,6 +97,8 @@
             </RadzenRow>
         </RadzenFieldset>
 
+
+
         <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
             <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
             <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
@@ -136,8 +123,9 @@ else
 
     List<ListaDePrecios> listasDePrecio;
     List<Motivo> motivos;
+    List<Deposito> depositos;
     RadzenDataGrid<ComprobanteDetalle> grid;
-    bool listaPrecioManual, permiteModificarPreciosUnitarios, descuentoManual;
+    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual;
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,11 +140,14 @@ else
             return;
         }
 
-        listaPrecioManual = permisos.Contains(Permisos.ListaPrecio);
-        permiteModificarPreciosUnitarios = permisos.Contains(Permisos.PreciosUnitarios);
+        permisoListaPrecioManual = permisos.Contains(Permisos.ListaPrecio);
+        permisoModificarPreciosUnitarios = permisos.Contains(Permisos.PreciosUnitarios);
+        permisoDepositoManual = permisos.Contains(Permisos.DepositoManual);
+        permisoDescuentoManual = permisos.Contains(Permisos.DescuentoManual);
 
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         motivos = await MotivosService.GetMotivos(null, null, false, null);
+        depositos = await DepositosService.GetDepositos(null, null, null);
 
         if (tipoOperacion == TipoOperacionEnum.Alta)
         {
@@ -303,6 +294,14 @@ else
     private async Task ChangeListaPrecio()
     {
 
+    }
+
+    private async Task ChangeMotivo()
+    {
+        if (comprobante.IdMotivo != null)
+            comprobante.IdDeposito = motivos.First(m => m.IdMotivo == comprobante.IdMotivo).IdDeposito;
+        else
+            comprobante.IdDeposito = null;
     }
 
     private async Task OnCargarArchivo()
