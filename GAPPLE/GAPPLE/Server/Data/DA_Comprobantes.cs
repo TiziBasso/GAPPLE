@@ -1,7 +1,9 @@
-﻿using System.Data.SqlClient;
-using System.Data;
+﻿using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
-using GAPPLE.Shared.Enums;
+using GAPPLE.Shared.Structs;
+using MathNet.Numerics.Optimization;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace GAPPLE.Server.Data
 {
@@ -48,5 +50,67 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
             cnn.Close();
         }
+
+        public DataTable InsertarNotaCreditoCabecera(ComprobanteCabecera comprobante, SqlTransaction transaction)
+        {
+            DataTable dt = new();
+
+            using (SqlConnection cnn = transaction.Connection)
+            {
+                SqlCommand cmd = cnn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "prc_ins_ComprobantesCabecera";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@pTipoComprobante", comprobante.TipoComprobante);
+                cmd.Parameters.AddWithValue("@pIdCliente", comprobante.IdCliente);
+                cmd.Parameters.AddWithValue("@pIdMotivo", comprobante.IdMotivo);
+                cmd.Parameters.AddWithValue("@pIdDeposito", comprobante.IdDeposito);
+                cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
+                cmd.Parameters.AddWithValue("@pIdEstado", comprobante.IdEstado);
+                cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
+                cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
+                if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
+                cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
+                cmd.Parameters.AddWithValue("@pIdListaDePrecios", comprobante.IdListaPrecio);
+                cmd.Parameters.AddWithValue("@pAlternativo", comprobante.Presupuesto);
+                cmd.Parameters.AddWithValue("@pAltaUsuario", comprobante.AltaUsuario);
+                SqlDataAdapter da = new(cmd);
+                da.Fill(dt);
+            }
+
+            return dt;
+        }
+
+        public void InsertarNotaCreditoDetalle(ComprobanteDetalle detalle, SqlTransaction transaction)
+        {
+            using SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_ComprobantesDetalle";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdComprobante", detalle.IdComprobante);
+            cmd.Parameters.AddWithValue("@pLinea", detalle.NumeroLinea);
+            cmd.Parameters.AddWithValue("@pCodProducto", detalle.CodProducto);
+            cmd.Parameters.AddWithValue("@pCantidad", detalle.Cantidad);
+            cmd.Parameters.AddWithValue("@pPrecio", detalle.Precio);
+            cmd.Parameters.AddWithValue("@pDescuento", detalle.Descuento);
+            if (!string.IsNullOrWhiteSpace(detalle.Detalle)) cmd.Parameters.AddWithValue("@pDetalle", detalle.Detalle);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteNotaCreditoDetalle(int idComprobante, SqlTransaction transaction)
+        {
+            using SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_ComprobantesDetalle";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
+            cmd.ExecuteNonQuery();
+        }
+
     }
 }

@@ -224,7 +224,7 @@ namespace GAPPLE.Server.Controllers
                         if (!string.IsNullOrEmpty(row["0"].ToString().Trim()))
                         {
                             var cod = row["0"].ToString().Trim();
-                            p = GetProductoOrden($"%{cod}", req.CodListaPrecio);
+                            p = ObtenerProductoOrden($"%{cod}", req.CodListaPrecio);
                             if (p == null)
                                 ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El código {cod} no sé encontró");
                             else if (p.Pasivo)
@@ -255,7 +255,7 @@ namespace GAPPLE.Server.Controllers
                             productos.Add(p);
                             if (p.CodComplemento != null)
                             {
-                                var aux = GetProductoOrden(p.CodComplemento, req.CodListaPrecio);
+                                var aux = ObtenerProductoOrden(p.CodComplemento, req.CodListaPrecio);
                                 if (aux.Pasivo) //puede pasar?
                                     ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El producto complemento {p.CodComplemento} se encuentra pasivo");
                                 else
@@ -298,7 +298,7 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        internal ProductoOrden GetProductoOrden(string codProducto, string codListaPrecio)
+        internal ProductoOrden ObtenerProductoOrden(string codProducto, string codListaPrecio)
         {
             ProductoOrden p = null;
             DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
@@ -309,6 +309,7 @@ namespace GAPPLE.Server.Controllers
                     DataRow row = dt.Rows[0];
                     p = new()
                     {
+                        IdProducto = int.Parse(row["IdProducto"].ToString()),
                         CodigoProducto = row["CodigoProducto"].ToString()!,
                         Descripcion = row["Descripcion"].ToString()!,
                         Linea = row["Linea"].ToString(),
@@ -326,5 +327,67 @@ namespace GAPPLE.Server.Controllers
 
             return p;
         }
+
+        internal List<ProductoOrden> ObtenerProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio)
+        {
+            List<ProductoOrden> productos = new();
+            DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daP.ObtenerProductos(codProducto, descripcion, null, null, linea, null))
+            {
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    ProductoOrden producto = new()
+                    {
+                        IdProducto = int.Parse(row["IdProducto"].ToString()),
+                        CodigoProducto = row["CodigoProducto"].ToString()!,
+                        Descripcion = (string)row["Descripcion"],
+                        Pasivo = bool.Parse(row["Pasivo"].ToString()),
+                    };
+                    if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
+
+                    using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, producto.CodigoProducto))
+                    {
+                        if (dtP.Rows.Count > 0)
+                            producto.Precio = decimal.Parse(dtP.Rows[0]["Precio"].ToString());
+                    }
+
+                    productos.Add(producto);
+                }
+            }
+
+            return productos;
+        }
+
+
+        [HttpGet("orden")]
+        public IActionResult GetProductoOrden(string codProducto, string codListaPrecio)
+        {
+            try
+            {
+                return Ok(ObtenerProductoOrden(codProducto, codListaPrecio));
+            }
+            catch (Exception ex)
+            {
+                //log
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpGet("orden/varios")]
+        public IActionResult GetProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio)
+        {
+            try
+            {
+                return Ok(ObtenerProductosOrden(codProducto, descripcion, linea, codListaPrecio));
+            }
+            catch (Exception ex)
+            {
+                //log
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+
     }
 }

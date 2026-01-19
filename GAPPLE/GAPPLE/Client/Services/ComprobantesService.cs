@@ -41,7 +41,8 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<Response> CancelarNotaCredito(int idComprobante)
         {
-            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito/cancelar", new{IdComprobante = idComprobante, NombreUsuario = SesionDTO.Nombre});
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito/{idComprobante}/cancelar", SesionDTO.Nombre);
+
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode);
 
@@ -50,6 +51,7 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<Response> PostNotaCredito(ComprobanteCabecera comprobante)
         {
+            comprobante.AltaUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito", comprobante);
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode, await response.Content.ReadFromJsonAsync<ComprobanteCabecera>());

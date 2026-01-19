@@ -20,11 +20,23 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPost("notacredito/obtener")]
-        public List<ComprobanteCabecera> GetNotasCredito(ComprobanteCabeceraRequest request)
+        public IActionResult GetNotasCredito(ComprobanteCabeceraRequest request)
+        {
+            try
+            {
+                return Ok(ObtenerNotasCredito(request));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        internal List<ComprobanteCabecera> ObtenerNotasCredito(ComprobanteCabeceraRequest request)
         {
             DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<ComprobanteCabecera> lstComprobantes = new();
-            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, (int)request.IdEstado.Value,request.RazonSocialCliente))
+            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, (int)request.IdEstado.Value, request.RazonSocialCliente))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -48,18 +60,39 @@ namespace GAPPLE.Server.Controllers
             return lstComprobantes;
         }
 
-        [HttpPut("notacredito/cancelar")]
-        public IActionResult CancelarNotaCredito(CancelacionNotaCredito cancelacionNota)
+        [HttpPost("notacredito")]
+        public IActionResult PostNotaCredito(ComprobanteCabecera comprobante)
         {
-            DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-            daC.CancelarNotaCredito(cancelacionNota.IdComprobante, cancelacionNota.NombreUsuario);
-            return Ok();
+            try
+            {
+
+                return Ok(comprobante);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
         }
 
-        public class CancelacionNotaCredito
+        [HttpPut("notacredito")]
+        public IActionResult PutNotaCredito(ComprobanteCabecera comprobante)
         {
-            public int IdComprobante { get; set; }
-            public string NombreUsuario { get; set; }
+            try
+            {
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("notacredito/{idComprobante:int}/cancelar")]
+        public IActionResult CancelarNotaCredito(int idComprobante, [FromBody] string usuario)
+        {
+            DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            daC.CancelarNotaCredito(idComprobante, usuario);
+            return Ok();
         }
     }
 }

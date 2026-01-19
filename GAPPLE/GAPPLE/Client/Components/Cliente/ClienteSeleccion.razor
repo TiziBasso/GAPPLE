@@ -5,6 +5,7 @@
 {
     <RadzenDataGrid TItem="Cliente" Data="clientes" @bind-Value="selected" Style="width:100%; height:100%;"
                     Density="Density.Compact" AllowFiltering=true AllowSorting="true" AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple" AllowVirtualization="true"
                     SelectionMode="DataGridSelectionMode.Single" RowDoubleClick="@OnDoubleClick" ColumnWidth="150px">
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Cód. cliente" Filterable="false" />
@@ -12,10 +13,9 @@
             <RadzenDataGridColumn Property="@nameof(Cliente.NombreComercial)" Title="Nombre comercial" />
             <RadzenDataGridColumn Property="@nameof(Cliente.CUIT)" Title="CUIT" />
             <RadzenDataGridColumn Property="@nameof(Cliente.CategoriaIva)" Title="Tipo IVA" />
-
-            <RadzenDataGridColumn Width="35px" TextAlign="TextAlign.Center">
+            <RadzenDataGridColumn Width="35px" TextAlign="TextAlign.Center" Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => Select(context))" />
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => Select(context))" Icon="done" ButtonStyle="ButtonStyle.Success" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>

@@ -2,6 +2,7 @@
 {
     public class ProductoOrden
     {
+        public int IdProducto { get; set; }
         public string CodigoProducto { get; set; }
         public string Descripcion { get; set; }
         public string Linea { get; set; }

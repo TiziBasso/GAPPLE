@@ -43,7 +43,10 @@ namespace GAPPLE.Client.Entities
             if (r.HttpStatusCode == System.Net.HttpStatusCode.BadRequest)
                 r.Errors = await httpResponse.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
             else if (r.HttpStatusCode == System.Net.HttpStatusCode.InternalServerError)
+            {
                 r.Message = await httpResponse.Content.ReadAsStringAsync();
+                Console.WriteLine(r.Message);
+            }
 
             return r;
         }

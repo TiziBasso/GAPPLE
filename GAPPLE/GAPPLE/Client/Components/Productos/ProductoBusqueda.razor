@@ -15,13 +15,13 @@
 
     <RadzenStack Orientation="Orientation.Vertical" Gap="5px" Style="width:60%">
         <RadzenLabel Text="Descripción producto:" Component="descrip" />
-        <RadzenTextBox @bind-Value="descripcion" Name="descrip" id="descrip" MaxLength="50" @onkeypress="KeyPress" Style="width: 100%;" Disabled="isLoading" AutoCompleteType="AutoCompleteType.Off" />
+        <RadzenTextBox @bind-Value="descripcion" Name="descrip" id="descrip"
+                       MaxLength="50" @onkeypress="KeyPress" Style="width: 100%;" Disabled="isLoading" AutoCompleteType="AutoCompleteType.Off" />
     </RadzenStack>
 
     <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
-        <RadzenLabel Text="Linea:" Component="marca" />
-        <RadzenLabel Text="Línea:" />
-        <RadzenDropDown Data="lstLineas" @bind-Value="descripcionLinea" />
+        <RadzenLabel Text="Linea:" Component="linea" />
+        <RadzenDropDown Data="lstLineas" @bind-Value="descripcionLinea" Name="linea" Disabled="isLoading" FilterAutoCompleteType="AutoCompleteType.Off" />
     </RadzenStack>
 
     <RadzenStack AlignItems="AlignItems.End" JustifyContent="JustifyContent.End" Style="width:fit-content">
@@ -31,11 +31,11 @@
 
 @if (!MultiSelect)
 {
-    <RadzenDataGrid Data="@skus" @ref="skuGrid" TItem="Producto" RowDoubleClick="@(args => SkuSelected(args.Data))"
+    <RadzenDataGrid Data="@skus" @ref="skuGrid" TItem="ProductoOrden" RowDoubleClick="@(args => SkuSelected(args.Data))"
                     Density="Density.Compact" AllowVirtualization="true" Style="height:35rem">
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Producto.CodigoProducto)" Title="Cód. prod." TextAlign="TextAlign.Right" Width="100px" />
-            <RadzenDataGridColumn Property="@nameof(Producto.Descripcion)" Title="Descripción" />
+            <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód. prod." TextAlign="TextAlign.Right" Width="100px" />
+            <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" />
             <RadzenDataGridColumn Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="65px">
                 <Template Context="dataSku">
                     <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
@@ -49,7 +49,7 @@
 }
 else
 {
-    <RadzenDataGrid @ref="skuGrid" TItem="Producto" Data="@skus" @bind-Value=@selectedSKUs SelectionMode="DataGridSelectionMode.Multiple"
+    <RadzenDataGrid @ref="skuGrid" TItem="ProductoOrden" Data="@skus" @bind-Value=@selectedSKUs SelectionMode="DataGridSelectionMode.Multiple"
                     Density="Density.Compact" AllowVirtualization="true" Style="height:30rem">
         <HeaderTemplate>
             <RadzenText TextAlign="TextAlign.Right" Style="width:100%">
@@ -83,24 +83,26 @@ else
 }
 
 @code {
-    [Parameter] public EventCallback<Producto> Callback { get; set; }
-    [Parameter] public EventCallback<List<Producto>> CallbackMultiple { get; set; }
+    [Parameter] public EventCallback<ProductoOrden> Callback { get; set; }
+    [Parameter] public EventCallback<List<ProductoOrden>> CallbackMultiple { get; set; }
 
     [Parameter] public bool MultiSelect { get; set; } = false;
     [Parameter] public bool? Pasivo { get; set; } = null;
+    [Parameter] public string CodListaPrecio { get; set; }
 
     CancellationTokenSource cancellationToken = new();
     RadzenButton refSearch;
-    IEnumerable<Producto> skus;
-    IList<Producto> selectedSKUs = new List<Producto>();
+    IEnumerable<ProductoOrden> skus;
+    IList<ProductoOrden> selectedSKUs = new List<ProductoOrden>();
     bool isLoading;
     string codProducto, descripcion, descripcionFilter, descripcionLinea;
     List<string> lstLineas = new();
-    RadzenDataGrid<Producto> skuGrid;
+    RadzenDataGrid<ProductoOrden> skuGrid;
 
     protected override async Task OnInitializedAsync()
     {
         lstLineas = await ProductosService.GetLineas();
+        descripcionLinea = lstLineas.FirstOrDefault();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -115,7 +117,7 @@ else
         {
             isLoading = true;
             RadzenDialogService.OpenBusyWithLoader("Buscando...");
-            skus = await ProductosService.GetProductos(codProducto, descripcion, null, false, descripcionLinea, cancellationToken: cancellationToken);
+            skus = await ProductosService.GetProductosOrden(codProducto, descripcion, descripcionLinea, CodListaPrecio, cancellationToken);
             RadzenDialogService.CloseDialog();
             isLoading = false;
             StateHasChanged();
@@ -134,7 +136,7 @@ else
         }
     }
 
-    private async Task SkuSelected(Producto sku)
+    private async Task SkuSelected(ProductoOrden sku)
     {
         if (Callback.HasDelegate)
             await Callback.InvokeAsync(sku);

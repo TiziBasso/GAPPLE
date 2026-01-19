@@ -32,17 +32,37 @@ namespace GAPPLE.Client.Services
                 return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}?{stringJoin}", cancellationToken.Token);
         }
 
-        public async ValueTask<Producto> GetProducto(string codigoProducto, int idListaPrecio)
+        public async ValueTask<ProductoOrden> GetProductoOrden(string codigoProducto, string codListaPrecio)
         {
             Dictionary<string, object> query = new();
-            query["codigoProducto"] = codigoProducto;
-            query["idListaPrecio"] = idListaPrecio;
+            query["codProducto"] = codigoProducto;
+            query["codListaPrecio"] = codListaPrecio;
 
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
-            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/prod?{stringJoin}");
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden?{stringJoin}");
             if (response.StatusCode == HttpStatusCode.OK)
-                return await response.Content.ReadFromJsonAsync<Producto>();
+                return await response.Content.ReadFromJsonAsync<ProductoOrden>();
+            else
+                return null;
+        }
+
+        public async ValueTask<List<ProductoOrden>> GetProductosOrden(string codigoProducto, string descripcion, string linea, string codListaPrecio,
+                                                                        CancellationTokenSource cancellationToken = null)
+        {
+            Dictionary<string, object> query = new();
+            if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codProducto"] = codigoProducto;
+            if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
+            if (linea != null) query["linea"] = linea;
+            query["codListaPrecio"] = codListaPrecio;
+            var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
+
+            var response = cancellationToken == null
+                            ? await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden/varios?{stringJoin}")
+                            : await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden/varios?{stringJoin}", cancellationToken.Token);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<ProductoOrden>>();
             else
                 return null;
         }

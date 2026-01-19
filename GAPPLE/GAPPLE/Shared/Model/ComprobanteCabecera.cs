@@ -6,6 +6,8 @@ namespace GAPPLE.Shared.Model
 {
     public class ComprobanteCabecera : RegistroUsuario
     {
+        private decimal? _importeTotal;
+
         [ColumnName("IdComprobante")]
         public int IdComprobante { get; set; }
 
@@ -70,7 +72,17 @@ namespace GAPPLE.Shared.Model
         public string ComprobanteReferencia { get; set; }
 
         [ColumnName("ImporteTotal")]
-        public decimal ImporteTotal { get; set; }
+        public decimal ImporteTotal
+        {
+            get
+            {
+                if (_importeTotal != null)
+                    return (decimal)_importeTotal;
+
+                return Detalle.Sum(x => x.PrecioTotal);
+            }
+            set => _importeTotal = value;
+        }
 
         [ColumnName("IdListaPrecio"), Required(ErrorMessage = "Debe seleccionar una lista de precio")]
         public int? IdListaPrecio { get; set; }
@@ -85,6 +97,6 @@ namespace GAPPLE.Shared.Model
 
         public bool Presupuesto { get; set; }
 
-        public List<ComprobanteDetalle> Detalle { get; set; }
+        public List<ComprobanteDetalle> Detalle { get; set; } = [];
     }
 }

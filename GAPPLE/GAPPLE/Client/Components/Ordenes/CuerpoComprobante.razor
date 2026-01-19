@@ -6,9 +6,7 @@
 @inject IJSFunction JSFunction
 @inject IJSFunctionRadzen JSFunctionRadzen
 
-<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5px">
-
-
+@* <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5px">
     <RadzenFieldset Text="Comprobante de referencia:">
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
@@ -25,14 +23,14 @@
             </RadzenStack>
         </RadzenStack>
     </RadzenFieldset>
-</RadzenStack>
+</RadzenStack> *@
 
 <RadzenDataGrid @ref="refGrid" Data="Lineas" TItem="ComprobanteDetalle" Style="min-height: 180px;"
                 Density="Density.Compact" IsLoading="isLoading" AllowAlternatingRows="false" EmptyText="@string.Empty" class="rz-mt-1">
     <HeaderTemplate>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
-                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" />
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" />
                 <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" />
 
                 @if (IngresarLineaManual)
@@ -61,7 +59,7 @@
     </HeaderTemplate>
     <Columns>
 
-        <RadzenDataGridColumn Title="SKU" TextAlign="TextAlign.Right" Width="100px" OrderIndex="0">
+        <RadzenDataGridColumn Title="Cód. prod." TextAlign="TextAlign.Right" Width="100px" OrderIndex="0">
             <Template Context="data">
                 @if (data.IdProducto == 0)
                 {
@@ -133,7 +131,6 @@
     [Parameter] public bool ModificarPreciosUnitarios { get; set; }
     [Parameter] public bool IngresarLineaManual { get; set; }
     [Parameter] public EventCallback Render { get; set; }
-    [Parameter] public EventCallback<int> ChangeListaPrecios { get; set; }
 
     bool agruparPreciosPorInterno;
     Dictionary<int, decimal> preciosAgrupadosPorInterno = new();
@@ -146,11 +143,11 @@
 
     bool isLoading;
     int totalLineas, totalUnidades;
-    int? idTipoListaPreciosAux;
+    //int? idTipoListaPreciosAux;
 
     protected override async Task OnInitializedAsync()
     {
-        idTipoListaPreciosAux = Comprobante.IdListaPrecio;
+        //idTipoListaPreciosAux = Comprobante.IdListaPrecio;
 
         if (Lineas.Any())
             SetTotales();
@@ -178,7 +175,7 @@
 
     private async Task HandleSKUOnFocusOut(ComprobanteDetalle linea)
     {
-        if (!string.IsNullOrWhiteSpace(linea.CodProducto) & linea.IdProducto == 0)
+        if (!string.IsNullOrWhiteSpace(linea.CodProducto) & linea.IdProducto == 0 & !isLoading)
         {
             isLoading = true;
             var result = await BuscarProducto(linea, linea.CodProducto);
@@ -355,20 +352,22 @@
 
     private async Task<bool> BuscarProducto(ComprobanteDetalle linea, string codProducto = null)
     {
-        var producto = await ProductosService.GetProducto(codProducto, (int)Comprobante.IdListaPrecio);
-        if (producto != null)
-        {
-            if (Comprobante.Detalle.Exists(s => s.CodProducto == producto.CodigoProducto))
-                RadzenDialogService.Notify(NotificationSeverity.Warning, "El producto fue cargado con anterioridad");
+        var producto = await ProductosService.GetProductoOrden(codProducto, Comprobante.CodListaPrecio);
 
-            BuildLinea(linea, producto);
-
-            return true;
-        }
-        else
+        if (producto == null)
         {
             RadzenDialogService.Notify(NotificationSeverity.Info, "No se encontró el producto", "Compruebe los datos ingresados");
             return false;
+        }
+        else if (Comprobante.Detalle.Exists(s => s.CodProducto == producto.CodigoProducto && s.IdProducto != 0))
+        {
+            RadzenDialogService.Notify(NotificationSeverity.Warning, "El producto fue cargado con anterioridad");
+            return false;
+        }
+        else
+        {
+            BuildLinea(linea, producto);
+            return true;
         }
     }
 
@@ -376,41 +375,45 @@
     {
         var result = await RadzenDialogService.OpenAsync<ProductoBusqueda>(
             "Busqúeda de SKU",
-            new() { { "Pasivo", false }, { "MultiSelect", true } },
+            new() { { "Pasivo", false }, { "MultiSelect", true }, { "CodListaPrecio", Comprobante.CodListaPrecio },
+                    { "CallbackMultiple", EventCallback.Factory.Create<List<ProductoOrden>>(this, OnBuscarSKU) } },
             new() { Width = "60rem", Height = "90vh" });
+    }
 
-        if (result != null)
+    private async Task OnBuscarSKU(List<ProductoOrden> skus)
+    {
+        RadzenDialogService.CloseDialog();
+        RadzenDialogService.OpenBusy("Cargando...");
+        isLoading = true;
+        bool lineaAñadida = false;
+        foreach (var sku in skus)
         {
-            RadzenDialogService.OpenBusy("Cargando...");
-            isLoading = true;
-            var skus = (List<Producto>)result;
-            var lineaAux = new ComprobanteDetalle() { NumeroLinea = Lineas.Count + 1, Cantidad = 1 };
-            bool lineaAñadida = false;
-            foreach (var sku in skus)
-            {
-                var linea = new ComprobanteDetalle() { NumeroLinea = Lineas.Count + 1, Cantidad = 1 };
-                Lineas.Add(linea);
-                if (Lineas.Count == 1)
-                    selectedRow = Lineas.Take(1).ToList();
-                BuildLinea(linea, sku);
-                lineaAñadida = true;
-            }
-            await refGrid.Reload();
-            await Render.InvokeAsync();
-            SetTotales();
-            isLoading = false;
-            RadzenDialogService.CloseDialog();
-            if (lineaAñadida)
-                await JSFunction.InputFocusAndSelect($"cant{lineaAux.NumeroLinea}");
+            var linea = new ComprobanteDetalle() { NumeroLinea = Lineas.Count + 1, Cantidad = 1 };
+            Lineas.Add(linea);
+            if (Lineas.Count == 1)
+                selectedRow = Lineas.Take(1).ToList();
+            BuildLinea(linea, sku);
+            lineaAñadida = true;
+        }
+        await refGrid.Reload();
+        await Render.InvokeAsync();
+        SetTotales();
+        isLoading = false;
+        RadzenDialogService.CloseDialog();
+
+        if (lineaAñadida)
+        {
+            await Task.Delay(1);
+            await JSFunction.InputFocusAndSelect($"cant{Lineas.Last().NumeroLinea}");
         }
     }
 
-    private void BuildLinea(ComprobanteDetalle linea, Producto producto)
+    private void BuildLinea(ComprobanteDetalle linea, ProductoOrden producto)
     {
         linea.IdProducto = producto.IdProducto;
         linea.CodProducto = producto.CodigoProducto;
         linea.DescripcionProducto = producto.Descripcion;
-        linea.Precio = producto.Precio ?? 0;
+        linea.Precio = producto.Precio;
     }
 
     private void SetTotales()
@@ -419,38 +422,16 @@
         totalUnidades = Lineas.Select(x => x.Cantidad).Sum();
     }
 
-    private async Task HandleListaPreciosChange(int id)
-    {
-        if (Lineas.Any())
-        {
-            if (await RadzenDialogService.Confirm("Si cambia la lista de precios se modificarán los precios unitarios. ¿Continúa?", MensajesHelper.Title, RadzenHelper.Confirm()) == true)
-            {
-                idTipoListaPreciosAux = id;
-
-                RadzenDialogService.OpenBusy("Cargando...");
-
-                Lineas.RemoveAll(x => x.IdProducto == 0);
-                await refGrid.Reload();
-                foreach (var ln in Lineas)
-                {
-                    var sku = await ProductosService.GetProducto(ln.CodProducto, (int)idTipoListaPreciosAux);
-                    ln.Precio = sku.Precio ?? 0;
-                }
-
-                RadzenDialogService.CloseDialog();
-
-                await ChangeListaPrecios.InvokeAsync(id);
-            }
-            else
-                Comprobante.IdListaPrecio = idTipoListaPreciosAux;
-        }
-        else
-            idTipoListaPreciosAux = id;
-    }
-
     public void RenderComponent()
     {
         StateHasChanged();
+    }
+
+    public async Task ReloadGrid() => await refGrid.Reload();
+
+    private void Submit(ComprobanteDetalle args)
+    {
+
     }
 
     // private async Task HandleClickSeleccionarRemito()

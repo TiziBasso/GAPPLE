@@ -52,7 +52,7 @@
             <TextAreaInput @bind-Value=request.CodigoTango id="codTango" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
-        <RadzenButton Click="FillOrdenes" ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Small" />
+        <RadzenButton Click="FillOrdenes" ButtonStyle=ButtonStyle.Secondary Icon="search" />
 
     </RadzenStack>
 
@@ -125,11 +125,11 @@ else
     RadzenDataGrid<ComprobanteCabecera> grid;
     List<ComprobanteCabecera> comprobantes = [];
     ComprobanteCabeceraRequest request = new()
-        {
-            FechaDesde = DateTime.Today.AddDays(-15),
-            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
-            IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-        };
+    {
+        FechaDesde = DateTime.Today.AddDays(-15),
+        FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+        IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+    };
 
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
@@ -159,7 +159,7 @@ else
             RadzenDialogService.NotifyInternalServerError();
         else
         {
-            comprobantes = response;
+            //comprobantes = response;
             await grid.Reload();
         }
     }
@@ -190,7 +190,7 @@ else
 
     private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
 
-    private async Task NuevaNotaCredito() => await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente", new() { { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) } }, new() { Width = "40rem", Height = "30rem" });
+    private async Task NuevaNotaCredito() => await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente", new() { { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) } }, new() { Width = "60rem", Height = "30rem" });
 
     private void OnSelectCliente(Cliente cliente) => NavigationManager.NavigateTo($"notascredito/alta/{cliente.IdCliente}");
 

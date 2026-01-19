@@ -305,6 +305,7 @@ namespace GAPPLE.Server.Controllers
                 foreach (DataRow row in dt.Rows)
                 {
                     ListaDePrecios lista = new ListaDePrecios();
+                    lista.IdLista = Convert.ToInt32(row["IdLista"]);
                     lista.CodigoTango = row["CodLista"].ToString()!;
                     lista.Descripcion = row["Descripcion"].ToString()!;
                     listas.Add(lista);
@@ -547,8 +548,8 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                    if(!string.IsNullOrEmpty(response.Message))
-                        daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
+                    if (!string.IsNullOrEmpty(response.Message))
+                        daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N", trans);
                 }
 
                 if (ModelState.ErrorCount > 0)
