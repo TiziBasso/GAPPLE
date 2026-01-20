@@ -69,6 +69,19 @@ namespace GAPPLE.Client.Tools
             }
         }
 
+        internal static IEnumerable<Opcion> Mercaderia
+        {
+            get
+            {
+                return
+                    [
+                        new Opcion((object)null, "No ingresa"),
+                        new Opcion(false, "Pendiente ingreso"),
+                        new Opcion(true, "Ingresada")
+                    ];
+            }
+        }
+
         internal static class ErrorPages
         {
             internal const string Invalido = "errorpage/invalid";

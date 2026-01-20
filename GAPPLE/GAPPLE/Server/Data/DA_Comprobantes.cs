@@ -12,7 +12,7 @@ namespace GAPPLE.Server.Data
         private string ConnectionString { get; }
         public DA_Comprobantes(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerComprobantesCabecera(DateTime fechaDesde, DateTime fechaHasta, string codigoOrden, string codigoTango, bool? mercaderiaIngresada, int? idEstado, string razonSocial)
+        public DataTable ObtenerComprobantesCabecera(DateTime fechaDesde, DateTime fechaHasta, string codigoOrden, string codigoTango, bool? mercaderiaIngresada, ComprobanteCabeceraEstadoEnum? idEstado, string razonSocial)
         {
             DataTable dt = new();
             SqlConnection cnn = new(ConnectionString);
@@ -26,7 +26,7 @@ namespace GAPPLE.Server.Data
             if (!string.IsNullOrWhiteSpace(codigoOrden)) cmd.Parameters.AddWithValue("@pCodigoOrden", codigoOrden);
             if (!string.IsNullOrWhiteSpace(codigoTango)) cmd.Parameters.AddWithValue("@pCodigoTango", codigoTango);
             if (mercaderiaIngresada != null) cmd.Parameters.AddWithValue("@pMercaderiaIngresada", mercaderiaIngresada);
-            if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", idEstado);
+            if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", (int)idEstado);
             if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocialCliente", razonSocial);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
@@ -100,7 +100,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void DeleteNotaCreditoDetalle(int idComprobante, SqlTransaction transaction)
+        public void EliminarNotaCreditoDetalle(int idComprobante, SqlTransaction transaction)
         {
             using SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -112,5 +112,23 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
+        public void ActualizarNotaCreditoCabecera(ComprobanteCabecera comprobante, SqlTransaction transaction)
+        {
+            using SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_ComprobanteCabecera";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdComprobante", comprobante.IdComprobante);
+            cmd.Parameters.AddWithValue("@pIdMotivo", comprobante.IdMotivo);
+            cmd.Parameters.AddWithValue("@pIdDeposito", comprobante.IdDeposito);
+            cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
+            cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
+            cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
+            if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", comprobante.EdicionUsuario);
+            cmd.ExecuteNonQuery();
+        }
     }
 }

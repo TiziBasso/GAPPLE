@@ -56,6 +56,7 @@
                 </RadzenLabel>
             </RadzenStack>
         </RadzenStack>
+        <ValidationMessage For="@(() => Comprobante.Detalle)" />
     </HeaderTemplate>
     <Columns>
 
@@ -87,7 +88,7 @@
             <Template Context="data">
                 @if (ModificarPreciosUnitarios | IngresarLineaManual)
                 {
-                    <input id=@($"unit{data.NumeroLinea}") type="number" @bind-value="data.Precio"
+                    <input id=@($"unit{data.NumeroLinea}") type="number" @bind-value="data.Precio" step="0.01"
                            @onkeydown="@(args => KeyDownUnit(args, data))" @onfocusout="@(() => OnFocusOutUnit(data))"
                            arrowKeyBlocker enterKeyBlocker
                            class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />

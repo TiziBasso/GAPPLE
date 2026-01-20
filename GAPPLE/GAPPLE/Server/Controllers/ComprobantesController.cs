@@ -3,6 +3,7 @@ using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Data.SqlClient;
 using System.Net;
 
 namespace GAPPLE.Server.Controllers
@@ -13,10 +14,12 @@ namespace GAPPLE.Server.Controllers
     {
         private IConfiguration Configuration { get; }
         private Usuario Usuario { get; }
+        private string DefaultConnectionString { get; }
 
         public ComprobantesController(IConfiguration configuration)
         {
             Configuration = configuration;
+            DefaultConnectionString = Configuration.GetConnectionString("DefaultConnection");
         }
 
         [HttpPost("notacredito/obtener")]
@@ -36,7 +39,7 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<ComprobanteCabecera> lstComprobantes = new();
-            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, (int)request.IdEstado.Value, request.RazonSocialCliente))
+            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -63,13 +66,30 @@ namespace GAPPLE.Server.Controllers
         [HttpPost("notacredito")]
         public IActionResult PostNotaCredito(ComprobanteCabecera comprobante)
         {
+            SqlTransaction transaction = null;
             try
             {
+                using (SqlConnection cnn = new(DefaultConnectionString))
+                {
+                    DA_Comprobantes daC = new(cnn.ConnectionString);
+                    cnn.Open();
+                    transaction = cnn.BeginTransaction();
+                    comprobante.IdComprobante = Convert.ToInt32(daC.InsertarNotaCreditoCabecera(comprobante, transaction).Rows[0]["IdComprobante"]);
+                    foreach (ComprobanteDetalle detalle in comprobante.Detalle)
+                    {
+                        detalle.IdComprobante = comprobante.IdComprobante;
+                        daC.InsertarNotaCreditoDetalle(detalle, transaction);
+                    }
+                    transaction.Commit();
+                    cnn.Close();
+                }
 
                 return Ok(comprobante);
             }
             catch (Exception ex)
             {
+                if (transaction != null && transaction.Connection != null)
+                    transaction.Rollback();
                 return StatusCode(500, ex.ToString());
             }
         }
@@ -77,12 +97,30 @@ namespace GAPPLE.Server.Controllers
         [HttpPut("notacredito")]
         public IActionResult PutNotaCredito(ComprobanteCabecera comprobante)
         {
+            SqlTransaction transaction = null;
             try
             {
+                using (SqlConnection cnn = new(DefaultConnectionString))
+                {
+                    DA_Comprobantes daC = new(cnn.ConnectionString);
+                    cnn.Open();
+                    transaction = cnn.BeginTransaction();
+                    daC.ActualizarNotaCreditoCabecera(comprobante, transaction);
+                    daC.EliminarNotaCreditoDetalle(comprobante.IdComprobante, transaction);
+                    foreach (ComprobanteDetalle detalle in comprobante.Detalle)
+                    {
+                        detalle.IdComprobante = comprobante.IdComprobante;
+                        daC.InsertarNotaCreditoDetalle(detalle, transaction);
+                    }
+                    transaction.Commit();
+                    cnn.Close();
+                }
                 return Ok();
             }
             catch (Exception ex)
             {
+                if(transaction != null && transaction.Connection != null)
+                    transaction.Rollback();
                 return StatusCode(500, ex.ToString());
             }
         }

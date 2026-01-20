@@ -42,9 +42,9 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Mercadería ingresada:" Component="mercaderia" />
-            <RadzenDropDown Data=@Variables.EstadosSiNo @bind-Value=@request.MercaderiaIngresada Name="mercaderia"
+            <RadzenDropDown Data=@Variables.Clasificaciones @bind-Value=@request.MercaderiaIngresada Name="mercaderia"
                             ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" />
+                            Placeholder="Todos" AllowClear=true Style="width: 10rem;" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -159,7 +159,7 @@ else
             RadzenDialogService.NotifyInternalServerError();
         else
         {
-            //comprobantes = response;
+            comprobantes = response;
             await grid.Reload();
         }
     }
