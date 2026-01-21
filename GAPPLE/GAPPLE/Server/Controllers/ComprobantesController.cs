@@ -75,9 +75,11 @@ namespace GAPPLE.Server.Controllers
                     cnn.Open();
                     transaction = cnn.BeginTransaction();
                     comprobante.IdComprobante = Convert.ToInt32(daC.InsertarNotaCreditoCabecera(comprobante, transaction).Rows[0]["IdComprobante"]);
-                    foreach (ComprobanteDetalle detalle in comprobante.Detalle)
+                    cnn.Open();
+					transaction = cnn.BeginTransaction();
+					foreach (ComprobanteDetalle detalle in comprobante.Detalle)
                     {
-                        detalle.IdComprobante = comprobante.IdComprobante;
+						detalle.IdComprobante = comprobante.IdComprobante;
                         daC.InsertarNotaCreditoDetalle(detalle, transaction);
                     }
                     transaction.Commit();

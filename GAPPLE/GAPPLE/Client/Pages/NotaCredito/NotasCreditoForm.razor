@@ -35,7 +35,13 @@
                         <ValidationMessage For="@(() => comprobante.ComprobanteReferencia)" />
                     </RadzenStack>
                 </RadzenColumn>
-
+                <RadzenColumn Size="3">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Código de orden:" />
+                        <TextBoxInput @bind-Value="comprobante.CodigoOrden" />
+                        <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
+                    </RadzenStack>
+                </RadzenColumn>
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Observaciones:" />

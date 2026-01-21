@@ -68,7 +68,8 @@ namespace GAPPLE.Server.Data
                 cmd.Parameters.AddWithValue("@pIdDeposito", comprobante.IdDeposito);
                 cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
                 cmd.Parameters.AddWithValue("@pIdEstado", comprobante.IdEstado);
-                cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
+				cmd.Parameters.AddWithValue("@pCodigoOrden", comprobante.CodigoOrden);
+				cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
                 cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
                 if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
                 cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
@@ -118,7 +119,7 @@ namespace GAPPLE.Server.Data
             SqlCommand cmd = cnn.CreateCommand();
             cmd.Transaction = transaction;
             cmd.CommandType = CommandType.StoredProcedure;
-            cmd.CommandText = "prc_upd_ComprobanteCabecera";
+            cmd.CommandText = "prc_upd_ComprobanteCabecera2";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@pIdComprobante", comprobante.IdComprobante);
             cmd.Parameters.AddWithValue("@pIdMotivo", comprobante.IdMotivo);
