@@ -570,8 +570,8 @@ namespace GAPPLE.Server.Controllers
                     pedido.DescripcionEstado = "EN TANGO";
                     daO.PersistirPedidoEstado(pedido.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
                     daO.PersistirPedidoTango(pedido.CodigoOrden, response.Message, trans);
-                    if(!string.IsNullOrEmpty(response.Message))
-                        daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N",trans);
+                    if (!string.IsNullOrEmpty(response.Message))
+                        daO.PersistirPedidoTangoZentra(pedido.CodigoOrden, response.Message, "N", trans);
                 }
 
                 if (ModelState.ErrorCount > 0)
@@ -1044,6 +1044,8 @@ namespace GAPPLE.Server.Controllers
                     var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
                     if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadAprobadaX"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadProbadorAprobadaF"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadProbadorAprobadaX"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadObsequiosAprobadoF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadObsequiosAprobadoX"].ToString()) != 0))
                         ordenesAux.Add(orden);
