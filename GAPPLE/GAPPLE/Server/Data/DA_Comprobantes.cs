@@ -55,37 +55,35 @@ namespace GAPPLE.Server.Data
         {
             DataTable dt = new();
 
-            using (SqlConnection cnn = transaction.Connection)
-            {
-                SqlCommand cmd = cnn.CreateCommand();
-                cmd.Transaction = transaction;
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = "prc_ins_ComprobantesCabecera";
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@pTipoComprobante", comprobante.TipoComprobante);
-                cmd.Parameters.AddWithValue("@pIdCliente", comprobante.IdCliente);
-                cmd.Parameters.AddWithValue("@pIdMotivo", comprobante.IdMotivo);
-                cmd.Parameters.AddWithValue("@pIdDeposito", comprobante.IdDeposito);
-                cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
-                cmd.Parameters.AddWithValue("@pIdEstado", comprobante.IdEstado);
-				cmd.Parameters.AddWithValue("@pCodigoOrden", comprobante.CodigoOrden);
-				cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
-                cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
-                if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
-                cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
-                cmd.Parameters.AddWithValue("@pIdListaDePrecios", comprobante.IdListaPrecio);
-                cmd.Parameters.AddWithValue("@pAlternativo", comprobante.Presupuesto);
-                cmd.Parameters.AddWithValue("@pAltaUsuario", comprobante.AltaUsuario);
-                SqlDataAdapter da = new(cmd);
-                da.Fill(dt);
-            }
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_ComprobantesCabecera";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pTipoComprobante", comprobante.TipoComprobante);
+            cmd.Parameters.AddWithValue("@pIdCliente", comprobante.IdCliente);
+            cmd.Parameters.AddWithValue("@pIdMotivo", comprobante.IdMotivo);
+            cmd.Parameters.AddWithValue("@pIdDeposito", comprobante.IdDeposito);
+            cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
+            cmd.Parameters.AddWithValue("@pIdEstado", comprobante.IdEstado);
+            cmd.Parameters.AddWithValue("@pCodigoOrden", comprobante.CodigoOrden);
+            cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
+            cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
+            if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
+            cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
+            cmd.Parameters.AddWithValue("@pIdListaDePrecios", comprobante.IdListaPrecio);
+            cmd.Parameters.AddWithValue("@pAlternativo", comprobante.Presupuesto);
+            cmd.Parameters.AddWithValue("@pAltaUsuario", comprobante.AltaUsuario);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
 
             return dt;
         }
 
         public void InsertarNotaCreditoDetalle(ComprobanteDetalle detalle, SqlTransaction transaction)
         {
-            using SqlConnection cnn = transaction.Connection;
+            SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
             cmd.Transaction = transaction;
             cmd.CommandType = CommandType.StoredProcedure;

@@ -75,11 +75,9 @@ namespace GAPPLE.Server.Controllers
                     cnn.Open();
                     transaction = cnn.BeginTransaction();
                     comprobante.IdComprobante = Convert.ToInt32(daC.InsertarNotaCreditoCabecera(comprobante, transaction).Rows[0]["IdComprobante"]);
-                    cnn.Open();
-					transaction = cnn.BeginTransaction();
-					foreach (ComprobanteDetalle detalle in comprobante.Detalle)
+                    foreach (ComprobanteDetalle detalle in comprobante.Detalle)
                     {
-						detalle.IdComprobante = comprobante.IdComprobante;
+                        detalle.IdComprobante = comprobante.IdComprobante;
                         daC.InsertarNotaCreditoDetalle(detalle, transaction);
                     }
                     transaction.Commit();
@@ -121,7 +119,7 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex)
             {
-                if(transaction != null && transaction.Connection != null)
+                if (transaction != null && transaction.Connection != null)
                     transaction.Rollback();
                 return StatusCode(500, ex.ToString());
             }

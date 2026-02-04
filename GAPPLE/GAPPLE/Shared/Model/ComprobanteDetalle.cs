@@ -4,6 +4,19 @@ namespace GAPPLE.Shared.Model
 {
     public class ComprobanteDetalle
     {
+        public ComprobanteDetalle() { }
+
+        public ComprobanteDetalle(OrdenDetalle ordenDetalle)
+        {
+            IdProducto = ordenDetalle.IdProducto;
+            NumeroLinea = ordenDetalle.NumeroLinea;
+            CodProducto = ordenDetalle.CodProducto;
+            DescripcionProducto = ordenDetalle.Descripcion;
+            Cantidad = ordenDetalle.Cantidad;
+            Precio = ordenDetalle.Precio;
+            Descuento = ordenDetalle.Descuento;
+        }
+
         [ColumnName("IdProducto")]
         public int IdProducto { get; set; }
 

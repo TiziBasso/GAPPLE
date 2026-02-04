@@ -312,7 +312,7 @@ else
 
     private async Task KeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
+        if (e.Key == KeyboardKeys.Enter)
         {
             await Task.Delay(1);
             await FillOrdenes();

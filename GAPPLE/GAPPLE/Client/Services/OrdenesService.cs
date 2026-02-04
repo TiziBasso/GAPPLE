@@ -19,8 +19,8 @@ namespace GAPPLE.Client.Services
 
         public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger, SesionDTO sesionDTO) => (HttpClient, Logger, SesionDTO) = (httpClient, logger, sesionDTO);
 
-        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario, CancellationTokenSource cancellationToken)
+        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string codOrden, bool? presupuesto, string razonSocial,
+                                        string linea, string zona, int? idEstado, string codTango, int idUsuario, CancellationTokenSource cancellationToken)
         {
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
@@ -81,7 +81,7 @@ namespace GAPPLE.Client.Services
         }
 
 
-        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetaLLE(string codOrden)
+        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetalle(string codOrden)
         {
             string uri = $"{URI_BASE}/ordenconpendiente/{codOrden}";
             return await HttpClient.GetFromJsonAsync<List<OrdenDetalle>>(uri);

@@ -31,7 +31,7 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Comprobante referencia:" />
-                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" />
+                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" disabled />
                         <ValidationMessage For="@(() => comprobante.ComprobanteReferencia)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -55,12 +55,12 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="F:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Factura" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Factura" Disabled="true" />
                         </RadzenStack>
 
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="P:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" Disabled="true" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
@@ -195,7 +195,10 @@ else
                 TipoComprobante = TiposComprobantes.NotaCredito,
                 IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
             };
-            comprobante.IdListaPrecio = listasDePrecio.Find(x => x.CodigoTango == cliente.CodListaPrecioDefault).IdLista;
+
+            await SeleccionarComprobanteReferencia(async o => await ComprobanteSeleccionado(o, true), BackPage);
+            if (comprobante.IdListaPrecio == null)
+                comprobante.IdListaPrecio = listasDePrecio.Find(x => x.CodigoTango == cliente.CodListaPrecioDefault).IdLista;
 
         }
         else if (tipoOperacion == TipoOperacionEnum.Edicion)
@@ -230,6 +233,34 @@ else
             }
         };
         showPage = true;
+    }
+
+    private async Task SeleccionarComprobanteReferencia(Action<Orden> Seleccionada, Action Cancelada)
+    {
+        await RadzenDialogService.OpenAsync<SeleccionarOrdenReferenciaNC>("Seleccionar pedido referencia", new() {
+            { "RazonSocialCliente", comprobante.ClienteRazonSocial},
+            { "Seleccionada", EventCallback.Factory.Create<Orden>(this, Seleccionada)},
+            { "Cancelada", EventCallback.Factory.Create(this, Cancelada)}
+            }, new() { Width = "90%", Height = "90%" });
+    }
+
+    private async Task ComprobanteSeleccionado(Orden orden, bool cambiaDetalle = false)
+    {
+        comprobante.ComprobanteReferencia = orden.CodigoOrden;
+        comprobante.Factura = !orden.Presupuesto;
+        comprobante.Presupuesto = orden.Presupuesto;
+        comprobante.CodListaPrecio = orden.CodListaPrecio;
+        if (!string.IsNullOrEmpty(comprobante.CodListaPrecio))
+            comprobante.IdListaPrecio = listasDePrecio.First(x => x.CodigoTango == comprobante.CodListaPrecio).IdLista;
+
+        if (cambiaDetalle)
+        {
+            var ordenConDetalle = await OrdenesService.GetOrden(orden.CodigoOrden, true);
+            comprobante.Detalle.Clear();
+            comprobante.Detalle = [.. ordenConDetalle.Detalle.Select(x => new ComprobanteDetalle(x))];
+        }
+
+        RadzenDialogService.CloseDialog();
     }
 
     private async Task HandleListaPreciosChange()
@@ -286,7 +317,8 @@ else
             RadzenDialogService.CloseDialog();
             if (response.IsOk)
             {
-
+                RadzenDialogService.NotifySuccess();
+                BackPage();
             }
             else if (response.IsBadRequest && response.Errors.Any())
                 RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
