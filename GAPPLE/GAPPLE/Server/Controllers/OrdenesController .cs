@@ -1022,6 +1022,8 @@ namespace GAPPLE.Server.Controllers
                     var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
                     if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadAprobadaX"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadProbadorAprobadaF"].ToString()) != 0 ||
+                                                        int.Parse(x["CantidadProbadorAprobadaX"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadObsequiosAprobadoF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadObsequiosAprobadoX"].ToString()) != 0))
                         ordenesAux.Add(orden);
