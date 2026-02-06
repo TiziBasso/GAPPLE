@@ -39,7 +39,7 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
             List<ComprobanteCabecera> lstComprobantes = new();
-            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente))
+            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente, request.IdComprobante))
             {
                 foreach (DataRow row in dt.Rows)
                 {
@@ -56,7 +56,35 @@ namespace GAPPLE.Server.Controllers
                     if (row["RazonSocial"] != DBNull.Value) cc.ClienteRazonSocial = row["RazonSocial"].ToString();
                     if (row["CUIT"] != DBNull.Value) cc.ClienteCuit = row["CUIT"].ToString();
                     if (row["CategoriaIVA"] != DBNull.Value) cc.ClienteCategoriaIVA = row["CategoriaIVA"].ToString();
+                    if (row["ComprobanteReferencia"] != DBNull.Value) cc.ComprobanteReferencia = row["ComprobanteReferencia"].ToString();
+                    if (row["Alternativo"] != DBNull.Value) cc.Presupuesto = bool.Parse(row["Alternativo"].ToString());
+                    cc.Factura = !cc.Presupuesto;
+                    if (row["IdListaPrecio"] != DBNull.Value) cc.IdListaPrecio = int.Parse(row["IdListaPrecio"].ToString());
+                    if (row["IdMotivo"] != DBNull.Value) cc.IdMotivo = int.Parse(row["IdMotivo"].ToString());
+                    if (row["IdEstado"] != DBNull.Value) cc.IdEstado = (Shared.Enums.ComprobanteCabeceraEstadoEnum)int.Parse(row["IdEstado"].ToString());
+                    if (row["IdCliente"] != DBNull.Value) cc.IdCliente = int.Parse(row["IdCliente"].ToString());
+                    if (row["CodigoCliente"] != DBNull.Value) cc.CodCliente = row["CodigoCliente"].ToString();
 
+                    if (request.ConDetalle)
+                    {
+                        using (DataTable dtd = daC.ObtenerComprobantesDetalle((int)request.IdComprobante))
+                        {
+                            foreach (DataRow rowd in dtd.Rows)
+                            {
+                                ComprobanteDetalle cd = new();
+                                cd.IdComprobante = (int)request.IdComprobante;
+                                cd.NumeroLinea = int.Parse(rowd["Linea"].ToString());
+                                cd.CodProducto = rowd["CodProducto"].ToString();
+                                cd.DescripcionProducto = rowd["Descripcion"].ToString();
+                                cd.Cantidad = int.Parse(rowd["Cantidad"].ToString());
+                                cd.Precio = decimal.Parse(rowd["Precio"].ToString());
+                                cd.Descuento = decimal.Parse(rowd["Descuento"].ToString());
+                                cd.Detalle = rowd["Detalle"].ToString();
+                                cc.Detalle.Add(cd);
+                            }
+
+                        }
+                    }
                     lstComprobantes.Add(cc);
                 }
             }

@@ -31,15 +31,16 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Comprobante referencia:" />
-                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" disabled />
+                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" />
                         <ValidationMessage For="@(() => comprobante.ComprobanteReferencia)" />
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Código de orden:" />
-                        <TextBoxInput @bind-Value="comprobante.CodigoOrden" />
+                        <TextBoxInput @bind-Value="comprobante.CodigoOrden" disabled />
                         <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
+                        @* <RadzenButton /> *@
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="3">
@@ -55,12 +56,12 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="F:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Factura" Disabled="true" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Factura" />
                         </RadzenStack>
 
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="P:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" Disabled="true" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
@@ -184,19 +185,19 @@ else
 
             var cliente = aux.First();
             comprobante = new()
-            {
-                FechaComprobante = DateTime.Today,
-                IdCliente = cliente.IdCliente,
-                ClienteCategoriaIVA = cliente.CategoriaIva,
-                ClienteCuit = cliente.CUIT,
-                ClienteRazonSocial = cliente.RazonSocial,
-                CodCliente = cliente.CodigoCliente,
-                Detalle = [],
-                TipoComprobante = TiposComprobantes.NotaCredito,
-                IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-            };
+                {
+                    FechaComprobante = DateTime.Today,
+                    IdCliente = cliente.IdCliente,
+                    ClienteCategoriaIVA = cliente.CategoriaIva,
+                    ClienteCuit = cliente.CUIT,
+                    ClienteRazonSocial = cliente.RazonSocial,
+                    CodCliente = cliente.CodigoCliente,
+                    Detalle = [],
+                    TipoComprobante = TiposComprobantes.NotaCredito,
+                    IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+                };
 
-            await SeleccionarComprobanteReferencia(async o => await ComprobanteSeleccionado(o, true), BackPage);
+            await SeleccionarComprobanteReferencia(async o => await ComprobanteSeleccionado(o, true), null);
             if (comprobante.IdListaPrecio == null)
                 comprobante.IdListaPrecio = listasDePrecio.Find(x => x.CodigoTango == cliente.CodListaPrecioDefault).IdLista;
 
@@ -246,7 +247,7 @@ else
 
     private async Task ComprobanteSeleccionado(Orden orden, bool cambiaDetalle = false)
     {
-        comprobante.ComprobanteReferencia = orden.CodigoOrden;
+        comprobante.CodigoOrden = orden.CodigoOrden;
         comprobante.Factura = !orden.Presupuesto;
         comprobante.Presupuesto = orden.Presupuesto;
         comprobante.CodListaPrecio = orden.CodListaPrecio;
@@ -312,18 +313,36 @@ else
     {
         if (await RadzenDialogService.ConfirmOperation())
         {
-            RadzenDialogService.OpenBusyWithLoader("Guardando...");
-            var response = await ComprobantesService.PostNotaCredito(comprobante);
-            RadzenDialogService.CloseDialog();
-            if (response.IsOk)
+            if (tipoOperacion == TipoOperacionEnum.Edicion)
             {
-                RadzenDialogService.NotifySuccess();
-                BackPage();
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
+                var response = await ComprobantesService.PutNotaCredito(comprobante);
+                RadzenDialogService.CloseDialog();
+                if (response.IsOk)
+                {
+                    RadzenDialogService.NotifySuccess();
+                    BackPage();
+                }
+                else if (response.IsBadRequest && response.Errors.Any())
+                    RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
+                else
+                    RadzenDialogService.NotifyInternalServerError();
             }
-            else if (response.IsBadRequest && response.Errors.Any())
-                RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
             else
-                RadzenDialogService.NotifyInternalServerError();
+            {
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
+                var response = await ComprobantesService.PostNotaCredito(comprobante);
+                RadzenDialogService.CloseDialog();
+                if (response.IsOk)
+                {
+                    RadzenDialogService.NotifySuccess();
+                    BackPage();
+                }
+                else if (response.IsBadRequest && response.Errors.Any())
+                    RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
+                else
+                    RadzenDialogService.NotifyInternalServerError();
+            }
         }
     }
 

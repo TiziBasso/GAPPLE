@@ -59,7 +59,14 @@ namespace GAPPLE.Client.Services
             return await Response.CreateAsync(response);
         }
 
-        public async ValueTask<Response> PutNotaCredito(ComprobanteCabecera comprobante) =>
-            await Response.CreateAsync(await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito", comprobante));
+        public async ValueTask<Response> PutNotaCredito(ComprobanteCabecera comprobante)
+        {
+            comprobante.EdicionUsuario = SesionDTO.Nombre;
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito", comprobante);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
+
+            return await Response.CreateAsync(response);
+        }
     }
 }
