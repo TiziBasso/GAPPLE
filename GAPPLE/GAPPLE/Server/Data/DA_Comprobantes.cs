@@ -35,7 +35,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void CancelarNotaCredito(int idComprobante, string usuario)
+        public void ActualizarNotaCreditoEstado(int idComprobante, ComprobanteCabeceraEstadoEnum estado, string usuario)
         {
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
@@ -45,7 +45,7 @@ namespace GAPPLE.Server.Data
                 CommandText = "prc_upd_ComprobanteCabecera"
             };
             cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
-            cmd.Parameters.AddWithValue("@pIdEstado", (int)ComprobanteCabeceraEstadoEnum.Cancelado);
+            cmd.Parameters.AddWithValue("@pIdEstado", (int)estado);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", usuario);
             cnn.Open();
             cmd.ExecuteNonQuery();
@@ -100,9 +100,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void EliminarNotaCreditoDetalle(
-    int idComprobante,
-    SqlTransaction transaction)
+        public void EliminarNotaCreditoDetalle(int idComprobante, SqlTransaction transaction)
         {
             SqlCommand cmd = transaction.Connection.CreateCommand();
             cmd.Transaction = transaction;
@@ -112,10 +110,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-
-        public void ActualizarNotaCreditoCabecera(
-       ComprobanteCabecera comprobante,
-       SqlTransaction transaction)
+        public void ActualizarNotaCreditoCabecera(ComprobanteCabecera comprobante, SqlTransaction transaction)
         {
             SqlCommand cmd = transaction.Connection.CreateCommand();
             cmd.Transaction = transaction;
@@ -129,6 +124,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
             if (!string.IsNullOrWhiteSpace(comprobante.Observaciones))
                 cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
+            else
                 cmd.Parameters.AddWithValue("@pObservaciones", DBNull.Value);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", comprobante.EdicionUsuario);
             cmd.ExecuteNonQuery();

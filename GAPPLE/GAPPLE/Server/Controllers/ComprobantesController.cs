@@ -1,4 +1,5 @@
 ﻿using GAPPLE.Server.Data;
+using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
@@ -64,14 +65,17 @@ namespace GAPPLE.Server.Controllers
                     if (row["IdEstado"] != DBNull.Value) cc.IdEstado = (Shared.Enums.ComprobanteCabeceraEstadoEnum)int.Parse(row["IdEstado"].ToString());
                     if (row["IdCliente"] != DBNull.Value) cc.IdCliente = int.Parse(row["IdCliente"].ToString());
                     if (row["CodigoCliente"] != DBNull.Value) cc.CodCliente = row["CodigoCliente"].ToString();
+                    cc.IdDeposito = Convert.ToInt32(row["IdDeposito"]);
+                    cc.DepositoDescripcion = Convert.ToString(row["DescripcionDeposito"]);
 
                     if (request.ConDetalle)
                     {
-                        using (DataTable dtd = daC.ObtenerComprobantesDetalle((int)request.IdComprobante))
+                        using (DataTable dtd = daC.ObtenerComprobantesDetalle(cc.IdComprobante))
                         {
                             foreach (DataRow rowd in dtd.Rows)
                             {
                                 ComprobanteDetalle cd = new();
+                                cd.IdProducto = Convert.ToInt32(rowd["IdProducto"]);
                                 cd.IdComprobante = (int)request.IdComprobante;
                                 cd.NumeroLinea = int.Parse(rowd["Linea"].ToString());
                                 cd.CodProducto = rowd["CodProducto"].ToString();
@@ -156,9 +160,46 @@ namespace GAPPLE.Server.Controllers
         [HttpPut("notacredito/{idComprobante:int}/cancelar")]
         public IActionResult CancelarNotaCredito(int idComprobante, [FromBody] string usuario)
         {
-            DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-            daC.CancelarNotaCredito(idComprobante, usuario);
-            return Ok();
+            try
+            {
+                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Cancelado, usuario);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("notacredito/{idComprobante:int}/aprobar")]
+        public IActionResult AprobarNotaCredito(int idComprobante, [FromBody] string usuario)
+        {
+            try
+            {
+                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Aprobado, usuario);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("notacredito/{idComprobante:int}/revertir")]
+        public IActionResult RevertirNotaCredito(int idComprobante, [FromBody] string usuario)
+        {
+            try
+            {
+                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Pendiente, usuario);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
         }
     }
 }

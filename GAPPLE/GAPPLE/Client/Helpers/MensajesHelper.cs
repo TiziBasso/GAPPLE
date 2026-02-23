@@ -6,7 +6,7 @@ namespace GAPPLE.Client.Helpers
         public static string ErrorDetail500 => "Por favor contacte a Sistemas!";
         public static string ErrorSummaryModel => "No se puede completar la operación";
         public static string ErrorDetailModel => "Compruebe todos los datos ingresados!";
-        public static string Title => "Integra";
+        public static string Title => "Zentra";
         public static string Export => "Exportando...";
         public static string EmptyResponse => "La búsqueda no ha devuelto resultados!";
         public static string ErrorFileFormat => "El archivo ingresado no contiene el formato requerido";

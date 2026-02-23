@@ -37,5 +37,6 @@ namespace GAPPLE.Shared.Helpers
         public static string DescuentoManual => "descuentoManual";
         public static string DepositoManual => "depositoManual";
         public static string LineaManual => "lineaManual";
+        public static string Aprobacion => "aprobacion";
     }
 }

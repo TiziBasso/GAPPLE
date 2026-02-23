@@ -30,13 +30,13 @@
     <HeaderTemplate>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
-                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" />
-                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" />
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" Disabled=@Disabled />
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled=@Disabled />
 
                 @if (IngresarLineaManual)
                 {
                     <RadzenButton ButtonStyle="ButtonStyle.Base" Icon="draw" IconColor="@Colors.Secondary" Text="Detalle libre" Size="ButtonSize.Small"
-                                  Click="HandleClickDetalleLibre" title="Detalle libre" />
+                                  Click="HandleClickDetalleLibre" title="Detalle libre" Disabled=@Disabled />
                 }
 
                 @* @if (PermiteFacturarRemitos)
@@ -80,13 +80,13 @@
             <Template Context="data">
                 <input id=@($"cant{data.NumeroLinea}") type="number" @bind-value="data.Cantidad"
                        @onkeydown="@(args => KeyDownCant(args, data))" @onfocusout="@(() => OnFocusOutCant(data))"
-                       arrowKeyBlocker enterKeyBlocker
+                       arrowKeyBlocker enterKeyBlocker disabled=@Disabled
                        class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Title="Unitario" TextAlign="TextAlign.Right" Width="110px">
             <Template Context="data">
-                @if (ModificarPreciosUnitarios | IngresarLineaManual)
+                @if (!Disabled && (ModificarPreciosUnitarios | IngresarLineaManual))
                 {
                     <input id=@($"unit{data.NumeroLinea}") type="number" @bind-value="data.Precio" step="0.01"
                            @onkeydown="@(args => KeyDownUnit(args, data))" @onfocusout="@(() => OnFocusOutUnit(data))"
@@ -103,7 +103,7 @@
             <Template Context="data">
                 <input id=@($"desc{data.NumeroLinea}") type="number" @bind-value="data.Descuento"
                        @onkeydown="@(args => KeyDownDesc(args, data))" @onfocusout="@(() => OnFocusOutDesc(data))"
-                       arrowKeyBlocker enterKeyBlocker
+                       arrowKeyBlocker enterKeyBlocker disabled=@Disabled
                        class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
             </Template>
         </RadzenDataGridColumn>
@@ -119,7 +119,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
             <Template Context="data">
-                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall"
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Disabled=@Disabled
                               Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" title="Eliminar" />
             </Template>
         </RadzenDataGridColumn>
@@ -131,9 +131,9 @@
     [Parameter] public List<ComprobanteDetalle> Lineas { get; set; }
     [Parameter] public bool ModificarPreciosUnitarios { get; set; }
     [Parameter] public bool IngresarLineaManual { get; set; }
+    [Parameter] public bool Disabled { get; set; }
     [Parameter] public EventCallback Render { get; set; }
 
-    bool agruparPreciosPorInterno;
     Dictionary<int, decimal> preciosAgrupadosPorInterno = new();
 
     ComprobanteDetalle Linea { get; set; }

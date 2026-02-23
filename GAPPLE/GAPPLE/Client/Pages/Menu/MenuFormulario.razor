@@ -9,10 +9,10 @@
 {
     <RadzenRow>
         <RadzenColumn Size="12">
-            <RadzenDataGrid Data="DataPadre" @ref="grilla" TItem="Menu" Density="Density.Default" RowRender="RowRender" LoadChildData="LoadChildData" 
-            @bind-Value="selectedMenu" RowCollapse="RowCollapse"
-            SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true" AllowVirtualization="true" PageSize="30"
-            ExpandMode="DataGridExpandMode.Multiple" Style="height:80vh;">
+            <RadzenDataGrid Data="DataPadre" @ref="grilla" TItem="Menu" Density="Density.Default" RowRender="RowRender" LoadChildData="LoadChildData"
+                            @bind-Value="selectedMenu" RowCollapse="RowCollapse"
+                            SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true" AllowVirtualization="true" PageSize="30"
+                            ExpandMode="DataGridExpandMode.Multiple" Style="height:80vh;">
                 <Columns>
                     <RadzenDataGridColumn TItem="Menu" Title="Nombre" Property="@nameof(Menu.Nombre)" Width="160px">
                         <EditTemplate>
@@ -70,15 +70,15 @@
                             @{
                                 var menu = (Menu)context;
 
-                                <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnAdd(context))" />
+                                <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(() => OnAdd(context))" />
 
                                 if (menu.IdPermiso > 2)
                                 {
-                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=> OnEdit(context))" />
+                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(() => OnEdit(context))" />
 
                                     if (!menu.TieneHijos)
                                     {
-                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(()=>OnDelete(context))" />
+                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(() => OnDelete(context))" />
                                     }
                                 }
                             }
@@ -140,7 +140,7 @@ else
     {
         operacion = TipoOperacionEnum.Alta;
         Menu permiso = new Menu() { IdPadre = nodo.IdPermiso, Tipo = 'M', Orden = Data.FindAll(x => x.IdPadre == nodo.IdPermiso).Count + 1 };
-        permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
+        permiso = await DialogService.OpenAsync<MenuModal>(MensajesHelper.Title, new Dictionary<string, object>()
         {
             {"permiso", permiso},
             {"SaveRow",EventCallback.Factory.Create<Menu>(this,SaveRow)}
@@ -178,7 +178,7 @@ else
     async Task OnEdit(Menu nodo)
     {
         operacion = TipoOperacionEnum.Edicion;
-        var permiso = await DialogService.OpenAsync<MenuModal>("Integra", new Dictionary<string, object>()
+        var permiso = await DialogService.OpenAsync<MenuModal>(MensajesHelper.Title, new Dictionary<string, object>()
         {
             {"permiso", nodo},
             {"SaveRow",EventCallback.Factory.Create<Menu>(this,SaveRow)}
@@ -187,7 +187,7 @@ else
 
     async Task OnDelete(Menu nodo)
     {
-        if ((await DialogService.Confirm($"¿Desea eliminar el nodo \"{nodo.Nombre}\"?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" })).Value)
+        if ((await DialogService.Confirm($"¿Desea eliminar el nodo \"{nodo.Nombre}\"?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" })).Value)
         {
             RadzenDialogService.OpenBusyWithLoader("Eliminando...");
             await SeguridadService.DeletePermiso(nodo.IdPermiso);
@@ -217,6 +217,6 @@ else
     }
 
     /*.rz-data-row.rz-datatable-edit {
-                                                                            display: none;
-                                                                        }*/
+                                                                                display: none;
+                                                                            }*/
 </style>

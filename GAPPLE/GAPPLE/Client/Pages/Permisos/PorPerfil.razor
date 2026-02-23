@@ -127,7 +127,7 @@ else
         }
         else
         {
-            var result = await DialogService.Confirm("¿Confirma guardar los datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma guardar los datos?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             List<Permiso> lstCambios = permisos.Where(x => x.HuboCambios).ToList();
             Response response = null;
 
@@ -175,7 +175,7 @@ else
 
     private async Task Cancelar()
     {
-        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
         await Reset();
     }
 

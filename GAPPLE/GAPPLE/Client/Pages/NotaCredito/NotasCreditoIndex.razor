@@ -101,15 +101,41 @@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCuit)" Title="Cuit" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCategoriaIVA)" Title="Tipo IVA" Width="100px" Resizable=false />
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteLectura Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => VerNotaCredito(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.ExtraSmall" Click="@(() => EditarNotaCredito(context))" Disabled=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => EditarNotaCredito(context))" Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteAprobacion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => AprobarNotaCredito(context))" Disabled=@(context.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente) />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(permiteCancelar)
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Visible=@(orden.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado)
+                                  @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteCancelar Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))" Disabled=@(context.IdEstado != ComprobanteCabeceraEstadoEnum.Aprobado) />
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))"
+                                  Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -134,7 +160,7 @@ else
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
     //permisos
-    bool permiteAlta, permiteEdicion, permiteCancelar;
+    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir;
 
     protected override async Task OnInitializedAsync()
     {
@@ -143,6 +169,9 @@ else
         permiteAlta = permisos.Contains(Permisos.Alta);
         permiteEdicion = permisos.Contains(Permisos.Edicion);
         permiteCancelar = permisos.Contains(Permisos.Cancelar);
+        permiteAprobacion = permisos.Contains(Permisos.Aprobacion);
+        permiteLectura = permisos.Contains(Permisos.Lectura);
+        permiteReverir = permisos.Contains(Permisos.Revertir);
 
         estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
 
@@ -164,6 +193,54 @@ else
         }
     }
 
+    private async Task AprobarNotaCredito(ComprobanteCabecera nota)
+    {
+        if (await RadzenDialogService.ConfirmOperation("aprobar", $"la nota de crédito {nota.CodigoOrden}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("Aprobando...");
+            var response = await ComprobantesService.AprobarNotaCredito(nota.IdComprobante);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+                var obj = comprobantes[index];
+
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Aprobado;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+
+                await grid.Reload();
+            }
+            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task RevertirConfirmacionOrden(ComprobanteCabecera nota)
+    {
+        if (await RadzenDialogService.ConfirmOperation("revertir", $"la nota de crédito {nota.CodigoOrden}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("revirtiendo...");
+            var response = await ComprobantesService.RevertirNotaCredito(nota.IdComprobante);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+                var obj = comprobantes[index];
+
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+
+                await grid.Reload();
+            }
+            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
     private async Task CancelarNotaCredito(ComprobanteCabecera nota)
     {
         if (await RadzenDialogService.ConfirmOperation("cancelar", $"la nota de crédito {nota.CodigoOrden}"))
@@ -177,7 +254,7 @@ else
                 var obj = comprobantes[index];
 
                 obj.IdEstado = ComprobanteCabeceraEstadoEnum.Cancelado;
-                obj.EstadoDescripcion = estados.Find(x => x.Id == ComprobanteCabeceraEstadoEnum.Cancelado).Descripcion;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
 
                 await grid.Reload();
             }
@@ -189,6 +266,7 @@ else
     }
 
     private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
+    private void VerNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/lectura/{nota.IdComprobante}");
 
     private async Task NuevaNotaCredito() => await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente", new() { { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) } }, new() { Width = "60rem", Height = "30rem" });
 

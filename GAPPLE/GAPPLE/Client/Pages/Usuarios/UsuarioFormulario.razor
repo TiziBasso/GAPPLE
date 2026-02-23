@@ -210,7 +210,7 @@ else
     {
         if (ValidarContraseñas())
         {
-            var result = await DialogService.Confirm("¿Confirma guardar datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma guardar datos?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             if (result != null && (bool)result)
             {
                 customValidation?.ClearErrors();
@@ -246,7 +246,7 @@ else
     {
         if (editContext.IsModified())
         {
-            var result = await DialogService.Confirm("¿Confirma cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma cancelar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             if (result != null && (bool)result)
                 NavigationManager.NavigateTo("/seguridad/usuarios");
         }

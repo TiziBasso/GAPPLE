@@ -1,5 +1,6 @@
 ﻿@page "/notascredito/{OperacionQuery}/{IdQuery:int}"
 @using GAPPLE.Client.Components.Ordenes
+@using System.Threading.Tasks
 
 @inject SeguridadService SeguridadService
 @inject DepositosService DepositosService
@@ -31,22 +32,25 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Comprobante referencia:" />
-                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" />
+                        <TextBoxInput @bind-Value="comprobante.ComprobanteReferencia" disabled=@disableInput />
                         <ValidationMessage For="@(() => comprobante.ComprobanteReferencia)" />
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Código de orden:" />
-                        <TextBoxInput @bind-Value="comprobante.CodigoOrden" disabled />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
+                            <TextBoxInput @bind-Value="comprobante.CodigoOrden" style="width:90%" disabled=@true />
+                            <RadzenButton Size="ButtonSize.Medium" Icon="list" Style="width:10%" ButtonStyle="ButtonStyle.Secondary" Disabled="disableInput"
+                                          Click="@(() => SeleccionarComprobanteReferencia(async c => await ComprobanteSeleccionado(c, false), ComprobanteCancelado))" />
+                        </RadzenStack>
                         <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
-                        @* <RadzenButton /> *@
                     </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Observaciones:" />
-                        <TextAreaInput @bind-Value="comprobante.Observaciones" />
+                        <TextAreaInput @bind-Value="comprobante.Observaciones" disabled=@disableInput />
                         <ValidationMessage For="@(() => comprobante.Observaciones)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -56,12 +60,12 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="F:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Factura" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Factura" Disabled="@disableInput" />
                         </RadzenStack>
 
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="P:" />
-                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" />
+                            <RadzenCheckBox @bind-Value="@comprobante.Presupuesto" Disabled="@disableInput" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
@@ -71,7 +75,8 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
-                        <RadzenDropDownDataGrid TValue="int?" Data="listasDePrecio" @bind-Value="idTipoListaPreciosAux" Disabled="@(!permisoListaPrecioManual)" Density="Density.Compact"
+                        <RadzenDropDownDataGrid TValue="int?" Data="listasDePrecio" @bind-Value="idTipoListaPreciosAux" Disabled="@(disableInput || !permisoListaPrecioManual)"
+                                                Density="Density.Compact"
                                                 TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.IdLista)"
                                                 Change=@(args=>HandleListaPreciosChange()) AllowVirtualization="true"
                                                 FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true
@@ -89,7 +94,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Ingresa mercadería:" Component="mercaderia" />
                         <RadzenDropDown Data=@Variables.Mercaderia @bind-Value=@comprobante.MercaderiaIngresada Name="mercaderia"
-                                        ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                                        ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion) Disabled="@disableInput"
                                         Placeholder="No ingresa" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -97,7 +102,7 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Motivo:" />
-                        <RadzenDropDown Data="motivos" @bind-Value="comprobante.IdMotivo" Change=ChangeMotivo
+                        <RadzenDropDown Data="motivos" @bind-Value="comprobante.IdMotivo" Change=ChangeMotivo Disabled="@disableInput"
                                         TextProperty="@nameof(Motivo.Descripcion)" ValueProperty="@nameof(Motivo.IdMotivo)" AllowVirtualization="true"
                                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
                         <ValidationMessage For="@(() => comprobante.IdMotivo)" />
@@ -107,7 +112,7 @@
                 <RadzenColumn Size="3">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Deposito:" />
-                        <RadzenDropDown Data="depositos" @bind-Value="comprobante.IdDeposito" Disabled="@(!permisoDepositoManual && !motivoNull)"
+                        <RadzenDropDown Data="depositos" @bind-Value="comprobante.IdDeposito" Disabled="@(disableInput || (!permisoDepositoManual && !motivoNull))"
                                         TextProperty="@nameof(Deposito.Descripcion)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
                                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
                         <ValidationMessage For="@(() => comprobante.IdDeposito)" />
@@ -118,11 +123,18 @@
         </RadzenFieldset>
 
         <CuerpoComprobante @ref="refCuerpo" Comprobante="comprobante" Lineas="comprobante.Detalle"
-                           ModificarPreciosUnitarios="permisoModificarPreciosUnitarios" />
+                           ModificarPreciosUnitarios="permisoModificarPreciosUnitarios" Disabled=@disableInput />
 
         <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
-            <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
-            <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
+            @if (tipoOperacion == TipoOperacionEnum.Lectura)
+            {
+                <RadzenButton Icon="arrow_back" Text="Volver" Click="BackPage" />
+            }
+            else
+            {
+                <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+                <RadzenButton Disabled=@(editMode) ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
+            }
         </RadzenStack>
 
     </RadzenTemplateForm>
@@ -146,7 +158,7 @@ else
     List<ListaDePrecios> listasDePrecio = [];
     List<Motivo> motivos = [];
     List<Deposito> depositos = [];
-    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull;
+    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput;
     int? idTipoListaPreciosAux;
     CuerpoComprobante refCuerpo;
 
@@ -185,24 +197,23 @@ else
 
             var cliente = aux.First();
             comprobante = new()
-                {
-                    FechaComprobante = DateTime.Today,
-                    IdCliente = cliente.IdCliente,
-                    ClienteCategoriaIVA = cliente.CategoriaIva,
-                    ClienteCuit = cliente.CUIT,
-                    ClienteRazonSocial = cliente.RazonSocial,
-                    CodCliente = cliente.CodigoCliente,
-                    Detalle = [],
-                    TipoComprobante = TiposComprobantes.NotaCredito,
-                    IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-                };
+            {
+                FechaComprobante = DateTime.Today,
+                IdCliente = cliente.IdCliente,
+                ClienteCategoriaIVA = cliente.CategoriaIva,
+                ClienteCuit = cliente.CUIT,
+                ClienteRazonSocial = cliente.RazonSocial,
+                CodCliente = cliente.CodigoCliente,
+                Detalle = [],
+                TipoComprobante = TiposComprobantes.NotaCredito,
+                IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+            };
 
-            await SeleccionarComprobanteReferencia(async o => await ComprobanteSeleccionado(o, true), null);
             if (comprobante.IdListaPrecio == null)
                 comprobante.IdListaPrecio = listasDePrecio.Find(x => x.CodigoTango == cliente.CodListaPrecioDefault).IdLista;
 
         }
-        else if (tipoOperacion == TipoOperacionEnum.Edicion)
+        else
         {
             comprobante = await ComprobantesService.GetNotaCredito((int)IdQuery);
             if (comprobante == null)
@@ -210,6 +221,8 @@ else
                 RadzenDialogService.NotifyInternalServerError();
                 BackPage();
             }
+            else if (tipoOperacion == TipoOperacionEnum.Lectura)
+                disableInput = true;
             else if (comprobante.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente)
             {
                 await RadzenDialogService.ShowAlertAsync("La nota de crédito no se encuentra en estado \"Pendiente\" y no puede ser editada", MensajesHelper.Title);
@@ -245,14 +258,31 @@ else
             }, new() { Width = "90%", Height = "90%" });
     }
 
+    private void ComprobanteCancelado()
+    {
+        RadzenDialogService.CloseDialog();
+    }
+
     private async Task ComprobanteSeleccionado(Orden orden, bool cambiaDetalle = false)
     {
+        if (!string.IsNullOrEmpty(comprobante.CodListaPrecio))
+        {
+            var aux = listasDePrecio.First(x => x.CodigoTango == orden.CodListaPrecio).IdLista;
+            if (comprobante.Detalle.Any() && comprobante.IdListaPrecio != null && aux != comprobante.IdListaPrecio)
+            {
+                if (await RadzenDialogService.Confirm("La lista de precio del comprobante seleccionado no es igual a la seleccionada anteriormente, si continua deberá cargar los productos nuevamente", MensajesHelper.Title, RadzenHelper.Confirm("Continuar", "Cancelar")) == true)
+                    comprobante.IdListaPrecio = aux;
+                else
+                    return;
+            }
+            else
+                comprobante.IdListaPrecio = aux;
+        }
+
         comprobante.CodigoOrden = orden.CodigoOrden;
         comprobante.Factura = !orden.Presupuesto;
         comprobante.Presupuesto = orden.Presupuesto;
         comprobante.CodListaPrecio = orden.CodListaPrecio;
-        if (!string.IsNullOrEmpty(comprobante.CodListaPrecio))
-            comprobante.IdListaPrecio = listasDePrecio.First(x => x.CodigoTango == comprobante.CodListaPrecio).IdLista;
 
         if (cambiaDetalle)
         {
@@ -262,6 +292,7 @@ else
         }
 
         RadzenDialogService.CloseDialog();
+
     }
 
     private async Task HandleListaPreciosChange()
@@ -309,9 +340,25 @@ else
         motivoNull = comprobante.IdDeposito == null;
     }
 
+    private async Task<bool> Validar()
+    {
+        List<string> errores = [];
+
+        if (!comprobante.Detalle.Any())
+            errores.Add("Debe ingresar al menos un producto");
+
+        if (comprobante.Detalle.Any(x => x.Cantidad == 0 || x.Precio == 0))
+            errores.Add("No se permiten cantidades o precios unitarios en 0");
+
+        if (errores.Any())
+            await RadzenDialogService.ShowAlertAsync(errores, MensajesHelper.Title);
+
+        return !errores.Any();
+    }
+
     private async Task Guardar()
     {
-        if (await RadzenDialogService.ConfirmOperation())
+        if (editContext.Validate() && await Validar() && await RadzenDialogService.ConfirmOperation())
         {
             if (tipoOperacion == TipoOperacionEnum.Edicion)
             {

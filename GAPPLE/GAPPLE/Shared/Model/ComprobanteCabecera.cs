@@ -11,7 +11,7 @@ namespace GAPPLE.Shared.Model
         [ColumnName("IdComprobante")]
         public int IdComprobante { get; set; }
 
-        [ColumnName("CodigoOrden"), Required(ErrorMessage = "Debe ingresar un cód de orden")]
+        [ColumnName("CodigoOrden")]
         public string CodigoOrden { get; set; }
 
         [ColumnName("CodigoTango")]

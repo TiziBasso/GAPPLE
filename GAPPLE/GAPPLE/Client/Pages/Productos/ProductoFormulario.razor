@@ -250,7 +250,7 @@ else
     {
         if (operacion == TipoOperacionEnum.Lectura)
             NavigationManager.NavigateTo("productos");
-        else if ((bool)await DialogService.Confirm("¿Desea cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+        else if ((bool)await DialogService.Confirm("¿Desea cancelar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
             NavigationManager.NavigateTo("productos");
     }
 
@@ -272,7 +272,7 @@ else
             NotificationService.Notify(NotificationSeverity.Error, "No se puede completar la operación, compruebe que todos los datos ingresados sean correctos!");
         else
         {
-            if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+            if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
             {
                 RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 Response response;

@@ -14,14 +14,14 @@
     [Parameter, EditorRequired] public Orden Pedido { get; set; }
     [Parameter] public EventCallback Imprimir { get; set; }
     [Parameter] public List<OrdenDetalle> Detalle { get; set; }
-    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public List<OrdenDetalle> Pendientes { get; set; } = null;
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
     List<OrdenDetalle>? detalleCompleto = new();
     List<OrdenDetalle>? detalle = new();
 
     bool showModal, showProbadores, showObsequios;
-    int cantPages = 0, lineasXPag = 49, aux;
+    int cantPages = 0, lineasXPag = 49;
 
     protected override void OnInitialized()
     {
