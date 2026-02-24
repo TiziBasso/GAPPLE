@@ -4,8 +4,8 @@
         @for (int i = 0; i < cantPages; i++)
         {
             GetData(i);
-            <Page Pedido=Pedido PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-            Detalle="detalle" ShowProbadores=showProbadores ShowObsequios="showObsequios"/>
+            <Page Pedido=Pedido PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
+                  Detalle="detalle" ShowProbadores=showProbadores ShowObsequios="showObsequios" />
         }
     </div>
 }
@@ -14,20 +14,58 @@
     [Parameter, EditorRequired] public Orden Pedido { get; set; }
     [Parameter] public EventCallback Imprimir { get; set; }
     [Parameter] public List<OrdenDetalle> Detalle { get; set; }
-    [Parameter] public List<OrdenDetalle>? Pendientes { get; set; } = null;
+    [Parameter] public List<OrdenDetalle> Pendientes { get; set; } = null;
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
-    List<OrdenDetalle>? detalleCompleto = new();
-    List<OrdenDetalle>? detalle = new();
+    List<OrdenDetalle> detalleCompleto = new();
+    List<OrdenDetalle> detalle = new();
 
     bool showModal, showProbadores, showObsequios;
     int cantPages = 0, lineasXPag = 49, aux;
 
     protected override void OnInitialized()
     {
-        detalleCompleto!.AddRange(Detalle);
+        detalleCompleto.AddRange(
+            Detalle.Select(x => new OrdenDetalle()
+            {
+                Descripcion = x.Descripcion,
+                NumeroLinea = x.NumeroLinea,
+                Cantidad = x.CantidadAprobada,
+                CantidadAprobada = x.CantidadAprobada,
+
+                CantidadObsequio = x.CantidadObsequioAprobada,
+                CantidadObsequioAprobada = x.CantidadObsequioAprobada,
+
+                CantidadProbador = x.CantidadProbadorAprobada,
+                CantidadProbadorAprobada = x.CantidadProbadorAprobada,
+
+                Descuento = x.Descuento,
+                Probador = x.Probador
+            })
+        );
+
+        // Pendientes
         if (Pendientes != null)
-            detalleCompleto.AddRange(Pendientes);
+        {
+            detalleCompleto.AddRange(
+                Pendientes.Select(x => new OrdenDetalle()
+                {
+                    Descripcion = x.Descripcion,
+                    NumeroLinea = x.NumeroLinea,
+                    Cantidad = x.Cantidad - x.CantidadAprobada,
+                    CantidadAprobada = 0,
+
+                    CantidadObsequio = x.CantidadObsequio - x.CantidadObsequioAprobada,
+                    CantidadObsequioAprobada = 0,
+
+                    CantidadProbador = x.CantidadProbador - x.CantidadProbadorAprobada,
+                    CantidadProbadorAprobada = 0,
+
+                    Descuento = x.Descuento,
+                    Probador = x.Probador
+                })
+            );
+        }
 
         int sumLineas = detalleCompleto.Count + 1;
         if (Pendientes != null && Pendientes.Any()) sumLineas++;
