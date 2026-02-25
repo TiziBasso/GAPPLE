@@ -7,6 +7,7 @@
 @inject NavigationManager NavigationManager
 @inject ComprobantesService ComprobantesService
 @inject RadzenDialogService RadzenDialogService
+@inject ParametrosDeConsulta ParametrosDeConsulta
 @inject ClientesService ClientesService
 @inject MotivosService MotivosService
 @inject ProductosService ProductosService
@@ -368,6 +369,14 @@ else
                 if (response.IsOk)
                 {
                     RadzenDialogService.NotifySuccess();
+                    ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
+                                {
+                                    { "request", new ComprobanteCabeceraRequest()
+                                                {
+                                                    IdComprobante = comprobante.IdComprobante
+                                                }
+                                    }
+                                });
                     BackPage();
                 }
                 else if (response.IsBadRequest && response.Errors.Any())
@@ -383,6 +392,14 @@ else
                 if (response.IsOk)
                 {
                     RadzenDialogService.NotifySuccess();
+                    ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
+                                {
+                                    { "request", new ComprobanteCabeceraRequest()
+                                                {
+                                                    IdComprobante = ((ComprobanteCabecera)response.Data).IdComprobante
+                                                }
+                                    }
+                                });
                     BackPage();
                 }
                 else if (response.IsBadRequest && response.Errors.Any())

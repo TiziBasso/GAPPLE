@@ -31,11 +31,14 @@ namespace GAPPLE.Client.Services
             if (idCliente != null) query["idCliente"] = idCliente;
             query["idUsuario"] = SesionDTO.IdUsuario;
 
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
-            if (query.Any())
-                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+            var response = await HttpClient.GetAsync(uri);
 
-            return await HttpClient.GetFromJsonAsync<List<Cliente>>(uri);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<Cliente>>();
+
+            return null;
         }
 
         public async ValueTask<Response> PostCLiente(Cliente cliente)

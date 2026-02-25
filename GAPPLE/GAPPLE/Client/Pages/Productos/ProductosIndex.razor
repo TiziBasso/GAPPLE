@@ -7,7 +7,6 @@
 @inject SeguridadService SeguridadService
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject NavigationManager navigationManager
-@inject RadzenDialogService RadzenDialogService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject RadzenDialogService RadzenDialogService
@@ -55,7 +54,7 @@
                     IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
                     FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
                     SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
-                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args)=> RowExpand(args))" Style="height: 65vh;" EmptyText="">
+                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args) => RowExpand(args))" Style="height: 65vh;" EmptyText="">
         <Columns>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.CodigoProducto))" Title="Código" TextAlign="TextAlign.Right"
                                   Width="90px" FilterValue="@codigoInternoFilter" Groupable="false" Resizable="false">
@@ -72,7 +71,7 @@
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Pasivo))" Title="Pasivo" TextAlign="TextAlign.Center" Width="75px"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false">
                 <Template Context="producto">
-                    <RadzenCheckBox @bind-Value=@producto.Pasivo TValue="bool" Change="@(()=>Change(producto))" />
+                    <RadzenCheckBox @bind-Value=@producto.Pasivo TValue="bool" Change="@(() => Change(producto))" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Orden))" Title="Orden" FilterOperator="FilterOperator.Contains"
@@ -170,16 +169,12 @@ else
 
     private async Task KeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
-        {
+        if (e.Key == KeyboardKeys.Enter)
             await FillProductos();
-        }
     }
 
-    private void ImportarProducto()
-    {
+    private void ImportarProducto() =>
         navigationManager.NavigateTo("productos/importar");
-    }
 
     private async Task FillProductos()
     {

@@ -3,6 +3,7 @@
 
 @inject ToolsService ToolsService
 @inject SeguridadService SeguridadService
+@inject ParametrosDeConsulta ParametrosDeConsulta
 @inject NavigationManager NavigationManager
 @inject RadzenDialogService RadzenDialogService
 @inject ComprobantesService ComprobantesService
@@ -25,12 +26,12 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Código:" Component="codigoOrden" />
-            <NumberInput @bind-Value=request.CodigoOrden id="codigoOrden" OnKeyDown="OnKeyDown" />
+            <TextBoxInput @bind-Value=request.CodigoOrden id="codigoOrden" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cliente:" Component="cliente" />
-            <TextAreaInput @bind-Value=request.RazonSocialCliente id="cliente" OnKeyDown="OnKeyDown" />
+            <TextBoxInput @bind-Value=request.RazonSocialCliente id="cliente" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -49,7 +50,7 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cód. tango:" Component="codTango" />
-            <TextAreaInput @bind-Value=request.CodigoTango id="codTango" OnKeyDown="OnKeyDown" />
+            <TextBoxInput @bind-Value=request.CodigoTango id="codTango" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
         <RadzenButton Click="FillOrdenes" ButtonStyle=ButtonStyle.Secondary Icon="search" />
@@ -80,8 +81,8 @@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.FechaComprobante)" Title="Fecha" Width="120px" FormatString="{0:dd/MM/yyyy}" Resizable=false Filterable="false" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MotivoDescripcion)" Title="Motivo" Width="100px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.EstadoDescripcion)" Title="Estado" Width="100px" Filterable="false" />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ImporteTotal)" Title="Total" FormatString="{0:N2}" Filterable="false" />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MercaderiaIngresada)" Title="Mercadería" Width="100px" Resizable=false Filterable="false">
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ImporteTotal)" Title="Total" Width="150px" FormatString="{0:N2}" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MercaderiaIngresada)" Title="Mercadería" Width="150px" Resizable=false Filterable="false">
                 <Template>
                     @if (context.MercaderiaIngresada == null)
                     {
@@ -161,6 +162,7 @@ else
 
     //permisos
     bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir;
+    int render = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -175,13 +177,39 @@ else
 
         estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
 
+        if (ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.NotasCredito && ParametrosDeConsulta.Parametros.Any())
+        {
+            if (ParametrosDeConsulta.Parametros.ContainsKey("request"))
+                request = (ComprobanteCabeceraRequest)ParametrosDeConsulta.Parametros["request"];
+        }
+        else
+            ParametrosDeConsulta.Clear();
+
         showPage = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2 && ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.NotasCredito && ParametrosDeConsulta.Parametros.Any())
+        {
+            await FillOrdenes();
+            StateHasChanged();
+        }
     }
 
     private async Task FillOrdenes()
     {
         RadzenDialogService.OpenBusyWithLoader("Cargando...");
         var response = await ComprobantesService.GetNotasCredito(request);
+        if (request.IdComprobante != null)
+        {
+            request.IdComprobante = null;
+            request.FechaDesde = DateTime.Today.AddDays(-15);
+            request.FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
+            request.IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente;
+        }
+        ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new() { { "request", request } });
         RadzenDialogService.CloseDialog();
 
         if (response == null)
@@ -268,7 +296,12 @@ else
     private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
     private void VerNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/lectura/{nota.IdComprobante}");
 
-    private async Task NuevaNotaCredito() => await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente", new() { { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) } }, new() { Width = "60rem", Height = "30rem" });
+    private async Task NuevaNotaCredito() =>
+        await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente",
+                                            new()
+                                            {
+                                                { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) }
+                                            }, new() { Width = "60rem", Height = "50rem" });
 
     private void OnSelectCliente(Cliente cliente) => NavigationManager.NavigateTo($"notascredito/alta/{cliente.IdCliente}");
 
