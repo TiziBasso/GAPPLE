@@ -30,6 +30,10 @@
             {
                 Descripcion = x.Descripcion,
                 NumeroLinea = x.NumeroLinea,
+                CodProducto = x.CodProducto,
+                Descuento = x.Descuento,
+                Probador = x.Probador,
+
                 Cantidad = x.CantidadAprobada,
                 CantidadAprobada = x.CantidadAprobada,
 
@@ -38,9 +42,6 @@
 
                 CantidadProbador = x.CantidadProbadorAprobada,
                 CantidadProbadorAprobada = x.CantidadProbadorAprobada,
-
-                Descuento = x.Descuento,
-                Probador = x.Probador
             })
         );
 
@@ -52,6 +53,10 @@
                 {
                     Descripcion = x.Descripcion,
                     NumeroLinea = x.NumeroLinea,
+                    CodProducto = x.CodProducto,
+                    Descuento = x.Descuento,
+                    Probador = x.Probador,
+
                     Cantidad = x.Cantidad - x.CantidadAprobada,
                     CantidadAprobada = 0,
 
@@ -60,9 +65,6 @@
 
                     CantidadProbador = x.CantidadProbador - x.CantidadProbadorAprobada,
                     CantidadProbadorAprobada = 0,
-
-                    Descuento = x.Descuento,
-                    Probador = x.Probador
                 })
             );
         }

@@ -29,6 +29,7 @@
     List<OrdenExpedicionDetalle> detalle = new();
     List<OrdenExpedicionDetalle> pendiente = new();
     List<OrdenExpedicionDetalle> pendienteRemain = new();
+    List<OrdenExpedicionDetalle> detalleCompleto = new();
 
 
     bool showModal, test;
@@ -36,7 +37,57 @@
 
     protected override void OnInitialized()
     {
-        int sumLineas = Orden.Detalle!.Count + 1 + Orden.Detalle.Sum(x => (x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ? 1 : 0);
+        detalleCompleto.AddRange(
+            Orden.Detalle.Where(x => x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).Select(x => new OrdenExpedicionDetalle()
+            {
+                DescripcionProducto = x.DescripcionProducto,
+                NumLinea = x.NumLinea,
+                CodProducto = x.CodProducto,
+                CantidadF = x.CantidadF,
+                CantidadX = x.CantidadX,
+                CantidadAprobadaF = x.CantidadAprobadaF,
+                CantidadAprobadaX = x.CantidadAprobadaF,
+
+                CantidadObsequioX = x.CantidadObsequioX,
+                CantidadObsequioF = x.CantidadObsequioF,
+                CantidadObsequioAprobadaX = x.CantidadObsequioAprobadaX,
+                CantidadObsequioAprobadaF = x.CantidadObsequioAprobadaF,
+
+                CantidadProbadorX = x.CantidadProbadorX,
+                CantidadProbadorF = x.CantidadProbadorF,
+                CantidadProbadorAprobadaX = x.CantidadProbadorAprobadaX,
+                CantidadProbadorAprobadaF = x.CantidadProbadorAprobadaF,
+            })
+        );
+
+        // Pendientes
+        if (Orden.Detalle.Any(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0))
+        {
+            detalleCompleto.AddRange(
+                Orden.Detalle.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).Select(x => new OrdenExpedicionDetalle()
+                {
+                    DescripcionProducto = x.DescripcionProducto,
+                    NumLinea = x.NumLinea,
+                    CodProducto = x.CodProducto,
+                    CantidadF = x.CantidadX - x.CantidadAprobadaF,
+                    CantidadX = x.CantidadF - x.CantidadAprobadaX,
+                    CantidadAprobadaF = 0,
+                    CantidadAprobadaX = 0,
+
+                    CantidadObsequioX = x.CantidadObsequioX - x.CantidadObsequioAprobadaX,
+                    CantidadObsequioF = x.CantidadObsequioF - x.CantidadObsequioAprobadaF,
+                    CantidadObsequioAprobadaX = 0,
+                    CantidadObsequioAprobadaF = 0,
+
+                    CantidadProbadorX = x.CantidadProbadorX - x.CantidadProbadorAprobadaX,
+                    CantidadProbadorF = x.CantidadProbadorF - x.CantidadProbadorAprobadaF,
+                    CantidadProbadorAprobadaX = 0,
+                    CantidadProbadorAprobadaF = 0,
+                })
+            );
+        }
+
+        int sumLineas = detalleCompleto!.Count + 1 + detalleCompleto.Sum(x => (x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ? 1 : 0);
 
         if (sumLineas / lineasXPag0 > 0)
         {
@@ -45,7 +96,7 @@
             cantPages += aux;
         }
 
-        pendiente = Orden.Detalle.Where(x => x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList();
+        pendiente = detalleCompleto.Where(x => x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList();
 
         showModal = true;
     }
@@ -57,7 +108,7 @@
 
     //     if(remaining > 0)
     //         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
-        
+
     //     int total = Orden.Detalle.Count;
     //     showPendientes = showed + remaining >= total;
     // }
@@ -72,7 +123,7 @@
             ? lineasXPag0
             : lineasXPagN;
 
-        int totalDetalle = Orden.Detalle.Count;
+        int totalDetalle = detalleCompleto.Count;
 
         // =========================
         // DETALLE
@@ -81,7 +132,8 @@
 
         if (remaining > 0 && showed < totalDetalle)
         {
-            detalle = Orden.Detalle
+            detalle = detalleCompleto
+                .Where(x => x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0)
                 .Skip(showed)
                 .Take(remaining)
                 .ToList();
