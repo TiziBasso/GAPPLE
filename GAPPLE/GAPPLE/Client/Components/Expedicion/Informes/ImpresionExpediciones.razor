@@ -9,7 +9,8 @@
             <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
                   Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
                   ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
-                  ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0)) />
+                  ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
+                  ShowPendiente="showPendientes" Pendiente="pendiente" />
         }
     </div>
 }
@@ -19,7 +20,9 @@
     [Parameter] public EventCallback Imprimir { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
+    bool showPendientes;
     List<OrdenExpedicionDetalle> detalle = new();
+    List<OrdenExpedicionDetalle> pendiente = new();
 
 
     bool showModal, test;
@@ -27,7 +30,7 @@
 
     protected override void OnInitialized()
     {
-        int sumLineas = Orden.Detalle!.Count + 1;
+        int sumLineas = Orden.Detalle!.Count + 1 + Orden.Detalle.Sum(x => (x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ? 1 : 0);
 
         if (sumLineas / lineasXPag0 > 0)
         {
@@ -35,6 +38,8 @@
             if (((sumLineas - lineasXPag0) % lineasXPagN) > 0) aux++;
             cantPages += aux;
         }
+
+        pendiente = Orden.Detalle.Where(x => x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList();
 
         showModal = true;
     }
@@ -44,7 +49,11 @@
         int showed = page == 0 ? 0 : lineasXPag0 + (lineasXPagN * (page - 1)),
             remaining = page == 0 ? lineasXPag0 : lineasXPagN;
 
-        detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
+        if(remaining > 0)
+            detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
+        
+        int total = Orden.Detalle.Count;
+        showPendientes = showed + remaining >= total;
         // remaining -= detalle!.Count;
         // if (detalle.Count > 0) showed -= detalle.Count;
         // else showed -= Orden.Detalle!.Count;

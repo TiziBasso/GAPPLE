@@ -24,16 +24,48 @@
             </span>
         </div>
         <div style="margin-top: 10px;height: 25cm;">
-            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX />
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente" />
         </div>
     }
     else
     {
-        <div style="margin-top: 10px;height: 28cm;">
-            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX />
-        </div>
+        @if (Detalle.Any())
+        {
+            <div style="margin-top: 10px;height: 28cm;">
+                <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente" />
+            </div>
+        }
+        else
+        {
+            @if (ShowPendiente)
+            {
+                <table style="border-collapse: collapse;width: 100%;">
+                    <tfoot style="font-style: italic;">
+                        <tr>
+                            <th colspan="6" style="border: 1px solid black;border-right: none;border-left: none;">PENDIENTES</th>
+                        </tr>
+                        <tr>
+                            <th style="border:1px solid;border-right: none;padding: 5px;">ID</th>
+                            <th style="border:1px solid;border-right: none;padding: 5px;width:60%">Producto</th>
+                            <th style="border:1px solid;border-right: none;padding: 5px;">Cantidad</th>
+                            <th style="border:1px solid;border-right: none;padding: 5px;">Probador</th>
+                            <th style="border:1px solid;border-right: none;padding: 5px;">Obsequio</th>
+                        </tr>
+                        @foreach (var item in Pendiente)
+                        {
+                            <tr style="font-size: 11pt;">
+                                <td style="text-align: end;">@item.CodProducto</td>
+                                <td>@item.DescripcionProducto</td>
+                                <td style="text-align: end;">@item.CantidadPendiente</td>
+                                <td style="text-align: end;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
+                                <td style="text-align: end;">@(item.CantidadObsequioPendiente != 0 ? item.CantidadObsequioPendiente : "")</td>
+                            </tr>
+                        }
+                    </tfoot>
+                </table>
+            }
+        }
     }
-
     <div style="width: 100%;margin-top: 10px;">
         <span style="text-align: end;width: 100%;display: block;">Página @PageNum de @CantPages</span>
     </div>
@@ -46,6 +78,8 @@
     [Parameter, EditorRequired] public int PageNum { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
     [Parameter, EditorRequired] public List<OrdenExpedicionDetalle> Detalle { get; set; }
+    [Parameter, EditorRequired] public List<OrdenExpedicionDetalle> Pendiente { get; set; }
+    [Parameter] public bool ShowPendiente { get; set; }
     [Parameter] public bool ShowX { get; set; }
     [Parameter] public bool ShowF { get; set; }
     [Parameter] public bool ShowPF { get; set; }
