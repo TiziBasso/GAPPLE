@@ -31,6 +31,7 @@ namespace GAPPLE.Server.Data
             cmd.Connection = cnn;
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_get_Acuerdos";
+            cmd.Parameters.AddWithValue("@pIdAcuerdo", request.IdAcuerdo ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@pFechaDesde", request.FechaDesde);
             cmd.Parameters.AddWithValue("@pFechaHasta", request.FechaHasta);
             cmd.Parameters.AddWithValue("@pIdCliente", request.IdCliente ?? (object)DBNull.Value);

@@ -37,7 +37,7 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="pasivo" />
-            <RadzenDropDown Data=@Variables.EstadosBool @bind-Value=@pasivo Name="pasivo" Placeholder="Todos"
+            <RadzenDropDown Data=@Variables.EstadosPasivo @bind-Value=@pasivo Name="pasivo" Placeholder="Ambos"
                             ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
                             Disabled="@isLoading" Style="width: 8rem;" />
         </RadzenStack>

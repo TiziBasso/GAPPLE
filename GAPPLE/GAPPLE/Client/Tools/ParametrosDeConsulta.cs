@@ -38,7 +38,8 @@ namespace GAPPLE.Client.Tools
             Ordenes,
             Usuarios,
             ProductosIndex,
-            NotasCredito
+            NotasCredito,
+            Acuerdos
         }
     }
 }

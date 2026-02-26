@@ -21,7 +21,7 @@ namespace GAPPLE.Server.Controllers
             connectionString = Configuration.GetConnectionString("DefaultConnection");
         }
 
-        [HttpPut("obtener")]
+        [HttpPost("obtener")]
         public IActionResult GetAcuerdos(AcuerdosRequest request)
         {
             try

@@ -45,4 +45,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<ToolsService>();
     services.AddScoped<MotivosService>();
     services.AddScoped<ComprobantesService>();
+    services.AddScoped<AcuerdosService>();
 }

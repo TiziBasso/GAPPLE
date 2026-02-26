@@ -78,7 +78,7 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cód. tango:" Component="codTango" />
             <input type="text" @bind-value="@codTango" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
-                   class="rz-textbox" style="width: 8rem" disabled="@(isLoading)" id="codTango" />
+                   class="rz-textbox" style="width: 8rem" disabled="@isLoading" id="codTango" />
         </RadzenStack>
 
         <RadzenButton Click="FillOrdenes" IsBusy=isLoading ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />

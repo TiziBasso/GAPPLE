@@ -33,6 +33,7 @@ namespace GAPPLE.Client.Services
 
         public async Task<Response> PostAcuerdo(Acuerdo acuerdo)
         {
+            acuerdo.AltaUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PostAsJsonAsync(URI_BASE, acuerdo);
 
             if (response.StatusCode == HttpStatusCode.OK)
@@ -43,6 +44,7 @@ namespace GAPPLE.Client.Services
 
         public async Task<Response> PutAcuerdo(Acuerdo acuerdo)
         {
+            acuerdo.EdicionUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PutAsJsonAsync(URI_BASE, acuerdo);
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Acuerdo>());

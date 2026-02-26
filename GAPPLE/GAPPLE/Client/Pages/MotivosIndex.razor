@@ -25,9 +25,9 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="estado" />
-            <RadzenDropDown Data=@Variables.EstadosBool @bind-Value=@pasivo Name="estado"
+            <RadzenDropDown Data=@Variables.EstadosPasivo @bind-Value=@pasivo Name="estado"
                             ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            AllowClear=true Placeholder="(Todos)" Style="width: 9rem;" />
+                            AllowClear=true Placeholder="Ambos" Style="width: 9rem;" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
