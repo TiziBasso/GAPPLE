@@ -6,11 +6,16 @@
         @for (int i = 0; i < cantPages; i++)
         {
             GetData(i);
-            <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
+            @* <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
                   Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
                   ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
                   ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
-                  ShowPendiente="showPendientes" Pendiente="pendiente" />
+                  ShowPendiente="showPendientes" Pendiente="pendiente" /> *@
+            <Page Orden=Orden PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
+                  Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
+                  ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
+                  ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
+                  ShowPendiente="showPendientes" Pendiente="pendienteRemain" />
         }
     </div>
 }
@@ -23,6 +28,7 @@
     bool showPendientes;
     List<OrdenExpedicionDetalle> detalle = new();
     List<OrdenExpedicionDetalle> pendiente = new();
+    List<OrdenExpedicionDetalle> pendienteRemain = new();
 
 
     bool showModal, test;
@@ -44,19 +50,64 @@
         showModal = true;
     }
 
+    // private void GetData(int page)
+    // {
+    //     int showed = page == 0 ? 0 : lineasXPag0 + (lineasXPagN * (page - 1)),
+    //         remaining = page == 0 ? lineasXPag0 : lineasXPagN;
+
+    //     if(remaining > 0)
+    //         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
+        
+    //     int total = Orden.Detalle.Count;
+    //     showPendientes = showed + remaining >= total;
+    // }
+
     private void GetData(int page)
     {
-        int showed = page == 0 ? 0 : lineasXPag0 + (lineasXPagN * (page - 1)),
-            remaining = page == 0 ? lineasXPag0 : lineasXPagN;
+        int showed = page == 0
+            ? 0
+            : lineasXPag0 + (lineasXPagN * (page - 1));
 
-        if(remaining > 0)
-            detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
-        
-        int total = Orden.Detalle.Count;
-        showPendientes = showed + remaining >= total;
-        // remaining -= detalle!.Count;
-        // if (detalle.Count > 0) showed -= detalle.Count;
-        // else showed -= Orden.Detalle!.Count;
+        int remaining = page == 0
+            ? lineasXPag0
+            : lineasXPagN;
+
+        int totalDetalle = Orden.Detalle.Count;
+
+        // =========================
+        // DETALLE
+        // =========================
+        detalle = new List<OrdenExpedicionDetalle>();
+
+        if (remaining > 0 && showed < totalDetalle)
+        {
+            detalle = Orden.Detalle
+                .Skip(showed)
+                .Take(remaining)
+                .ToList();
+        }
+
+        int usadosDetalle = detalle.Count;
+        int espacioRestante = remaining - usadosDetalle;
+
+        // =========================
+        // PENDIENTES
+        // =========================
+        pendienteRemain = new List<OrdenExpedicionDetalle>();
+
+        if (espacioRestante > 0)
+        {
+            // Cuántos pendientes ya deberían haberse mostrado en páginas anteriores
+            int pendientesSkip = Math.Max(0, showed - totalDetalle);
+
+            pendienteRemain = pendiente
+                .Skip(pendientesSkip)
+                .Take(espacioRestante)
+                .ToList();
+        }
+
+        // Mostrar pendientes solo si ya se terminaron los detalles
+        showPendientes = showed + remaining >= totalDetalle;
     }
 
 }
