@@ -46,7 +46,7 @@
                         </tr>
                         <tr>
                             <th style="border:1px solid;border-right: none; padding: 5px; width:10%;">#</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px;">ID</th>
+                            <th style="border:1px solid;border-right: none;padding: 5px; width:20%;">ID</th>
                             <th style="border:1px solid;border-right: none;padding: 5px;width:60%">Producto</th>
                             <th style="border:1px solid;border-right: none;padding: 5px;">Cantidad</th>
                             <th style="border:1px solid;border-right: none;padding: 5px;">Probador</th>
@@ -55,12 +55,12 @@
                         @foreach (var item in Pendiente)
                         {
                             <tr style="border-bottom:1px solid; margin-bottom:5px; margin-top:5px; line-height:1.5;">
-                                <td style="text-align: end;">@item.NumLinea</td>
-                                <td style="text-align: end;">@item.CodProducto</td>
-                                <td>@item.DescripcionProducto</td>
-                                <td style="text-align: end;">@(item.CantidadPendiente != 0 ? item.CantidadPendiente : "")</td>
-                                <td style="text-align: end;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
-                                <td style="text-align: end;">@(item.CantidadObsequioPendiente != 0 ? item.CantidadObsequioPendiente : "")</td>
+                                <td style="text-align: end;padding:1px;">@item.NumLinea</td>
+                                <td style="text-align: center;padding:1px;">@item.CodProducto</td>
+                                <td style="padding:1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@item.DescripcionProducto</td>
+                                <td style="text-align: end;padding:1px;">@(item.CantidadPendiente != 0 ? item.CantidadPendiente : "")</td>
+                                <td style="text-align: end;padding:1px;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
+                                <td style="text-align: end;padding:1px;">@(item.CantidadObsequioPendiente != 0 ? item.CantidadObsequioPendiente : "")</td>
                             </tr>
                         }
                     </tfoot>
