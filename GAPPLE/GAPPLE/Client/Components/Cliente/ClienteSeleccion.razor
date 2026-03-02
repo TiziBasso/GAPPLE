@@ -31,10 +31,14 @@
 
     <RadzenDataGrid @ref="refGrid" TItem="Cliente" Data="clientes" @bind-Value="selected" Style="width:100%; flex:auto;"
                     Density="Density.Compact" AllowFiltering=true AllowSorting="true" AllowColumnResize="true"
-                    FilterMode="FilterMode.Simple" AllowVirtualization="true" ShowEmptyMessage="false" 
+                    FilterMode="FilterMode.Simple" AllowVirtualization="true" ShowEmptyMessage="false"
                     SelectionMode="DataGridSelectionMode.Single" RowDoubleClick="@OnDoubleClick" ColumnWidth="150px">
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Cód. cliente" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Cód. cliente" FilterValue="codClienteFilter">
+                <FilterTemplate>
+                    <RadzenTextBox @bind-Value="codClienteFilter" Style="width:100%" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón social" />
             <RadzenDataGridColumn Property="@nameof(Cliente.CUIT)" Title="CUIT" />
             <RadzenDataGridColumn Property="@nameof(Cliente.CategoriaIva)" Title="Tipo IVA" />
@@ -52,6 +56,7 @@
 
     string codCliente = null, razonSocial = null, cuit = null;
     bool? clienteEspecial = null;
+    string codClienteFilter = null;
 
     IList<Cliente> selected = [];
     List<Cliente> clientes = [];
