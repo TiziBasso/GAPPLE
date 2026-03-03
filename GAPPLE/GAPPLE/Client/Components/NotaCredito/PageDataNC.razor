@@ -22,15 +22,15 @@
                     <td>@item.DescripcionProducto</td>
                     <td style="text-align: end;">@item.Cantidad</td>
                     <td style="text-align: end;">@item.Descuento %</td>
-                    <td style="text-align: end;">@item.Precio %</td>
-                    <td style="text-align: end;">@item.PrecioTotal %</td>
+                    <td style="text-align: end;">@Math.Round(item.Precio,2)</td>
+                    <td style="text-align: end;">@Math.Round(item.PrecioTotal, 2)</td>
                 </tr>
             }
             <tr>
                 <td colspan="2"></td>
                 <td colspan="2" style="text-align: end;">Total cant: @Detalle.Sum(x => x.Cantidad)</td>
                 <td colspan="2"></td>
-                <td style="text-align: end;">Total: @Detalle.Sum(x => x.PrecioTotal)</td>
+                <td style="text-align: end;">Total: @Math.Round(Detalle.Sum(x => x.PrecioTotal),2)</td>
             </tr>
         </tbody>
     }

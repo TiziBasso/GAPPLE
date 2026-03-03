@@ -6,11 +6,6 @@
         @for (int i = 0; i < cantPages; i++)
         {
             GetData(i);
-            @* <Page Orden=Orden PageNum="i+1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
-                  Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
-                  ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
-                  ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
-                  ShowPendiente="showPendientes" Pendiente="pendiente" /> *@
             <Page Orden=Orden PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
                   Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
                   ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
