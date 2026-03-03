@@ -1,5 +1,6 @@
 ﻿@page "/notascredito"
 @using GAPPLE.Client.Components.Cliente
+@using GAPPLE.Client.Components.NotaCredito
 
 @inject ToolsService ToolsService
 @inject SeguridadService SeguridadService
@@ -7,6 +8,8 @@
 @inject NavigationManager NavigationManager
 @inject RadzenDialogService RadzenDialogService
 @inject ComprobantesService ComprobantesService
+@inject IJSFunction JSFunction
+
 
 @if (showPage)
 {
@@ -102,7 +105,13 @@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCuit)" Title="Cuit" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCategoriaIVA)" Title="Tipo IVA" Width="100px" Resizable=false />
-
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="print" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => VerNotaCreditoImpresion(orden))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteLectura Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
@@ -141,6 +150,13 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+
+@if (showResumen)
+    {
+        <ImpresionNotaCredito  notaCredito=Resumen
+                        Detalle="@(Resumen!.Detalle!.Where(x=>x.Cantidad > 0).ToList())"
+                        Imprimir="@(async()=>await Imprimir())" />
+    }
 }
 else
 {
@@ -151,6 +167,7 @@ else
     bool showPage;
     RadzenDataGrid<ComprobanteCabecera> grid;
     List<ComprobanteCabecera> comprobantes = [];
+    ComprobanteCabecera Resumen = null;
     ComprobanteCabeceraRequest request = new()
     {
         FechaDesde = DateTime.Today.AddDays(-15),
@@ -161,7 +178,7 @@ else
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
     //permisos
-    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir;
+    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, showResumen;
     int render = 0;
 
     protected override async Task OnInitializedAsync()
@@ -309,5 +326,27 @@ else
     {
         if (key == KeyboardKeys.Enter)
             await FillOrdenes();
+    }
+
+    async Task VerNotaCreditoImpresion(ComprobanteCabecera cc)
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        Resumen = await ComprobantesService.GetNotaCredito(cc.IdComprobante!);
+        RadzenDialogService.CloseDialog();
+        if (Resumen == null)
+            RadzenDialogService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        else
+        {
+            RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
+            showResumen = true;
+        }
+    }
+
+    public async Task Imprimir(string id = "print")
+    {
+        await JSFunction.Imprimir(id);
+        showResumen = false;
+        RadzenDialogService.CloseDialog();
+        Resumen = null;
     }
 }

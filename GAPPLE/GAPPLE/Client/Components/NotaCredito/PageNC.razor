@@ -1,0 +1,49 @@
+﻿<div style="font-family: Arial, Helvetica, sans-serif;width: 21cm;height: 29.7cm; break-after:page">
+    <div style="display: flex;justify-content: space-between;">
+        <div style="display: flex;gap:7px;">
+            <strong>F.C: @(comprobanteCabecera.AltaRegistro.Value.ToString("dd/MM/yyyy"))</strong>
+        </div>
+        <strong>@(comprobanteCabecera.IdComprobante)</strong>
+    </div>
+    <div style="display: grid;gap: 10px;margin-top: 10px;">
+        <div style="display: flex;justify-content: space-between;">
+            <strong style="width: fit-content;">Cliente: (@comprobanteCabecera.CodCliente) @comprobanteCabecera.ClienteRazonSocial</strong>
+            <strong style="width: fit-content;">CUIT: @comprobanteCabecera.ClienteCuit</strong>
+            <strong style="width: fit-content;">@comprobanteCabecera.ClienteCategoriaIVA</strong>
+        </div>
+        <div style="display: flex;justify-content: space-between;">
+            <strong style="width: fit-content;">Comprobante referencia: @comprobanteCabecera.ComprobanteReferencia</strong>
+            <strong style="width: fit-content;">Orden referencia: @comprobanteCabecera.CodigoOrden</strong>
+        </div>
+    </div>
+    <div style="display: flex;justify-content: space-between;">
+        @if (!string.IsNullOrEmpty(comprobanteCabecera.Observaciones))
+        {
+            <strong style="width: fit-content;">Observaciones:</strong> @comprobanteCabecera.Observaciones
+        }
+    </div>
+    <div style="margin-top: 10px;height: 60rem;">
+        <PageDataNC Detalle="Detalle.Where(x=>x.Cantidad > 0).ToList()" />
+    </div>
+    <div style="width: 100%;margin-top: 10px;">
+        <span style="text-align: end;width: 100%;display: block;">Página @PageNum de @CantPages</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public EventCallback Imprimir { get; set; }
+    [Parameter, EditorRequired] public ComprobanteCabecera comprobanteCabecera { get; set; }
+    [Parameter, EditorRequired] public int CantPages { get; set; }
+    [Parameter, EditorRequired] public int PageNum { get; set; }
+    [Parameter] public bool ShouldPrint { get; set; } = true;
+    [Parameter, EditorRequired] public List<ComprobanteDetalle> Detalle { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (PageNum == CantPages && ShouldPrint)
+        {
+            await Task.Delay(100);
+            await Imprimir.InvokeAsync();
+        }
+    }
+}
