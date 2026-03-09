@@ -52,7 +52,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["DescripcionMotivo"] != DBNull.Value) cc.MotivoDescripcion = row["DescripcionMotivo"].ToString();
                     if (row["DescripcionEstado"] != DBNull.Value) cc.EstadoDescripcion = row["DescripcionEstado"].ToString();
                     if (row["ImporteTotal"] != DBNull.Value) cc.ImporteTotal = decimal.Parse(row["ImporteTotal"].ToString());
-                    if (row["MercaderiaIngresada"] != DBNull.Value) cc.MercaderiaIngresada = bool.Parse(row["ImporteTotal"].ToString());
+                    if (row["MercaderiaIngresada"] != DBNull.Value) cc.MercaderiaIngresada = bool.Parse(row["MercaderiaIngresada"].ToString());
                     if (row["Observaciones"] != DBNull.Value) cc.Observaciones = row["Observaciones"].ToString();
                     if (row["RazonSocial"] != DBNull.Value) cc.ClienteRazonSocial = row["RazonSocial"].ToString();
                     if (row["CUIT"] != DBNull.Value) cc.ClienteCuit = row["CUIT"].ToString();
