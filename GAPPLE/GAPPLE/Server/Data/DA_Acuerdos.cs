@@ -87,7 +87,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pAltaUsuario", acuerdo.AltaUsuario);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
-            idAcuerdo = int.Parse(dt.Rows[0]["IdMotivo"].ToString()!);
+            idAcuerdo = int.Parse(dt.Rows[0]["IdAcuerdo"].ToString()!);
 
             return idAcuerdo;
         }

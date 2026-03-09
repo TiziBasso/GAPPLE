@@ -1,0 +1,159 @@
+﻿@inject RadzenDialogService RadzenDialogService
+@inject ProductosService ProductosService
+@inject AcuerdosService AcuerdosService
+
+
+@using GAPPLE.Client.Components.Cliente
+
+@if (showForm)
+{
+    <RadzenTemplateForm EditContext="editContext" Data="Acuerdo" TItem="Acuerdo" Submit="Guardar">
+        <DataAnnotationsValidator />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:100%">
+                <RadzenLabel Text="Cliente:" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
+                    <TextBoxInput @bind-Value="Acuerdo.RazonSocial" style="width:90%" disabled=@true />
+                    <RadzenButton Size="ButtonSize.Medium" Icon="list" Style="width:10%" ButtonStyle="ButtonStyle.Secondary" Disabled="disabledInput"
+                                  Click="@SeleccionarCliente" />
+                </RadzenStack>
+                <ValidationMessage For="@(() => Acuerdo.IdCliente)" />
+            </RadzenStack>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
+                <RadzenLabel Text="Fecha desde:" Component="fechaDesde" />
+                <RadzenDatePicker @bind-Value="Acuerdo.FechaDesde" Name="fechaDesde" DateFormat="dd/MM/yyyy" Style="width:100%" />
+                <ValidationMessage For="@(() => Acuerdo.FechaDesde)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
+                <RadzenLabel Text="Fecha hasta:" Component="fechaHasta" />
+                <RadzenDatePicker @bind-Value="Acuerdo.FechaHasta" Name="fechaHasta" DateFormat="dd/MM/yyyy" Style="width:100%" />
+            </RadzenStack>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+                <RadzenLabel Text="Linea:" Component="linea" />
+                <RadzenDropDown Data="lineas" @bind-Value="Acuerdo.Linea" Style="width:100%" Disabled="@disabledInput" />
+                <ValidationMessage For="@(() => Acuerdo.Linea)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+                <RadzenLabel Text="Condición:" Component="condicion" />
+                <TextBoxInput @bind-Value="Acuerdo.Condicion" Name="condicion" Style="width:100%" maxlength="150" />
+                <ValidationMessage For="@(() => Acuerdo.Condicion)" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:30%" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                <RadzenLabel Text="Activo:" Component="activo" />
+                <RadzenCheckBox @bind-Value="Acuerdo.Activo" Name="activo" />
+            </RadzenStack>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Icon="cancel" Text="Cancelar" ButtonStyle="ButtonStyle.Danger" Click="Cancelar" />
+            <RadzenButton Icon="save" Text="Guardar" ButtonStyle="ButtonStyle.Success" ButtonType="ButtonType.Submit" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public TipoOperacionEnum TipoOperacion { get; set; }
+    [Parameter] public Acuerdo Acuerdo { get; set; } = null;
+    [Parameter] public EventCallback<Acuerdo> OnSave { get; set; }
+    bool showForm, disabledInput;
+    List<string> lineas = [];
+    EditContext editContext;
+    ValidationMessageStore messageStore;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TipoOperacion == TipoOperacionEnum.Alta)
+            Acuerdo = new() { FechaDesde = DateTime.Today, FechaHasta = DateTime.Today.AddMonths(1), Activo = true };
+        else
+        {
+            if (Acuerdo == null)
+            {
+                RadzenDialogService.NotifyInternalServerError();
+                RadzenDialogService.CloseDialog();
+            }
+            disabledInput = true;
+        }
+
+        lineas = await ProductosService.GetLineas();
+
+        editContext = new(Acuerdo);
+        messageStore = new(editContext);
+        editContext.OnValidationRequested += Validar;
+        editContext.OnFieldChanged += (s, e) =>
+        {
+            messageStore?.Clear(e.FieldIdentifier);
+        };
+        showForm = true;
+    }
+
+    private void Validar(object sender, ValidationRequestedEventArgs args)
+    {
+        messageStore?.Clear();
+
+        if (string.IsNullOrWhiteSpace(Acuerdo.Condicion))
+            messageStore?.Add(() => Acuerdo.Condicion, "Debe ingresar una condición");
+        else if (Acuerdo.Condicion.Length > 150)
+            messageStore?.Add(() => Acuerdo.Condicion, "La cantidad máxima de cáracteres es 150");
+
+        if (Acuerdo.FechaDesde > Acuerdo.FechaHasta)
+            messageStore?.Add(() => Acuerdo.FechaDesde, "La fecha desde no puede ser mayor a la fecha hasta");
+
+    }
+
+    private async Task Guardar()
+    {
+        if (editContext.Validate() && await RadzenDialogService.ConfirmOperation())
+        {
+            RadzenDialogService.OpenBusyWithLoader();
+            var response = TipoOperacion == TipoOperacionEnum.Alta
+                            ? await AcuerdosService.PostAcuerdo(Acuerdo)
+                            : await AcuerdosService.PutAcuerdo(Acuerdo);
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
+            {
+                RadzenDialogService.NotifySuccess();
+                if (OnSave.HasDelegate)
+                    await OnSave.InvokeAsync((Acuerdo)response.Data);
+            }
+            else if (response.IsBadRequest)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task SeleccionarCliente() =>
+        await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente",
+                                            new()
+                                            {
+                                                { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) }
+                                            }, new() { Width = "60rem", Height = "50rem" });
+
+    private void OnSelectCliente(Cliente cliente)
+    {
+        RadzenDialogService.CloseDialog();
+        Acuerdo.IdCliente = cliente.IdCliente;
+        editContext.NotifyFieldChanged(editContext.Field(nameof(Acuerdo.IdCliente)));
+        Acuerdo.RazonSocial = cliente.RazonSocial;
+        Acuerdo.CodigoCliente = cliente.CodigoCliente;
+        Acuerdo.CUIT = cliente.CUIT;
+    }
+
+    private async Task Cancelar()
+    {
+        if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
+            RadzenDialogService.CloseDialog();
+
+    }
+}

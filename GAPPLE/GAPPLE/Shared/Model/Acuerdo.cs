@@ -1,4 +1,5 @@
 ﻿using GAPPLE.Shared.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace GAPPLE.Shared.Model
 {
@@ -8,6 +9,7 @@ namespace GAPPLE.Shared.Model
         public int IdAcuerdo { get; set; }
 
         [ColumnName("IdCliente")]
+        [Required(ErrorMessage = "Debe seleccionar un cliente")]
         public int? IdCliente { get; set; }
 
         [ColumnName("CodigoCliente")]
@@ -20,6 +22,7 @@ namespace GAPPLE.Shared.Model
         public string CUIT { get; set; }
 
         [ColumnName("Linea")]
+        [Required(ErrorMessage = "Debe seleccionar una linea")]
         public string Linea { get; set; }
 
         [ColumnName("Condicion")]
