@@ -26,15 +26,15 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="estado" />
             <RadzenDropDown Data=@Variables.EstadosPasivo @bind-Value=@pasivo Name="estado"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            AllowClear=true Placeholder="Ambos" Style="width: 9rem;" />
+            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+            AllowClear=true Placeholder="Ambos" Style="width: 9rem;" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Depósito:" Component="deposito" />
             <RadzenDropDown Data=depositos @bind-Value=@idDesposito Name="deposito"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" />
+            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+            Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" />
         </RadzenStack>
 
 
@@ -47,7 +47,7 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref=grid Data="motivos" AllowSorting=true AllowFiltering=true ColumnWidth="200px" Density="Density.Compact" AllowColumnResize=true
-                    FilterMode="FilterMode.Simple" Style="height:60vh" ShowEmptyMessage="false">
+    FilterMode="FilterMode.Simple" Style="height:60vh" ShowEmptyMessage="false">
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Motivo.IdMotivo)" Title="Cód." Width="100px" Filterable=false TextAlign="TextAlign.Right" />
             <RadzenDataGridColumn Property="@nameof(Motivo.Descripcion)" Title="Descripción" />
@@ -103,6 +103,7 @@ else
 
         var aux = await DepositosService.GetDepositos();
         depositos.AddRange(aux.Select(x => new Opcion(x.IdDeposito, x.Descripcion)));
+        await FillMotivos();
         showPage = true;
     }
 
