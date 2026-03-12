@@ -58,25 +58,32 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref="grid" TItem="Acuerdo" Data="acuerdosFiltrados" AllowFiltering=true FilterMode="FilterMode.Simple" AllowSorting=true
-                    AllowColumnResize=true Density=Density.Compact
+                    AllowColumnResize=true Density=Density.Compact AllowGrouping="true" HideGroupedColumn="true"
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
+        <GroupHeaderTemplate Context="group">
+            @{
+                var item = group.Data.Items.Cast<Acuerdo>().FirstOrDefault();
+            }
+
+            (@item?.CodigoCliente) <b>@item?.RazonSocial</b> - @item?.CUIT
+        </GroupHeaderTemplate>
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.IdAcuerdo)" Title="Cód. acuerdo" TextAlign="TextAlign.Right" Width="120px" />
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.IdAcuerdo)" Title="Cód. acuerdo" TextAlign="TextAlign.Right" Width="120px" Groupable="false" />
             <RadzenDataGridColumn Property="@nameof(Acuerdo.CodigoCliente)" Title="Cód. cliente" Width="120px" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.RazonSocial)" Title="Razón social" Width="150px" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.CUIT)" Title="CUIT" />
+            @* <RadzenDataGridColumn Property="@nameof(Acuerdo.RazonSocial)" Title="Razón social" Width="150px" />
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.CUIT)" Title="CUIT" /> *@
             <RadzenDataGridColumn Property="@nameof(Acuerdo.Linea)" Title="Linea" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaDesde)" Title="Fecha desde" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px">
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaDesde)" Title="Fecha desde" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false">
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=desdeFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaHasta)" Title="Fecha hasta" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px">
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaHasta)" Title="Fecha hasta" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false">
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=hastaFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.Activo)" Title="Activo" TextAlign=TextAlign.Center Filterable="false" Width="70px">
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.Activo)" Title="Activo" TextAlign=TextAlign.Center Filterable="false" Width="70px" Groupable="false">
                 <Template>
                     <RadzenCheckBox Value="context.Activo" ReadOnly=true Style="cursor:default" />
                 </Template>
@@ -106,7 +113,6 @@ else
     };
 
     RadzenDataGrid<Acuerdo> grid;
-
     List<Acuerdo> acuerdos = [];
     List<Acuerdo> acuerdosFiltrados => AplicarFiltros();
     int render = 0;
@@ -139,10 +145,13 @@ else
     {
         render++;
 
-        if (render == 2 && ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.Acuerdos && ParametrosDeConsulta.Parametros.Any())
+        if (render == 2)
         {
             await FillAcuerdos();
             StateHasChanged();
+            grid.Groups.Add(new GroupDescriptor() { Property = nameof(Acuerdo.CodigoCliente), Title = "Cód. Cliente" });
+            await grid.Reload();
+            await grid.ReloadSettings();
         }
     }
 
