@@ -147,7 +147,7 @@ namespace GAPPLE.Server.Controllers
                     transaction.Commit();
                     cnn.Close();
                 }
-                return Ok();
+                return Ok(comprobante);
             }
             catch (Exception ex)
             {

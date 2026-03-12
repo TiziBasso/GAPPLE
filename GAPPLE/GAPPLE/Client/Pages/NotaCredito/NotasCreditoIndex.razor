@@ -112,6 +112,13 @@
                                   Click="@(() => VerNotaCreditoImpresion(orden))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible="permiteClonar"
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="file_copy" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => ClonarNotaCredito(orden))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteLectura Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
@@ -151,11 +158,11 @@
         </Columns>
     </RadzenDataGrid>
 
-@if (showResumen)
+    @if (showResumen)
     {
-        <ImpresionNotaCredito  notaCredito=Resumen
-                        Detalle="@(Resumen!.Detalle!.Where(x=>x.Cantidad > 0).ToList())"
-                        Imprimir="@(async()=>await Imprimir())" />
+        <ImpresionNotaCredito notaCredito=Resumen
+                              Detalle="@(Resumen!.Detalle!.Where(x=>x.Cantidad > 0).ToList())"
+                              Imprimir="@(async()=>await Imprimir())" />
     }
 }
 else
@@ -178,7 +185,7 @@ else
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
     //permisos
-    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, showResumen;
+    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, permiteClonar, showResumen;
     int render = 0;
 
     protected override async Task OnInitializedAsync()
@@ -191,6 +198,7 @@ else
         permiteAprobacion = permisos.Contains(Permisos.Aprobacion);
         permiteLectura = permisos.Contains(Permisos.Lectura);
         permiteReverir = permisos.Contains(Permisos.Revertir);
+        permiteClonar = permisos.Contains(Permisos.Clonar);
 
         estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
 
@@ -311,6 +319,7 @@ else
     }
 
     private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
+    private void ClonarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/clonar/{nota.IdComprobante}");
     private void VerNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/lectura/{nota.IdComprobante}");
 
     private async Task NuevaNotaCredito() =>

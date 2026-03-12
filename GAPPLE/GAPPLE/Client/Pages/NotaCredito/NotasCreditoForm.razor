@@ -222,12 +222,24 @@ else
                 RadzenDialogService.NotifyInternalServerError();
                 BackPage();
             }
-            else if (tipoOperacion == TipoOperacionEnum.Lectura)
-                disableInput = true;
-            else if (comprobante.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente)
+            else
             {
-                await RadzenDialogService.ShowAlertAsync("La nota de crédito no se encuentra en estado \"Pendiente\" y no puede ser editada", MensajesHelper.Title);
-                BackPage();
+                disableInput = tipoOperacion == TipoOperacionEnum.Lectura;
+                if (tipoOperacion == TipoOperacionEnum.Clonar)
+                {
+                    comprobante.IdComprobante = 0;
+                    var aux = comprobante.Factura;
+                    comprobante.Factura = comprobante.Presupuesto;
+                    comprobante.Presupuesto = aux;
+                    comprobante.TipoComprobante = TiposComprobantes.NotaCredito;
+                    comprobante.IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente;
+                    comprobante.FechaComprobante = DateTime.Today;
+                }
+                else if (comprobante.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente)
+                {
+                    await RadzenDialogService.ShowAlertAsync("La nota de crédito no se encuentra en estado \"Pendiente\" y no puede ser editada", MensajesHelper.Title);
+                    BackPage();
+                }
             }
         }
 
@@ -361,38 +373,16 @@ else
     {
         if (editContext.Validate() && await Validar() && await RadzenDialogService.ConfirmOperation())
         {
-            if (tipoOperacion == TipoOperacionEnum.Edicion)
+            RadzenDialogService.OpenBusyWithLoader("Guardando...");
+            var response = tipoOperacion == TipoOperacionEnum.Edicion
+                            ? await ComprobantesService.PutNotaCredito(comprobante)
+                            : await ComprobantesService.PostNotaCredito(comprobante);
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
             {
-                RadzenDialogService.OpenBusyWithLoader("Guardando...");
-                var response = await ComprobantesService.PutNotaCredito(comprobante);
-                RadzenDialogService.CloseDialog();
-                if (response.IsOk)
-                {
-                    RadzenDialogService.NotifySuccess();
-                    ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
-                                {
-                                    { "request", new ComprobanteCabeceraRequest()
-                                                {
-                                                    IdComprobante = comprobante.IdComprobante
-                                                }
-                                    }
-                                });
-                    BackPage();
-                }
-                else if (response.IsBadRequest && response.Errors.Any())
-                    RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
-                else
-                    RadzenDialogService.NotifyInternalServerError();
-            }
-            else
-            {
-                RadzenDialogService.OpenBusyWithLoader("Guardando...");
-                var response = await ComprobantesService.PostNotaCredito(comprobante);
-                RadzenDialogService.CloseDialog();
-                if (response.IsOk)
-                {
-                    RadzenDialogService.NotifySuccess();
-                    ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
+                RadzenDialogService.NotifySuccess();
+                ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
                                 {
                                     { "request", new ComprobanteCabeceraRequest()
                                                 {
@@ -400,13 +390,12 @@ else
                                                 }
                                     }
                                 });
-                    BackPage();
-                }
-                else if (response.IsBadRequest && response.Errors.Any())
-                    RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
-                else
-                    RadzenDialogService.NotifyInternalServerError();
+                BackPage();
             }
+            else if (response.IsBadRequest && response.Errors.Any())
+                RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
+            else
+                RadzenDialogService.NotifyInternalServerError();
         }
     }
 

@@ -84,7 +84,7 @@ namespace GAPPLE.Client.Services
             comprobante.EdicionUsuario = SesionDTO.Nombre;
             var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito", comprobante);
             if (response.StatusCode == HttpStatusCode.OK)
-                return new(response.StatusCode);
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<ComprobanteCabecera>());
 
             return await Response.CreateAsync(response);
         }
