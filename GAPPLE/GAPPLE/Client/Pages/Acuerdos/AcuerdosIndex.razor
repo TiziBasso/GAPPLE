@@ -69,9 +69,9 @@
         </GroupHeaderTemplate>
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Acuerdo.IdAcuerdo)" Title="Cód. acuerdo" TextAlign="TextAlign.Right" Width="120px" Groupable="false" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.CodigoCliente)" Title="Cód. cliente" Width="120px" />
-            @* <RadzenDataGridColumn Property="@nameof(Acuerdo.RazonSocial)" Title="Razón social" Width="150px" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.CUIT)" Title="CUIT" /> *@
+            @* <RadzenDataGridColumn Property="@nameof(Acuerdo.CodigoCliente)" Title="Cód. cliente" Width="120px" /> *@
+            <RadzenDataGridColumn Property="@nameof(Acuerdo.RazonSocial)" Title="Razón social" Width="150px" />
+            @* <RadzenDataGridColumn Property="@nameof(Acuerdo.CUIT)" Title="CUIT" /> *@
             <RadzenDataGridColumn Property="@nameof(Acuerdo.Linea)" Title="Linea" />
             <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaDesde)" Title="Fecha desde" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false">
                 <FilterTemplate>
@@ -149,7 +149,7 @@ else
         {
             await FillAcuerdos();
             StateHasChanged();
-            grid.Groups.Add(new GroupDescriptor() { Property = nameof(Acuerdo.CodigoCliente), Title = "Cód. Cliente" });
+            grid.Groups.Add(new GroupDescriptor() { Property = nameof(Acuerdo.RazonSocial), Title = "Razón social" });
             await grid.Reload();
             await grid.ReloadSettings();
         }
