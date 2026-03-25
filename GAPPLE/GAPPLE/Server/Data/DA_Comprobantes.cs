@@ -162,5 +162,33 @@ namespace GAPPLE.Server.Data
 
             return dt;
         }
+
+        public void InsertarArchivo(NotaCreditoArchivo archivo, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_archivo";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdComprobante", archivo.IdComprobante);
+            cmd.Parameters.AddWithValue("@pNombreArchivo", archivo.NombreArchivo);
+            cmd.Parameters.AddWithValue("@pRuta", archivo.Path);
+            cmd.Parameters.AddWithValue("@pTipoMime", archivo.TipoArchivo);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteArchivo(NotaCreditoArchivo archivo, SqlTransaction transaction)
+        {
+            SqlConnection cnn = transaction.Connection;
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_archivo";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdArchivo", archivo.IdArchivo);
+            cmd.Parameters.AddWithValue("@pIdComprobante", archivo.IdComprobante);
+            cmd.ExecuteNonQuery();
+        }
     }
 }
