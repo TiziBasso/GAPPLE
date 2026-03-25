@@ -146,5 +146,21 @@ namespace GAPPLE.Server.Data
 
             return dt;
         }
+
+        public DataTable ObtenerArchivos(int idComprobante)
+        {
+            DataTable dt = new();
+            SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = cnn.CreateCommand();
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_archivo";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+
+            return dt;
+        }
     }
 }

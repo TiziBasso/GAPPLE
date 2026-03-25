@@ -3,6 +3,7 @@ using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
 using System.Net;
@@ -193,8 +194,37 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Pendiente, usuario);
+                daC.ObtenerArchivos(idComprobante);
                 return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpGet("notacredito/archivos/{idComprobante:int}")]
+        public IActionResult GetArchivos(int idComprobante)
+        {
+            try
+            {
+                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                List<NotaCreditoArchivo> archivos = new();
+                using (DataTable dt = daC.ObtenerArchivos(idComprobante))
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        NotaCreditoArchivo nc = new();
+                        nc.IdArchivo = int.Parse(row["IdArchivo"].ToString());
+                        nc.IdComprobante = int.Parse(row["IdComprobante"].ToString());
+                        nc.NombreArchivo = row["NombreArchivo"].ToString();
+                        nc.Path = row["Ruta"].ToString();
+                        nc.TipoArchivo = row["TipoMime"].ToString();
+                        nc.FechaSubida = DateTime.Parse(row["FechaSubida"].ToString());
+                        archivos.Add(nc);
+                    }
+                }
+                return Ok(archivos);
             }
             catch (Exception ex)
             {
