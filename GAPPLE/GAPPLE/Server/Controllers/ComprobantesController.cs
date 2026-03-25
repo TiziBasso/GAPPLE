@@ -39,7 +39,7 @@ namespace GAPPLE.Server.Controllers
 
         internal List<ComprobanteCabecera> ObtenerNotasCredito(ComprobanteCabeceraRequest request)
         {
-            DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            DA_Comprobantes daC = new(DefaultConnectionString);
             List<ComprobanteCabecera> lstComprobantes = new();
             using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente, request.IdComprobante))
             {
@@ -163,7 +163,7 @@ namespace GAPPLE.Server.Controllers
         {
             try
             {
-                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Comprobantes daC = new(DefaultConnectionString);
                 daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Cancelado, usuario);
                 return Ok();
             }
@@ -178,7 +178,7 @@ namespace GAPPLE.Server.Controllers
         {
             try
             {
-                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Comprobantes daC = new(DefaultConnectionString);
                 daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Aprobado, usuario);
                 return Ok();
             }
@@ -193,7 +193,7 @@ namespace GAPPLE.Server.Controllers
         {
             try
             {
-                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Comprobantes daC = new(DefaultConnectionString);
                 daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Pendiente, usuario);
                 return Ok();
             }
@@ -203,28 +203,45 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpGet("notacredito/archivos/{idComprobante:int}")]
+        [HttpGet("notacredito/{idComprobante:int}/archivos")]
         public IActionResult GetArchivos(int idComprobante)
         {
             try
             {
-                DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+                DA_Comprobantes daC = new(DefaultConnectionString);
                 List<NotaCreditoArchivo> archivos = new();
                 using (DataTable dt = daC.ObtenerArchivos(idComprobante))
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        NotaCreditoArchivo nc = new();
-                        nc.IdArchivo = int.Parse(row["IdArchivo"].ToString());
-                        nc.IdComprobante = int.Parse(row["IdComprobante"].ToString());
-                        nc.NombreArchivo = row["NombreArchivo"].ToString();
-                        nc.Path = row["Ruta"].ToString();
-                        nc.TipoArchivo = row["TipoMime"].ToString();
-                        nc.FechaSubida = DateTime.Parse(row["FechaSubida"].ToString());
+                        NotaCreditoArchivo nc = new()
+                        {
+                            IdArchivo = int.Parse(row["IdArchivo"].ToString()),
+                            IdComprobante = int.Parse(row["IdComprobante"].ToString()),
+                            NombreArchivo = row["NombreArchivo"].ToString(),
+                            Path = row["Ruta"].ToString(),
+                            TipoArchivo = row["TipoMime"].ToString(),
+                            FechaSubida = DateTime.Parse(row["FechaSubida"].ToString())
+                        };
                         archivos.Add(nc);
                     }
                 }
                 return Ok(archivos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpDelete("notacredito/{idComprobante:int}/archivos")]
+        public IActionResult DeleteArchivos(List<NotaCreditoArchivo> archivos)
+        {
+            try
+            {
+                DA_Comprobantes daC = new(DefaultConnectionString);
+
+                return Ok();
             }
             catch (Exception ex)
             {
