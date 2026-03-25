@@ -194,7 +194,7 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 DA_Comprobantes daC = new(Configuration.GetConnectionString("DefaultConnection"));
-                daC.ObtenerArchivos(idComprobante);
+                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Pendiente, usuario);
                 return Ok();
             }
             catch (Exception ex)
