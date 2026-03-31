@@ -114,7 +114,7 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.ToString()s);
+                return StatusCode(500, ex.ToString());
             }
         }
     }

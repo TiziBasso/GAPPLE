@@ -5,7 +5,7 @@
     <RadzenDataGrid Data="notaCreditoArchivos" Density="Density.Compact">
         <HeaderTemplate>
             <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-            Click="@(() => CargarArchivo())" @onclick:stopPropagation="true" />
+                          Click="@(() => CargarArchivo())" @onclick:stopPropagation="true" />
         </HeaderTemplate>
         <Columns>
             <RadzenDataGridColumn Property="@nameof(NotaCreditoArchivo.IdArchivo)" Title="Cód" />
@@ -14,7 +14,7 @@
             <RadzenDataGridColumn>
                 <Template>
                     <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                    Click="@(() => DescargarArchivo(context))" @onclick:stopPropagation="true" />
+                                  Click="@(() => DescargarArchivo(context))" @onclick:stopPropagation="true" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -38,6 +38,8 @@ else
 
     public async Task DescargarArchivo(NotaCreditoArchivo nc)
     {
-        
+
     }
+
+    void CargarArchivo() { }
 }

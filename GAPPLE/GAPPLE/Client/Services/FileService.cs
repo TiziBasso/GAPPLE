@@ -59,7 +59,7 @@ namespace GAPPLE.Client.Services
             }
 
             if (response.IsOk)
-                response.Data = chunkIndex;
+                response.Data = chunkIndex--;
 
             return response;
         }
