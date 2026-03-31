@@ -98,5 +98,23 @@ namespace GAPPLE.Client.Services
 
             return null;
         }
+
+        public async ValueTask<Response> PostNotaCreditoArchivo(List<NotaCreditoArchivo> archivos)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito/archivos", archivos);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
+
+            return await Response.CreateAsync(response);
+        }
+
+        public async ValueTask<Response> DeleteNotaCreditoArchivo(NotaCreditoArchivo archivo)
+        {
+            var response = await HttpClient.DeleteAsync($"{URI_BASE}/notacredito/archivo/{archivo.IdArchivo}");
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode);
+
+            return await Response.CreateAsync(response);
+        }
     }
 }

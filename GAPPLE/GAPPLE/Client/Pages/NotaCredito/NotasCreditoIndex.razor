@@ -359,16 +359,7 @@ else
      
     async Task CargarArchivos(ComprobanteCabecera cc)
     {
-        RadzenDialogService.OpenBusyWithLoader("Cargando...");
-        Resumen = await ComprobantesService.GetNotaCredito(cc.IdComprobante!);
-        RadzenDialogService.CloseDialog();
-        if (Resumen == null)
-            RadzenDialogService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
-        else
-        {
-            RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
-            showResumen = true;
-        }
+        NavigationManager.NavigateTo($"notacreditoarchivos/{cc.IdComprobante}");
     }
 
     public async Task Imprimir(string id = "print")

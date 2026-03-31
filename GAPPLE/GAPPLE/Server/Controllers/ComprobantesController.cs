@@ -234,13 +234,47 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpDelete("notacredito/{idComprobante:int}/archivos")]
-        public IActionResult DeleteArchivos(List<NotaCreditoArchivo> archivos)
+        [HttpPost("notacredito/archivos")]
+        public IActionResult PostArchivos(List<NotaCreditoArchivo> archivos)
         {
+            SqlTransaction transaction = null;
             try
             {
-                DA_Comprobantes daC = new(DefaultConnectionString);
+                using (SqlConnection cnn = new(DefaultConnectionString))
+                {
+                    DA_Comprobantes daC = new(cnn.ConnectionString);
+                    cnn.Open();
+                    transaction = cnn.BeginTransaction();
+                    foreach (var item in archivos)
+                    {
+                        daC.InsertarArchivo(item, transaction);
+                    }
+                    transaction.Commit();
+                    cnn.Close();
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
 
+        [HttpDelete("notacredito/archivo/{idarchivo:int}/{idcomprobante:int}")]
+        public IActionResult DeleteArchivo(int idarchivo, int idcomprobante)
+        {
+            SqlTransaction transaction = null;
+            try
+            {
+                using (SqlConnection cnn = new(DefaultConnectionString))
+                {
+                    DA_Comprobantes daC = new(cnn.ConnectionString);
+                    cnn.Open();
+                    transaction = cnn.BeginTransaction();
+                    daC.DeleteArchivo(idarchivo, idcomprobante, null);
+                    transaction.Commit();
+                    cnn.Close();
+                }
                 return Ok();
             }
             catch (Exception ex)

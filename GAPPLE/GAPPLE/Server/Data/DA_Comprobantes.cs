@@ -178,7 +178,7 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void DeleteArchivo(NotaCreditoArchivo archivo, SqlTransaction transaction)
+        public void DeleteArchivo(int idArchivo, int idcomprobante, SqlTransaction transaction)
         {
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
@@ -186,8 +186,8 @@ namespace GAPPLE.Server.Data
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_del_archivo";
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@pIdArchivo", archivo.IdArchivo);
-            cmd.Parameters.AddWithValue("@pIdComprobante", archivo.IdComprobante);
+            cmd.Parameters.AddWithValue("@pIdArchivo", idArchivo);
+            cmd.Parameters.AddWithValue("@pIdComprobante", idcomprobante);
             cmd.ExecuteNonQuery();
         }
     }

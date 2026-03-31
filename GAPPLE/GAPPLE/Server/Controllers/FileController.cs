@@ -8,7 +8,7 @@ namespace GAPPLE.Server.Controllers
     [ApiController]
     public class FileController : ControllerBase
     {
-        private readonly string _uploadFolder = @"C:\Zentra";
+        private readonly string _uploadFolder = @"C:\ZentraFiles";
 
         public FileController()
         {

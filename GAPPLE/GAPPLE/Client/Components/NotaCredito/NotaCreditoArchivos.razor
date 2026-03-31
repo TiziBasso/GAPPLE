@@ -1,10 +1,15 @@
-﻿@inject ComprobantesService ComprobantesService
+﻿@page "/notacreditoarchivos/{IdComprobante:int}"
+@using GAPPLE.Client.Pages.NotaCredito
+@inject ComprobantesService ComprobantesService
+@inject NavigationManager NavigationManager
+@inject RadzenDialogService RadzenDialogService
+@inject FileService FileService
 
 @if (showForm)
 {
     <RadzenDataGrid Data="notaCreditoArchivos" Density="Density.Compact">
         <HeaderTemplate>
-            <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+            <RadzenButton Icon="upload" Text="Agregar archivos" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                           Click="@(() => CargarArchivo())" @onclick:stopPropagation="true" />
         </HeaderTemplate>
         <Columns>
@@ -19,6 +24,8 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+
+    <RadzenButton Text="Volver" Click="Volver" ButtonStyle="ButtonStyle.Secondary" />
 }
 else
 {
@@ -41,5 +48,38 @@ else
 
     }
 
-    void CargarArchivo() { }
+    async Task CargarArchivo()
+    {
+        var result = await RadzenDialogService.OpenAsync<ArchivosTest>("Cargar archivos", null, new DialogOptions
+        {
+            Width = "500px",
+            Height = "300px"
+        });
+
+        if (result != null)
+        {
+            RadzenDialogService.OpenBusyWithLoader();
+            List<NotaCreditoArchivo> archivos = new();
+            foreach(var item in (List<string>)result)
+            {
+                archivos.Add(new NotaCreditoArchivo
+                {
+                    IdComprobante = IdComprobante,
+                    NombreArchivo = item.Substring(item.LastIndexOf("/")+1),
+                    FechaSubida = DateTime.Today,
+                    Path = item,
+                    TipoArchivo = "arch"
+                });
+            }
+            await ComprobantesService.PostNotaCreditoArchivo(archivos);
+        }
+
+        notaCreditoArchivos = await ComprobantesService.GetArchivos(IdComprobante);
+        RadzenDialogService.CloseDialog();
+    }
+
+    void Volver()
+    {
+        NavigationManager.NavigateTo($"/notascredito");
+    }
 }

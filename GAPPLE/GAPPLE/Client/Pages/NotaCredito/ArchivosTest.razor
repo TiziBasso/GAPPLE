@@ -1,6 +1,4 @@
-﻿@page "/archivostest"
-
-@implements IDisposable
+﻿@implements IDisposable
 
 @inject IJSRuntime JS
 @inject RadzenDialogService RadzenDialogService
@@ -8,14 +6,11 @@
 @inject SignalRService SignalRService
 @inject ProgressBarService ProgressBarService
 
-
-<h3>ArchivosTest</h3>
-
 <InputFile OnChange="OnFilesSelected" multiple style="display:none" @ref="fileInput" />
 
 <RadzenButton Text="Seleccionar archivos" Click="@AbrirSelector" />
 
-<RadzenDataGrid Data="@files" TItem="IBrowserFile">
+<RadzenDataGrid @ref="radzenDataGrid" Data="@files" TItem="IBrowserFile">
     <Columns>
         <RadzenDataGridColumn TItem="IBrowserFile" Property="Name" Title="Nombre" />
         <RadzenDataGridColumn TItem="IBrowserFile" Title="Tamaño">
@@ -37,6 +32,7 @@
     CancellationTokenSource cancellationToken = new();
     private List<IBrowserFile> files = new();
     private InputFile fileInput;
+    RadzenDataGrid<IBrowserFile> radzenDataGrid;
 
     private async Task AbrirSelector()
     {
@@ -46,6 +42,7 @@
     private void OnFilesSelected(InputFileChangeEventArgs e)
     {
         files.AddRange(e.GetMultipleFiles());
+        radzenDataGrid.Reload();
     }
 
     private async Task ProcesarArchivos()
@@ -55,8 +52,6 @@
     .Select(g => g.First())
     .ToList();
         await SubirArchivos(files, cancellationToken);
-
-        RadzenDialogService.Notify(NotificationSeverity.Success, "Todo OK");
     }
 
     private async Task<List<string>> SubirArchivos(List<IBrowserFile> files, CancellationTokenSource cancellationToken)
@@ -113,6 +108,7 @@
         else
         {
             RadzenDialogService.Notify(NotificationSeverity.Success, "Todos los archivos se subieron correctamente");
+            RadzenDialogService.CloseDialog(paths);
         }
 
         return paths;
@@ -121,6 +117,7 @@
     void Eliminar(IBrowserFile file)
     {
         files.Remove(file);
+        radzenDataGrid.Reload();
     }
 
     public void Dispose()
