@@ -343,7 +343,8 @@ else
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
         zonas = await OrdenesService.GetZonas();
-        ofertas = await OfertasService.GetOfertas(null, null, null, null, true);
+        var aux = await OfertasService.GetOfertas(null, null, null, null, true);
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
         editContext = new(orden);
 
         showPage = true;

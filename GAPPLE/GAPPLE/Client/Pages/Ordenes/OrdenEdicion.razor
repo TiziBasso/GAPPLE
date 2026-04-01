@@ -550,7 +550,8 @@ else
                     Cards.Add(new Card(group.Key, chunk));
             }
 
-            ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+            var aux = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+            ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
             ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
             await RecalcularOfertas();
 
@@ -623,7 +624,8 @@ else
                 Cards.Add(new Card(group.Key, chunk));
         }
 
-        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        var aux = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
         await RecalcularOfertas();
         RadzenDialogService.CloseDialog();
     }
