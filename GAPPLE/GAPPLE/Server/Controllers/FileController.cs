@@ -16,15 +16,17 @@ namespace GAPPLE.Server.Controllers
                 Directory.CreateDirectory(_uploadFolder);
         }
 
-        [HttpPost("chunk/{nombreUsuario}/{fileName}/{chunkIndex:int}")]
-        public async Task<IActionResult> UploadChunk(string fileName, int chunkIndex, string nombreUsuario)
+        [HttpPost("chunk/{entidad}/{nombreUsuario}/{fileName}/{chunkIndex:int}")]
+        public async Task<IActionResult> UploadChunk(string entidad, string fileName, int chunkIndex, string nombreUsuario)
         {
             try
             {
-                if (!Directory.Exists(_uploadFolder))
-                    Directory.CreateDirectory(_uploadFolder);
+                var carpetaEntidad = Path.Combine(_uploadFolder, entidad);
 
-                string baseName = Path.Combine(_uploadFolder, $"{nombreUsuario}_{fileName}");
+                if (!Directory.Exists(carpetaEntidad))
+                    Directory.CreateDirectory(carpetaEntidad);
+
+                string baseName = Path.Combine(carpetaEntidad, $"{nombreUsuario}_{fileName}");
 
                 if (chunkIndex == 0)
                 {
@@ -51,13 +53,13 @@ namespace GAPPLE.Server.Controllers
         }
 
 
-        [HttpPost("complete/{nombreUsuario}/{fileName}/{chunksTotales:int}")]
-        public IActionResult CompleteUpload(string fileName, int chunksTotales, string nombreUsuario)
+        [HttpPost("complete/{entidad}/{nombreUsuario}/{fileName}/{chunksTotales:int}")]
+        public IActionResult CompleteUpload(string entidad, string nombreUsuario, string fileName, int chunksTotales )
         {
             string finalFilePath = null;
             try
             {
-                string baseName = Path.Combine(_uploadFolder, $"{nombreUsuario}_{fileName}");
+                string baseName = Path.Combine(_uploadFolder, entidad, $"{nombreUsuario}_{fileName}");
                 finalFilePath = baseName; // archivo final
 
                 // recolecto todos los chunk paths
@@ -91,7 +93,7 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        internal static byte[] GetFile(string fullPath)
+        internal byte[] GetFile(string fullPath)
         {
             if (fullPath == null || !System.IO.File.Exists(fullPath))
                 throw new Exception("Ha ocurrido un error en la lectura del archivo");
@@ -99,7 +101,7 @@ namespace GAPPLE.Server.Controllers
             return System.IO.File.ReadAllBytes(fullPath);
         }
 
-        internal static void DeleteFile(string fullPath)
+        internal void DeleteFile(string fullPath)
         {
             if (fullPath != null && System.IO.File.Exists(fullPath))
                 System.IO.File.Delete(fullPath);

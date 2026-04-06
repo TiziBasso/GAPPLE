@@ -3,9 +3,11 @@ using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO.Compression;
 using System.Net;
 
 namespace GAPPLE.Server.Controllers
@@ -204,29 +206,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("notacredito/{idComprobante:int}/archivos")]
-        public IActionResult GetArchivos(int idComprobante)
+        public async Task<IActionResult> GetArchivos(int idComprobante)
         {
             try
             {
-                DA_Comprobantes daC = new(DefaultConnectionString);
-                List<NotaCreditoArchivo> archivos = new();
-                using (DataTable dt = daC.ObtenerArchivos(idComprobante))
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        NotaCreditoArchivo nc = new()
-                        {
-                            IdArchivo = int.Parse(row["IdArchivo"].ToString()),
-                            IdComprobante = int.Parse(row["IdComprobante"].ToString()),
-                            NombreArchivo = row["NombreArchivo"].ToString(),
-                            Path = row["Ruta"].ToString(),
-                            TipoArchivo = row["TipoMime"].ToString(),
-                            FechaSubida = DateTime.Parse(row["FechaSubida"].ToString())
-                        };
-                        archivos.Add(nc);
-                    }
-                }
-                return Ok(archivos);
+                return Ok(await ObtenerArchivos(idComprobante, null, default));
             }
             catch (Exception ex)
             {
@@ -234,8 +218,70 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpPost("notacredito/archivos")]
-        public IActionResult PostArchivos(List<NotaCreditoArchivo> archivos)
+        [HttpPost("notacredito/archivos/download")]
+        public async Task<IActionResult> GetGiftCardPrint(List<NotaCreditoArchivo> archivos, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                FileController fC = new();
+                using var ms = new MemoryStream();
+                using var zip = new ZipArchive(ms, ZipArchiveMode.Create, true);
+
+                foreach (var archivo in archivos)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    var bytes = fC.GetFile(archivo.Path);
+
+                    var entry = zip.CreateEntry(archivo.NombreArchivo);
+                    using var entryStream = entry.Open();
+                    entryStream.Write(bytes);
+
+                    await Task.Yield();
+                }
+
+                zip.Dispose();
+                ms.Position = 0;
+
+                if (cancellationToken.IsCancellationRequested)
+                    return StatusCode(500);
+
+                return File(ms.ToArray(), "application/zip", $"archivos.zip");
+            }
+            catch (Exception ex)
+            {
+                //log.LogError(User.Identity.Name, ex.ToString());
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        internal async Task<List<NotaCreditoArchivo>> ObtenerArchivos(int idComprobante, int? idArchivo, CancellationToken cancellationToken)
+        {
+            DA_Comprobantes daC = new(DefaultConnectionString);
+            List<NotaCreditoArchivo> archivos = new();
+            using (DataTable dt = daC.ObtenerArchivos(idComprobante, idArchivo))
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+
+                    NotaCreditoArchivo nc = new()
+                    {
+                        IdArchivo = int.Parse(row["IdArchivo"].ToString()),
+                        IdComprobante = int.Parse(row["IdComprobante"].ToString()),
+                        NombreArchivo = row["NombreArchivo"].ToString(),
+                        Path = row["Ruta"].ToString(),
+                        TipoArchivo = row["TipoMime"].ToString(),
+                        FechaSubida = DateTime.Parse(row["FechaSubida"].ToString())
+                    };
+                    archivos.Add(nc);
+                }
+            }
+            return archivos;
+        }
+
+        [HttpPost("notacredito/{idComprobante:int}/archivos")]
+        public IActionResult PostArchivos(int idComprobante, List<NotaCreditoArchivo> archivos)
         {
             SqlTransaction transaction = null;
             try
@@ -247,12 +293,14 @@ namespace GAPPLE.Server.Controllers
                     transaction = cnn.BeginTransaction();
                     foreach (var item in archivos)
                     {
-                        daC.InsertarArchivo(item, transaction);
+                        item.IdComprobante = idComprobante;
+                        var dt = daC.InsertarArchivo(item, transaction);
+                        item.IdArchivo = Convert.ToInt32(dt.Rows[0]["IdArchivo"]);
                     }
                     transaction.Commit();
                     cnn.Close();
                 }
-                return Ok();
+                return Ok(archivos);
             }
             catch (Exception ex)
             {
@@ -260,18 +308,21 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpDelete("notacredito/archivo/{idarchivo:int}/{idcomprobante:int}")]
-        public IActionResult DeleteArchivo(int idarchivo, int idcomprobante)
+        [HttpDelete("notacredito/{idcomprobante:int}/archivo/{idarchivo:int}")]
+        public async Task<IActionResult> DeleteArchivo(int idcomprobante, int idarchivo)
         {
             SqlTransaction transaction = null;
             try
             {
+                FileController fC = new();
                 using (SqlConnection cnn = new(DefaultConnectionString))
                 {
+                    var archivo = (await ObtenerArchivos(idcomprobante, idarchivo, default)).FirstOrDefault();
                     DA_Comprobantes daC = new(cnn.ConnectionString);
                     cnn.Open();
                     transaction = cnn.BeginTransaction();
-                    daC.DeleteArchivo(idarchivo, idcomprobante, null);
+                    daC.DeleteArchivo(archivo.IdArchivo, archivo.IdComprobante, transaction);
+                    fC.DeleteFile(archivo.Path);
                     transaction.Commit();
                     cnn.Close();
                 }
@@ -279,6 +330,9 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex)
             {
+                if (transaction != null && transaction.Connection != null)
+                    transaction.Rollback();
+
                 return StatusCode(500, ex.ToString());
             }
         }

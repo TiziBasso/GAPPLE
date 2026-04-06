@@ -105,5 +105,10 @@ namespace GAPPLE.Client.Tools
             internal const string UsuarioNoEncontrado = "errorpage/usernotfound";
             internal const string ReparacionEcommerce = "errorpage/reparacionecommerce";
         }
+
+        internal static class FilesEntity
+        {
+            internal const string NotasCredito = "NotasCredito";
+        }
     }
 }

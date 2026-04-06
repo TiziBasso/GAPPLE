@@ -149,7 +149,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteArchivos Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="drive_file_move" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall" Click="@(() => CargarArchivos(context))" />
                 </Template>
@@ -191,7 +191,7 @@ else
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
     //permisos
-    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, permiteClonar, showResumen;
+    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, permiteClonar, permiteArchivos, showResumen;
     int render = 0;
 
     protected override async Task OnInitializedAsync()
@@ -205,6 +205,7 @@ else
         permiteLectura = permisos.Contains(Permisos.Lectura);
         permiteReverir = permisos.Contains(Permisos.Revertir);
         permiteClonar = permisos.Contains(Permisos.Clonar);
+        permiteArchivos = permisos.Contains(Permisos.Archivos);
 
         estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
 

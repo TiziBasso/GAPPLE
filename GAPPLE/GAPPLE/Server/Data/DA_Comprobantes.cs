@@ -1,7 +1,5 @@
 ﻿using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
-using GAPPLE.Shared.Structs;
-using MathNet.Numerics.Optimization;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -136,7 +134,6 @@ namespace GAPPLE.Server.Data
             DataTable dt = new();
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = cnn.CreateCommand();
-
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_get_ComprobanteDetalle";
             cmd.Parameters.Clear();
@@ -147,7 +144,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public DataTable ObtenerArchivos(int idComprobante)
+        public DataTable ObtenerArchivos(int idComprobante, int? idArchivo)
         {
             DataTable dt = new();
             SqlConnection cnn = new(ConnectionString);
@@ -157,14 +154,16 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_get_archivo";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
+            if (idArchivo != null) cmd.Parameters.AddWithValue("@pIdArchivo", idArchivo);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
 
             return dt;
         }
 
-        public void InsertarArchivo(NotaCreditoArchivo archivo, SqlTransaction transaction)
+        public DataTable InsertarArchivo(NotaCreditoArchivo archivo, SqlTransaction transaction)
         {
+            DataTable dt = new();
             SqlConnection cnn = transaction.Connection;
             SqlCommand cmd = cnn.CreateCommand();
             cmd.Transaction = transaction;
@@ -175,7 +174,9 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pNombreArchivo", archivo.NombreArchivo);
             cmd.Parameters.AddWithValue("@pRuta", archivo.Path);
             cmd.Parameters.AddWithValue("@pTipoMime", archivo.TipoArchivo);
-            cmd.ExecuteNonQuery();
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+            return dt;
         }
 
         public void DeleteArchivo(int idArchivo, int idcomprobante, SqlTransaction transaction)

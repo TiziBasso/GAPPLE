@@ -2,8 +2,9 @@
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http.Json;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace GAPPLE.Client.Services
 {
@@ -96,23 +97,33 @@ namespace GAPPLE.Client.Services
             if (response.StatusCode == HttpStatusCode.OK)
                 return await response.Content.ReadFromJsonAsync<List<NotaCreditoArchivo>>();
 
-            return null;
+            return [];
         }
 
-        public async ValueTask<Response> PostNotaCreditoArchivo(List<NotaCreditoArchivo> archivos)
+        public async ValueTask<Response> PostNotaCreditoArchivo(int idComprobante, List<NotaCreditoArchivo> archivos)
         {
-            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito/archivos", archivos);
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito/{idComprobante}/archivos", archivos);
             if (response.StatusCode == HttpStatusCode.OK)
-                return new(response.StatusCode);
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<List<NotaCreditoArchivo>>());
 
             return await Response.CreateAsync(response);
         }
 
         public async ValueTask<Response> DeleteNotaCreditoArchivo(NotaCreditoArchivo archivo)
         {
-            var response = await HttpClient.DeleteAsync($"{URI_BASE}/notacredito/archivo/{archivo.IdArchivo}");
+            var response = await HttpClient.DeleteAsync($"{URI_BASE}/notacredito/{archivo.IdComprobante}/archivo/{archivo.IdArchivo}");
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode);
+
+            return await Response.CreateAsync(response);
+        }
+
+        public async ValueTask<Response> GetNotaCreditoArchivos(List<NotaCreditoArchivo> archivos)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito/archivos/download", archivos);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadAsByteArrayAsync());
 
             return await Response.CreateAsync(response);
         }
