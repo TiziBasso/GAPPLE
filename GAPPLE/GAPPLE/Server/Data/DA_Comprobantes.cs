@@ -70,7 +70,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
             cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
             if (!string.IsNullOrWhiteSpace(comprobante.Observaciones)) cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
-            cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
+            if(!string.IsNullOrWhiteSpace(comprobante.ComprobanteReferencia)) cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
             cmd.Parameters.AddWithValue("@pIdListaDePrecios", comprobante.IdListaPrecio);
             cmd.Parameters.AddWithValue("@pAlternativo", comprobante.Presupuesto);
             cmd.Parameters.AddWithValue("@pAltaUsuario", comprobante.AltaUsuario);

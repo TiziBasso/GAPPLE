@@ -34,6 +34,7 @@
 
 @code {
     [Parameter] public int IdComprobante { get; set; }
+    [Parameter] public List<string> NombresCargados { get; set; }
     [Parameter] public EventCallback<List<NotaCreditoArchivo>> Callback { get; set; }
     CancellationTokenSource cancellationToken = new();
     private List<IBrowserFile> files = new();
@@ -48,7 +49,7 @@
 
     private void OnFilesSelected(InputFileChangeEventArgs e)
     {
-        files = e.GetMultipleFiles().ToList();
+        files.AddRange(e.GetMultipleFiles());
         radzenDataGrid.Reload();
     }
 
@@ -58,6 +59,8 @@
 
         if (g.Any(x => x.Count() > 1))
             RadzenDialogService.Notify(NotificationSeverity.Info, "Se seleccionaron dos archivos con el mismo nombre");
+        else if (NombresCargados.Any(x => files.Any(y => y.Name == x)))
+            RadzenDialogService.Notify(NotificationSeverity.Info, "Ya hay un archivo cargado con el mismo nombre");
         else
         {
             string aux = files.Count == 1 ? "archivo" : "archivos";
@@ -86,7 +89,7 @@
                     i++;
                     ProgressBarService.Update($"Archivo {i}/{files.Count}");
                     // 1. Subida en chunks
-                    var chunks = await FileService.PostChunkFile(Variables.FilesEntity.NotasCredito, file, ProgressBarService.Update, cancellationToken);
+                    var chunks = await FileService.PostChunkFile(Variables.FilesEntity.NotasCredito, $"{IdComprobante:000000}", file, ProgressBarService.Update, cancellationToken);
                     if (!chunks.IsOk)
                     {
                         errores.Add(file.Name);
@@ -94,7 +97,7 @@
                     }
 
                     // 2. Confirmación
-                    var complete = await FileService.PostCompleteFile(Variables.FilesEntity.NotasCredito, file.Name, (int)chunks.Data);
+                    var complete = await FileService.PostCompleteFile(Variables.FilesEntity.NotasCredito, $"{IdComprobante:000000}", file.Name, (int)chunks.Data);
                     if (!complete.IsOk)
                     {
                         errores.Add(file.Name);

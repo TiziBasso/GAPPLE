@@ -114,7 +114,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Deposito:" />
                         <RadzenDropDown Data="depositos" @bind-Value="comprobante.IdDeposito" Disabled="@(disableInput || (!permisoDepositoManual && !motivoNull))"
-                                        TextProperty="@nameof(Deposito.Descripcion)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
+                                        TextProperty="@nameof(Deposito.DescripcionCod)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
                                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
                         <ValidationMessage For="@(() => comprobante.IdDeposito)" />
                     </RadzenStack>
@@ -402,9 +402,6 @@ else
     private void Validar(object sender, ValidationRequestedEventArgs args)
     {
         messageStore?.Clear();
-
-        if (string.IsNullOrWhiteSpace(comprobante.ComprobanteReferencia))
-            messageStore?.Add(() => comprobante.ComprobanteReferencia, "Debe ingresar un comprobante referencia");
 
         if (!comprobante.Presupuesto && !comprobante.Factura)
             messageStore?.Add(() => comprobante.Factura, "Debe seleccionar al menos un tipo de orden");

@@ -29,7 +29,7 @@ namespace GAPPLE.Client.Services
         /// <param name="Porcentaje"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async ValueTask<Response> PostChunkFile(string entidad, IBrowserFile file, Action<int> Porcentaje, CancellationTokenSource cancellationToken)
+        public async ValueTask<Response> PostChunkFile(string entidad, string subEntidad, IBrowserFile file, Action<int> Porcentaje, CancellationTokenSource cancellationToken)
         {
             Response response = new(HttpStatusCode.OK);
             long totalRead = 0;
@@ -47,7 +47,7 @@ namespace GAPPLE.Client.Services
 
                 // Endpoint que recibe los chunks
                 var r = await httpClient.PostAsync(
-                    $"{REQUEST_URI_BASE}/chunk/{entidad}/{sesionDTO.Nombre}/{file.Name}/{chunkIndex}",
+                    $"{REQUEST_URI_BASE}/chunk/{entidad}/{subEntidad}/{file.Name}/{chunkIndex}",
                     chunkContent, cancellationToken.Token
                 );
                 response.HttpStatusCode = r.StatusCode;
@@ -70,9 +70,9 @@ namespace GAPPLE.Client.Services
         /// <param name="fileName"></param>
         /// <param name="chunksTotales"></param>
         /// <returns></returns>
-        public async ValueTask<Response> PostCompleteFile(string entidad, string fileName, int chunksTotales)
+        public async ValueTask<Response> PostCompleteFile(string entidad, string subEntidad, string fileName, int chunksTotales)
         {
-            var response = await httpClient.PostAsync($"{REQUEST_URI_BASE}/complete/{entidad}/{sesionDTO.Nombre}/{fileName}/{chunksTotales}", null);
+            var response = await httpClient.PostAsync($"{REQUEST_URI_BASE}/complete/{entidad}/{subEntidad}/{fileName}/{chunksTotales}", null);
             return new(response.StatusCode, await response.Content.ReadAsStringAsync());
         }
 

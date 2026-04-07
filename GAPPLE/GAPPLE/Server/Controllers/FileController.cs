@@ -16,8 +16,8 @@ namespace GAPPLE.Server.Controllers
                 Directory.CreateDirectory(_uploadFolder);
         }
 
-        [HttpPost("chunk/{entidad}/{nombreUsuario}/{fileName}/{chunkIndex:int}")]
-        public async Task<IActionResult> UploadChunk(string entidad, string fileName, int chunkIndex, string nombreUsuario)
+        [HttpPost("chunk/{entidad}/{subEntidad}/{fileName}/{chunkIndex:int}")]
+        public async Task<IActionResult> UploadChunk(string entidad, string subEntidad, string fileName, int chunkIndex)
         {
             try
             {
@@ -26,7 +26,12 @@ namespace GAPPLE.Server.Controllers
                 if (!Directory.Exists(carpetaEntidad))
                     Directory.CreateDirectory(carpetaEntidad);
 
-                string baseName = Path.Combine(carpetaEntidad, $"{nombreUsuario}_{fileName}");
+                var carpetaSubEntidad = Path.Combine(carpetaEntidad, subEntidad);
+
+                if (!Directory.Exists(carpetaSubEntidad))
+                    Directory.CreateDirectory(carpetaSubEntidad);
+
+                string baseName = Path.Combine(carpetaSubEntidad, $"{fileName}");
 
                 if (chunkIndex == 0)
                 {
@@ -53,13 +58,13 @@ namespace GAPPLE.Server.Controllers
         }
 
 
-        [HttpPost("complete/{entidad}/{nombreUsuario}/{fileName}/{chunksTotales:int}")]
-        public IActionResult CompleteUpload(string entidad, string nombreUsuario, string fileName, int chunksTotales )
+        [HttpPost("complete/{entidad}/{subEntidad}/{fileName}/{chunksTotales:int}")]
+        public IActionResult CompleteUpload(string entidad, string subEntidad, string fileName, int chunksTotales )
         {
             string finalFilePath = null;
             try
             {
-                string baseName = Path.Combine(_uploadFolder, entidad, $"{nombreUsuario}_{fileName}");
+                string baseName = Path.Combine(_uploadFolder, entidad, subEntidad, $"{fileName}");
                 finalFilePath = baseName; // archivo final
 
                 // recolecto todos los chunk paths

@@ -109,33 +109,33 @@
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="print" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => VerNotaCreditoImpresion(orden))" @onclick:stopPropagation="true" />
+                                  Click="@(() => VerNotaCreditoImpresion(orden))" @onclick:stopPropagation="true" title="Imprimir nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible="permiteClonar"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="file_copy" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => ClonarNotaCredito(orden))" @onclick:stopPropagation="true" />
+                                  Click="@(() => ClonarNotaCredito(orden))" @onclick:stopPropagation="true" title="Clonar nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteLectura Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => VerNotaCredito(context))" />
+                                  Click="@(() => VerNotaCredito(context))" title="Ver nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => EditarNotaCredito(context))" Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) />
+                                  Click="@(() => EditarNotaCredito(context))" Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) title="Editar nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteAprobacion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.ExtraSmall"
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.ExtraSmall" title="Aprobar nota de crédito"
                                   Click="@(() => AprobarNotaCredito(context))" Disabled=@(context.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente) />
                 </Template>
             </RadzenDataGridColumn>
@@ -144,21 +144,21 @@
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  Visible=@(orden.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado)
+                                  Visible=@(orden.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) title="Revertir nota de crédito"
                                   @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteArchivos Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
-                    <RadzenButton Icon="drive_file_move" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall" Click="@(() => CargarArchivos(context))" />
+                    <RadzenButton Icon="drive_file_move" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall" Click="@(() => CargarArchivos(context))" title="Archivos de nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteCancelar Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
                 <Template>
                     <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))"
-                                  Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) />
+                                  Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) title="Cancelar nota de crédito" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
