@@ -34,7 +34,7 @@
 
 @code {
     [Parameter] public int IdComprobante { get; set; }
-    [Parameter] public List<string> NombresCargados { get; set; }
+    [Parameter] public List<string> NombresCargados { get; set; } = new List<string>();
     [Parameter] public EventCallback<List<NotaCreditoArchivo>> Callback { get; set; }
     CancellationTokenSource cancellationToken = new();
     private List<IBrowserFile> files = new();

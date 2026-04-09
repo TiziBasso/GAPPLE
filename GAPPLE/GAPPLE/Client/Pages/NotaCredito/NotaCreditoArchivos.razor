@@ -122,7 +122,7 @@ else
     async Task CargarArchivo() =>
         await RadzenDialogService.OpenAsync<NotaCreditoArchivosModal>("Cargar archivos", new(){ { "IdComprobante", IdComprobante},
                                         { "Callback", EventCallback.Factory.Create<List<NotaCreditoArchivo>>(this, ArchivoCallback)},
-                                        { "NombresCargados", notaCreditoArchivos.Select(x=>x.NombreArchivo) } }, new DialogOptions
+                                        { "NombresCargados", notaCreditoArchivos.Select(x=>x.NombreArchivo).ToList() } }, new DialogOptions
                                         {
                                             Width = "80rem",
                                             Height = "50rem",
