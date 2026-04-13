@@ -1,0 +1,62 @@
+﻿@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+@inject ProgressBarService ProgressBarService
+
+<RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Class="rz-p-12">
+	<RadzenText TextStyle="TextStyle.H6">@Text</RadzenText>
+	<RadzenProgressBar Value="Porcentaje"
+					   ProgressBarStyle="ProgressBarStyle.Secondary"
+					   Mode="ProgressBarMode.Determinate"
+					   Style="width:60vw; color:#000000" />
+</RadzenStack>
+
+@code {
+	private double _porcentaje;
+#pragma warning disable BL0007 // Component parameter should not be set outside of its component.
+	[Parameter]
+	public double Porcentaje
+	{
+		get => _porcentaje; set
+		{
+			if (value == _porcentaje)
+				return;
+
+			_porcentaje = value;
+			InvokeAsync(StateHasChanged);
+		}
+
+	}
+
+	private string _text = "Procesando...";
+	[Parameter]
+	public string Text
+	{
+		get => _text; set
+		{
+			if (value == _text)
+				return;
+			_text = value;
+			Porcentaje = 0;
+			InvokeAsync(StateHasChanged);
+		}
+	}
+#pragma warning restore BL0007 // Component parameter should not be set outside of its component.
+	protected override void OnInitialized()
+	{
+		ProgressBarService.OnUpdatePorcentaje += Change;
+		ProgressBarService.OnUpdateTexto += Change;
+	}
+
+	void Change(string t)
+	{
+		Porcentaje = 0;
+		Text = t;
+		InvokeAsync(StateHasChanged);
+	}
+
+	void Change(double d)
+	{
+		Porcentaje = d;
+		InvokeAsync(StateHasChanged);
+	}
+}

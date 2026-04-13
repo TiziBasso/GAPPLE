@@ -31,14 +31,21 @@ static void Services(IServiceCollection services)
     services.AddScoped<OfertasService>();
     services.AddScoped<SeguridadService>();
     services.AddScoped<DialogService>();
-    services.AddScoped<DialogCustom>();
+    services.AddScoped<RadzenDialogService>();
     services.AddScoped<ProductosService>();
     services.AddScoped<ToolsHelpers>();
     services.AddScoped<ClientesService>();
     services.AddScoped<RadzenCustom>();
     services.AddScoped<OrdenesService>();
-    services.AddScoped<JSFunction>();
     services.AddScoped<IJSFunction, JSFunction>();
+    services.AddScoped<IJSFunctionRadzen, JSFunctionRadzen>();
     services.AddSingleton<SesionDTO>();
     services.AddSingleton<SignalRService>();
+    services.AddScoped<DepositosService>();
+    services.AddScoped<ToolsService>();
+    services.AddScoped<MotivosService>();
+    services.AddScoped<ComprobantesService>();
+    services.AddScoped<AcuerdosService>();
+    services.AddScoped<ProgressBarService>();
+    services.AddScoped<FileService>();
 }

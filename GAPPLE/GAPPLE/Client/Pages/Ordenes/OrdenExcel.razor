@@ -10,7 +10,7 @@
 @inject OfertasService OfertasService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject SesionDTO SesionDTO
 @inject SignalRService SignalRService
 @using System.Linq
@@ -193,7 +193,7 @@
         </RadzenFieldset>
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0">
-            <CustomFileInput @ref=refFileInput @bind-BytesFile=request.File ChangeFile="ClearGrid" />
+            <CustomFileInput @ref=refFileInput @bind-FileValue="file" ChangeFile="ClearGrid" />
             <RadzenIcon Icon="question_mark" @onclick="ShowFormat" Style="margin-right:5px; height:10px; cursor:default;font-size:medium;" title="Formato de excel" />
             <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Procesar" Icon="upload" Click="ProcesarArchivo" Size="ButtonSize.Small" Disabled=isLoading />
         </RadzenStack>
@@ -307,6 +307,7 @@ else
 }
 
 @code {
+    IBrowserFile file;
     bool showPage, seleccionaVendedor, isLoading, unico, esAdmin;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
@@ -343,7 +344,8 @@ else
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
         zonas = await OrdenesService.GetZonas();
-        ofertas = await OfertasService.GetOfertas(null, null, null, null, true);
+        var aux = await OfertasService.GetOfertas(null, null, null, null, true);
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
         editContext = new(orden);
 
         showPage = true;
@@ -369,10 +371,10 @@ else
 
             if (await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PostPedido(orden);
-                DialogCustom.CloseDialog();
-                if (result.IsSuccessStatusCode)
+                RadzenDialogService.CloseDialog();
+                if (result.IsOk)
                 {
                     //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
                     NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
@@ -382,8 +384,6 @@ else
                     NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
             }
         }
-        else
-            Console.WriteLine("No valido");
     }
 
     private async Task Cancelar()
@@ -398,13 +398,14 @@ else
         {
             NotificationService.Notify(NotificationSeverity.Info, "Alguno de los datos de la orden ha cambiado", "Procese el archivo nuevamente");
             lstProductos.Clear();
+            file = null;
             await refGrid.Reload();
         }
     }
 
     private async Task ProcesarArchivo()
     {
-        if (request.File == null)
+        if (file == null)
             NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar un archivo");
         else if (string.IsNullOrEmpty(orden.CodCliente))
             NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar un cliente");
@@ -413,7 +414,7 @@ else
         else
         {
             isLoading = true;
-            DialogCustom.OpenProgressBar("Procesando archivo");
+            RadzenDialogService.OpenProgressBar("Procesando archivo");
             await SignalRService.StartConnection();
             request.CodListaPrecio = orden.CodListaPrecio;
             request.CodCliente = orden.CodCliente;
@@ -421,17 +422,24 @@ else
             if (ofertasSeleccionadas.Any())
                 request.OfertasSeleccionadas = string.Join(",", ofertasSeleccionadas);
 
+            using var stream = file.OpenReadStream();
+
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            request.File = ms.ToArray();
+
             var response = await ProductosService.ProcesarArchivo(request);
-            DialogCustom.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
             {
                 lstProductos = (List<ProductoOrden>)response.Data;
                 await RecalcularOfertas();
             }
             else if (response.Errors != null && response.Errors.Count > 0)
-                DialogCustom.ShowErrors(response.Errors);
+                RadzenDialogService.ShowAlert(response.Errors);
             else
-                DialogCustom.NotifyInternalServerError();
+                RadzenDialogService.NotifyInternalServerError();
 
             isLoading = false;
         }
@@ -441,7 +449,7 @@ else
 
     async Task AsignarVariables()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
         orden.CodListaPrecio = clientes[index].CodListaPrecioDefault!;
@@ -472,7 +480,7 @@ else
         }
         await ClearGrid();
 
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     private async Task DeleteRow(ProductoOrden p)

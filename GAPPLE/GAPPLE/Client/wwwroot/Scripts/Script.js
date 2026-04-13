@@ -2,6 +2,10 @@ function focusInput(id) {
     document.getElementById(id).focus();
 }
 
+function BlurInput(id) {
+    document.getElementById(id).blur();
+}
+
 function focusAndSelectInput(id) {
     document.getElementById(id).focus();
     document.getElementById(id).select();
@@ -361,3 +365,81 @@ function BuscarNodoActivo(uri) {
         paginaActiva.parentElement.setAttribute('data-nodoactivo', 1);
     }
 }
+
+document.addEventListener('keydown', function (e) {
+    const target = e.target;
+    const isEditable = target.tagName === "INPUT";
+
+    if (!isEditable) return;
+
+    const isArrowKey = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key);
+    const isPageDown = e.key === "PageDown";
+    const isEnter = e.key === "Enter";
+
+    const blockArrows = target.hasAttribute("arrowKeyBlocker");
+    const blockPageDown = target.hasAttribute("pageDownBlocker");
+    const blockEnter = target.hasAttribute("enterKeyBlocker");
+
+    if ((blockArrows && isArrowKey) || (blockPageDown && isPageDown) || (blockEnter && isEnter)) {
+        e.preventDefault();
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    const target = e.target;
+    const isEditable = target.tagName === "INPUT";
+
+    if (!isEditable) return;
+
+    const isDecimalInput = target.getAttribute("data-validate") === "number";
+    if (isDecimalInput) {
+        if (e.ctrlKey) {
+            const key = e.key.toLowerCase();
+            if (key === 'v' || key === 'c' || key === 'z' || key === 'x') {
+                return;
+            }
+        }
+
+        if (e.key === "Dead" || e.key === "´") {
+            e.preventDefault();
+            return;
+        }
+
+        const allowedKeys = ["Enter", "Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight", "Home", "End", ".", ",", "-"];
+        const isNumber = /^[0-9]$/.test(e.key);
+        const isAllowedSymbol = allowedKeys.includes(e.key);
+
+        if (!isNumber && !isAllowedSymbol) {
+            e.preventDefault();
+        }
+
+        if ((e.key === '.' && target.value.includes('.')) ||
+            (e.key === ',' && target.value.includes(',')) ||
+            (e.key === '-' && target.value.includes('-'))) {
+            e.preventDefault();
+        }
+    }
+});
+
+document.addEventListener('beforeinput', function (e) {
+    const target = e.target;
+    const isEditable = target.tagName === "INPUT";
+
+    if (!isEditable) return;
+
+    if (e.ctrlKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'v' || key === 'c' || key === 'z' || key === 'x') {
+            return;
+        }
+    }
+
+    const isDecimalInput = target.getAttribute("data-validate") === "number";
+    if (isDecimalInput) {
+        // e.data puede ser null (como cuando presionás Backspace, etc.)
+        const char = e.data;
+        if (char && !/[0-9.,-]/.test(char)) {
+            e.preventDefault();
+        }
+    }
+});

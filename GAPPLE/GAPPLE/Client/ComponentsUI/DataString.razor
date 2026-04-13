@@ -1,19 +1,29 @@
-﻿<RadzenDataGrid TItem="string" Data="Data" Style="height:100%; width:100%" Density=Density.Compact
-                AllowFiltering=false AllowSorting=true>
+﻿<RadzenDataGrid TItem="StringItem" Data="Items" Density="Density.Compact" Style="height:100%; width:100%;"
+                AllowFiltering="false" AllowSorting="true" ShowEmptyMessage="false">
     <Columns>
-        <RadzenDataGridColumn TItem="string" Title=@Title TextAlign="@TextAlign">
-            <Template>
-                @context
-            </Template>
-        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(StringItem.Value)" Title=@Title TextAlign="@TextAlign" />
     </Columns>
-    <EmptyTemplate>
-        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No hay registros para mostrar.</p>
-    </EmptyTemplate>
 </RadzenDataGrid>
 
 @code {
-    [Parameter] public List<string> Data { get; set; } = new();
+    [Parameter] public List<string> Data { get; set; }
     [Parameter] public string Title { get; set; } = "Nombre";
     [Parameter] public TextAlign TextAlign { get; set; } = TextAlign.Left;
+
+    List<StringItem> Items = [];
+
+    protected override void OnInitialized()
+    {
+        Data.ForEach(x => Items.Add(new StringItem(x)));
+    }
+
+    private class StringItem
+    {
+        public StringItem(string s)
+        {
+            Value = s;
+        }
+
+        public string Value { get; set; }
+    }
 }

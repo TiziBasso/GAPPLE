@@ -3,7 +3,7 @@
 @inject SeguridadService SeguridadService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @using Microsoft.AspNetCore.Authorization;
 @using Microsoft.AspNetCore.Components.Authorization;
 @attribute [Authorize]
@@ -84,13 +84,13 @@ else
 
     public async Task SeleccionPerfil()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         permisos = await SeguridadService.GetPermisosTotal(null, idPerfil);
         permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
         usuarios = await SeguridadService.GetUsuariosPorPerfil((int)idPerfil);
         await grilla.Reload();
         await grilla.ExpandRows(permisosPadre);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
@@ -127,13 +127,13 @@ else
         }
         else
         {
-            var result = await DialogService.Confirm("¿Confirma guardar los datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma guardar los datos?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             List<Permiso> lstCambios = permisos.Where(x => x.HuboCambios).ToList();
             Response response = null;
 
             if (result != null && result == true)
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
 
                 foreach (var item in lstCambios)
                 {
@@ -142,7 +142,7 @@ else
 
                 response = await SeguridadService.PostPermisosPorPerfil(lstCambios);
 
-                if (response.IsSuccessStatusCode)
+                if (response.IsOk)
                 {
                     ShowNotification(NotificationSeverity.Success, 3500, "Se han guardado los datos correctamente");
                     await Reset();
@@ -151,7 +151,7 @@ else
                 {
                     ShowNotification(NotificationSeverity.Error, 3500, "Se ha producido un error inesperado!");
                 }
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
             }
         }
     }
@@ -175,7 +175,7 @@ else
 
     private async Task Cancelar()
     {
-        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
         await Reset();
     }
 

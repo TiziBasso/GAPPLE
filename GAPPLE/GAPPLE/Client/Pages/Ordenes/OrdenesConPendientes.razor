@@ -4,12 +4,12 @@
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject OrdenesService OrdenesService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject AuthenticationStateProvider AutenticacionProvider
 
-<RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Ordenes con pendientes" class="mb-3" />
+<RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Ordenes con pendientes" class="rz-mb-3" />
 
 <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End">
 
@@ -116,11 +116,11 @@ EmptyText="" Style="height:60vh;margin-top:15px;" FilterCaseSensitivity="FilterC
             NotificationService.Notify(NotificationSeverity.Info, MensajesHelper.Title, "La fecha hasta no puede ser mayor a la fecha desde");
         else
         {
-            DialogCustom.OpenBusyWithLoader("Cargando...");
+            RadzenDialogService.OpenBusyWithLoader("Cargando...");
             var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
             var auth = await autenticacionExt.GetAuthenticationStateAsync();
             lstOrdenes = await OrdenesService.GetOrdenesPendientes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59), int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             StateHasChanged();
             await grid.Reload();
 

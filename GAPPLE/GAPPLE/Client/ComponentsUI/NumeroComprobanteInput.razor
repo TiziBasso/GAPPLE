@@ -1,0 +1,228 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq.Expressions
+@inject IJSFunction JSFunction
+
+<div class="containerInputComprobante @(_fieldCssClasses)" @onclick="HandleClickContainer">
+    <input class="inputComprobante" id="@($"prefijoComprobanteInput-{GetHashCode()}")" placeholder="A" @bind-value="prefijo" maxlength="1" autocomplete="off" enterKeyBlocker
+           onkeydown="filtroTeclasLetras(@(GetLetrasJSArray()))" @onkeypress="HandlePrefijoOnKeyPress" @oninput="HandlePrefijoOnInput" disabled="@(Disabled || DisabledLetra)" style="width:14px" />
+    <strong tabindex="-1">-</strong>
+    <input type="text" data-validate="number" class="inputComprobante" id="@($"ptoVentaComprobanteInput-{GetHashCode()}")" placeholder="0000" @bind-value="ptoVenta" maxlength="4"
+           @oninput="HandlePtoVenta" @onfocusout="HandlePtoVentaOutFocus" autocomplete="off" @onkeyup="HandlePtoVenta" enterKeyBlocker
+           @onclick="HandleClick" @onclick:stopPropagation="true" onkeydown="filtroTeclas()" disabled="@(Disabled || DisabledPtoVenta)" style="width:36px" />
+    <strong tabindex="-1">-</strong>
+    <input type="text" data-validate="number" class="inputComprobante" id="@($"numeroComprobanteInput-{GetHashCode()}")" placeholder="00000000" @bind-value="numero" maxlength="8"
+           @onkeypress="HandleNumero" @onfocusout="HandleNumeroFacturaOutFocus" @oninput="HandleNumeroOnInput" @onclick="HandleClick" @onclick:stopPropagation="true"
+           onkeydown="filtroTeclas()" disabled="@(Disabled || DisabledNroComprobante)" autocomplete="off" style="width:66px" />
+</div>
+
+<script>
+    function filtroTeclasLetras(arrayLetras)
+    {
+    var tecla = event.key.toUpperCase();
+
+    if (tecla != 'BACKSPACE' && tecla != 'TAB' && !arrayLetras.includes(tecla)) {
+    event.preventDefault();
+    }
+    }
+
+    function filtroTeclas()
+    {
+    var tecla = event.key;
+    if ([',','.','e','+','-','ArrowUp','ArrowDown','E'].includes(tecla))
+    event.preventDefault()
+    }
+</script>
+
+@code {
+    [CascadingParameter] private EditContext CascadedEditContext { get; set; }
+
+    [Parameter, EditorRequired] public string Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<string>> ValueExpression { get; set; }
+    [Parameter, EditorRequired] public List<char> LetrasPermitidas { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool DisabledLetra { get; set; }
+    [Parameter] public bool DisabledPtoVenta { get; set; }
+    [Parameter] public bool DisabledNroComprobante { get; set; }
+
+    private string prefijo = "";
+    private string ptoVenta = "";
+    private string numero = "";
+
+    private FieldIdentifier _fieldIdentifier;
+    private string _fieldCssClasses => CascadedEditContext?.FieldCssClass(_fieldIdentifier) ?? "";
+
+    protected override void OnInitialized()
+    {
+        _fieldIdentifier = FieldIdentifier.Create(ValueExpression);
+        var split = Value?.Split("-");
+        if (split != null)
+        {
+            prefijo = split.Length > 0 ? split[0] : "";
+            ptoVenta = split.Length > 1 ? split[1] : "";
+            numero = split.Length > 2 ? split[2] : "";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Value == $"{prefijo}-{ptoVenta}-{numero}") return;
+
+        if (string.IsNullOrEmpty(Value))
+        {
+            prefijo = null;
+            ptoVenta = null;
+            numero = null;
+        }
+        else
+        {
+            var split = Value?.Split("-");
+            if (split != null)
+            {
+                if (split.Length > 0 && split[0].Length == 1)
+                    prefijo = split[0];
+                if (split.Length > 1 && split[1].Length <= 4)
+                    ptoVenta = split[1];
+                if (split.Length > 2 && split[2].Length <= 8)
+                    numero = split[2];
+            }
+        }
+    }
+
+    private string NroComprobanteCompleto =>
+        $"{prefijo?.ToUpper()}{(!string.IsNullOrWhiteSpace(prefijo) && !string.IsNullOrWhiteSpace(ptoVenta) ? "-" : "")}{ptoVenta}{(!string.IsNullOrWhiteSpace(ptoVenta) && !string.IsNullOrWhiteSpace(numero) ? "-" : "")}{numero}";
+
+    private string GetLetrasJSArray()
+    {
+        return "[" + string.Join(",", LetrasPermitidas.Select(c => $"'{c}'")) + "]";
+    }
+
+    private async Task ActualizarValor()
+    {
+        var nuevoValor = NroComprobanteCompleto;
+        if (string.IsNullOrEmpty(nuevoValor))
+            Value = null;
+        else
+            Value = nuevoValor;
+
+        await ValueChanged.InvokeAsync(Value);
+        CascadedEditContext?.NotifyFieldChanged(_fieldIdentifier);
+    }
+
+    private async Task HandlePrefijoOnKeyPress()
+    {
+        await JSFunction.InputFocusAndSelect($"ptoVentaComprobanteInput-{GetHashCode()}");
+    }
+
+    private void HandlePrefijoOnInput(ChangeEventArgs args)
+    {
+        prefijo = args.Value.ToString().ToUpper();
+        _ = ActualizarValor();
+    }
+
+    private async Task HandlePtoVenta(ChangeEventArgs args)
+    {
+        ptoVenta = args.Value.ToString();
+        _ = ActualizarValor();
+
+        if (ptoVenta.Length == 4)
+            await JSFunction.InputFocusAndSelect($"numeroComprobanteInput-{GetHashCode()}");
+    }
+
+    private void HandleNumeroOnInput(ChangeEventArgs args)
+    {
+        numero = args.Value.ToString();
+        _ = ActualizarValor();
+    }
+
+    private void HandlePtoVentaOutFocus()
+    {
+        if (!string.IsNullOrEmpty(ptoVenta))
+        {
+            ptoVenta = ptoVenta.Trim().PadLeft(4, '0');
+        }
+
+        _ = ActualizarValor();
+    }
+
+    private void HandleNumero(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            HandleNumeroFacturaOutFocus();
+        }
+    }
+
+    private async Task HandlePtoVenta(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            HandlePtoVentaOutFocus();
+            // await refNumeroComprobante.FocusAsync();
+            await JSFunction.InputFocusAndSelect($"numeroComprobanteInput-{GetHashCode()}");
+        }
+    }
+
+    private void HandleNumeroFacturaOutFocus()
+    {
+        if (!string.IsNullOrEmpty(numero))
+        {
+            numero = numero.Trim().PadLeft(8, '0');
+        }
+
+        _ = ActualizarValor();
+    }
+
+    private async Task HandleClick()
+    {
+        if (string.IsNullOrEmpty(NroComprobanteCompleto))
+        {
+            await JSFunction.InputFocusAndSelect($"prefijoComprobanteInput-{GetHashCode()}");
+        }
+    }
+
+    private async Task HandleClickContainer()
+    {
+        await JSFunction.InputFocusAndSelect($"prefijoComprobanteInput-{GetHashCode()}");
+    }
+}
+
+<style>
+    .containerInputComprobante {
+        transition: var(--rz-input-transition);
+        font-size: var(--rz-input-font-size);
+        font-family: inherit;
+        color: var(--rz-input-value-color);
+        line-height: var(--rz-input-line-height);
+        height: var(--rz-input-height);
+        border: 1px solid black;
+        width: fit-content;
+        box-sizing: border-box;
+        border: var(--rz-input-border);
+        box-shadow: var(--rz-input-shadow);
+        background-color: var(--rz-input-background-color);
+        padding-inline: var(--rz-input-padding-inline);
+        padding-block: var(--rz-input-padding-block);
+        border-radius: var(--rz-input-border-radius);
+        position: relative;
+        z-index: 1;
+    }
+
+    .inputComprobante {
+        border: none;
+        background: transparent;
+        font-size: inherit;
+        position: relative;
+        z-index: 2;
+    }
+
+        .inputComprobante:focus-visible {
+            outline: none;
+            border-bottom: 1px solid #007bff !important;
+        }
+
+    .containerInputComprobante:focus-within {
+        outline: none !important;
+        border-color: #007bff !important;
+    }
+</style>

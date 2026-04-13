@@ -8,7 +8,7 @@
 @inject OfertasService OfertasService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject SesionDTO SesionDTO
 @inject IJSRuntime JSRuntime
 @using System.Linq
@@ -475,7 +475,7 @@ else
     {
         if (!string.IsNullOrEmpty(valorAux))
         {
-            DialogCustom.OpenBusy("Cargando...");
+            RadzenDialogService.OpenBusy("Cargando...");
             showCards = false;
             GuardarProductosDiferenteLinea();
             orden.Linea = valorAux;
@@ -517,13 +517,14 @@ else
 
             ReconstruirCards();
 
-            ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+            var aux = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+            ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
             ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
             RecalcularOfertas();
 
             //await JSRuntime.InvokeVoidAsync("refreshDomCache");
             showCards = true;
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
         }
     }
 
@@ -543,7 +544,7 @@ else
 
     async Task AsignarVariables()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         articulosPorClientes = await ClientesService.GetArticulosPorCliente(orden.CodCliente);
         sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
         var index = clientes.FindIndex(x => x.CodigoCliente == orden.CodCliente);
@@ -603,12 +604,13 @@ else
         //         Cards.Add(new Card(group.Key, chunk));
         // }
 
-        ofertas = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        var aux = await OfertasService.GetOfertas(null, orden.Linea, null, null, true);
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
         RecalcularOfertas();
 
         //await JSRuntime.InvokeVoidAsync("refreshDomCache");
 
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     Oferta GetOfertaConMayorDescuento(string codigoProducto)
@@ -743,7 +745,7 @@ else
 
     void ModificarDescuento(decimal e, ProductoParaOfertas p)
     {
-        DialogCustom.OpenBusyWithLoader("aplicando descuentos");
+        RadzenDialogService.OpenBusyWithLoader("aplicando descuentos");
 
         foreach (var item in Cards.Where(x => x.FamilyName == p.Familia).ToList())
         {
@@ -753,7 +755,7 @@ else
                 p.ModificadoManual = true;
             }
         }
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     async Task Guardar()
@@ -794,10 +796,10 @@ else
 
             if (valid || await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 var result = await OrdenesService.PostPedido(orden);
-                DialogCustom.CloseDialog();
-                if (result.IsSuccessStatusCode)
+                RadzenDialogService.CloseDialog();
+                if (result.IsOk)
                 {
                     //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
                     NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());

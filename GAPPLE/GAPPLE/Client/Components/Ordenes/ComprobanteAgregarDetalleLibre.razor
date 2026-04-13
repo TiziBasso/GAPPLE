@@ -1,0 +1,24 @@
+﻿@inject RadzenDialogService RadzenDialogService
+
+<EditForm Model="detalleLibre" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+        <RadzenLabel Text="Concepto" Component="concepto" />
+        <RadzenTextBox @bind-Value="detalleLibre.Concepto" Name="concepto" MaxLength="50" AutoCompleteType="AutoCompleteType.Off" />
+        <ValidationMessage For="(() => detalleLibre.Concepto)" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-5">
+        <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar" />
+    </RadzenStack>
+</EditForm>
+
+@code {
+    ComprobanteDetalleLibre detalleLibre = new();
+
+    private void Submit()
+    {
+        RadzenDialogService.CloseDialog(detalleLibre);
+    }
+}

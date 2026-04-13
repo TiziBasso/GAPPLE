@@ -1,0 +1,104 @@
+﻿@inject ClientesService ClientesService
+@inject RadzenDialogService RadzenDialogService
+
+<RadzenStack Orientation="Orientation.Vertical" Style="width:100%; height:100%;">
+
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End" class="rz-mb-2" Style="width:100%; flex:1;">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cód. cliente:" Component="codCliente" />
+            <TextBoxInput @bind-Value=codCliente id="codCliente" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Razón social:" Component="razonSocial" />
+            <TextBoxInput @bind-Value=razonSocial id="razonSocial" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="CUIT:" Component="cuit" />
+            <TextBoxInput @bind-Value=cuit id="cuit" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Clientes especiales: " Component="especial" />
+            <RadzenDropDown @bind-Value=clienteEspecial Data="Variables.Clasificaciones"
+                            TextProperty="@nameof(Opcion.Descripcion)" ValueProperty="@nameof(Opcion.Id)"
+                            Name="especial" Placeholder="Todos" />
+        </RadzenStack>
+
+        <RadzenButton Click="FillClientes" ButtonStyle=ButtonStyle.Secondary Icon="search" />
+    </RadzenStack>
+
+    <RadzenDataGrid @ref="refGrid" TItem="Cliente" Data="clientes" @bind-Value="selected" Style="width:100%; flex:auto;"
+                    Density="Density.Compact" AllowFiltering=true AllowSorting="true" AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple" AllowVirtualization="true" ShowEmptyMessage="false"
+                    SelectionMode="DataGridSelectionMode.Single" RowDoubleClick="@OnDoubleClick" ColumnWidth="150px">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Cód. cliente" FilterValue="codClienteFilter">
+                <FilterTemplate>
+                    <RadzenTextBox @bind-Value="codClienteFilter" Style="width:100%" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón social" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CUIT)" Title="CUIT" />
+            <RadzenDataGridColumn Property="@nameof(Cliente.CategoriaIva)" Title="Tipo IVA" />
+            <RadzenDataGridColumn Width="35px" TextAlign="TextAlign.Center" Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Click="@(() => Select(context))" Icon="done" ButtonStyle="ButtonStyle.Success" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenStack>
+
+@code {
+    [Parameter] public EventCallback<Cliente> OnSelect { get; set; }
+
+    string codCliente = null, razonSocial = null, cuit = null;
+    bool? clienteEspecial = null;
+    string codClienteFilter = null;
+
+    IList<Cliente> selected = [];
+    List<Cliente> clientes = [];
+    RadzenDataGrid<Cliente> refGrid;
+
+    private async Task FillClientes()
+    {
+        clientes.Clear();
+
+        RadzenDialogService.OpenBusyWithLoader("Buscando...");
+        var aux = await ClientesService.GetClientes(codCliente, razonSocial, cuit, clienteEspecial, null);
+        RadzenDialogService.CloseDialog();
+
+        if (aux == null)
+            RadzenDialogService.NotifyInternalServerError();
+        else if (aux.Count == 0)
+            RadzenDialogService.NotifyEmptyResponse();
+        else
+            clientes = aux;
+
+        await refGrid.Reload();
+    }
+
+    private async Task OnDoubleClick(DataGridRowMouseEventArgs<Cliente> args)
+    {
+        selected = new List<Cliente>() { args.Data };
+        await Select();
+    }
+
+    private async Task Select(Cliente cliente)
+    {
+        if (await RadzenDialogService.ConfirmOperation("seleccionar el cliente", cliente.RazonSocial))
+            await OnSelect.InvokeAsync(cliente);
+    }
+
+    private async Task Select() =>
+        await Select(selected.First());
+
+    private async Task OnKeyDown(string key)
+    {
+        if (key == KeyboardKeys.Enter)
+            await FillClientes();
+    }
+
+}

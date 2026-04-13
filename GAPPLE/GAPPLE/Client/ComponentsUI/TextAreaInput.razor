@@ -1,0 +1,73 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inherits InputBase<string>
+
+<textarea @ref="elementReference" value="@CurrentValueAsString" @oninput="HandleOnInput" @onchange="HandleOnChange"
+          @onkeydown="HandleOnKeyDown" @onblur=HandleOnBlur
+          name="@NameAttributeValue" class="rz-textbox @(CssClass) @(Class)"
+          @attributes="@AdditionalAttributes" autocomplete="off" />
+
+@code {
+    [Parameter] public string Class { get; set; }
+    [Parameter] public EventCallback<string> OnKeyDown { get; set; }
+
+    ElementReference elementReference;
+    string _currentValue;
+
+    protected override bool TryParseValueFromString(string value, out string result, out string validationErrorMessage)
+    {
+        try
+        {
+            result = value;
+            validationErrorMessage = null;
+            return true;
+        }
+        catch
+        {
+            result = default;
+            validationErrorMessage = $"El valor '{value}' no es válido.";
+            return false;
+        }
+    }
+
+    private void HandleOnChange()
+    {
+        if (TryParseValueFromString(CurrentValueAsString, out var parsedValue, out _))
+        {
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+        }
+    }
+
+    public async Task FocusAsync()
+    {
+        await elementReference.FocusAsync();
+    }
+
+    private async Task HandleOnBlur(FocusEventArgs _)
+    {
+        if (!string.Equals(Value, _currentValue, StringComparison.Ordinal))
+        {
+            Value = _currentValue;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    private void HandleOnInput(ChangeEventArgs args)
+    {
+        _currentValue = args.Value?.ToString();
+    }
+
+    private async Task HandleOnKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == KeyboardKeys.Enter)
+        {
+            if (!string.Equals(Value, _currentValue, StringComparison.Ordinal))
+            {
+                Value = _currentValue;
+                await ValueChanged.InvokeAsync(Value);
+            }
+        }
+
+        if (OnKeyDown.HasDelegate)
+            await OnKeyDown.InvokeAsync(args.Key);
+    }
+}

@@ -1,5 +1,5 @@
 ﻿@inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject NotificationService NotificationService
 @inject OrdenesService OrdenesService
 
@@ -248,10 +248,10 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm(), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Guardando...");
+            RadzenDialogService.OpenBusyWithLoader("Guardando...");
             var response = await OrdenesService.PostExpedicionDetalle(orden);
-            DialogCustom.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();

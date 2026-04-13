@@ -2,7 +2,7 @@
 
 namespace GAPPLE.Shared.Model
 {
-    public class Oferta
+    public class Oferta : RegistroUsuario
     {
         public int Id_GVA { get; set; }
         public int IdOferta { get; set; }

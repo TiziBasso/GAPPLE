@@ -1,0 +1,63 @@
+﻿@if (showModal)
+{
+    <div id="print" style="display:none">
+        @for (int i = 0; i < cantPages; i++)
+        {
+            GetData(i);
+            <PageNC comprobanteCabecera=notaCredito PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
+                    Detalle="detalle" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public ComprobanteCabecera notaCredito { get; set; }
+    [Parameter] public EventCallback Imprimir { get; set; }
+    [Parameter] public List<ComprobanteDetalle> Detalle { get; set; }
+    [Parameter] public bool ShouldPrint { get; set; } = true;
+
+    List<ComprobanteDetalle> detalleCompleto = new();
+    List<ComprobanteDetalle> detalle = new();
+
+    bool showModal, showProbadores, showObsequios;
+    int cantPages = 0, lineasXPag = 49;
+
+    protected override void OnInitialized()
+    {
+        detalleCompleto.AddRange(
+            Detalle.Select(x => new ComprobanteDetalle()
+                {
+                    DescripcionProducto = x.DescripcionProducto,
+                    NumeroLinea = x.NumeroLinea,
+                    CodProducto = x.CodProducto,
+                    Descuento = x.Descuento,
+                    Cantidad = x.Cantidad,
+                    Precio = x.Precio,
+                    IdProducto = x.IdProducto
+                })
+        );
+
+        int sumLineas = detalleCompleto.Count + 1;
+
+        cantPages = sumLineas / lineasXPag;
+        if (sumLineas % lineasXPag != 0 || cantPages == 0) cantPages++;
+
+        showModal = true;
+    }
+
+    private void GetData(int page)
+    {
+        detalle = detalleCompleto!.Skip(page * lineasXPag)?.Take(lineasXPag).ToList();
+    }
+
+    // private void GetData(int page)
+    // {
+    //     // int showed = page * lineasXPag, remaining = lineasXPag;
+
+    //     detalle = detalleCompleto!.Skip(page * lineasXPag)?.Take(lineasXPag).ToList();
+    //     // al trabajar con 1 sola List<T> es innecesario guardar los valores en variables extras
+    //     // remaining -= detalleCompleto!.Count;
+    //     // if (detalleCompleto.Count > 0) showed -= detalleCompleto.Count;
+    //     // else showed -= detalleCompleto!.Count;
+    // }
+}

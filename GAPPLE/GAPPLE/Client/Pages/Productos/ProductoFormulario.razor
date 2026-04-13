@@ -9,7 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject ToolsHelpers ToolsHelpers
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 
 @if (editContext != null)
 {
@@ -131,7 +131,7 @@
         </CascadingValue>
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-8">
-            @if (operacion == Operaciones.Lectura)
+            @if (operacion == TipoOperacionEnum.Lectura)
             {
                 <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="arrow_back" Text="Volver" Click="Cancelar" />
             }
@@ -159,7 +159,7 @@ else
     //List<ProductoProveedor> precioCostoHistoricos = new();
     //List<ProductoPrecio> preciosHistoricos = new();
 
-    Operaciones operacion;
+    TipoOperacionEnum operacion;
     bool disabledInput, mostarPreciosCostos, invalidFamilia, onEdit;
     int tabIndex, render;
     string descripcionFamilia = string.Empty;
@@ -173,9 +173,9 @@ else
 
         operacion = ToolsHelpers.ObtenerOperacion(OperacionUrl);
 
-        if (operacion == Operaciones.Lectura)
+        if (operacion == TipoOperacionEnum.Lectura)
             disabledInput = true;
-        else if (operacion == Operaciones.Importar && PaisOrigen == null)
+        else if (operacion == TipoOperacionEnum.Importar && PaisOrigen == null)
         {
             NavigationManager.NavigateTo(Variables.ErrorPages.Invalido);
             error = true;
@@ -203,7 +203,7 @@ else
             else
             {
                 Producto? p = null;
-                p = await ProductosService.GetProducto(null, IdProducto);
+                //p = await ProductosService.GetProducto(null, IdProducto);
 
                 if (p == null)
                 {
@@ -248,9 +248,9 @@ else
 
     private async Task Cancelar()
     {
-        if (operacion == Operaciones.Lectura)
+        if (operacion == TipoOperacionEnum.Lectura)
             NavigationManager.NavigateTo("productos");
-        else if ((bool)await DialogService.Confirm("¿Desea cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+        else if ((bool)await DialogService.Confirm("¿Desea cancelar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
             NavigationManager.NavigateTo("productos");
     }
 
@@ -272,18 +272,18 @@ else
             NotificationService.Notify(NotificationSeverity.Error, "No se puede completar la operación, compruebe que todos los datos ingresados sean correctos!");
         else
         {
-            if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
+            if ((bool)await DialogService.Confirm("¿Desea guardar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No", ShowClose = false }))
             {
-                DialogCustom.OpenBusyWithLoader("Guardando...");
+                RadzenDialogService.OpenBusyWithLoader("Guardando...");
                 Response response;
-                if (operacion == Operaciones.Alta)
+                if (operacion == TipoOperacionEnum.Alta)
                     response = await ProductosService.PostProducto(Producto);
                 else
                     response = await ProductosService.PutProducto(Producto);
 
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
 
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsOk)
                 {
                     if (response.Errors != null && response.Errors.Any())
                     {
@@ -293,10 +293,10 @@ else
                     else
                         NotificationService.Notify(NotificationSeverity.Error, "Ha ocurrido un error inesperado!", "Por favor contacte a sistemas!");
                 }
-                else if (operacion == Operaciones.Alta)
+                else if (operacion == TipoOperacionEnum.Alta)
                 {
                     await Task.Delay(1);
-                    if (operacion == Operaciones.Alta)
+                    if (operacion == TipoOperacionEnum.Alta)
                     {
                         Dictionary<string, object> parametros = new();
                         parametros.Add("codigo", Producto.CodigoProducto);
@@ -333,7 +333,7 @@ else
         invalidFamilia = editContext.GetValidationMessages(editContext.Field(nameof(Producto.Clasificacion))).Any();
         editContext.Validate();
         var errors = editContext.GetValidationMessages().ToList();
-        DialogCustom.ShowErrors(errors);
+        RadzenDialogService.ShowAlert(errors);
     }
 
     // private void AddProveedor(ProductoProveedor proveedor)

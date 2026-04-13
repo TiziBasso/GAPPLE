@@ -1,0 +1,133 @@
+﻿@page "/notacreditoarchivos/{IdComprobante:int}"
+
+@using GAPPLE.Client.Components.NotaCredito
+@using GAPPLE.Client.Pages.NotaCredito
+
+@inject ComprobantesService ComprobantesService
+@inject NavigationManager NavigationManager
+@inject RadzenDialogService RadzenDialogService
+@inject SeguridadService SeguridadService
+@inject FileService FileService
+@inject IJSFunction JSFunction
+
+@if (showForm)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text=@($"Archivos de la nota de crédito {IdComprobante:00000}") class="rz-mb-3" />
+
+    <RadzenDataGrid @ref="grid" Data="notaCreditoArchivos" Density="Density.Compact" Style="height:40rem" ShowEmptyMessage="false" class="rz-mb-3">
+        <HeaderTemplate>
+            <RadzenButton Icon="upload" Text="Agregar archivos" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.Medium"
+                          Click="@(() => CargarArchivo())" @onclick:stopPropagation="true" />
+            <RadzenButton Icon="download" Text="Descargar todo" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.Medium"
+                          Click="@DescargarArchivo" @onclick:stopPropagation="true" Disabled="@(notaCreditoArchivos.Count == 0)" />
+        </HeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(NotaCreditoArchivo.IdArchivo)" Title="Cód" Width="100px" />
+            <RadzenDataGridColumn Property="@nameof(NotaCreditoArchivo.NombreArchivo)" Title="Nombre" />
+            <RadzenDataGridColumn Property="@nameof(NotaCreditoArchivo.FechaSubida)" Title="Fecha subida" FormatString="{0:dd/MM/yyyy HH:mm}" TextAlign="TextAlign.Center" Width="130px" />
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => DescargarArchivo(context))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => BorrarArchivo(context))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+        <RadzenButton Icon="arrow_back" Text="Volver" Click="Volver" ButtonStyle="ButtonStyle.Secondary" />
+    </RadzenStack>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public int IdComprobante { get; set; }
+    List<NotaCreditoArchivo> notaCreditoArchivos = new();
+    RadzenDataGrid<NotaCreditoArchivo> grid;
+    bool showForm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var permisos = await SeguridadService.ValidatePageAccess(Permisos.Menu.NotasCredito);
+
+        if (!permisos.Contains(Permisos.Archivos))
+        {
+            await RadzenDialogService.ShowAlertAsync("No tiene permiso para realizar la operación", MensajesHelper.Title);
+            Volver();
+            return;
+        }
+
+        await ObtenerNotaCredito();
+        showForm = true;
+    }
+
+    public async Task ObtenerNotaCredito()
+    {
+        notaCreditoArchivos = await ComprobantesService.GetArchivos(IdComprobante);
+    }
+
+    public async Task DescargarArchivo() => await DescargarArchivo(notaCreditoArchivos);
+
+    public async Task DescargarArchivo(NotaCreditoArchivo nc) => await DescargarArchivo(new List<NotaCreditoArchivo> { nc });
+
+    public async Task DescargarArchivo(List<NotaCreditoArchivo> ncs)
+    {
+        RadzenDialogService.OpenBusyWithLoader("Descargando");
+        var response = await ComprobantesService.GetNotaCreditoArchivos(ncs);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+        {
+            RadzenDialogService.Notify(NotificationSeverity.Success, "La descarga comenzará pronto");
+            await JSFunction.DownloadFile(response.DataBytes, $"archivos_{IdComprobante:00000}.zip");
+        }
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    public async Task BorrarArchivo(NotaCreditoArchivo nc)
+    {
+        if (await RadzenDialogService.ConfirmOperation("borrar el archivo", nc.NombreArchivo50))
+        {
+            RadzenDialogService.OpenBusyWithLoader();
+            var resonse = await ComprobantesService.DeleteNotaCreditoArchivo(nc);
+            RadzenDialogService.CloseDialog();
+            if (resonse.IsOk)
+            {
+                RadzenDialogService.NotifyDelete("El archivo");
+                notaCreditoArchivos.Remove(nc);
+                await grid.Reload();
+            }
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task ArchivoCallback(List<NotaCreditoArchivo> archivos)
+    {
+        RadzenDialogService.CloseDialog();
+        notaCreditoArchivos.AddRange(archivos);
+        await grid.Reload();
+    }
+
+    async Task CargarArchivo() =>
+        await RadzenDialogService.OpenAsync<NotaCreditoArchivosModal>("Cargar archivos", new(){ { "IdComprobante", IdComprobante},
+                                        { "Callback", EventCallback.Factory.Create<List<NotaCreditoArchivo>>(this, ArchivoCallback)},
+                                        { "NombresCargados", notaCreditoArchivos.Select(x=>x.NombreArchivo).ToList() } }, new DialogOptions
+                                        {
+                                            Width = "80rem",
+                                            Height = "50rem",
+                                            ShowClose = false
+                                        });
+
+    void Volver() => NavigationManager.NavigateTo($"/notascredito");
+}

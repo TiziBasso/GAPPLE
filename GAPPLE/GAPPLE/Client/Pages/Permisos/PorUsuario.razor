@@ -1,6 +1,6 @@
 ﻿@page "/permisos/usuario"
 @inject SeguridadService SeguridadService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @using Microsoft.AspNetCore.Authorization;
@@ -99,12 +99,12 @@ else
 
     private async Task SeleccionUsuario()
     {
-        DialogCustom.OpenBusyWithLoader("Cargando...");
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
         permisos = await SeguridadService.GetPermisosTotal(idUsuario, null);
         permisosPadre = permisos.Where(x => x.IdPadre == null).ToList();
         await grilla.Reload();
         await grilla.ExpandRows(permisosPadre);
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     void LoadChildData(DataGridLoadChildDataEventArgs<Permiso> args)
@@ -153,7 +153,7 @@ else
 
     private async Task Cancelar()
     {
-        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+        var result = await DialogService.Confirm("¿Desea cancelar la operacion?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
         idUsuario = null;
         permisosPadre.Clear();
         permisos.Clear();
@@ -168,13 +168,13 @@ else
         }
         else
         {
-            var result = await DialogService.Confirm("¿Confirma guardar los datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma guardar los datos?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             Response response = null;
             List<Permiso> lstCambios = permisos.Where(x => x.HuboCambios).ToList();
 
             if (result != null && result == true)
             {
-                DialogCustom.OpenBusyWithLoader();
+                RadzenDialogService.OpenBusyWithLoader();
 
                 foreach (var item in lstCambios)
                 {
@@ -190,7 +190,7 @@ else
 
                 response = await SeguridadService.PostPermisosPorUsuario(lstCambios);
 
-                if (response.IsSuccessStatusCode)
+                if (response.IsOk)
                 {
                     ShowNotification(NotificationSeverity.Success, 3500, "Se han guardado los datos correctamente");
                     idUsuario = null;
@@ -206,7 +206,7 @@ else
                     permisos.Clear();
                     await grilla.Reload();
                 }
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
             }
         }
 

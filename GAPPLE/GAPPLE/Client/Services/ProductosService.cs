@@ -32,17 +32,37 @@ namespace GAPPLE.Client.Services
                 return await HttpClient.GetFromJsonAsync<List<Producto>>($"{REQUEST_URI_BASE}?{stringJoin}", cancellationToken.Token);
         }
 
-        public async ValueTask<Producto> GetProducto(int? codigoInterno, int? idProducto = null)
+        public async ValueTask<ProductoOrden> GetProductoOrden(string codigoProducto, string codListaPrecio)
         {
             Dictionary<string, object> query = new();
-            if (idProducto != null) query["idProducto"] = idProducto;
-            if (codigoInterno != null) query["codigoInterno"] = codigoInterno;
+            query["codProducto"] = codigoProducto;
+            query["codListaPrecio"] = codListaPrecio;
 
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
-            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/prod?{stringJoin}");
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden?{stringJoin}");
             if (response.StatusCode == HttpStatusCode.OK)
-                return await response.Content.ReadFromJsonAsync<Producto>();
+                return await response.Content.ReadFromJsonAsync<ProductoOrden>();
+            else
+                return null;
+        }
+
+        public async ValueTask<List<ProductoOrden>> GetProductosOrden(string codigoProducto, string descripcion, string linea, string codListaPrecio,
+                                                                        CancellationTokenSource cancellationToken = null)
+        {
+            Dictionary<string, object> query = new();
+            if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codProducto"] = codigoProducto;
+            if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
+            if (linea != null) query["linea"] = linea;
+            query["codListaPrecio"] = codListaPrecio;
+            var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
+
+            var response = cancellationToken == null
+                            ? await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden/varios?{stringJoin}")
+                            : await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden/varios?{stringJoin}", cancellationToken.Token);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<ProductoOrden>>();
             else
                 return null;
         }
@@ -57,26 +77,26 @@ namespace GAPPLE.Client.Services
                     var prod = await response.Content.ReadFromJsonAsync<Producto>();
                     producto.IdProducto = prod!.IdProducto;
                     producto.CodigoProducto = prod.CodigoProducto;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else
                 {
                     return response.StatusCode == HttpStatusCode.BadRequest
-                        ? new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
-                        : new(false, "Ha ocurrido un error inesperado!");
+                        ? new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()!)
+                        : new(response.StatusCode, "Ha ocurrido un error inesperado!");
                 }
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "PostProducto");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
         public async ValueTask<Response> PutProducto(Producto producto)
         {
             var response = await HttpClient.PutAsJsonAsync($"{REQUEST_URI_BASE}", producto);
-            return new(true);
+            return new(response.StatusCode);
             //if (response.StatusCode == HttpStatusCode.OK)
             //{
             //    var prod = await response.Content.ReadFromJsonAsync<Producto>();
@@ -146,16 +166,16 @@ namespace GAPPLE.Client.Services
             {
                 var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/procesar", req);
                 if (response.StatusCode == HttpStatusCode.OK)
-                    return new(true, await response.Content.ReadFromJsonAsync<List<ProductoOrden>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<List<ProductoOrden>>());
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
     }

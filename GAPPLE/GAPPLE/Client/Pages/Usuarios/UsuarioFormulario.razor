@@ -3,7 +3,7 @@
 
 @inject SeguridadService SeguridadService
 @inject DialogService DialogService
-@inject RadzenCustom DialogCustom
+@inject RadzenCustom RadzenDialogService
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
 @inject SesionDTO SesionDTO
@@ -85,7 +85,7 @@
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="margin-top:2rem;width: 20rem;">
                     <RadzenLabel Text="Habilitado:" Component="habilitado" />
-                    <RadzenCheckBox @bind-Value=@Usuario.Habilitado Name="habilitado" Disabled=@(disableEdit || operacion == Operaciones.Alta) />
+                    <RadzenCheckBox @bind-Value=@Usuario.Habilitado Name="habilitado" Disabled=@(disableEdit || operacion == TipoOperacionEnum.Alta) />
                 </RadzenStack>
             </RadzenStack>
         </RadzenRow>
@@ -132,7 +132,7 @@ else
     List<Vendedor> vendedores;
     EditContext editContext;
     CustomValidation customValidation;
-    Operaciones operacion;
+    TipoOperacionEnum operacion;
     List<PerfilUsuario> perfiles = Enumerable.Empty<PerfilUsuario>().ToList();
 
     private string ConfirmarContraseña { get; set; }
@@ -161,20 +161,20 @@ else
         switch (Operacion)
         {
             case "ver":
-                operacion = Operaciones.Lectura;
+                operacion = TipoOperacionEnum.Lectura;
                 disableEdit = true;
                 break;
             case "edicion":
-                operacion = Operaciones.Edicion;
+                operacion = TipoOperacionEnum.Edicion;
                 disableEdit = false;
                 break;
             case "alta":
-                operacion = Operaciones.Alta;
+                operacion = TipoOperacionEnum.Alta;
                 disableEdit = false;
                 break;
         }
 
-        if (operacion == Operaciones.Alta)
+        if (operacion == TipoOperacionEnum.Alta)
         {
             Usuario = new() { Habilitado = true };
         }
@@ -210,21 +210,21 @@ else
     {
         if (ValidarContraseñas())
         {
-            var result = await DialogService.Confirm("¿Confirma guardar datos?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma guardar datos?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             if (result != null && (bool)result)
             {
                 customValidation?.ClearErrors();
                 Response response;
-                DialogCustom.OpenBusyWithLoader();
+                RadzenDialogService.OpenBusyWithLoader();
 
-                if (operacion == Operaciones.Alta)
+                if (operacion == TipoOperacionEnum.Alta)
                     response = await SeguridadService.PostUsuario(Usuario);
                 else
                     response = await SeguridadService.PutUsuario(Usuario);
 
-                DialogCustom.CloseDialog();
+                RadzenDialogService.CloseDialog();
 
-                if (!response.IsSuccessStatusCode)
+                if (!response.IsOk)
                 {
                     if (response.Errors != null && response.Errors.Any())
                         customValidation?.DisplayErrors(response.Errors);
@@ -246,7 +246,7 @@ else
     {
         if (editContext.IsModified())
         {
-            var result = await DialogService.Confirm("¿Confirma cancelar la operación?", "Integra", new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
+            var result = await DialogService.Confirm("¿Confirma cancelar la operación?", MensajesHelper.Title, new ConfirmOptions() { OkButtonText = "Sí", CancelButtonText = "No" });
             if (result != null && (bool)result)
                 NavigationManager.NavigateTo("/seguridad/usuarios");
         }

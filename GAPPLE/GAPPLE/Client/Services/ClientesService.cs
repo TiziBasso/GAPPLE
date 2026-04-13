@@ -20,7 +20,7 @@ namespace GAPPLE.Client.Services
             SesionDTO = sesionDTO;
         }
 
-        public async ValueTask<List<Cliente>> GetClientes(string codCliente = null, string razonSocial = null, string? cuit = null, bool? clienteEspecial = null)
+        public async ValueTask<List<Cliente>> GetClientes(string codCliente = null, string razonSocial = null, string cuit = null, bool? clienteEspecial = null, int? idCliente = null)
         {
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
@@ -28,13 +28,17 @@ namespace GAPPLE.Client.Services
             if (codCliente != null) query["codCliente"] = codCliente;
             if (razonSocial != null) query["razonSocial"] = razonSocial.Trim();
             if (cuit != null) query["cuit"] = cuit;
+            if (idCliente != null) query["idCliente"] = idCliente;
             query["idUsuario"] = SesionDTO.IdUsuario;
 
+            uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
 
-            if (query.Any())
-                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+            var response = await HttpClient.GetAsync(uri);
 
-            return await HttpClient.GetFromJsonAsync<List<Cliente>>(uri);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<Cliente>>();
+
+            return null;
         }
 
         public async ValueTask<Response> PostCLiente(Cliente cliente)
@@ -42,12 +46,12 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", cliente);
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                return new(true);
+                return new(response.StatusCode);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
-                return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
             else
-                return new(false, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
+                return new(response.StatusCode, "Ha ocurrido un error inesperado! Por favor contacte a sistemas!");
         }
 
         public async ValueTask<List<ArticulosPorCliente>> GetArticulosPorCliente(string? codCliente = null)

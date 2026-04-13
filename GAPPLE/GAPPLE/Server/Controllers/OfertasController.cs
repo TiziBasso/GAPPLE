@@ -38,7 +38,15 @@ namespace GAPPLE.Server.Controllers
                         Activa = bool.Parse(row["Activo"].ToString()!),
                         Descripcion = row["Descripcion"].ToString()!,
                         Inclusiones = row["Inclusiones"].ToString(),
+                        AltaRegistro = Convert.ToDateTime(row["AltaRegistro"]),
+                        AltaUsuario = Convert.ToString(row["AltaUsuario"]),
                     };
+
+                    if (row["EdicionRegistro"] != DBNull.Value)
+                    {
+                        o.EdicionRegistro = Convert.ToDateTime(row["EdicionRegistro"]);
+                        o.EdicionUsuario = Convert.ToString(row["EdicionUsuario"]);
+                    }
                     lstOfertas.Add(o);
                 }
             }
@@ -49,7 +57,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PostOfertas(Oferta oferta)
         {
             DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            daO.PersistirOferta(oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!);
+            daO.PersistirOferta(oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!, oferta.AltaUsuario);
             return Ok();
         }
 
@@ -57,7 +65,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PutOfertas(Oferta oferta)
         {
             DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            daO.EditarOferta(oferta.IdOferta, oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!);
+            daO.EditarOferta(oferta.IdOferta, oferta.Nombre, oferta.Linea, oferta.Descripcion, oferta.Descuento, oferta.Desde, oferta.Hasta, oferta.Inclusiones!, oferta.EdicionUsuario);
             return Ok();
         }
     }

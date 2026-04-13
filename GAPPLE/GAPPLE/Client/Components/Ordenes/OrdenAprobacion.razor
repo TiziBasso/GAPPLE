@@ -1,5 +1,5 @@
 ﻿@inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject OrdenesService OrdenesService
 @inject NotificationService NotificationService
 
@@ -108,19 +108,19 @@
 
         if (await DialogService.Confirm(msg, MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Cargando...");
+            RadzenDialogService.OpenBusyWithLoader("Cargando...");
             Orden.AprobadoFinanzas = finanzas;
             Orden.AprobadoContaduria = contaduria;
             Orden.AprobadoVentas = ventas;
             var response = await OrdenesService.PutPedidoAprobacion(Orden);
-            DialogCustom.CloseDialog();
-            if (response.IsSuccessStatusCode)
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
             {
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();
             }
             else if (response.Errors != null && response.Errors.Any())
-                DialogCustom.ShowErrors(response.Errors["error"]);
+                RadzenDialogService.ShowAlert(response.Errors["error"]);
             else
                 NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.ErrorSummary500, MensajesHelper.ErrorDetail500);
         }

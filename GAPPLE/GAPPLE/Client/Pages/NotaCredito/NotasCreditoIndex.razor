@@ -1,0 +1,373 @@
+﻿@page "/notascredito"
+@using GAPPLE.Client.Components.Cliente
+@using GAPPLE.Client.Components.NotaCredito
+
+@inject ToolsService ToolsService
+@inject SeguridadService SeguridadService
+@inject ParametrosDeConsulta ParametrosDeConsulta
+@inject NavigationManager NavigationManager
+@inject RadzenDialogService RadzenDialogService
+@inject ComprobantesService ComprobantesService
+@inject IJSFunction JSFunction
+
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Notas de crédito" class="rz-mb-3" />
+
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End" class="rz-mb-2">
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Desde:" Component="desde" />
+            <RadzenDatePicker @bind-Value="request.FechaDesde" DateFormat="dd/MM/yyyy" Name="desde" Style="width:8rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Hasta:" Component="hasta" />
+            <RadzenDatePicker @bind-Value="request.FechaHasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Name="hasta" Style="width:8rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Código:" Component="codigoOrden" />
+            <TextBoxInput @bind-Value=request.CodigoOrden id="codigoOrden" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cliente:" Component="cliente" />
+            <TextBoxInput @bind-Value=request.RazonSocialCliente id="cliente" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="estado" />
+            <RadzenDropDown Data=@estados @bind-Value=@request.IdEstado Name="estado"
+                            ValueProperty=@nameof(Estado<ComprobanteCabeceraEstadoEnum?>.Id) TextProperty=@nameof(Estado<ComprobanteCabeceraEstadoEnum?>.Descripcion)
+                            AllowClear=true Placeholder="(Todos)" Style="width: 9rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Mercadería ingresada:" Component="mercaderia" />
+            <RadzenDropDown Data=@Variables.Clasificaciones @bind-Value=@request.MercaderiaIngresada Name="mercaderia"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
+                            Placeholder="Todos" AllowClear=true Style="width: 10rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cód. tango:" Component="codTango" />
+            <TextBoxInput @bind-Value=request.CodigoTango id="codTango" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenButton Click="FillOrdenes" ButtonStyle=ButtonStyle.Secondary Icon="search" />
+
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" class="rz-mb-2">
+        <RadzenButton Icon="add" Text="Nueva nota de crédito" Size="ButtonSize.Small" Click="NuevaNotaCredito" Visible=permiteAlta ButtonStyle="ButtonStyle.Secondary" />
+    </RadzenStack>
+
+    <RadzenDataGrid @ref=grid Data="comprobantes" AllowSorting=true AllowFiltering=true ColumnWidth="200px" Density="Density.Compact" AllowColumnResize=true
+                    FilterMode="FilterMode.Simple" Style="height:60vh" ShowEmptyMessage="false">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.IdComprobante)" Title="ID" Width="100px" FormatString="{0:00000000}" Resizable=false>
+                <FilterTemplate>
+
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+            @* <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.TipoComprobante)" Title="Tipo" Width="150px" Resizable=false>
+                <FilterTemplate>
+                </FilterTemplate>
+                <Template>
+                    @TiposComprobantes.ObtenerTipoComprobante(context.TipoComprobante).DescripcionComprobante
+                </Template>
+            </RadzenDataGridColumn> *@
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoOrden)" Title="Cód. orden" Width="150px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoTango)" Title="Cód. tango" Width="150px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.FechaComprobante)" Title="Fecha" Width="120px" FormatString="{0:dd/MM/yyyy}" Resizable=false Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MotivoDescripcion)" Title="Motivo" Width="100px" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.EstadoDescripcion)" Title="Estado" Width="100px" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ImporteTotal)" Title="Total" Width="150px" FormatString="{0:N2}" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MercaderiaIngresada)" Title="Mercadería" Width="150px" Resizable=false Filterable="false">
+                <Template>
+                    @if (context.MercaderiaIngresada == null)
+                    {
+                        @("No debe ingresar")
+                    }
+                    else if (context.MercaderiaIngresada == true)
+                    {
+                        @("Ingresada")
+                    }
+                    else
+                    {
+                        @("Pendiente de ingreso")
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Observaciones)" Title="Observaciones" Width="100px" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCuit)" Title="Cuit" Width="150px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCategoriaIVA)" Title="Tipo IVA" Width="100px" Resizable=false />
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="print" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => VerNotaCreditoImpresion(orden))" @onclick:stopPropagation="true" title="Imprimir nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible="permiteClonar"
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="file_copy" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => ClonarNotaCredito(orden))" @onclick:stopPropagation="true" title="Clonar nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteLectura Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => VerNotaCredito(context))" title="Ver nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteEdicion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => EditarNotaCredito(context))" Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) title="Editar nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteAprobacion Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.ExtraSmall" title="Aprobar nota de crédito"
+                                  Click="@(() => AprobarNotaCredito(context))" Disabled=@(context.IdEstado != ComprobanteCabeceraEstadoEnum.Pendiente) />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(permiteCancelar)
+                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                <Template Context="orden">
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Visible=@(orden.IdEstado == ComprobanteCabeceraEstadoEnum.Aprobado) title="Revertir nota de crédito"
+                                  @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteArchivos Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="drive_file_move" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall" Click="@(() => CargarArchivos(context))" title="Archivos de nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false Visible=permiteCancelar Frozen="true" FrozenPosition="FrozenColumnPosition.Right">
+                <Template>
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click="@(() => CancelarNotaCredito(context))"
+                                  Visible=@(context.IdEstado == ComprobanteCabeceraEstadoEnum.Pendiente) title="Cancelar nota de crédito" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    @if (showResumen)
+    {
+        <ImpresionNotaCredito notaCredito=Resumen
+                              Detalle="@(Resumen!.Detalle!.Where(x=>x.Cantidad > 0).ToList())"
+                              Imprimir="@(async()=>await Imprimir())" />
+    }
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage;
+    RadzenDataGrid<ComprobanteCabecera> grid;
+    List<ComprobanteCabecera> comprobantes = [];
+    ComprobanteCabecera Resumen = null;
+    ComprobanteCabeceraRequest request = new()
+    {
+        FechaDesde = DateTime.Today.AddDays(-15),
+        FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+        IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+    };
+
+    List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
+
+    //permisos
+    bool permiteAlta, permiteEdicion, permiteCancelar, permiteAprobacion, permiteLectura, permiteReverir, permiteClonar, permiteArchivos, showResumen;
+    int render = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos(Permisos.Menu.NotasCredito);
+        permiteAlta = permisos.Contains(Permisos.Alta);
+        permiteEdicion = permisos.Contains(Permisos.Edicion);
+        permiteCancelar = permisos.Contains(Permisos.Cancelar);
+        permiteAprobacion = permisos.Contains(Permisos.Aprobacion);
+        permiteLectura = permisos.Contains(Permisos.Lectura);
+        permiteReverir = permisos.Contains(Permisos.Revertir);
+        permiteClonar = permisos.Contains(Permisos.Clonar);
+        permiteArchivos = permisos.Contains(Permisos.Archivos);
+
+        estados = await ToolsService.GetEstados<ComprobanteCabeceraEstadoEnum?>(new() { ShowNull = true, Seccion = SeccionesEstado.ComprobanteCabecera });
+
+        if (ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.NotasCredito && ParametrosDeConsulta.Parametros.Any())
+        {
+            if (ParametrosDeConsulta.Parametros.ContainsKey("request"))
+                request = (ComprobanteCabeceraRequest)ParametrosDeConsulta.Parametros["request"];
+        }
+        else
+            ParametrosDeConsulta.Clear();
+
+        showPage = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2 && ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.NotasCredito && ParametrosDeConsulta.Parametros.Any())
+        {
+            await FillOrdenes();
+            StateHasChanged();
+        }
+    }
+
+    private async Task FillOrdenes()
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        var response = await ComprobantesService.GetNotasCredito(request);
+        if (request.IdComprobante != null)
+        {
+            request.IdComprobante = null;
+            request.FechaDesde = DateTime.Today.AddDays(-15);
+            request.FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1);
+            request.IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente;
+        }
+        ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new() { { "request", request } });
+        RadzenDialogService.CloseDialog();
+
+        if (response == null)
+            RadzenDialogService.NotifyInternalServerError();
+        else
+        {
+            comprobantes = response;
+            await grid.Reload();
+        }
+    }
+
+    private async Task AprobarNotaCredito(ComprobanteCabecera nota)
+    {
+        if (await RadzenDialogService.ConfirmOperation("aprobar", $"la nota de crédito {nota.CodigoOrden}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("Aprobando...");
+            var response = await ComprobantesService.AprobarNotaCredito(nota.IdComprobante);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+                var obj = comprobantes[index];
+
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Aprobado;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+
+                await grid.Reload();
+            }
+            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task RevertirConfirmacionOrden(ComprobanteCabecera nota)
+    {
+        if (await RadzenDialogService.ConfirmOperation("revertir", $"la nota de crédito {nota.CodigoOrden}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("revirtiendo...");
+            var response = await ComprobantesService.RevertirNotaCredito(nota.IdComprobante);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+                var obj = comprobantes[index];
+
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+
+                await grid.Reload();
+            }
+            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task CancelarNotaCredito(ComprobanteCabecera nota)
+    {
+        if (await RadzenDialogService.ConfirmOperation("cancelar", $"la nota de crédito {nota.CodigoOrden}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("Cancelando...");
+            var response = await ComprobantesService.CancelarNotaCredito(nota.IdComprobante);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+                var obj = comprobantes[index];
+
+                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Cancelado;
+                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+
+                await grid.Reload();
+            }
+            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private void EditarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/edicion/{nota.IdComprobante}");
+    private void ClonarNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/clonar/{nota.IdComprobante}");
+    private void VerNotaCredito(ComprobanteCabecera nota) => NavigationManager.NavigateTo($"notascredito/lectura/{nota.IdComprobante}");
+
+    private async Task NuevaNotaCredito() =>
+        await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente",
+                                            new()
+                                            {
+                                                { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) }
+                                            }, new() { Width = "60rem", Height = "50rem" });
+
+    private void OnSelectCliente(Cliente cliente) => NavigationManager.NavigateTo($"notascredito/alta/{cliente.IdCliente}");
+
+    private async Task OnKeyDown(string key)
+    {
+        if (key == KeyboardKeys.Enter)
+            await FillOrdenes();
+    }
+
+    async Task VerNotaCreditoImpresion(ComprobanteCabecera cc)
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        Resumen = await ComprobantesService.GetNotaCredito(cc.IdComprobante!);
+        RadzenDialogService.CloseDialog();
+        if (Resumen == null)
+            RadzenDialogService.Notify(NotificationSeverity.Error, MensajesHelper.Title, MensajesHelper.ErrorSummary500);
+        else
+        {
+            RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
+            showResumen = true;
+        }
+    }
+     
+    async Task CargarArchivos(ComprobanteCabecera cc)
+    {
+        NavigationManager.NavigateTo($"notacreditoarchivos/{cc.IdComprobante}");
+    }
+
+    public async Task Imprimir(string id = "print")
+    {
+        await JSFunction.Imprimir(id);
+        showResumen = false;
+        RadzenDialogService.CloseDialog();
+        Resumen = null;
+    }
+}

@@ -5,8 +5,7 @@
 @inject SeguridadService SeguridadService
 @inject OrdenesService OrdenesService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
-@inject NotificationService NotificationService
+@inject RadzenDialogService RadzenDialogService
 @inject IJSFunction JSFunction
 
 @if (showPage)
@@ -122,7 +121,7 @@ else
 
     private async Task Imprimir()
     {
-        DialogCustom.OpenBusyWithLoader("Imprimiendo...");
+        RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
         expedicionesPrint = new();
         foreach (var item in selected)
         {
@@ -142,28 +141,28 @@ else
             item.Impreso = true;
         }
         selected = new List<OrdenExpedicion>();
-        DialogCustom.CloseDialog();
+        RadzenDialogService.CloseDialog();
     }
 
     private async Task Despachar()
     {
-        DialogCustom.OpenBusyWithLoader("Despachando...");
+        RadzenDialogService.OpenBusyWithLoader("Despachando...");
         var response = await OrdenesService.DespacharOrdenes(selected.ToList());
-        DialogCustom.CloseDialog();
-        if (response.IsSuccessStatusCode)
+        RadzenDialogService.CloseDialog();
+        if (response.IsOk)
         {
-            NotificationService.Notify(NotificationSeverity.Success, "Ordenes despachadas correctamente");
+            RadzenDialogService.Notify(NotificationSeverity.Success, "Ordenes despachadas correctamente");
             selected = new List<OrdenExpedicion>();
             await FillOrdenes();
         }
         else if (response.Errors != null && response.Errors.Any())
         {
-            DialogCustom.ShowErrors(response.Errors["error"]);
+            RadzenDialogService.ShowAlert(response.Errors["error"]);
             await FillOrdenes();
         }
         else
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Ha ocurrido un error", response.Message);
+            RadzenDialogService.Notify(NotificationSeverity.Error, "Ha ocurrido un error", response.Message);
         }
     }
 

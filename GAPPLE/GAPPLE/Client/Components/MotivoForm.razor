@@ -1,0 +1,117 @@
+﻿@inject MotivosService MotivosService
+@inject DepositosService DepositosService
+@inject RadzenDialogService RadzenDialogService
+@inject DialogService DialogService
+
+@if (showPage)
+{
+    <RadzenTemplateForm EditContext="editContext" Data="motivo" TItem="Motivo" Submit="Guardar">
+        <DataAnnotationsValidator />
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" class="rz-mb-2">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+                <RadzenLabel Text="Descripción:" Component="modalDescripcion" />
+                <RadzenTextBox @bind-Value="motivo.Descripcion" Style="width:15rem" Name="modalDescripcion" MaxLength="50" AutoCompleteType="AutoCompleteType.Off" />
+                <ValidationMessage For="@(() => motivo.Descripcion)" />
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:2rem" AlignItems="AlignItems.Center">
+                <RadzenLabel Text="Pasivo:" Component="modalPasivo" />
+                <RadzenCheckBox @bind-Value=motivo.Pasivo Name="modalPasivo" />
+            </RadzenStack>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical" Gap="5px" class="rz-mb-2">
+            <RadzenLabel Text="Depósito:" Component="modalDeposito" />
+            <RadzenDropDown @bind-Value="motivo.IdDeposito" Data="depositos" Style="width:18rem" Name="modalDeposito" Disabled=@(!cambiaDepo)
+                            ValueProperty="@nameof(Deposito.IdDeposito)" TextProperty="@nameof(Deposito.Descripcion)" />
+            <ValidationMessage For="@(() => motivo.IdDeposito)" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Icon="cancel" Text="Cancelar" ButtonStyle="ButtonStyle.Danger" Click="Cancelar" />
+            <RadzenButton Icon="save" Text="Guardar" ButtonStyle="ButtonStyle.Success" ButtonType="ButtonType.Submit" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public EventCallback<Motivo> AfterSave { get; set; }
+    [Parameter] public Motivo Motivo { get; set; }
+    [Parameter] public TipoOperacionEnum TipoOperacion { get; set; }
+
+    Motivo motivo;
+    bool showPage, cambiaDepo;
+    List<Deposito> depositos = [];
+
+    EditContext editContext;
+    ValidationMessageStore messageStore;
+
+    protected override async Task OnInitializedAsync()
+    {
+        motivo = (Motivo)Motivo.Clone();
+        cambiaDepo = TipoOperacion == TipoOperacionEnum.Alta || motivo.IdDeposito == null;
+
+        depositos = await DepositosService.GetDepositos(null, null, true);
+
+        editContext = new(motivo);
+        editContext.OnValidationRequested += HandleValidationRequested;
+        editContext.OnFieldChanged += (s, e) => messageStore?.Clear(e.FieldIdentifier);
+        messageStore = new(editContext);
+        showPage = true;
+    }
+
+    private void HandleValidationRequested(object sender, ValidationRequestedEventArgs args)
+    {
+        messageStore?.Clear();
+        if (string.IsNullOrWhiteSpace(motivo.Descripcion))
+            messageStore?.Add(() => motivo.Descripcion, "Debe ingresar una descripción");
+    }
+
+    private async Task Guardar()
+    {
+        if (editContext.Validate())
+        {
+            if (await RadzenDialogService.ConfirmOperation())
+            {
+                var response = TipoOperacion switch
+                {
+                    TipoOperacionEnum.Alta => await MotivosService.PostMotivo(motivo),
+                    TipoOperacionEnum.Edicion => await MotivosService.PutMotivo(motivo),
+                    _ => null
+                };
+
+                if (response == null || response.IsInternalServerError)
+                    RadzenDialogService.NotifyInternalServerError();
+                else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+                    RadzenDialogService.ShowAlert(response.Errors);
+                else if (response.IsOk)
+                {
+                    var obj = (Motivo)response.Data;
+                    if (cambiaDepo && obj.IdDeposito != null)
+                    {
+                        var depo = depositos.First(x => x.IdDeposito == obj.IdDeposito);
+                        obj.DescripcionDeposito = depo.Descripcion;
+                        obj.VisibleDeposito = depo.Visible;
+                    }
+                    await AfterSave.InvokeAsync(obj);
+                }
+            }
+        }
+        else
+        {
+            var errors = editContext.GetValidationMessages().ToList();
+            RadzenDialogService.ShowAlert(errors);
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
+            RadzenDialogService.CloseDialog();
+    }
+}

@@ -1,5 +1,5 @@
 ﻿@inject ProductosService ProductosService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 
@@ -48,9 +48,9 @@
 
 	private async Task BuscarProductos()
 	{
-		DialogCustom.OpenBusy("Cargando...");
+		RadzenDialogService.OpenBusy("Cargando...");
 		productos = await ProductosService.GetProductos(null, null, null, null, linea, null);
-		DialogCustom.CloseDialog();
+		RadzenDialogService.CloseDialog();
 	}
 
 	private async Task Cancelar()
@@ -80,9 +80,9 @@
 				complementos.Add(c);
 			}
 
-			DialogCustom.OpenBusyWithLoader("Guardando...");
+			RadzenDialogService.OpenBusyWithLoader("Guardando...");
 			var response = await ProductosService.InsertProductosComplementos(complementos);
-			DialogCustom.CloseDialog();
+			RadzenDialogService.CloseDialog();
 			if (response)
 				await InsertCallback.InvokeAsync(complementos);
 			else

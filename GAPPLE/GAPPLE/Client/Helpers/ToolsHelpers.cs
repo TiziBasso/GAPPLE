@@ -13,10 +13,10 @@ namespace GAPPLE.Client.Helpers
         public ToolsHelpers(NavigationManager navigationManager)
         {
             NavigationManager = navigationManager;
-            operaciones = Enum.GetValues(typeof(Operaciones)).Cast<Operaciones>().ToList();
+            operaciones = Enum.GetValues(typeof(TipoOperacionEnum)).Cast<TipoOperacionEnum>().ToList();
         }
 
-        private readonly List<Operaciones> operaciones;
+        private readonly List<TipoOperacionEnum> operaciones;
 
         public bool Validate(string operation, int? value)
         {
@@ -40,11 +40,11 @@ namespace GAPPLE.Client.Helpers
             return false;
         }
 
-        public Operaciones ObtenerOperacion(string operation)
+        public TipoOperacionEnum ObtenerOperacion(string operation)
         {
             operation = operation.ToLower();
             if (operation == "ver") operation = "lectura";
-            return operaciones.Find(x => x.ToString().ToLower() == operation);
+            return operaciones.Find(x => x.ToString().Equals(operation, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public void ClearValidationMessages(EditContext editContext, bool revalidate = false, bool markAsUnmodified = false)

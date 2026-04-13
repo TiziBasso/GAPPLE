@@ -1,0 +1,194 @@
+﻿@typeparam TItem
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+@if (Data != null && Data.Any())
+{
+    <div class="checkList" style="background:var(--rz-listbox-background-color);border:var(--rz-listbox-border);border-radius:4px;pointer-events:@(Enable ? "all" : "none");filter:@(Enable ? "" : "opacity(.6)grayscale(1)"); height:fit-content; width:@(Width)">
+
+        @if (DisplayAll || DisplayFilter)
+        {
+            <div style="display:flex;margin-top:2px;padding:var(--rz-dropdown-item-padding);border-bottom: var(--rz-listbox-filter-border);align-items:center;">
+                @if (DisplayAll)
+                {
+                    <RadzenCheckBox Change="OnChangeAll" Name="@Id" TValue="bool?" TriState="true" Value="all" />
+                    <RadzenLabel Text="@DisplayAllText" Component="@Id" Style="margin-left:5px;" />
+                }
+                @if (DisplayFilter)
+                {
+                    <div class="filtro-checkList">
+                        <RadzenIcon Icon="search" />
+                        <input class="checkList-input" placeholder="@FilterText" @oninput="@((args) => BuscarSegunFiltro(args.Value.ToString()))" style="top:0;" />
+                    </div>
+                }
+            </div>
+        }
+
+        @if (!reload)
+        {
+            <ul id="@("ul" + Id)" class="checkbox-list" style="height:@Height;padding:0;">
+                <Virtualize Items="dataFilter" Context="item" TItem="TItem">
+                    @{
+                        var text = TextField?.Invoke(item);
+                        var value = ValueField?.Invoke(item).ToString();
+                        bool isChecked = false;
+
+                        if (SelectedValues.Exists(x => x.ToString() == value))
+                        {
+                            isChecked = true;
+                        }
+
+                        <li class="check-list-item" style="cursor:pointer;" @onclick="@(() => CheckboxClicked(value, !isChecked))">
+                            <RadzenCheckBox @ref="refCheckBox" Name="@(Id + value)" TValue="bool" Value="isChecked" Style="margin:0 0.5rem 0 0;" ReadOnly="true" />
+                            <RadzenLabel Component="@(Id + value)" Text="@text" Style="font-size: 0.875rem;font-weight:400;" @onclick="@(() => CheckboxClicked(value, !isChecked))" />
+                        </li>
+                    }
+                </Virtualize>
+            </ul>
+        }
+
+    </div>
+}
+else
+{
+    <div class="checkList" style="background:var(--rz-listbox-background-color);border:var(--rz-listbox-border);border-radius:4px;pointer-events:none; height:@Height">
+        <p style="color: lightgrey; font-size: 24px; text-align: center; margin: 2rem;">No hay registros para mostrar.</p>
+    </div>
+}
+
+@code {
+    [Parameter] public ICollection<TItem> Data { get; set; }
+    [Parameter] public Func<TItem, string> TextField { get; set; }
+    [Parameter] public Func<TItem, object> ValueField { get; set; }
+    [Parameter] public List<object> SelectedValues { get; set; }
+    [Parameter] public string Id { get; set; }
+    [Parameter] public bool Enable { get; set; } = true;
+    [Parameter] public bool DisplayFilter { get; set; }
+    [Parameter] public string FilterText { get; set; } = "Buscar...";
+    [Parameter] public bool DisplayAll { get; set; }
+    [Parameter] public bool EmpiezaVacio { get; set; }
+    [Parameter] public bool? CheckAll { get; set; }
+    [Parameter] public string Height { get; set; }
+    [Parameter] public string Width { get; set; } = "100%";
+    [Parameter] public string DisplayAllText { get; set; } = "Todos";
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    bool reload;
+    RadzenCheckBox<bool> refCheckBox;
+    private ICollection<TItem> dataFilter;
+    private bool? all;
+
+    protected override void OnInitialized()
+    {
+        dataFilter = Data;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            SeleccionarValores();
+            CambioSelectedValues();
+        }
+    }
+
+    private void CheckboxClicked(string value, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!SelectedValues.Exists(x => x.ToString() == value))
+                SelectedValues.Add(value);
+        }
+        else
+            SelectedValues.RemoveAll(x => x.ToString() == value);
+
+        all = Data.Count() == SelectedValues.Count ? true : SelectedValues.Count > 0 ? null : false;
+        Change();
+    }
+
+    private void BuscarSegunFiltro(string filtro)
+    {
+        if (!string.IsNullOrEmpty(filtro))
+        {
+            dataFilter = Data.Where(x => TextField.Invoke(x).ToLower().Contains(filtro.ToLower())).ToList();
+            DisplayAll = false;
+        }
+        else
+        {
+            dataFilter = Data;
+            DisplayAll = true;
+        }
+
+        StateHasChanged();
+    }
+
+    private void OnChangeAll()
+    {
+        if (all == true)
+            all = false;
+        else if (all == false)
+            all = true;
+        else
+            all = true;
+
+        if (all == true)
+        {
+            SelectedValues.Clear();
+            foreach (var item in dataFilter)
+            {
+                var value = ValueField.Invoke(item).ToString();
+                SelectedValues.Add(value);
+            }
+        }
+        else if (all == false)
+            SelectedValues.Clear();
+
+        Change();
+    }
+
+    private void SeleccionarValores()
+    {
+        if (!EmpiezaVacio && (CheckAll == true || SelectedValues.Count == 0))
+        {
+            SelectedValues.Clear();
+            foreach (var item in dataFilter)
+            {
+                var value = ValueField.Invoke(item).ToString();
+                SelectedValues.Add(value);
+            }
+        }
+        else if (CheckAll == false)
+            SelectedValues.Clear();
+    }
+
+    public void CambioSelectedValues()
+    {
+        if (SelectedValues.Count == dataFilter.Count || SelectedValues.Count == 0)
+            all = true;
+        else if (SelectedValues.Count > 0)
+            all = null;
+        else
+            all = false;
+
+        StateHasChanged();
+    }
+
+    public void RenderComponent(ICollection<TItem> datosNuevos, bool? checkAll = null)
+    {
+        reload = true;
+        CheckAll = checkAll;
+        Data = datosNuevos;
+        dataFilter = Data;
+        SeleccionarValores();
+        CambioSelectedValues();
+        Change();
+        reload = false;
+    }
+
+    private void Change()
+    {
+        if (OnChange.HasDelegate)
+            OnChange.InvokeAsync();
+
+        StateHasChanged();
+    }
+}

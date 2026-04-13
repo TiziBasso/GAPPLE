@@ -8,12 +8,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion(1, "Ambos"),
                     new Opcion(2, "Activo"),
                     new Opcion(3, "Pasivo")
-                };
+                ];
             }
         }
 
@@ -21,25 +21,38 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion(1, "Ambos"),
                     new Opcion(2, "Visible"),
                     new Opcion(3, "Invisible")
-                };
+                ];
             }
         }
 
-        internal static IEnumerable<Opcion> EstadosBool
+        internal static IEnumerable<Opcion> EstadosPasivo
         {
             get
             {
-                return new List<Opcion>
-                {
-                    new Opcion((object)null, "Todos"),
+                return
+                [
+                    new Opcion((object)null, "Ambos"),
                     new Opcion(false, "Activo"),
                     new Opcion(true, "Pasivo")
-                };
+                ];
+            }
+        }
+
+        internal static IEnumerable<Opcion> EstadosActivo
+        {
+            get
+            {
+                return
+                [
+                    new Opcion((object)null, "Ambos"),
+                    new Opcion(true, "Activo"),
+                    new Opcion(false, "Pasivo")
+                ];
             }
         }
 
@@ -47,12 +60,12 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion((object)null, "Ambos"),
                     new Opcion(false, "Sí"),
                     new Opcion(true, "No")
-                };
+                ];
             }
         }
 
@@ -60,12 +73,25 @@ namespace GAPPLE.Client.Tools
         {
             get
             {
-                return new List<Opcion>
-                {
+                return
+                [
                     new Opcion((object)null, "Todos"),
                     new Opcion(true, "Sí"),
                     new Opcion(false, "No")
-                };
+                ];
+            }
+        }
+
+        internal static IEnumerable<Opcion> Mercaderia
+        {
+            get
+            {
+                return
+                    [
+                        new Opcion((object)null, "No ingresa"),
+                        new Opcion(false, "Pendiente ingreso"),
+                        new Opcion(true, "Ingresada")
+                    ];
             }
         }
 
@@ -78,6 +104,11 @@ namespace GAPPLE.Client.Tools
             internal const string Main = "errorpage";
             internal const string UsuarioNoEncontrado = "errorpage/usernotfound";
             internal const string ReparacionEcommerce = "errorpage/reparacionecommerce";
+        }
+
+        internal static class FilesEntity
+        {
+            internal const string NotasCredito = "NotasCredito";
         }
     }
 }

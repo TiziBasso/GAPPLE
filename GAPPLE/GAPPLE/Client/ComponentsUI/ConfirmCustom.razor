@@ -1,0 +1,86 @@
+@inject DialogService dialogService
+
+
+@((MarkupString)Detail)
+
+@if (Dictionary != null)
+{
+	<RadzenAlert AlertStyle=@AlertStyle Variant=@Variant Shade=@Shade AllowClose="false" ShowIcon="false"
+				 Style="margin-top:0; margin-top:15px;">
+		<RadzenStack Style="height:25vh; overflow:auto; width:100%;" AlignItems="AlignItems.Start">
+			@foreach (var key in Dictionary.Keys)
+			{
+				<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Style="width:100%">
+					<RadzenStack Orientation="Orientation.Vertical" Gap="5px">
+						@if (!string.IsNullOrEmpty(key))
+						{
+							<dl>
+								<dt style="margin-left:5px;">
+									@key:
+								</dt>
+								@foreach (var error in Dictionary[key])
+								{
+									<dd style="margin-left:15px;">
+										@((MarkupString)error)
+									</dd>
+								}
+							</dl>
+						}
+						else
+						{
+							<dl>
+							@foreach (var error in Dictionary[key])
+							{
+								<dt style="margin-left:0;">
+									@((MarkupString)error)
+								</dt>
+							}
+							</dl>
+						}
+					</RadzenStack>
+					@if (ShowDeleteMessage)
+					{
+						<RadzenIcon Icon="clear" @onclick=@(() => DeleteError(key)) class="ClearButton" />
+					}
+				</RadzenStack>
+			}
+		</RadzenStack>
+	</RadzenAlert>
+}
+else
+{
+	<RadzenAlert AlertStyle=@AlertStyle Variant=@Variant Shade=@Shade AllowClose="false" ShowIcon="false">
+		<ul>
+			Ha ocurrido un error inesperado!
+		</ul>
+	</RadzenAlert>
+}
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" class="rz-mt-3">
+	<RadzenButton Click="@(() => dialogService.Close(false))" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Icon="cancel" />
+	<RadzenButton Click="@(() => dialogService.Close(true))" ButtonStyle="ButtonStyle.Success" Text="Continuar" Icon="arrow_forward" />
+</RadzenStack>
+
+@code {
+	[Parameter] public Dictionary<string, List<string>> Dictionary { get; set; } = null;
+	[Parameter] public bool ShowDeleteMessage { get; set; } = false;
+	[Parameter] public AlertStyle AlertStyle { get; set; } = AlertStyle.Danger;
+	[Parameter] public Variant Variant { get; set; } = Variant.Flat;
+	[Parameter] public Shade Shade { get; set; } = Shade.Lighter;
+	[Parameter] public string Detail { get; set; }
+
+	private void DeleteError(string key)
+	{
+		Dictionary.Remove(key);
+		StateHasChanged();
+	}
+
+}
+
+<style>
+	.rz-alert-content {
+		display: flex;
+		width: 100%;
+		align-items: start;
+	}
+</style>

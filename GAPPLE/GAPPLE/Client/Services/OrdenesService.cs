@@ -1,11 +1,9 @@
 ﻿using GAPPLE.Client.Entities;
 using GAPPLE.Shared.Model;
+using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http.Json;
 using System.Net;
-using GAPPLE.Client.Tools;
-using System.ComponentModel.Design.Serialization;
-using System.Runtime.Intrinsics.X86;
+using System.Net.Http.Json;
 
 namespace GAPPLE.Client.Services
 {
@@ -21,8 +19,8 @@ namespace GAPPLE.Client.Services
 
         public OrdenesService(HttpClient httpClient, ILogger<OrdenesService> logger, SesionDTO sesionDTO) => (HttpClient, Logger, SesionDTO) = (httpClient, logger, sesionDTO);
 
-        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string? codOrden, bool? presupuesto, string? razonSocial,
-                                        string? linea, string? zona, int? idEstado, string? codTango, int idUsuario, CancellationTokenSource cancellationToken)
+        public async ValueTask<List<Orden>> GetOrdenes(DateTime desde, DateTime hasta, int? idPedido, string codOrden, bool? presupuesto, string razonSocial,
+                                        string linea, string zona, int? idEstado, string codTango, int idUsuario, CancellationTokenSource cancellationToken)
         {
             string uri = $"{URI_BASE}/lista";
             Dictionary<string, object> query = new();
@@ -83,7 +81,7 @@ namespace GAPPLE.Client.Services
         }
 
 
-        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetaLLE(string codOrden)
+        public async ValueTask<List<OrdenDetalle>> GetOrdenConPendienteDetalle(string codOrden)
         {
             string uri = $"{URI_BASE}/ordenconpendiente/{codOrden}";
             return await HttpClient.GetFromJsonAsync<List<OrdenDetalle>>(uri);
@@ -110,11 +108,6 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<Zonas>>($"{URI_BASE}/zonas");
         }
 
-        public async ValueTask<List<Opcion>> GetEstados()
-        {
-            return await HttpClient.GetFromJsonAsync<List<Opcion>>($"{URI_BASE}/estados");
-        }
-
         public async ValueTask<Response> PostPedido(Orden pedido)
         {
             try
@@ -122,21 +115,22 @@ namespace GAPPLE.Client.Services
                 if (pedido.Usuario == null)
                     pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}", pedido);
-                if (response.IsSuccessStatusCode)
+
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Orden p = await response.Content.ReadFromJsonAsync<Orden>();
                     pedido.CodigoOrden = p.CodigoOrden;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "PostPedido");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -146,21 +140,21 @@ namespace GAPPLE.Client.Services
             {
                 pedido.Usuario = SesionDTO.Nombre;
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}", pedido);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Orden p = await response.Content.ReadFromJsonAsync<Orden>();
                     pedido.CodigoOrden = p.CodigoOrden;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "PutPedido");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -171,22 +165,22 @@ namespace GAPPLE.Client.Services
                 pedido.Usuario = SesionDTO.Nombre;
                 OrdenDTO aux = new(pedido);
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/aprobacion/{SesionDTO.IdUsuario}", aux);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
                     pedido.IdEstado = r.IdEstado;
                     pedido.DescripcionEstado = r.DescripcionEstado;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "PutPedidoAprobacion");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -196,17 +190,17 @@ namespace GAPPLE.Client.Services
             {
                 orden.EdicionUsuario = SesionDTO.Nombre;
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/estado", orden);
-                if (response.IsSuccessStatusCode)
-                    return new(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "CambioEstadoPedidos");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -215,17 +209,17 @@ namespace GAPPLE.Client.Services
             try
             {
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}", id);
-                if (response.IsSuccessStatusCode)
-                    return new(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "CambioEstadoPedidos");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -249,17 +243,17 @@ namespace GAPPLE.Client.Services
             try
             {
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/expediciondetalle", orden);
-                if (response.IsSuccessStatusCode)
-                    return new(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "PostExpedicionDetalle");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -268,17 +262,17 @@ namespace GAPPLE.Client.Services
             try
             {
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/despachar/{SesionDTO.Nombre}", ordenes);
-                if (response.IsSuccessStatusCode)
-                    return new(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "DespacharOrden");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -300,15 +294,15 @@ namespace GAPPLE.Client.Services
                 OrdenDTO aux = new(order);
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4)); // timeout de 2 minutos (120s)
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango", aux, cts.Token);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
                     order.IdEstado = r.IdEstado;
                     order.DescripcionEstado = r.DescripcionEstado;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadAsStringAsync());
+                    return new(response.StatusCode, await response.Content.ReadAsStringAsync());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
 
@@ -316,7 +310,7 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Pasar a tango");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -328,12 +322,12 @@ namespace GAPPLE.Client.Services
                 OrdenDTO aux = new(order);
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4)); // timeout de 2 minutos (120s)
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango/obsequios", aux, cts.Token);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadAsStringAsync());
+                    return new(response.StatusCode, await response.Content.ReadAsStringAsync());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
 
@@ -341,7 +335,7 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Pasar a tango");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -353,12 +347,12 @@ namespace GAPPLE.Client.Services
                 OrdenDTO aux = new(order);
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4)); // timeout de 2 minutos (120s)
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/tango/probadores", aux, cts.Token);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadAsStringAsync());
+                    return new(response.StatusCode, await response.Content.ReadAsStringAsync());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
 
@@ -366,7 +360,7 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Pasar a tango");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -379,17 +373,17 @@ namespace GAPPLE.Client.Services
                     Usuario = SesionDTO.Nombre
                 };
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/lista", aux);
-                if (response.IsSuccessStatusCode)
-                    return new(true);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadAsStringAsync());
+                    return new(response.StatusCode, await response.Content.ReadAsStringAsync());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Cambiar lista de precio");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -402,22 +396,22 @@ namespace GAPPLE.Client.Services
                     Usuario = SesionDTO.Nombre
                 };
                 var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirestado", orden);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
                     order.IdEstado = r.IdEstado;
                     order.DescripcionEstado = r.DescripcionEstado;
-                    return new(true);
+                    return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    return new(false, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "RevertirEstadoOrden");
-                return new(false);
+                return new(HttpStatusCode.InternalServerError);
             }
         }
     }

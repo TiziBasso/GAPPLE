@@ -4,7 +4,7 @@
 @inject SeguridadService SeguridadService
 @inject ProductosService ProductosService
 @inject DialogService DialogService
-@inject DialogCustom DialogCustom
+@inject RadzenDialogService RadzenDialogService
 @inject NotificationService NotificationService
 
 @if (showPage)
@@ -50,9 +50,9 @@ else
     {
         if (await DialogService.Confirm(MensajesHelper.Confirm("borrar", "los complementos de los productos"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
         {
-            DialogCustom.OpenBusyWithLoader("Borrando...");
+            RadzenDialogService.OpenBusyWithLoader("Borrando...");
             var response = await ProductosService.DeleteProductosComplementos(selected.ToList());
-            DialogCustom.CloseDialog();
+            RadzenDialogService.CloseDialog();
             if (response)
             {
                 productosComplementos.RemoveAll(x => selected.Any(y => y.CodigoPrincipal == x.CodigoPrincipal && y.CodigoRelacionado == x.CodigoRelacionado));
