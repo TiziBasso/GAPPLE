@@ -81,6 +81,7 @@
             </RadzenDataGridColumn> *@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoOrden)" Title="Cód. orden" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoTango)" Title="Cód. tango" Width="150px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.NumeroNC)" Title="Número NC" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.FechaComprobante)" Title="Fecha" Width="120px" FormatString="{0:dd/MM/yyyy}" Resizable=false Filterable="false" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MotivoDescripcion)" Title="Motivo" Width="100px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.EstadoDescripcion)" Title="Estado" Width="100px" Filterable="false" />
@@ -182,11 +183,11 @@ else
     List<ComprobanteCabecera> comprobantes = [];
     ComprobanteCabecera Resumen = null;
     ComprobanteCabeceraRequest request = new()
-    {
-        FechaDesde = DateTime.Today.AddDays(-15),
-        FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
-        IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-    };
+        {
+            FechaDesde = DateTime.Today.AddDays(-15),
+            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+            IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+        };
 
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
@@ -255,26 +256,37 @@ else
 
     private async Task AprobarNotaCredito(ComprobanteCabecera nota)
     {
-        if (await RadzenDialogService.ConfirmOperation("aprobar", $"la nota de crédito {nota.CodigoOrden}"))
+        var numero = await RadzenDialogService.OpenAsync<ConfirmNumberNC>(
+            $"Aprobar nota de crédito {nota.CodigoOrden}",
+            null
+        );
+
+        if (numero == null)
+            return;
+
+        RadzenDialogService.OpenBusyWithLoader("Aprobando...");
+        var response = await ComprobantesService.AprobarNotaCredito(
+            nota.IdComprobante,
+            numero.ToString()
+        );
+
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
         {
-            RadzenDialogService.OpenBusyWithLoader("Aprobando...");
-            var response = await ComprobantesService.AprobarNotaCredito(nota.IdComprobante);
-            RadzenDialogService.CloseDialog();
-            if (response.IsOk)
-            {
-                var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
-                var obj = comprobantes[index];
+                nota.NumeroNC = numero;
+            var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
+            var obj = comprobantes[index];
 
-                obj.IdEstado = ComprobanteCabeceraEstadoEnum.Aprobado;
-                obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
+            obj.IdEstado = ComprobanteCabeceraEstadoEnum.Aprobado;
+            obj.EstadoDescripcion = estados.Find(x => x.Id == obj.IdEstado).Descripcion;
 
-                await grid.Reload();
-            }
-            else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
-                RadzenDialogService.ShowAlert(response.Errors);
-            else
-                RadzenDialogService.NotifyInternalServerError();
+            await grid.Reload();
         }
+        else if (response.IsBadRequest && response.Errors != null && response.Errors.Count > 0)
+            RadzenDialogService.ShowAlert(response.Errors);
+        else
+            RadzenDialogService.NotifyInternalServerError();
     }
 
     private async Task RevertirConfirmacionOrden(ComprobanteCabecera nota)
@@ -332,9 +344,9 @@ else
     private async Task NuevaNotaCredito() =>
         await RadzenDialogService.OpenAsync<ClienteSeleccion>("Selección de cliente",
                                             new()
-                                            {
+                                                {
                                                 { "OnSelect", EventCallback.Factory.Create<Cliente>(this, OnSelectCliente) }
-                                            }, new() { Width = "60rem", Height = "50rem" });
+                                                }, new() { Width = "60rem", Height = "50rem" });
 
     private void OnSelectCliente(Cliente cliente) => NavigationManager.NavigateTo($"notascredito/alta/{cliente.IdCliente}");
 
@@ -357,7 +369,7 @@ else
             showResumen = true;
         }
     }
-     
+
     async Task CargarArchivos(ComprobanteCabecera cc)
     {
         NavigationManager.NavigateTo($"notacreditoarchivos/{cc.IdComprobante}");

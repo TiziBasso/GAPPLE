@@ -60,9 +60,9 @@ namespace GAPPLE.Client.Services
             return await Response.CreateAsync(response);
         }
 
-        public async ValueTask<Response> AprobarNotaCredito(int idComprobante)
+        public async ValueTask<Response> AprobarNotaCredito(int idComprobante, string numeroNC)
         {
-            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito/{idComprobante}/aprobar", SesionDTO.Nombre);
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/notacredito/{idComprobante}/aprobar/{numeroNC}", SesionDTO.Nombre);
 
             if (response.StatusCode == HttpStatusCode.OK)
                 return new(response.StatusCode);

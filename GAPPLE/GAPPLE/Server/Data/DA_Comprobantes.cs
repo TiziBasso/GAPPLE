@@ -33,7 +33,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void ActualizarNotaCreditoEstado(int idComprobante, ComprobanteCabeceraEstadoEnum estado, string usuario)
+        public void ActualizarNotaCreditoEstado(int idComprobante, ComprobanteCabeceraEstadoEnum estado, string usuario, string numeroNC = null)
         {
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
@@ -44,6 +44,7 @@ namespace GAPPLE.Server.Data
             };
             cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
             cmd.Parameters.AddWithValue("@pIdEstado", (int)estado);
+            if(numeroNC != null) cmd.Parameters.AddWithValue("@pNumeroNC", numeroNC);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", usuario);
             cnn.Open();
             cmd.ExecuteNonQuery();

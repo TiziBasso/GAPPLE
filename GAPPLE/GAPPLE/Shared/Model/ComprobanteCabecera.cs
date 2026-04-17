@@ -98,5 +98,7 @@ namespace GAPPLE.Shared.Model
         public bool Presupuesto { get; set; }
 
         public List<ComprobanteDetalle> Detalle { get; set; } = [];
+
+        public string NumeroNC { get; set; }
     }
 }

@@ -1,0 +1,41 @@
+﻿@using System.ComponentModel.DataAnnotations
+@inject DialogService DialogService
+
+<RadzenTemplateForm Data="model" Submit="OnSubmit" TItem="Model">
+    <DataAnnotationsValidator />
+
+    <RadzenTextBox @bind-Value="model.Numero" Name="Numero" Style="width:100%" />
+
+    <RadzenRequiredValidator Component="Numero" Text="Debe ingresar un número de nota de credito" />
+
+    <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <RadzenButton Text="Cancelar" Click="@OnCancel" />
+        <RadzenButton Text="Confirmar" ButtonType="ButtonType.Submit" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    Model model;
+    EditContext editContext;
+
+    protected override void OnInitialized()
+    {
+        model = new Model();
+    }
+
+    void OnSubmit()
+    {
+        DialogService.Close(model.Numero);
+    }
+
+    void OnCancel()
+    {
+        DialogService.Close(null);
+    }
+
+    class Model
+    {
+        [Required]
+        public string Numero { get; set; }
+    }
+}

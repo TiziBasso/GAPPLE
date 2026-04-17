@@ -31,7 +31,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandText = "prc_get_Clientes";
             if (idCliente != null) cmd.Parameters.AddWithValue("@pIdCliente", idCliente);
             if (codCliente != null) cmd.Parameters.AddWithValue("@pCodCliente", codCliente);
-            if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocial", razonSocial);
+            if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocial", $"%{razonSocial}%");
             if (cuit != null) cmd.Parameters.AddWithValue("@pCUIT", cuit);
             if (clienteEspecial != null) cmd.Parameters.AddWithValue("@pClienteEspecial", clienteEspecial);
             cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);

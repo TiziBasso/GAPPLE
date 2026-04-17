@@ -68,6 +68,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["IdEstado"] != DBNull.Value) cc.IdEstado = (Shared.Enums.ComprobanteCabeceraEstadoEnum)int.Parse(row["IdEstado"].ToString());
                     if (row["IdCliente"] != DBNull.Value) cc.IdCliente = int.Parse(row["IdCliente"].ToString());
                     if (row["CodigoCliente"] != DBNull.Value) cc.CodCliente = row["CodigoCliente"].ToString();
+                    if (row["NumeroNC"] != DBNull.Value) cc.NumeroNC = row["NumeroNC"].ToString();
                     cc.IdDeposito = Convert.ToInt32(row["IdDeposito"]);
                     cc.DepositoDescripcion = Convert.ToString(row["DescripcionDeposito"]);
 
@@ -79,7 +80,7 @@ namespace GAPPLE.Server.Controllers
                             {
                                 ComprobanteDetalle cd = new();
                                 cd.IdProducto = Convert.ToInt32(rowd["IdProducto"]);
-                                cd.IdComprobante = (int)request.IdComprobante;
+                                cd.IdComprobante = (int)request.IdComprobante;  
                                 cd.NumeroLinea = int.Parse(rowd["Linea"].ToString());
                                 cd.CodProducto = rowd["CodProducto"].ToString();
                                 cd.DescripcionProducto = rowd["Descripcion"].ToString();
@@ -175,13 +176,13 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpPut("notacredito/{idComprobante:int}/aprobar")]
-        public IActionResult AprobarNotaCredito(int idComprobante, [FromBody] string usuario)
+        [HttpPut("notacredito/{idComprobante:int}/aprobar/{numeroNC}")]
+        public IActionResult AprobarNotaCredito(int idComprobante, string numeroNC, [FromBody] string usuario)
         {
             try
             {
                 DA_Comprobantes daC = new(DefaultConnectionString);
-                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Aprobado, usuario);
+                daC.ActualizarNotaCreditoEstado(idComprobante, ComprobanteCabeceraEstadoEnum.Aprobado, usuario, numeroNC);
                 return Ok();
             }
             catch (Exception ex)
