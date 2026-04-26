@@ -51,8 +51,8 @@ namespace GAPPLE.Client.Services
                                                                         CancellationTokenSource cancellationToken = null)
         {
             Dictionary<string, object> query = new();
-            if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codProducto"] = codigoProducto;
-            if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
+            if (!string.IsNullOrEmpty(codigoProducto)) query["codProducto"] = WebUtility.UrlEncode($"%{codigoProducto.Trim()}%");
+            if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode($"%{descripcion.Trim()}%");
             if (linea != null) query["linea"] = linea;
             query["codListaPrecio"] = codListaPrecio;
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());

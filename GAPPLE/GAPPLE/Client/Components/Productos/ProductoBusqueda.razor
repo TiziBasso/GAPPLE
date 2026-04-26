@@ -49,8 +49,8 @@
 }
 else
 {
-    <RadzenDataGrid @ref="skuGrid" TItem="ProductoOrden" Data="@skus" @bind-Value=@selectedSKUs SelectionMode="DataGridSelectionMode.Multiple"
-                    Density="Density.Compact" AllowVirtualization="true" Style="height:30rem">
+    <RadzenDataGrid @ref="skuGrid" TItem="ProductoOrden" Data="@skus" @bind-Value=@selectedSKUs SelectionMode="DataGridSelectionMode.Multiple" FilterMode="FilterMode.Simple"
+                    Density="Density.Compact" AllowVirtualization="true" Style="height:30rem" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
         <HeaderTemplate>
             <RadzenText TextAlign="TextAlign.Right" Style="width:100%">
                 <strong>

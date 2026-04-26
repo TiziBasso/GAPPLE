@@ -62,7 +62,7 @@ namespace GAPPLE.Shared.Model
         [ColumnName("Fecha")]
         public DateTime FechaComprobante { get; set; }
 
-        [ColumnName("Observaciones"), MaxLength(50, ErrorMessage = "La longitud máxima es de 50 caracteres")]
+        [ColumnName("Observaciones"), MaxLength(500, ErrorMessage = "La longitud máxima es de 500 caracteres")]
         public string Observaciones { get; set; }
 
         [ColumnName("TipoComprobanteReferencia")]

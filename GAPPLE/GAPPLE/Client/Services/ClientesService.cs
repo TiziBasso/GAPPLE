@@ -25,7 +25,7 @@ namespace GAPPLE.Client.Services
             string uri = $"{URI_BASE}";
             Dictionary<string, object> query = new();
             if (clienteEspecial != null) query["clienteEspecial"] = clienteEspecial;
-            if (codCliente != null) query["codCliente"] = codCliente;
+            if (!string.IsNullOrEmpty(codCliente)) query["codCliente"] = WebUtility.UrlEncode($"%{codCliente.Trim()}%");
             if (razonSocial != null) query["razonSocial"] = razonSocial.Trim();
             if (cuit != null) query["cuit"] = cuit;
             if (idCliente != null) query["idCliente"] = idCliente;
