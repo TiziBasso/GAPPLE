@@ -101,7 +101,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Title="% Dto" TextAlign="TextAlign.Right" Width="65px">
             <Template Context="data">
-                <input id=@($"desc{data.NumeroLinea}") type="number" @bind-value="data.Descuento"
+                <input id=@($"desc{data.NumeroLinea}") type="number" step="0.01" @bind-value="data.Descuento"
                        @onkeydown="@(args => KeyDownDesc(args, data))" @onfocusout="@(() => OnFocusOutDesc(data))"
                        arrowKeyBlocker enterKeyBlocker disabled=@Disabled
                        class="rz-textbox table-input-padding" style="width:100%; height: 25px; text-align: right;" />
