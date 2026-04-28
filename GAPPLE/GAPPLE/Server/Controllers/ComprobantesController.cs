@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.IO.Compression;
 using System.Net;
 
