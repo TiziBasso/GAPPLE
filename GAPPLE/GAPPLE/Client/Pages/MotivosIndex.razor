@@ -32,9 +32,24 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Depósito:" Component="deposito" />
-            <RadzenDropDown Data=depositos @bind-Value=@idDesposito Name="deposito"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" />
+            <RadzenDropDownDataGrid Data="@depositos" @bind-Value=@idDesposito Name="deposito"
+                                    ValueProperty=@nameof(Deposito.IdDeposito) TextProperty="@nameof(Deposito.Descripcion)"
+                                    Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" AllowFiltering="true"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    AllowVirtualization="true"
+                                    Density="Density.Compact"
+                                    AllowFilteringByAllStringColumns="true"
+                                    AllowSorting="true">
+                <Columns>
+                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.CodigoTango) Title="Código" />
+                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.Descripcion) Title="Descripción" />
+                    
+                </Columns>
+            </RadzenDropDownDataGrid>
+
+         
+            
+            
         </RadzenStack>
 
 
@@ -86,11 +101,12 @@ else
 @code {
     bool showPage, permiteAlta, permiteEdicion;
 
-    int? idMotivo, idDesposito;
+    int? idMotivo;
+    int idDesposito;
     string descripcion = null;
     bool? pasivo = null;
 
-    List<Opcion> depositos = [new((int?)null, "(Todos)")];
+    List<Deposito> depositos = [];
     List<Motivo> motivos = [];
     RadzenDataGrid<Motivo> grid;
 
@@ -101,8 +117,8 @@ else
         permiteAlta = permisos.Contains(GAPPLE.Shared.Helpers.Permisos.Alta);
         permiteEdicion = permisos.Contains(GAPPLE.Shared.Helpers.Permisos.Edicion);
 
-        var aux = await DepositosService.GetDepositos();
-        depositos.AddRange(aux.Select(x => new Opcion(x.IdDeposito, x.Descripcion)));
+        depositos = await DepositosService.GetDepositos();
+        depositos.Insert(0, new Deposito { IdDeposito = 0, Descripcion = "(Todos)" });
         await FillMotivos();
         showPage = true;
     }
@@ -110,7 +126,8 @@ else
     private async Task FillMotivos()
     {
         RadzenDialogService.OpenBusyWithLoader("Cargando...");
-        var response = await MotivosService.GetMotivos(idMotivo, string.IsNullOrWhiteSpace(descripcion) ? null : descripcion, pasivo, idDesposito);
+        var response = await MotivosService.GetMotivos(idMotivo, string.IsNullOrWhiteSpace(descripcion) ? null : descripcion,
+                                            pasivo, idDesposito != 0 ? idDesposito : null);
         RadzenDialogService.CloseDialog();
 
         if (response == null)
