@@ -55,13 +55,19 @@
 
     </RadzenStack>
 
-    <RadzenDataGrid @ref="grid" Data="lstOrdenes" @bind-Value="selected" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
+    <RadzenDataGrid @ref="grid" Data="lstOrdenesFiltrados" @bind-Value="selected" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
                     AllowColumnResize=true Density="Density.Compact" AllowVirtualization="true" SelectionMode="DataGridSelectionMode.Single"
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
         <Columns>
             <RadzenDataGridColumn Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenNumeric @bind-Value=idFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Title="Fecha Pedido" Property="@nameof(Orden.Creacion)" Width="150px" FormatString="{0:dd/MM/yyyy HH:mm}" Filterable="true" Resizable="false" TextAlign="TextAlign.Center">
+                <FilterTemplate>
+                    <RadzenDatePicker AllowClear="true" @bind-Value=desdeFilter DateFormat="dd/MM/yyyy" Style="width:100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
@@ -140,9 +146,11 @@ else
     string linea, codTango, codOrden;
     DateTime desde = DateTime.Today.AddDays(-30), hasta = DateTime.Today.AddDays(1).AddTicks(-1);
     List<Orden> lstOrdenes = [];
+    List<Orden> lstOrdenesFiltrados => AplicarFiltros();
     string zonaFilter, codOrdenFilter;
     List<string> zonasFilter = new();
     int? idFilter;
+    DateTime? desdeFilter;
     bool showPage, isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -204,5 +212,15 @@ else
     {
         cancellationToken.Cancel();
         cancellationToken.Dispose();
+    }
+
+    
+    private List<Orden> AplicarFiltros()
+    {
+        var q = lstOrdenes.AsQueryable();
+
+        q = q.FilterDate(x => x.Creacion, desdeFilter);
+
+        return q.ToList();
     }
 }
