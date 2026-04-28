@@ -1,0 +1,253 @@
+﻿@inject RadzenDialogService RadzenDialogService
+@inject AcuerdosService AcuerdosService
+@inject ParametrosDeConsulta ParametrosDeConsulta
+
+@using Components.Acuerdos
+
+@if (showPage)
+{
+    <RadzenDataGrid @ref="grid" TItem="AcuerdoMontoGrid" Data="acuerdosMontos" AllowFiltering="true"
+                    FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize="true" Density="Density.Compact"
+                    AllowGrouping="true" HideGroupedColumn="true" ShowEmptyMessage="false" Style="height:60vh"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
+        <HeaderTemplate>
+            <RadzenButton Text="Agregar monto" Icon="add" ButtonStyle="ButtonStyle.Secondary"
+                          Size="ButtonSize.Small" Click="AgregarAcuerdoMonto" />
+        </HeaderTemplate>
+        <GroupHeaderTemplate>
+            @if (context.GroupDescriptor.Property == nameof(AcuerdoMontoGrid.Mes))
+            {
+                var mes = (DateTime)context.Data.Key;
+
+                <span>Mes: @mes.ToString("MMMM yyyy")</span>
+            }
+            else
+            {
+                <span>@context.GroupDescriptor.GetTitle()</span>
+            }
+        </GroupHeaderTemplate>
+        <Columns>
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Mes)"
+                                  Title="Mes"
+                                  FormatString="{0:MMMM yyyy}"
+                                  Groupable="true" Filterable="false"
+                                  Width="140px">
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Id)"
+                                  Title="Id monto"
+                                  TextAlign="TextAlign.Right"
+                                  Width="120px"
+                                  Groupable="false" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Fecha)"
+                                  Title="Fecha"
+                                  FormatString="{0:dd/MM/yyyy HH:mm}"
+                                  TextAlign="TextAlign.Center"
+                                  Width="140px" Filterable="false"
+                                  Groupable="false" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Monto)" Width="180px"
+                                  Title="Monto">
+
+                <GroupFooterTemplate Context="group">
+                    @{
+                        var total = group.Data.Items
+                            .Cast<AcuerdoMontoGrid>()
+                            .Sum(x => x.Monto);
+                    }
+
+                    <b>Total mes: $@total.ToString("N2")</b>
+                </GroupFooterTemplate>
+
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.CodigoCliente)"
+                                  Title="Cód. cliente"
+                                  Width="120px" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.RazonSocial)"
+                                  Title="Razón social"
+                                  Width="150px" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Linea)"
+                                  Title="Linea" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Condicion)"
+                                  Title="Condición" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.IdComprobante)"
+                                  Title="Id NC" />
+
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.NumeroNC)"
+                                  Title="N° NC" />
+
+            <RadzenDataGridColumn Frozen="true"
+                                  FrozenPosition="FrozenColumnPosition.Right"
+                                  Filterable="false"
+                                  Sortable="false"
+                                  Groupable="false"
+                                  Resizable="false"
+                                  TextAlign="TextAlign.Center"
+                                  Width="35px">
+
+                <Template Context="acuerdoMonto">
+
+                    <RadzenButton Icon="edit"
+                                  ButtonStyle="ButtonStyle.Warning"
+                                  Variant="Variant.Flat"
+                                  Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => EditarAcuerdoMonto(acuerdoMonto.AcuerdoMonto))"
+                                  @onclick:stopPropagation="true" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Frozen="true"
+                                  FrozenPosition="FrozenColumnPosition.Right"
+                                  Filterable="false"
+                                  Sortable="false"
+                                  Groupable="false"
+                                  Resizable="false"
+                                  TextAlign="TextAlign.Center"
+                                  Width="35px">
+
+                <Template Context="acuerdoMonto">
+
+                    <RadzenButton Icon="delete"
+                                  ButtonStyle="ButtonStyle.Danger"
+                                  Variant="Variant.Flat"
+                                  Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => EliminarAcuerdoMonto(acuerdoMonto.AcuerdoMonto))"
+                                  @onclick:stopPropagation="true" />
+
+                </Template>
+
+            </RadzenDataGridColumn>
+
+        </Columns>
+
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    [Parameter] public AcuerdoCliente AcuerdoCliente { get; set; }
+    [Parameter] public Acuerdo Acuerdo { get; set; }
+
+    bool showPage;
+    bool permiteAlta, permiteEdicion;
+    int render;
+    RadzenDataGrid<AcuerdoMontoGrid> grid;
+    List<AcuerdoMontoGrid> acuerdosMontos = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await AcuerdosService.GetAcuerdosMontos(new() { IdAcuerdo = Acuerdo.IdAcuerdo });
+        if (response.IsOk)
+        {
+            var aux = (List<AcuerdoMonto>)response.Data;
+            if (aux.Count > 0)
+            {
+                acuerdosMontos = aux
+                .Select(x => new AcuerdoMontoGrid
+                {
+                    AcuerdoMonto = x
+                })
+                .OrderByDescending(x => x.Fecha)
+                .ToList();
+
+            }
+            else
+                RadzenDialogService.NotifyEmptyResponse();
+        }
+        else
+        {
+            RadzenDialogService.NotifyInternalServerError();
+            RadzenDialogService.CloseDialog();
+        }
+
+        showPage = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        render++;
+        if (render == 2)
+        {
+            grid.Groups.Add(new GroupDescriptor() { Property = nameof(AcuerdoMontoGrid.Mes), Title = "Mes" });
+            await grid.Reload();
+        }
+    }
+
+    private async Task EliminarAcuerdoMonto(AcuerdoMonto acuerdoMonto)
+    {
+        if (await RadzenDialogService.ConfirmOperation("eliminar", $"el monto ${acuerdoMonto.Monto:N2}"))
+        {
+            RadzenDialogService.OpenBusyWithLoader("Eliminando...");
+            var response = await AcuerdosService.DeleteAcuerdosMonto(acuerdoMonto);
+            RadzenDialogService.CloseDialog();
+            if (response.IsOk)
+            {
+                RadzenDialogService.NotifySuccess("El monto", "se ha eliminado");
+                acuerdosMontos.RemoveAll(x => x.Id == acuerdoMonto.Id);
+                await grid.Reload();
+            }
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task AgregarAcuerdoMonto() =>
+        await AbrirModal("Nuevo monto de acuerdo", new()
+        {
+            Fecha = DateTime.Now,
+            Linea = Acuerdo.Linea,
+            CodigoCliente = AcuerdoCliente.CodigoCliente,
+            IdCliente = AcuerdoCliente.IdCliente,
+            RazonSocial = AcuerdoCliente.RazonSocial,
+            Condicion = Acuerdo.Condicion,
+            IdAcuerdo = Acuerdo.IdAcuerdo,
+        }, TipoOperacionEnum.Alta);
+
+    private async Task EditarAcuerdoMonto(AcuerdoMonto acuerdoMonto) =>
+        await AbrirModal($"Monto del acuerdo {acuerdoMonto.IdAcuerdo}", (AcuerdoMonto)acuerdoMonto.Clone(), TipoOperacionEnum.Edicion);
+
+    private async Task AbrirModal(string title, AcuerdoMonto acuerdoMonto, TipoOperacionEnum operacion) =>
+        await RadzenDialogService.OpenAsync<AcuerdosMontoForm>(title, new() { { "AcuerdoCliente", AcuerdoCliente }, { "AcuerdoMonto", acuerdoMonto}, { "TipoOperacion", operacion },
+                                                            { "OnSave", EventCallback.Factory.Create<AcuerdoMonto>(this, OnSave) } }, new() { Height = "40rem", Width = "50rem" });
+
+    private async Task OnSave(AcuerdoMonto acuerdoMonto)
+    {
+        RadzenDialogService.CloseDialog();
+        acuerdosMontos.RemoveAll(x => x.Id == acuerdoMonto.Id);
+        acuerdosMontos.Add(new() { AcuerdoMonto = acuerdoMonto });
+        await grid.Reload();
+    }
+
+    private class AcuerdoMontoGrid
+    {
+        public AcuerdoMonto AcuerdoMonto { get; set; } = default!;
+
+        public DateTime Mes => new(
+            AcuerdoMonto.Fecha.Year,
+            AcuerdoMonto.Fecha.Month,
+            1);
+
+        public int Id => AcuerdoMonto.Id;
+        public int IdAcuerdo => AcuerdoMonto.IdAcuerdo;
+        public DateTime Fecha => AcuerdoMonto.Fecha;
+        public decimal Monto => AcuerdoMonto.Monto;
+        public string CodigoCliente => AcuerdoMonto.CodigoCliente;
+        public string RazonSocial => AcuerdoMonto.RazonSocial;
+        public string Linea => AcuerdoMonto.Linea;
+        public string Condicion => AcuerdoMonto.Condicion;
+        public int? IdComprobante => AcuerdoMonto.IdComprobante;
+        public string NumeroNC => AcuerdoMonto.NumeroNC;
+    }
+}

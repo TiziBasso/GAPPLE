@@ -39,7 +39,8 @@ namespace GAPPLE.Client.Tools
             Usuarios,
             ProductosIndex,
             NotasCredito,
-            Acuerdos
+            Acuerdos,
+            AcuerdosMonto
         }
     }
 }
