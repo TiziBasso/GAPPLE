@@ -5,12 +5,23 @@
                 EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
     <Columns>
         <RadzenDataGridColumn Title="Cod. Producto" Property="@nameof(OrdenDetalle.CodProducto)" />
-        <RadzenDataGridColumn Title="Cant. pedida" Property="@nameof(OrdenDetalle.Cantidad)" />
-        <RadzenDataGridColumn Title="Cant. aprobada" Property="@nameof(OrdenDetalle.CantidadAprobada)" />
+        <RadzenDataGridColumn Title="Cant. pedida" Property="@nameof(OrdenDetalle.Cantidad)">
+        <FooterTemplate>
+            @detalles.Sum(x => x.Cantidad)
+        </FooterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Cant. aprobada" Property="@nameof(OrdenDetalle.CantidadAprobada)">
+            <FooterTemplate>
+                @detalles.Sum(x => x.CantidadAprobada)
+            </FooterTemplate>
+        </RadzenDataGridColumn>
         <RadzenDataGridColumn Title="Cant. pendiente">
             <Template>
                 <span>@(context.Cantidad - context.CantidadAprobada)</span>
             </Template>
+            <FooterTemplate>
+                @(detalles.Sum(x => x.Cantidad) - detalles.Sum(x => x.CantidadAprobada))
+            </FooterTemplate>
         </RadzenDataGridColumn>
     </Columns>
 </RadzenDataGrid>

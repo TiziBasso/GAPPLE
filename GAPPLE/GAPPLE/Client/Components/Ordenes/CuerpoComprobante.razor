@@ -116,6 +116,9 @@
             <Template Context="data">
                 $@data.PrecioTotal.ToString("N2", new CultureInfo("es-AR"))
             </Template>
+            <FooterTemplate>
+                $@Lineas.Sum(x => x.PrecioTotal).ToString("N2", new CultureInfo("es-AR"))
+            </FooterTemplate>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
             <Template Context="data">

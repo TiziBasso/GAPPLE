@@ -70,12 +70,6 @@
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
-            <RadzenLabel Text="Linea:" Component="linea" />
-            <RadzenDropDown Data=@lineas @bind-Value=@linea Name="linea" AllowClear=true
-                            Disabled="@isLoading" Style="width: 15rem;" />
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Cód. tango:" Component="codTango" />
             <input type="text" @bind-value="@codTango" @bind-value:event="oninput" @onkeypress="@((KeyboardEventArgs e) => KeyPress(e))"
                    class="rz-textbox" style="width: 8rem" disabled="@isLoading" id="codTango" />
@@ -335,7 +329,7 @@ else
             var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
             var auth = await autenticacionExt.GetAuthenticationStateAsync();
             lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59),
-                                                        idPedido, codOrden, presupuesto, razonSocial, linea, null,
+                                                        idPedido, codOrden, !presupuesto, razonSocial, linea, null,
                                                         idEstado, codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
             RadzenDialogService.CloseDialog();
             StateHasChanged();
