@@ -34,22 +34,19 @@
             <RadzenLabel Text="Depósito:" Component="deposito" />
             <RadzenDropDownDataGrid Data="@depositos" @bind-Value=@idDesposito Name="deposito"
                                     ValueProperty=@nameof(Deposito.IdDeposito) TextProperty="@nameof(Deposito.Descripcion)"
-                                    Placeholder="(Todos)" AllowClear=true Style="width: 7rem;" AllowFiltering="true"
+                                    Placeholder="(Todos)" AllowClear=true Style="width: 10rem;" AllowFiltering="true"
                                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                     AllowVirtualization="true"
                                     Density="Density.Compact"
                                     AllowFilteringByAllStringColumns="true"
                                     AllowSorting="true">
                 <Columns>
-                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.CodigoTango) Title="Código" />
+                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.CodigoTango) Title="Código"  Width="80px"/>
                     <RadzenDropDownDataGridColumn Property=@nameof(Deposito.Descripcion) Title="Descripción" />
                     
                 </Columns>
             </RadzenDropDownDataGrid>
 
-         
-            
-            
         </RadzenStack>
 
 

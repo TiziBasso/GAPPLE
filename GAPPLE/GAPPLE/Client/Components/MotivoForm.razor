@@ -23,8 +23,20 @@
 
         <RadzenStack Orientation="Orientation.Vertical" Gap="5px" class="rz-mb-2">
             <RadzenLabel Text="Depósito:" Component="modalDeposito" />
-            <RadzenDropDown @bind-Value="motivo.IdDeposito" Data="depositos" Style="width:18rem" Name="modalDeposito" Disabled=@(!cambiaDepo)
-                            ValueProperty="@nameof(Deposito.IdDeposito)" TextProperty="@nameof(Deposito.Descripcion)" />
+            <RadzenDropDownDataGrid Data="@depositos" @bind-Value=@motivo.IdDeposito Name="modalDeposito"
+                                    ValueProperty=@nameof(Deposito.IdDeposito) TextProperty="@nameof(Deposito.Descripcion)"
+                                    Placeholder="(Todos)" AllowClear=true Style="width: 18rem;" AllowFiltering="true"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    AllowVirtualization="true"
+                                    Density="Density.Compact"
+                                    AllowFilteringByAllStringColumns="true"
+                                    AllowSorting="true">
+                <Columns>
+                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.CodigoTango) Title="Código"  Width="80px"/>
+                    <RadzenDropDownDataGridColumn Property=@nameof(Deposito.Descripcion) Title="Descripción" />
+                    
+                </Columns>
+            </RadzenDropDownDataGrid>
             <ValidationMessage For="@(() => motivo.IdDeposito)" />
         </RadzenStack>
 

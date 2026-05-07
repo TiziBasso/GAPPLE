@@ -8,15 +8,13 @@
 
 @if (showForm)
 {
-    <RadzenText Text="Clientes especiales" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+    <RadzenText Text="Clientes" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
 
     <RadzenDataGrid @ref="grilla" Data="clientes" AllowFiltering="true" AllowVirtualization="true" Density=Density.Compact
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" EmptyText="No hay registros"
                     ShowEmptyMessage="true" IsLoading="isBusy" Style="height: 82vh;">
         <HeaderTemplate>
             <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Agregar cliente" Click="AgregarCliente" />
-            <RadzenLabel Text="Clientes especiales: " Component="especial" />
-            <RadzenDropDown @bind-Value=opcion Data="Variables.Clasificaciones" TextProperty="@nameof(Opcion.Descripcion)" ValueProperty="@nameof(Opcion.Id)" Name="especial" Change="(() => OnChange(opcion))" Placeholder="Todos" />
         </HeaderTemplate>
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
@@ -46,11 +44,10 @@ else
     bool? opcion;
     bool showForm, isBusy;
 
-
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
-        clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
+        clientes = await ClientesService.GetClientes();
         showForm = true;
     }
 
@@ -59,7 +56,7 @@ else
         isBusy = true;
         await DialogService.OpenAsync<ClienteAdd>($"Agregar cliente ", null, new() { Width = "60vw", Height = "50vh" });
         opcion = true;
-        clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
+        clientes = await ClientesService.GetClientes();
         await grilla.Reload();
         isBusy = false;
     }
@@ -69,7 +66,7 @@ else
         isBusy = true;
         await DialogService.OpenAsync<ClienteAdd>($"Modificar a cliente especial", new() { { "Cliente", cliente } }, new() { Width = "40vw", Height = "46vh" });
         opcion = true;
-        clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
+        clientes = await ClientesService.GetClientes();
         await grilla.Reload();
         isBusy = false;
     }
@@ -84,7 +81,7 @@ else
     public async Task OnChange(bool? opcion)
     {
         isBusy = true;
-        clientes = await ClientesService.GetClientes(clienteEspecial: opcion);
+        clientes = await ClientesService.GetClientes();
         await grilla.Reload();
         isBusy = false;
     }

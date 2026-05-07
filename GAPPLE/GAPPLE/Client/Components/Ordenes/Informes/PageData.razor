@@ -41,7 +41,15 @@
             <tr>
                 <td colspan="2"></td>
                 <td colspan="2" style="text-align: end;">Total: @Detalle.Sum(x => x.Cantidad)</td>
-                <td colspan="2"></td>
+                <td colspan="1"></td>
+                @if (ShowProbadores)
+                {
+                    <td colspan="1" style="text-align: end;">Total: @Detalle.Sum(x => x.CantidadProbadorAprobada)</td>
+                }
+                @if (ShowObsequios)
+                {
+                    <td colspan="1" style="text-align: end;">Total: @Detalle.Sum(x => x.CantidadObsequioAprobada)</td>
+                }
             </tr>
         </tbody>
     }
