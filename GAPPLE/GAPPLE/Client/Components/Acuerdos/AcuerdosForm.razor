@@ -44,10 +44,6 @@
                 <RadzenTextBox @bind-Value="Acuerdo.Condicion" Name="condicion" Style="width:100%" maxlength="150" AutoCompleteType="AutoCompleteType.Off" />
                 <ValidationMessage For="@(() => Acuerdo.Condicion)" />
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:30%" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                <RadzenLabel Text="Activo:" Component="activo" />
-                <RadzenCheckBox @bind-Value="Acuerdo.Activo" Name="activo" />
-            </RadzenStack>
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceAround">
@@ -79,7 +75,7 @@ else
         
             Acuerdo.FechaDesde = DateTime.Today;
             Acuerdo.FechaHasta = DateTime.Today.AddMonths(1);
-            Acuerdo.Activo = true;
+            Acuerdo.IdEstado = AcuerdosEstadoEnum.PendienteAprobacion;
 
             AcuerdoCliente.Acuerdos ??= [];
         }

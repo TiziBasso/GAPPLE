@@ -1,4 +1,5 @@
-﻿using GAPPLE.Shared.Helpers;
+﻿using GAPPLE.Shared.Enums;
+using GAPPLE.Shared.Helpers;
 using System.ComponentModel.DataAnnotations;
 
 namespace GAPPLE.Shared.Model
@@ -20,7 +21,11 @@ namespace GAPPLE.Shared.Model
 
         public DateTime? FechaHasta { get; set; }
 
-        public bool Activo { get; set; }
+        public AcuerdosEstadoEnum? IdEstado { get; set; }
+
+        public bool Vigente => FechaDesde == null || FechaHasta == null ? false : FechaDesde.Value < DateTime.Now & DateTime.Now < FechaHasta.Value;
+
+        public string DescripcionEstado { get; set; }
 
         public object Clone() => MemberwiseClone();
     }

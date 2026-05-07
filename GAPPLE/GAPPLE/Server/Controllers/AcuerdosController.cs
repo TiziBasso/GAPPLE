@@ -1,9 +1,11 @@
 ﻿using GAPPLE.Server.Data;
 using GAPPLE.Server.Helpers;
+using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 
 namespace GAPPLE.Server.Controllers
@@ -56,14 +58,12 @@ namespace GAPPLE.Server.Controllers
                 {
                     IdAcuerdo = (int)row["IdAcuerdo"],
                     IdCliente = aux.IdCliente,
-                    //TODO: decidir cual
-                    //IdEstado = (enum)row["IdEstado"]
-                    //Aprobado = (bool)row["IdEstado"]
                     Linea = (string)row["Linea"],
                     Condicion = (string)row["Condicion"],
                     FechaDesde = (DateTime)row["FechaDesde"],
                     FechaHasta = (DateTime)row["FechaHasta"],
-                    Activo = (bool)row["Activo"]
+                    IdEstado = (AcuerdosEstadoEnum)int.Parse(row["IdEstado"].ToString()),
+                    DescripcionEstado = row["DescripcionEstado"].ToString()
                 });
             }
 
@@ -90,6 +90,39 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 new DA_Acuerdos(connectionString).EditarAcuerdo(acuerdo);
+                return Ok(acuerdo);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
+        [HttpPut("estado/{idEstado:int}")]
+        public IActionResult PutEstadoAcuerdo(AcuerdosEstadoEnum idEstado, [FromBody] Acuerdo acuerdo)
+        {
+            try
+            {
+                DA_Acuerdos daA = new(connectionString);
+                ToolsController tC = new(Configuration);
+                using DataTable dt = daA.ObtenerAcuerdos(new() { IdAcuerdo = acuerdo.IdAcuerdo });
+
+                if (dt == null || dt.Rows.Count == 0)
+                    ModelState.AddModelError("errores", "No se econtró el acuerdo, realice la búsqueda nuevamente.");
+                else if ((AcuerdosEstadoEnum)int.Parse(dt.Rows[0]["IdEstado"].ToString()) != acuerdo.IdEstado)
+                    ModelState.AddModelError("errores", "El acuerdo cambio de estado, realice la búsqueda nuevamente.");
+                else
+                {
+                    var estados = tC.ObtenerEstado<AcuerdosEstadoEnum>(new() { Seccion = "Acuerdos" });
+                    acuerdo.DescripcionEstado = estados.First(x => x.Id == idEstado).Descripcion;
+                    acuerdo.IdEstado = idEstado;
+                    acuerdo.EdicionRegistro = DateTime.Now;
+                    daA.EditarAcuerdo(new() { IdAcuerdo = acuerdo.IdAcuerdo, IdEstado = acuerdo.IdEstado, EdicionUsuario = acuerdo.EdicionUsuario });
+                }
+
+                if (ModelState.ErrorCount > 0)
+                    return BadRequest(ModelState);
+
                 return Ok(acuerdo);
             }
             catch (Exception ex)

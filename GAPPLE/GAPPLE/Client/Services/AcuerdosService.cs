@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 using System.Net;
 using GAPPLE.Shared.Requests;
+using GAPPLE.Shared.Enums;
 
 namespace GAPPLE.Client.Services
 {
@@ -53,6 +54,17 @@ namespace GAPPLE.Client.Services
 
         public async Task<Response> DeleteAcuerdos(Acuerdo acuerdo) =>
             await Response.CreateAsync(await HttpClient.DeleteAsync($"{URI_BASE}/{acuerdo.IdAcuerdo}"));
+
+        public async Task<Response> CambiarEstadoAcuerdo(Acuerdo acuerdo, AcuerdosEstadoEnum idEstado)
+        {
+            acuerdo.EdicionUsuario = SesionDTO.Nombre;
+            var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/estado/{(int)idEstado}", acuerdo);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Acuerdo>());
+
+            return await Response.CreateAsync(response);
+        }
 
         #region AcuerdosMontos
         public async Task<Response> GetAcuerdosMontos(AcuerdoMontosRequest request)
