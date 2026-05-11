@@ -141,7 +141,6 @@ else
     [Parameter] public Acuerdo Acuerdo { get; set; }
 
     bool showPage;
-    bool permiteAlta, permiteEdicion;
     int render;
     RadzenDataGrid<AcuerdoMontoGrid> grid;
     List<AcuerdoMontoGrid> acuerdosMontos = [];
@@ -219,7 +218,7 @@ else
         await AbrirModal($"Monto del acuerdo {acuerdoMonto.IdAcuerdo}", (AcuerdoMonto)acuerdoMonto.Clone(), TipoOperacionEnum.Edicion);
 
     private async Task AbrirModal(string title, AcuerdoMonto acuerdoMonto, TipoOperacionEnum operacion) =>
-        await RadzenDialogService.OpenAsync<AcuerdosMontoForm>(title, new() { { "AcuerdoCliente", AcuerdoCliente }, { "AcuerdoMonto", acuerdoMonto}, { "TipoOperacion", operacion },
+        await RadzenDialogService.OpenAsync<AcuerdosMontoForm>(title, new() { { "AcuerdoCliente", AcuerdoCliente }, { "Acuerdo", Acuerdo}, { "AcuerdoMonto", acuerdoMonto}, { "TipoOperacion", operacion },
                                                             { "OnSave", EventCallback.Factory.Create<AcuerdoMonto>(this, OnSave) } }, new() { Height = "40rem", Width = "50rem" });
 
     private async Task OnSave(AcuerdoMonto acuerdoMonto)

@@ -4,6 +4,7 @@
     {
         PendienteAprobacion = 40,
         Activo = 41,
-        Caducado = 42
+        Caducado = 42,
+        Cancelado = 43
     }
 }

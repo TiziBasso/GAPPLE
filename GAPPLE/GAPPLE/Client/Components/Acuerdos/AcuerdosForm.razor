@@ -9,7 +9,8 @@
 {
     <RadzenTemplateForm EditContext="editContext" Data="Acuerdo" TItem="Acuerdo" Submit="Guardar">
         <DataAnnotationsValidator />
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:100%">
                 <RadzenLabel Text="Cliente:" />
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
@@ -21,7 +22,7 @@
             </RadzenStack>
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Fecha desde:" Component="fechaDesde" />
                 <RadzenDatePicker @bind-Value="Acuerdo.FechaDesde" Name="fechaDesde" DateFormat="dd/MM/yyyy" Style="width:100%" />
@@ -33,13 +34,13 @@
             </RadzenStack>
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Linea:" Component="linea" />
                 <RadzenDropDown Data="lineas" @bind-Value="Acuerdo.Linea" Style="width:100%" Disabled="@disabledInput" />
                 <ValidationMessage For="@(() => Acuerdo.Linea)" />
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Condición:" Component="condicion" />
                 <RadzenTextBox @bind-Value="Acuerdo.Condicion" Name="condicion" Style="width:100%" maxlength="150" AutoCompleteType="AutoCompleteType.Off" />
                 <ValidationMessage For="@(() => Acuerdo.Condicion)" />

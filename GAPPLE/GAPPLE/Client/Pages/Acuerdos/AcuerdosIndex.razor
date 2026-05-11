@@ -58,7 +58,8 @@
         </Columns>
         <Template Context="cliente">
             <RadzenDataGrid TItem="Acuerdo" Data="AplicarFiltros(cliente.Acuerdos)" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize="true"
-                            ShowEmptyMessage="false" Density="Density.Compact" Style="height:20rem;" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="70px">
+                            ShowEmptyMessage="false" Density="Density.Compact" Style="height:20rem;" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="70px"
+                            CellRender="@CellRender">
                 <Columns>
                     <RadzenDataGridColumn Property="@nameof(Acuerdo.Linea)" Title="Linea" Width="120px" />
                     
@@ -94,7 +95,16 @@
                         </Template>
                     </RadzenDataGridColumn>
 
-                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEdicion
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteCancelar
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Cancelar acuerdo"
+                                          Visible="@(acuerdo.IdEstado == AcuerdosEstadoEnum.Activo)"
+                                          Click="@(() => CancelarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteMontos
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
                             <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Total ingresado"
@@ -110,7 +120,7 @@
                         </Template>
                     </RadzenDataGridColumn>
 
-                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEdicion
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEliminar
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
                             <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Eliminar acuerdo"
@@ -142,7 +152,7 @@ else
     List<string> lineas = [];
     List<Estado<AcuerdosEstadoEnum?>> estados = [];
 
-    bool permiteAlta, permiteEdicion, permiteAprobacion;
+    bool permiteAlta, permiteEdicion, permiteAprobacion, permiteMontos, permiteEliminar, permiteCancelar;
     DateTime? desdeFilter, hastaFilter;
 
     protected override async Task OnInitializedAsync()
@@ -152,6 +162,9 @@ else
         permiteAlta = permisos.Contains(Permisos.Alta);
         permiteEdicion = permisos.Contains(Permisos.Edicion);
         permiteAprobacion = permisos.Contains(Permisos.Aprobacion);
+        permiteMontos = permisos.Contains(Permisos.Montos);
+        permiteEliminar = permisos.Contains(Permisos.Eliminar);
+        permiteCancelar = permisos.Contains(Permisos.Cancelar);
 
         estados = await ToolsService.GetEstados<AcuerdosEstadoEnum?>(new() { Seccion = "Acuerdos", ShowNull = true });
         lineas = await ProductosService.GetLineas();
@@ -241,23 +254,34 @@ else
             RadzenDialogService.NotifyInternalServerError();
     }
 
-    private async Task AprobarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo)
+    private async Task AprobarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
+        await CambiarEstadoAcuerdo(acuerdoCliente, acuerdo, AcuerdosEstadoEnum.Activo, "aprobar", "Aprobando...");
+
+    private async Task CancelarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
+        await CambiarEstadoAcuerdo(acuerdoCliente, acuerdo, AcuerdosEstadoEnum.Cancelado, "cancelar", "Cancelando...");
+
+    private async Task CambiarEstadoAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo, AcuerdosEstadoEnum nuevoEstado, string operacion, string loadingText)
     {
-        if (await RadzenDialogService.ConfirmOperation("aprobar", "el acuerdo"))
+        if (await RadzenDialogService.ConfirmOperation(operacion, "el acuerdo"))
         {
-            RadzenDialogService.OpenBusyWithLoader("Aprobando...");
-            var response = await AcuerdosService.CambiarEstadoAcuerdo(acuerdo, AcuerdosEstadoEnum.Activo);
+            RadzenDialogService.OpenBusyWithLoader(loadingText);
+
+            var response = await AcuerdosService.CambiarEstadoAcuerdo(acuerdo, nuevoEstado);
+
             RadzenDialogService.CloseDialog();
 
             if (response.IsOk)
             {
-                var index = acuerdoCliente.Acuerdos.IndexOf(acuerdoCliente.Acuerdos.First(x => x.IdAcuerdo == acuerdo.IdAcuerdo));
-                acuerdoCliente.Acuerdos[index] = (Acuerdo)response.Data;
+                var index = acuerdoCliente.Acuerdos.FindIndex(x => x.IdAcuerdo == acuerdo.IdAcuerdo);
+
+                if (index >= 0)
+                    acuerdoCliente.Acuerdos[index] = (Acuerdo)response.Data;
+
                 await grid.Reload();
             }
-            else if (response.Errors != null && response.Errors.Count > 0)
+            else if (response.Errors?.Count > 0)
                 RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
-            else if (response.Message != null)
+            else if (!string.IsNullOrWhiteSpace(response.Message))
                 RadzenDialogService.ShowAlert(response.Message, MensajesHelper.Title);
             else
                 RadzenDialogService.NotifyInternalServerError();
@@ -311,6 +335,12 @@ else
             cliente.Acuerdos.Add(acuerdoCliente.Acuerdos[0]);
         }
         await grid.Reload();
+    }
+
+    void CellRender(RowRenderEventArgs<Acuerdo> args)
+    {
+        if (args.Data.IdEstado == AcuerdosEstadoEnum.Activo)
+            args.Attributes.Add("style", $"background-color: var(--rz-success-lighter);");
     }
 
     private async Task OnKeyDown(string key)
