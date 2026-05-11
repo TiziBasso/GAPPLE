@@ -121,6 +121,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pFecha", comprobante.FechaComprobante);
             cmd.Parameters.AddWithValue("@pImporteTotal", comprobante.ImporteTotal);
             cmd.Parameters.AddWithValue("@pMercaderiaIngresada", comprobante.MercaderiaIngresada);
+            cmd.Parameters.AddWithValue("@pComprobanteReferencia", comprobante.ComprobanteReferencia);
             if (!string.IsNullOrWhiteSpace(comprobante.Observaciones))
                 cmd.Parameters.AddWithValue("@pObservaciones", comprobante.Observaciones);
             else
