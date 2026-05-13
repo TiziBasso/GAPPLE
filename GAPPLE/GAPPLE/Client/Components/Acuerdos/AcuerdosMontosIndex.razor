@@ -6,6 +6,32 @@
 
 @if (showPage)
 {
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 Gap="2rem"
+                 class="mb-3">
+
+        <RadzenStack Gap="0">
+            <RadzenLabel Text="Cód. cliente" />
+            <RadzenLabel Text="@AcuerdoCliente.CodigoCliente" Style="font-weight: bold;" />
+        </RadzenStack>
+
+        <RadzenStack Gap="0">
+            <RadzenLabel Text="Razón social" />
+            <RadzenLabel Text="@AcuerdoCliente.RazonSocial" Style="font-weight: bold;" />
+        </RadzenStack>
+
+        <RadzenStack Gap="0">
+            <RadzenLabel Text="Línea" />
+            <RadzenLabel Text="@Acuerdo.Linea" Style="font-weight: bold;" />
+        </RadzenStack>
+
+        <RadzenStack Gap="0">
+            <RadzenLabel Text="Condición" />
+            <RadzenLabel Text="@Acuerdo.Condicion" Style="font-weight: bold;" />
+        </RadzenStack>
+
+    </RadzenStack>
+
     <RadzenDataGrid @ref="grid" TItem="AcuerdoMontoGrid" Data="acuerdosMontos" AllowFiltering="true"
                     FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize="true" Density="Density.Compact"
                     AllowGrouping="true" HideGroupedColumn="true" ShowEmptyMessage="false" Style="height:60vh"
@@ -35,11 +61,11 @@
                                   Width="140px">
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Id)"
+            @* <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Id)"
                                   Title="Id monto"
                                   TextAlign="TextAlign.Right"
                                   Width="120px"
-                                  Groupable="false" />
+                                  Groupable="false" /> *@
 
             <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Fecha)"
                                   Title="Fecha"
@@ -48,9 +74,10 @@
                                   Width="140px" Filterable="false"
                                   Groupable="false" />
 
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Monto)" Width="180px"
-                                  Title="Monto">
-
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Monto)" Width="180px" Title="Monto" TextAlign="TextAlign.Right">
+                <Template>
+                    $ @context.Monto.ToString("N2")
+                </Template>
                 <GroupFooterTemplate Context="group">
                     @{
                         var total = group.Data.Items
@@ -63,25 +90,14 @@
 
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.CodigoCliente)"
-                                  Title="Cód. cliente"
-                                  Width="120px" />
-
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.RazonSocial)"
-                                  Title="Razón social"
-                                  Width="150px" />
-
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Linea)"
-                                  Title="Linea" />
-
-            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Condicion)"
-                                  Title="Condición" />
-
+            <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.Notas)"
+                                  Title="Notas" />
+            @*
             <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.IdComprobante)"
                                   Title="Id NC" />
 
             <RadzenDataGridColumn Property="@nameof(AcuerdoMontoGrid.NumeroNC)"
-                                  Title="N° NC" />
+                                  Title="N° NC" /> *@
 
             <RadzenDataGridColumn Frozen="true"
                                   FrozenPosition="FrozenColumnPosition.Right"
@@ -139,6 +155,7 @@ else
 @code {
     [Parameter] public AcuerdoCliente AcuerdoCliente { get; set; }
     [Parameter] public Acuerdo Acuerdo { get; set; }
+    [Parameter] public EventCallback Reload { get; set; }
 
     bool showPage;
     int render;
@@ -195,6 +212,8 @@ else
             {
                 RadzenDialogService.NotifySuccess("El monto", "se ha eliminado");
                 acuerdosMontos.RemoveAll(x => x.Id == acuerdoMonto.Id);
+                Acuerdo.MontosCargados--;
+                await Reload.InvokeAsync();
                 await grid.Reload();
             }
             else
@@ -226,6 +245,8 @@ else
         RadzenDialogService.CloseDialog();
         acuerdosMontos.RemoveAll(x => x.Id == acuerdoMonto.Id);
         acuerdosMontos.Add(new() { AcuerdoMonto = acuerdoMonto });
+        Acuerdo.MontosCargados++;
+        await Reload.InvokeAsync();
         await grid.Reload();
     }
 
@@ -248,5 +269,6 @@ else
         public string Condicion => AcuerdoMonto.Condicion;
         public int? IdComprobante => AcuerdoMonto.IdComprobante;
         public string NumeroNC => AcuerdoMonto.NumeroNC;
+        public string Notas => AcuerdoMonto.Notas;
     }
 }

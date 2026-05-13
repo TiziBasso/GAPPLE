@@ -116,7 +116,7 @@
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
                             <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Editar acuerdo"
-                                          Click="@(() => EditarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                                          Click="@(() => EditarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" Visible="@(acuerdo.MontosCargados == 0)" />
                         </Template>
                     </RadzenDataGridColumn>
 
@@ -245,6 +245,8 @@ else
                 {
                     RadzenDialogService.NotifySuccess("El acuerdo", "se eliminado");
                     acuerdoCliente.Acuerdos.Remove(acuerdo);
+                    if (acuerdoCliente.Acuerdos.Count == 0)
+                        acuerdosClientes.Remove(acuerdoCliente);
                     await grid.Reload();
                 }
                 else
@@ -289,9 +291,12 @@ else
         }
     }
 
-    private async Task InfoAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
-        await RadzenDialogService.OpenAsync<AcuerdosMontosIndex>($"Acuerdo {acuerdo.IdAcuerdo}", new() { { "AcuerdoCliente", acuerdoCliente }, { "Acuerdo", acuerdo } },
-                                                                new() { Width = "90vw", Height = "90vh" });
+    private async Task InfoAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo)
+    {
+        await RadzenDialogService.OpenAsync<AcuerdosMontosIndex>($"Acuerdo {acuerdo.IdAcuerdo}", new() { { "AcuerdoCliente", acuerdoCliente }, { "Acuerdo", acuerdo },
+                                                                                                        { "Reload", EventCallback.Factory.Create(this, async ()=>await grid.Reload()) } },
+                                                                    new() { Width = "90vw", Height = "90vh" });
+    }
 
     private async Task AgregarAcuerdo() =>
         await AbrirModal(new(), new(), TipoOperacionEnum.Alta);
