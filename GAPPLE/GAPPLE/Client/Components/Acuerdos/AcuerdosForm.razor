@@ -9,11 +9,12 @@
 {
     <RadzenTemplateForm EditContext="editContext" Data="Acuerdo" TItem="Acuerdo" Submit="Guardar">
         <DataAnnotationsValidator />
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:100%">
                 <RadzenLabel Text="Cliente:" />
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
-                    <TextBoxInput @bind-Value="Acuerdo.RazonSocial" style="width:90%" disabled=@true />
+                    <TextBoxInput @bind-Value="AcuerdoCliente.RazonSocial" style="width:90%" disabled=@true />
                     <RadzenButton Size="ButtonSize.Medium" Icon="list" Style="width:10%" ButtonStyle="ButtonStyle.Secondary" Disabled="disabledInput"
                                   Click="@SeleccionarCliente" />
                 </RadzenStack>
@@ -21,7 +22,7 @@
             </RadzenStack>
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Fecha desde:" Component="fechaDesde" />
                 <RadzenDatePicker @bind-Value="Acuerdo.FechaDesde" Name="fechaDesde" DateFormat="dd/MM/yyyy" Style="width:100%" />
@@ -33,20 +34,16 @@
             </RadzenStack>
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%" class="rz-mb-4">
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Linea:" Component="linea" />
                 <RadzenDropDown Data="lineas" @bind-Value="Acuerdo.Linea" Style="width:100%" Disabled="@disabledInput" />
                 <ValidationMessage For="@(() => Acuerdo.Linea)" />
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:35%">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
                 <RadzenLabel Text="Condición:" Component="condicion" />
-                <TextBoxInput @bind-Value="Acuerdo.Condicion" Name="condicion" Style="width:100%" maxlength="150" />
+                <RadzenTextBox @bind-Value="Acuerdo.Condicion" Name="condicion" Style="width:100%" maxlength="150" AutoCompleteType="AutoCompleteType.Off" />
                 <ValidationMessage For="@(() => Acuerdo.Condicion)" />
-            </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:30%" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                <RadzenLabel Text="Activo:" Component="activo" />
-                <RadzenCheckBox @bind-Value="Acuerdo.Activo" Name="activo" />
             </RadzenStack>
         </RadzenStack>
 
@@ -63,8 +60,9 @@ else
 
 @code {
     [Parameter] public TipoOperacionEnum TipoOperacion { get; set; }
+    [Parameter] public AcuerdoCliente AcuerdoCliente { get; set; } = null;
     [Parameter] public Acuerdo Acuerdo { get; set; } = null;
-    [Parameter] public EventCallback<Acuerdo> OnSave { get; set; }
+    [Parameter] public EventCallback<AcuerdoCliente> OnSave { get; set; }
     bool showForm, disabledInput;
     List<string> lineas = [];
     EditContext editContext;
@@ -73,7 +71,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         if (TipoOperacion == TipoOperacionEnum.Alta)
-            Acuerdo = new() { FechaDesde = DateTime.Today, FechaHasta = DateTime.Today.AddMonths(1), Activo = true };
+        {
+            Acuerdo ??= new();
+        
+            Acuerdo.FechaDesde = DateTime.Today;
+            Acuerdo.FechaHasta = DateTime.Today.AddMonths(1);
+            Acuerdo.IdEstado = AcuerdosEstadoEnum.PendienteAprobacion;
+
+            AcuerdoCliente.Acuerdos ??= [];
+        }
         else
         {
             if (Acuerdo == null)
@@ -100,6 +106,9 @@ else
     {
         messageStore?.Clear();
 
+        if (Acuerdo.IdCliente == null)
+            messageStore?.Add(() => Acuerdo.IdCliente, "Debe seleccionar un cliente");
+
         if (string.IsNullOrWhiteSpace(Acuerdo.Condicion))
             messageStore?.Add(() => Acuerdo.Condicion, "Debe ingresar una condición");
         else if (Acuerdo.Condicion.Length > 150)
@@ -122,9 +131,11 @@ else
 
             if (response.IsOk)
             {
+                Acuerdo.IdAcuerdo = ((Acuerdo)response.Data).IdAcuerdo;
                 RadzenDialogService.NotifySuccess();
+                AcuerdoCliente.Acuerdos.Add(Acuerdo);
                 if (OnSave.HasDelegate)
-                    await OnSave.InvokeAsync((Acuerdo)response.Data);
+                    await OnSave.InvokeAsync(AcuerdoCliente);
             }
             else if (response.IsBadRequest)
                 RadzenDialogService.ShowAlert(response.Errors);
@@ -143,11 +154,11 @@ else
     private void OnSelectCliente(Cliente cliente)
     {
         RadzenDialogService.CloseDialog();
-        Acuerdo.IdCliente = cliente.IdCliente;
+        Acuerdo.IdCliente = (int)cliente.IdCliente;
         editContext.NotifyFieldChanged(editContext.Field(nameof(Acuerdo.IdCliente)));
-        Acuerdo.RazonSocial = cliente.RazonSocial;
-        Acuerdo.CodigoCliente = cliente.CodigoCliente;
-        Acuerdo.CUIT = cliente.CUIT;
+        AcuerdoCliente.IdCliente = (int)cliente.IdCliente;
+        AcuerdoCliente.RazonSocial = cliente.RazonSocial;
+        AcuerdoCliente.CodigoCliente = cliente.CodigoCliente;
     }
 
     private async Task Cancelar()

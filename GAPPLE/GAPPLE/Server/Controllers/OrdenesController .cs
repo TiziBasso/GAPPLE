@@ -1,12 +1,11 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using GAPPLE.Client.Entities;
+﻿using GAPPLE.Client.Entities;
 using GAPPLE.Server.Data;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Net;
 using System.Text.Json;
 
@@ -113,7 +112,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction? trans)
+        public Orden GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction trans)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;

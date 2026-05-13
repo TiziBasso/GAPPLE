@@ -1,40 +1,32 @@
-﻿using GAPPLE.Shared.Helpers;
+﻿using GAPPLE.Shared.Enums;
+using GAPPLE.Shared.Helpers;
 using System.ComponentModel.DataAnnotations;
 
 namespace GAPPLE.Shared.Model
 {
-    public class Acuerdo : RegistroUsuario
+    public class Acuerdo : RegistroUsuario, ICloneable
     {
-        [ColumnName("IdAcuerdo")]
         public int IdAcuerdo { get; set; }
 
-        [ColumnName("IdCliente")]
-        [Required(ErrorMessage = "Debe seleccionar un cliente")]
         public int? IdCliente { get; set; }
 
-        [ColumnName("CodigoCliente")]
-        public string CodigoCliente { get; set; }
-
-        [ColumnName("RazonSocial")]
-        public string RazonSocial { get; set; }
-
-        [ColumnName("CUIT")]
-        public string CUIT { get; set; }
-
-        [ColumnName("Linea")]
         [Required(ErrorMessage = "Debe seleccionar una linea")]
         public string Linea { get; set; }
 
-        [ColumnName("Condicion")]
+        public bool Aprobado { get; set; }
+
         public string Condicion { get; set; }
 
-        [ColumnName("FechaDesde")]
         public DateTime? FechaDesde { get; set; }
 
-        [ColumnName("FechaHasta")]
         public DateTime? FechaHasta { get; set; }
 
-        [ColumnName("Activo")]
-        public bool Activo { get; set; }
+        public AcuerdosEstadoEnum? IdEstado { get; set; }
+
+        public bool Vigente => FechaDesde == null || FechaHasta == null ? false : FechaDesde.Value < DateTime.Now & DateTime.Now < FechaHasta.Value;
+
+        public string DescripcionEstado { get; set; }
+
+        public object Clone() => MemberwiseClone();
     }
 }

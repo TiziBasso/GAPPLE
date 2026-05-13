@@ -6,6 +6,7 @@
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject SeguridadService SeguridadService
 @inject ProductosService ProductosService
+@inject ToolsService ToolsService
 
 @if (showPage)
 {
@@ -34,20 +35,10 @@
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
-            <RadzenLabel Text="CUIT:" Component="cuit" />
-            <TextBoxInput @bind-Value=request.CUIT id="cuit" OnKeyDown="OnKeyDown" />
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Vertical">
-            <RadzenLabel Text="Linea:" Component="linea" />
-            <RadzenDropDown Data=@lineas @bind-Value=@request.Linea Name="linea" AllowClear=true Style="width: 15rem;" />
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Estado:" Component="estado" />
-            <RadzenDropDown Data=@Variables.EstadosActivo @bind-Value=@request.Activo Name="estado"
-                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion)
-                            Placeholder="Ambos" AllowClear=true Style="width: 7rem;" />
+            <RadzenDropDown Data=@estados @bind-Value=@request.IdEstado Name="estado"
+                            ValueProperty=@nameof(Estado<AcuerdosEstadoEnum>.Id) TextProperty=@nameof(Estado<AcuerdosEstadoEnum>.Descripcion)
+                            Placeholder="(Todos)" AllowClear=true Style="width: 13rem;" />
         </RadzenStack>
 
         <RadzenButton Text="Buscar" Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" Click="FillAcuerdos" />
@@ -57,45 +48,88 @@
         <RadzenButton Text="Agregar acuerdo" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="AgregarAcuerdo" Visible=@(permiteAlta) />
     </RadzenStack>
 
-    <RadzenDataGrid @ref="grid" TItem="Acuerdo" Data="acuerdosFiltrados" AllowFiltering=true FilterMode="FilterMode.Simple" AllowSorting=true
-                    AllowColumnResize=true Density=Density.Compact AllowGrouping="true" HideGroupedColumn="true"
-                    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
-        <GroupHeaderTemplate Context="group">
-            @{
-                var item = group.Data.Items.Cast<Acuerdo>().FirstOrDefault();
-            }
-
-            (@item?.CodigoCliente) <b>@item?.RazonSocial</b> - @item?.CUIT
-        </GroupHeaderTemplate>
+    <RadzenDataGrid @ref="grid" TItem="AcuerdoCliente" Data="acuerdosClientes" AllowFiltering=true FilterMode="FilterMode.Simple" AllowSorting=true
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ExpandMode="DataGridExpandMode.Single"
+                    AllowColumnResize=true Density=Density.Compact
+                    ShowEmptyMessage="false" Style="height:60vh" ColumnWidth="30px">
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.IdAcuerdo)" Title="Cód. acuerdo" TextAlign="TextAlign.Right" Width="120px" Groupable="false" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.CodigoCliente)" Title="Cód. cliente" Width="120px" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.RazonSocial)" Title="Razón social" Width="150px" />
-            @* <RadzenDataGridColumn Property="@nameof(Acuerdo.CUIT)" Title="CUIT" /> *@
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.Linea)" Title="Linea" />
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaDesde)" Title="Fecha desde" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false">
-                <FilterTemplate>
-                    <RadzenDatePicker @bind-Value=desdeFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
-                </FilterTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaHasta)" Title="Fecha hasta" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false">
-                <FilterTemplate>
-                    <RadzenDatePicker @bind-Value=hastaFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
-                </FilterTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Acuerdo.Activo)" Title="Activo" TextAlign=TextAlign.Center Filterable="false" Width="70px" Groupable="false">
-                <Template>
-                    <RadzenCheckBox Value="context.Activo" ReadOnly=true Style="cursor:default" />
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEdicion
-                                  Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
-                <Template Context="acuerdo">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => EditarAcuerdo(acuerdo))" @onclick:stopPropagation="true" />
-                </Template>
-            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(AcuerdoCliente.CodigoCliente)" Title="Cód. cliente" Width="120px" />
+            <RadzenDataGridColumn Property="@nameof(AcuerdoCliente.RazonSocial)" Title="Razón social" Width="150px" />
         </Columns>
+        <Template Context="cliente">
+            <RadzenDataGrid TItem="Acuerdo" Data="AplicarFiltros(cliente.Acuerdos)" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize="true"
+                            ShowEmptyMessage="false" Density="Density.Compact" Style="height:20rem;" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="70px"
+                            CellRender="@CellRender">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.Linea)" Title="Linea" Width="120px" />
+                    
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.Condicion)" Title="Linea" Width="120px" />
+                    
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.DescripcionEstado)" Title="Estado" Filterable="false" Width="100px" Groupable="false" />
+
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaDesde)" Title="Fecha desde" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false"
+                                          FilterMode="FilterMode.Simple">
+                        <FilterTemplate>
+                            <RadzenDatePicker @bind-Value=desdeFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+                        </FilterTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.FechaHasta)" Title="Fecha hasta" FormatString="{0:dd/MM/yyyy}" TextAlign=TextAlign.Center Width="100px" Groupable="false"
+                                          FilterMode="FilterMode.Simple">
+                        <FilterTemplate>
+                            <RadzenDatePicker @bind-Value=hastaFilter Max="DateTime.Today" AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
+                        </FilterTemplate>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.Vigente)" Title="Vigente" TextAlign=TextAlign.Center Filterable="false" Width="70px" Groupable="false">
+                        <Template>
+                            <RadzenCheckBox Value="context.Vigente" ReadOnly=true Style="cursor:default" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteAprobacion
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Aprobar"
+                                          Click="@(() => AprobarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true"
+                                          Visible="@(acuerdo.IdEstado == AcuerdosEstadoEnum.PendienteAprobacion && acuerdo.Vigente)" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteCancelar
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Cancelar acuerdo"
+                                          Visible="@(acuerdo.IdEstado == AcuerdosEstadoEnum.Activo)"
+                                          Click="@(() => CancelarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteMontos
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Total ingresado"
+                                          Click="@(() => InfoAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEdicion
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Editar acuerdo"
+                                          Click="@(() => EditarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteEliminar
+                                          Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
+                        <Template Context="acuerdo">
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Eliminar acuerdo"
+                                          Click="@(() => DeleteAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </Template>
     </RadzenDataGrid>
 }
 else
@@ -109,16 +143,16 @@ else
     {
         FechaDesde = DateTime.Now.AddMonths(-1),
         FechaHasta = DateTime.Now.EndOfDay(),
-        Activo = true
+        IdEstado = AcuerdosEstadoEnum.Activo
     };
 
-    RadzenDataGrid<Acuerdo> grid;
-    List<Acuerdo> acuerdos = [];
-    List<Acuerdo> acuerdosFiltrados => AplicarFiltros();
+    RadzenDataGrid<AcuerdoCliente> grid;
+    List<AcuerdoCliente> acuerdosClientes = [];
     int render = 0;
     List<string> lineas = [];
+    List<Estado<AcuerdosEstadoEnum?>> estados = [];
 
-    bool permiteAlta, permiteEdicion;
+    bool permiteAlta, permiteEdicion, permiteAprobacion, permiteMontos, permiteEliminar, permiteCancelar;
     DateTime? desdeFilter, hastaFilter;
 
     protected override async Task OnInitializedAsync()
@@ -127,7 +161,12 @@ else
         var permisos = await SeguridadService.GetPermisos(Permisos.Menu.Acuerdos);
         permiteAlta = permisos.Contains(Permisos.Alta);
         permiteEdicion = permisos.Contains(Permisos.Edicion);
+        permiteAprobacion = permisos.Contains(Permisos.Aprobacion);
+        permiteMontos = permisos.Contains(Permisos.Montos);
+        permiteEliminar = permisos.Contains(Permisos.Eliminar);
+        permiteCancelar = permisos.Contains(Permisos.Cancelar);
 
+        estados = await ToolsService.GetEstados<AcuerdosEstadoEnum?>(new() { Seccion = "Acuerdos", ShowNull = true });
         lineas = await ProductosService.GetLineas();
 
         if (ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.Acuerdos && ParametrosDeConsulta.Parametros.Any())
@@ -149,34 +188,32 @@ else
         {
             await FillAcuerdos();
             StateHasChanged();
-            grid.Groups.Add(new GroupDescriptor() { Property = nameof(Acuerdo.RazonSocial), Title = "Razón social" });
             await grid.Reload();
-            await grid.ReloadSettings();
         }
     }
 
-    private List<Acuerdo> AplicarFiltros()
+    private List<Acuerdo> AplicarFiltros(List<Acuerdo> acuerdos)
     {
-        var q = acuerdos.AsQueryable();
+        var aux = acuerdos.AsQueryable();
 
-        q = q.FilterDate(x => x.FechaDesde, desdeFilter);
-        q = q.FilterDate(x => x.FechaHasta, hastaFilter);
+        if (desdeFilter != null) aux = aux.FilterDate(x => x.FechaDesde, desdeFilter);
+        if (hastaFilter != null) aux = aux.FilterDate(x => x.FechaHasta, hastaFilter);
 
-        return q.ToList();
+        return aux.ToList();
     }
 
     private async Task FillAcuerdos()
     {
         RadzenDialogService.OpenBusyWithLoader("Buscando...");
-        acuerdos.Clear();
+        acuerdosClientes.Clear();
         var response = await AcuerdosService.GetAcuerdos(request);
         RadzenDialogService.CloseDialog();
         if (response.IsOk)
         {
             ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.Acuerdos, new() { { "request", request } });
-            var aux = (List<Acuerdo>)response.Data;
+            var aux = (List<AcuerdoCliente>)response.Data;
             if (aux.Count > 0)
-                acuerdos = aux;
+                acuerdosClientes = aux;
             else
                 RadzenDialogService.NotifyEmptyResponse();
         }
@@ -186,26 +223,124 @@ else
             RadzenDialogService.NotifyInternalServerError();
     }
 
-    private async Task AgregarAcuerdo()
+    private async Task DeleteAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo)
     {
-        await RadzenDialogService.OpenAsync<AcuerdosForm>("Nuevo acuerdo", new() { { "TipoOperacion", TipoOperacionEnum.Alta },
-                                                            { "OnSave", EventCallback.Factory.Create<Acuerdo>(this, OnSave) } }, new() { Height = "25rem", Width = "50rem" });
-    }
-
-    private async Task EditarAcuerdo(Acuerdo acuerdo)
-    {
-        await RadzenDialogService.OpenAsync<AcuerdosForm>($"Acuerdo {acuerdo.IdAcuerdo}", new() { { "Acuerdo", acuerdo }, { "TipoOperacion", TipoOperacionEnum.Edicion },
-                                                            { "OnSave", EventCallback.Factory.Create<Acuerdo>(this, OnSave) } }, new() { Height = "25rem", Width = "50rem" });
-    }
-
-    private async Task OnSave(Acuerdo acuerdo)
-    {
-        if (acuerdos.Exists(x => x.IdAcuerdo == acuerdo.IdAcuerdo))
-            acuerdos.RemoveAll(x => x.IdAcuerdo == acuerdo.IdAcuerdo);
-
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        var aux = await AcuerdosService.GetAcuerdosMontos(new() { IdAcuerdo = acuerdo.IdAcuerdo });
         RadzenDialogService.CloseDialog();
-        acuerdos.Add(acuerdo);
+        if (aux.IsOk)
+        {
+            if (((List<AcuerdoMonto>)aux.Data).Count != 0)
+            {
+                await RadzenDialogService.Alert("El acuerdo no se puede eliminar porque ya tiene montos cargados", MensajesHelper.Title, RadzenHelper.Alert());
+                return;
+            }
+            else if (await RadzenDialogService.ConfirmOperation())
+            {
+                RadzenDialogService.OpenBusyWithLoader("Eliminando...");
+                var response = await AcuerdosService.DeleteAcuerdos(acuerdo);
+                RadzenDialogService.CloseDialog();
+                if (response.IsOk)
+                {
+                    RadzenDialogService.NotifySuccess("El acuerdo", "se eliminado");
+                    acuerdoCliente.Acuerdos.Remove(acuerdo);
+                    await grid.Reload();
+                }
+                else
+                    RadzenDialogService.NotifyInternalServerError();
+            }
+        }
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    private async Task AprobarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
+        await CambiarEstadoAcuerdo(acuerdoCliente, acuerdo, AcuerdosEstadoEnum.Activo, "aprobar", "Aprobando...");
+
+    private async Task CancelarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
+        await CambiarEstadoAcuerdo(acuerdoCliente, acuerdo, AcuerdosEstadoEnum.Cancelado, "cancelar", "Cancelando...");
+
+    private async Task CambiarEstadoAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo, AcuerdosEstadoEnum nuevoEstado, string operacion, string loadingText)
+    {
+        if (await RadzenDialogService.ConfirmOperation(operacion, "el acuerdo"))
+        {
+            RadzenDialogService.OpenBusyWithLoader(loadingText);
+
+            var response = await AcuerdosService.CambiarEstadoAcuerdo(acuerdo, nuevoEstado);
+
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
+            {
+                var index = acuerdoCliente.Acuerdos.FindIndex(x => x.IdAcuerdo == acuerdo.IdAcuerdo);
+
+                if (index >= 0)
+                    acuerdoCliente.Acuerdos[index] = (Acuerdo)response.Data;
+
+                await grid.Reload();
+            }
+            else if (response.Errors?.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors, MensajesHelper.Title);
+            else if (!string.IsNullOrWhiteSpace(response.Message))
+                RadzenDialogService.ShowAlert(response.Message, MensajesHelper.Title);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task InfoAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo) =>
+        await RadzenDialogService.OpenAsync<AcuerdosMontosIndex>($"Acuerdo {acuerdo.IdAcuerdo}", new() { { "AcuerdoCliente", acuerdoCliente }, { "Acuerdo", acuerdo } },
+                                                                new() { Width = "90vw", Height = "90vh" });
+
+    private async Task AgregarAcuerdo() =>
+        await AbrirModal(new(), new(), TipoOperacionEnum.Alta);
+
+    private async Task EditarAcuerdo(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo)
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        var aux = await AcuerdosService.GetAcuerdosMontos(new() { IdAcuerdo = acuerdo.IdAcuerdo });
+        RadzenDialogService.CloseDialog();
+
+        if (aux.IsOk)
+        {
+            if (((List<AcuerdoMonto>)aux.Data).Count != 0)
+                await RadzenDialogService.Alert("El acuerdo no se puede editar porque ya tiene montos cargados", MensajesHelper.Title, RadzenHelper.Alert());
+            else
+                await AbrirModal((AcuerdoCliente)acuerdoCliente.Clone(), (Acuerdo)acuerdo.Clone(), TipoOperacionEnum.Edicion);
+        }
+        else
+            RadzenDialogService.NotifyInternalServerError();
+
+    }
+
+    private async Task AbrirModal(AcuerdoCliente acuerdoCliente, Acuerdo acuerdo, TipoOperacionEnum operacion)
+    {
+        await RadzenDialogService.OpenAsync<AcuerdosForm>(operacion == TipoOperacionEnum.Edicion ? $"Acuerdo {acuerdo.IdAcuerdo}" : "Nuevo acuerdo",
+                                                        new() { { "AcuerdoCliente", acuerdoCliente}, { "Acuerdo", acuerdo }, { "TipoOperacion", operacion },
+                                                        { "OnSave", EventCallback.Factory.Create<AcuerdoCliente>(this, OnSave) } }, new() { Height = "25rem", Width = "50rem" });
+    }
+
+    private async Task OnSave(AcuerdoCliente acuerdoCliente)
+    {
+        RadzenDialogService.CloseDialog();
+        var cliente = acuerdosClientes.FirstOrDefault(x => x.IdCliente == acuerdoCliente.IdCliente);
+        if (cliente == null)
+        {
+            acuerdosClientes.Add(acuerdoCliente);
+        }
+        else
+        {
+
+            cliente.Acuerdos.RemoveAll(x => x.IdAcuerdo == acuerdoCliente.Acuerdos[0].IdAcuerdo);
+            cliente.Acuerdos.Add(acuerdoCliente.Acuerdos[0]);
+        }
         await grid.Reload();
+    }
+
+    void CellRender(RowRenderEventArgs<Acuerdo> args)
+    {
+        if (args.Data.IdEstado == AcuerdosEstadoEnum.Activo)
+            args.Attributes.Add("style", $"background-color: var(--rz-success-lighter);");
     }
 
     private async Task OnKeyDown(string key)

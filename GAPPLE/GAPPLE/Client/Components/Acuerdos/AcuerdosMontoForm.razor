@@ -1,0 +1,224 @@
+﻿@inject RadzenDialogService RadzenDialogService
+@inject ProductosService ProductosService
+@inject AcuerdosService AcuerdosService
+
+@if (showForm)
+{
+    <RadzenTemplateForm EditContext="editContext"
+                        Data="AcuerdoMonto"
+                        TItem="AcuerdoMonto"
+                        Submit="Guardar">
+
+        <DataAnnotationsValidator />
+
+        <!-- CLIENTE -->
+
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     Gap="0"
+                     Style="width:100%"
+                     class="rz-mb-4">
+
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="0"
+                         Style="width:20%">
+
+                <RadzenLabel Text="Código cliente:" />
+                <RadzenText TextStyle="TextStyle.Body1"
+                            Text="@AcuerdoMonto.CodigoCliente" />
+
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="0"
+                         Style="width:40%">
+
+                <RadzenLabel Text="Cliente:" />
+                <RadzenText TextStyle="TextStyle.Body1"
+                            Text="@AcuerdoMonto.RazonSocial" />
+
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="0"
+                         Style="width:20%">
+
+                <RadzenLabel Text="Línea:" />
+                <RadzenText TextStyle="TextStyle.Body1"
+                            Text="@AcuerdoMonto.Linea" />
+
+            </RadzenStack>
+
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical"
+                     Gap="0"
+                     Style="width:100%"
+                     class="rz-mb-4">
+
+            <RadzenLabel Text="Condición:" />
+            <RadzenText TextStyle="TextStyle.Body1"
+                        Text="@AcuerdoMonto.Condicion" />
+
+        </RadzenStack>
+
+        <!-- INPUTS -->
+
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     Gap="0"
+                     Style="width:100%"
+                     class="rz-mb-4">
+
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="0"
+                         Style="width:50%">
+
+                <RadzenLabel Text="Fecha:" Component="fecha" />
+
+                <RadzenDatePicker @bind-Value="AcuerdoMonto.Fecha"
+                                  Name="fecha"
+                                  DateFormat="dd/MM/yyyy HH:mm"
+                                  ShowTime="true"
+                                  Style="width:100%" />
+
+                <ValidationMessage For="@(() => AcuerdoMonto.Fecha)" />
+
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="0"
+                         Style="width:50%">
+
+                <RadzenLabel Text="Monto:" Component="monto" />
+
+                <NumberInput @bind-Value="AcuerdoMonto.Monto"
+                             id="monto" FormatType="FormatType.None"
+                             TValue="decimal"
+                             Style="width:100%" />
+
+                <ValidationMessage For="@(() => AcuerdoMonto.Monto)" />
+
+            </RadzenStack>
+
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical"
+                     Gap="0"
+                     Style="width:100%"
+                     class="rz-mb-4">
+
+            <RadzenLabel Text="Notas:" Component="notas" />
+
+            <RadzenTextArea @bind-Value="AcuerdoMonto.Notas"
+                            Name="notas"
+                            Style="width:100%; min-height:120px"
+                            maxlength="1000"
+                            AutoCompleteType="AutoCompleteType.Off" />
+
+            <ValidationMessage For="@(() => AcuerdoMonto.Notas)" />
+
+        </RadzenStack>
+
+        <!-- BOTONES -->
+
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     JustifyContent="JustifyContent.SpaceAround">
+
+            <RadzenButton Icon="cancel"
+                          Text="Cancelar"
+                          ButtonStyle="ButtonStyle.Danger"
+                          Click="Cancelar" />
+
+            <RadzenButton Icon="save"
+                          Text="Guardar"
+                          ButtonStyle="ButtonStyle.Success"
+                          ButtonType="ButtonType.Submit" />
+
+        </RadzenStack>
+
+    </RadzenTemplateForm>
+}
+else
+{
+    <Loader />
+}
+
+
+@code {
+    [Parameter] public TipoOperacionEnum TipoOperacion { get; set; }
+    [Parameter] public AcuerdoCliente AcuerdoCliente { get; set; } = null;
+    [Parameter] public AcuerdoMonto AcuerdoMonto { get; set; } = null;
+    [Parameter] public Acuerdo Acuerdo { get; set; } = null;
+    [Parameter] public EventCallback<AcuerdoMonto> OnSave { get; set; }
+    bool showForm, disabledInput;
+    EditContext editContext;
+    ValidationMessageStore messageStore;
+
+    protected override async Task OnInitializedAsync()
+    {
+        disabledInput = TipoOperacion == TipoOperacionEnum.Edicion;
+
+        editContext = new(AcuerdoMonto);
+        messageStore = new(editContext);
+        editContext.OnValidationRequested += Validar;
+        editContext.OnFieldChanged += (s, e) =>
+        {
+            messageStore?.Clear(e.FieldIdentifier);
+        };
+        showForm = true;
+    }
+
+    private void Validar(object sender, ValidationRequestedEventArgs args)
+    {
+        messageStore?.Clear();
+
+        if (AcuerdoMonto.Monto == 0)
+            messageStore?.Add(() => AcuerdoMonto.Monto, "El monto no puede ser 0");
+
+        if (AcuerdoMonto.Fecha < Acuerdo.FechaDesde || AcuerdoMonto.Fecha > Acuerdo.FechaHasta)
+            messageStore?.Add(() => AcuerdoMonto.Fecha, $"La fecha debe estar entre {Acuerdo.FechaDesde:dd/MM/yyyy} y {Acuerdo.FechaHasta:dd/MM/yyyy}");
+
+    }
+
+    private async Task Guardar()
+    {
+        if (editContext.Validate() && await RadzenDialogService.ConfirmOperation())
+        {
+            RadzenDialogService.OpenBusyWithLoader();
+            var response = TipoOperacion == TipoOperacionEnum.Alta
+                            ? await AcuerdosService.PostAcuerdosMonto(AcuerdoMonto)
+                            : await AcuerdosService.PutAcuerdosMonto(AcuerdoMonto);
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
+            {
+                AcuerdoMonto.Id = ((AcuerdoMonto)response.Data).Id;
+                RadzenDialogService.NotifySuccess();
+                if (OnSave.HasDelegate)
+                    await OnSave.InvokeAsync(AcuerdoMonto);
+            }
+            else if (response.IsBadRequest)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+    }
+
+    private async Task AbrirBusquedaPedido()
+    {
+        // abre modal pedido
+        // callback asigna:
+        // acuerdoMonto.IdPedido = valor;
+    }
+
+    private async Task AbrirBusquedaComprobante()
+    {
+        // abre modal comprobante
+        // callback asigna:
+        // acuerdoMonto.IdComprobante = valor;
+    }
+    private async Task Cancelar()
+    {
+        if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
+            RadzenDialogService.CloseDialog();
+    }
+}
