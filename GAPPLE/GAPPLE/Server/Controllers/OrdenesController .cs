@@ -8,6 +8,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Net;
 using System.Text.Json;
+using GAPPLE.Shared.Enums;
 
 namespace GAPPLE.Server.Controllers
 {
@@ -446,30 +447,34 @@ namespace GAPPLE.Server.Controllers
         [HttpPut("aprobacion/{idUsuario:int}")]
         public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] OrdenDTO pedido)
         {
-            SqlTransaction? trans = null;
+            SqlTransaction trans = null;
             try
             {
-                SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
-                DA_Ordenes daO = new(cnn.ConnectionString);
-                var pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
-                var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
-
-                cnn.Open();
-                trans = cnn.BeginTransaction();
-                foreach (var id in idPedidos)
+                using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                 {
-                    daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, pedido.Usuario, trans);
 
-                    if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                    DA_Ordenes daO = new(cnn.ConnectionString);
+                    var pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
+                    var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
+
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var id in idPedidos)
                     {
-                        pedido.IdEstado = 3;
-                        pedido.DescripcionEstado = "APROBADO";
-                        daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
-                    }
-                }
+                        daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, pedido.Usuario, trans);
 
-                trans.Commit();
-                cnn.Close();
+                        if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                        {
+                            pedido.IdEstado = 3;
+                            pedido.DescripcionEstado = "APROBADO";
+                            daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
+                        }
+                    }
+
+                    trans.Commit();
+                    cnn.Close();
+                }
+                pedido.TieneAcuerdoActivo = new AcuerdosController(Configuration).ObtenerAcuerdos(new() { CodCliente = pedido.CodigoCliente, IdEstado = AcuerdosEstadoEnum.Activo }).Any(x => x.Acuerdos.Any(y => y.Vigente));
                 return Ok(pedido);
             }
             catch (Exception ex)

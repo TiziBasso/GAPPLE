@@ -12,7 +12,7 @@
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
         <HeaderTemplate>
             <RadzenButton Text="Agregar monto" Icon="add" ButtonStyle="ButtonStyle.Secondary"
-                          Size="ButtonSize.Small" Click="AgregarAcuerdoMonto" />
+                          Size="ButtonSize.Small" Click="AgregarAcuerdoMonto" Visible="@(Acuerdo.IdEstado != AcuerdosEstadoEnum.PendienteAprobacion)" />
         </HeaderTemplate>
         <GroupHeaderTemplate>
             @if (context.GroupDescriptor.Property == nameof(AcuerdoMontoGrid.Mes))

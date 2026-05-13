@@ -36,10 +36,10 @@ namespace GAPPLE.Server.Data
             if (request.FechaHasta != null) cmd.Parameters.AddWithValue("@pFechaHasta", request.FechaHasta);
             if (request.IdEstado != null) cmd.Parameters.AddWithValue("@pIdAcuerdo", request.IdAcuerdo);
             if (request.IdCliente != null) cmd.Parameters.AddWithValue("@pIdCliente", request.IdCliente);
-            if (!string.IsNullOrEmpty(request.CodCliente)) cmd.Parameters.AddWithValue("@pCodCliente", request.CodCliente);
-            if (!string.IsNullOrEmpty(request.RazonSocial)) cmd.Parameters.AddWithValue("@pRazonSocial", request.RazonSocial);
-            if (!string.IsNullOrEmpty(request.CUIT)) cmd.Parameters.AddWithValue("@pCUIT", request.CUIT);
-            if (!string.IsNullOrEmpty(request.Linea)) cmd.Parameters.AddWithValue("@pLinea", request.Linea);
+            if (!string.IsNullOrEmpty(request.CodCliente)) cmd.Parameters.AddWithValue("@pCodCliente", $"%{request.CodCliente}%");
+            if (!string.IsNullOrEmpty(request.RazonSocial)) cmd.Parameters.AddWithValue("@pRazonSocial", $"%{request.RazonSocial}%");
+            if (!string.IsNullOrEmpty(request.CUIT)) cmd.Parameters.AddWithValue("@pCUIT", $"%{request.CUIT}%");
+            if (!string.IsNullOrEmpty(request.Linea)) cmd.Parameters.AddWithValue("@pLinea", $"%{request.Linea}%");
             if (request.IdEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", request.IdEstado);
             SqlDataAdapter dataAdapter = new(cmd);
             dataAdapter.Fill(dt);

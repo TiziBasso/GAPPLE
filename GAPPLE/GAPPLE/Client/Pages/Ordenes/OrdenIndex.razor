@@ -266,7 +266,7 @@ else
 
     //List<string> permisos = new() { "alta", "eliminar", "finanzas", "contaduria", "ventas" };
     //List<string> permisos;
-    bool aprueba, alta, eliminar, cambiaLista, tango, revertir, finanzas, ventas, contaduria; //variables auxiliares para no hacer la consulta en cada row
+    bool aprueba, alta, eliminar, cambiaLista, tango, revertir, finanzas, ventas, contaduria, permisoAcuerdos; //variables auxiliares para no hacer la consulta en cada row
 
     //filters variables
     int? idFilter, unidadesFilter;
@@ -288,6 +288,7 @@ else
         cambiaLista = permisos.Contains("cambiaLista");
         tango = permisos.Contains("tango");
         revertir = permisos.Contains("revertir");
+        permisoAcuerdos = permisos.Contains("acuerdos");
 
         lineas = await ProductosService.GetLineas();
         estados = await ToolsService.GetEstados<int?>(new() { ShowNull = true, Seccion = SeccionesEstado.Pedidos });
@@ -394,8 +395,9 @@ else
         var idEstadoAnt = order.IdEstado;
         await DialogService.OpenAsync<OrdenAprobacion>
             ($"Aprobar orden {order.Id}",
-            new() { { "PermisoVentas", ventas }, { "PermisoContaduria", contaduria }, { "PermisoFinanzas", finanzas }, { "Orden", order } },
+            new() { { "PermisoVentas", ventas }, { "PermisoContaduria", contaduria }, { "PermisoFinanzas", finanzas }, { "PermisoAcuerdos", permisoAcuerdos }, { "Orden", order } },
             new() { ShowClose = false, AutoFocusFirstElement = false, Height = "28rem", Width = "50rem" });
+
         var o = lstOrdenes.FirstOrDefault(x => x.Id != order.Id && x.CodigoOrden.EndsWith(order.CodigoOrden.Substring(2)) && x.IdEstado == idEstadoAnt);
         if (o != null)
         {

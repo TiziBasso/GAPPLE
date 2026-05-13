@@ -36,7 +36,7 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        private List<AcuerdoCliente> ObtenerAcuerdos(AcuerdosRequest request)
+        internal List<AcuerdoCliente> ObtenerAcuerdos(AcuerdosRequest request)
         {
             List<AcuerdoCliente> acuerdosClientes = [];
 
@@ -63,7 +63,8 @@ namespace GAPPLE.Server.Controllers
                     FechaDesde = (DateTime)row["FechaDesde"],
                     FechaHasta = (DateTime)row["FechaHasta"],
                     IdEstado = (AcuerdosEstadoEnum)int.Parse(row["IdEstado"].ToString()),
-                    DescripcionEstado = row["DescripcionEstado"].ToString()
+                    DescripcionEstado = row["DescripcionEstado"].ToString(),
+                    MontosCargados = int.Parse(row["MontosCargados"].ToString())
                 });
             }
 
@@ -105,11 +106,11 @@ namespace GAPPLE.Server.Controllers
             {
                 DA_Acuerdos daA = new(connectionString);
                 ToolsController tC = new(Configuration);
-                using DataTable dt = daA.ObtenerAcuerdos(new() { IdAcuerdo = acuerdo.IdAcuerdo });
+                var acuerdos = ObtenerAcuerdos(new() { IdAcuerdo = acuerdo.IdAcuerdo });
 
-                if (dt == null || dt.Rows.Count == 0)
+                if (acuerdos == null || acuerdos.Count == 0 || acuerdos[0].Acuerdos.Count == 0)
                     ModelState.AddModelError("errores", "No se econtró el acuerdo, realice la búsqueda nuevamente.");
-                else if ((AcuerdosEstadoEnum)int.Parse(dt.Rows[0]["IdEstado"].ToString()) != acuerdo.IdEstado)
+                else if (acuerdos[0].Acuerdos[0].IdEstado != acuerdo.IdEstado)
                     ModelState.AddModelError("errores", "El acuerdo cambio de estado, realice la búsqueda nuevamente.");
                 else
                 {

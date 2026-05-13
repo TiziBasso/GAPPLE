@@ -27,6 +27,8 @@ namespace GAPPLE.Shared.Model
 
         public string DescripcionEstado { get; set; }
 
+        public int MontosCargados { get; set; }
+
         public object Clone() => MemberwiseClone();
     }
 }

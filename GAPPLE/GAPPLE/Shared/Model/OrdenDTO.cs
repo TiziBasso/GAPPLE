@@ -19,9 +19,11 @@
             CodListaPrecio = orden.CodListaPrecio;
             Factura = orden.Factura;
             Presupuesto = orden.Presupuesto;
+            CodigoCliente = orden.CodCliente;
         }
         public int Id { get; set; }
         public string CodigoOrden { get; set; }
+        public string CodigoCliente { get; set; }
         public int? IdEstado { get; set; }
         public string DescripcionEstado { get; set; }
         public string Usuario { get; set; } = null;
@@ -36,7 +38,8 @@
         public bool Factura { get; set; }
         public bool Presupuesto { get; set; }
         public string EdicionUsuario { get; set; }
-
+        public bool TieneAcuerdoActivo { get; set; } = false;
+        
         //public string TipoIVA { get; set; } = "RI";
         //public string CUITCliente { get; set; }
         //public int? ID_GVA01 { get; set; }

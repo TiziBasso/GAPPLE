@@ -14,7 +14,7 @@
             <TextBoxInput @bind-Value=razonSocial id="razonSocial" OnKeyDown="OnKeyDown" />
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Vertical">
+        @* <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="CUIT:" Component="cuit" />
             <TextBoxInput @bind-Value=cuit id="cuit" OnKeyDown="OnKeyDown" />
         </RadzenStack>
@@ -24,7 +24,7 @@
             <RadzenDropDown @bind-Value=clienteEspecial Data="Variables.Clasificaciones"
                             TextProperty="@nameof(Opcion.Descripcion)" ValueProperty="@nameof(Opcion.Id)"
                             Name="especial" Placeholder="Todos" />
-        </RadzenStack>
+        </RadzenStack> *@
 
         <RadzenButton Click="FillClientes" ButtonStyle=ButtonStyle.Secondary Icon="search" />
     </RadzenStack>

@@ -84,6 +84,7 @@
     [Parameter, EditorRequired] public bool PermisoFinanzas { get; set; }
     [Parameter, EditorRequired] public bool PermisoVentas { get; set; }
     [Parameter, EditorRequired] public bool PermisoContaduria { get; set; }
+    [Parameter, EditorRequired] public bool PermisoAcuerdos { get; set; }
     [Parameter] public Orden Orden { get; set; }
 
     bool finanzas, ventas, contaduria;
@@ -116,6 +117,8 @@
             RadzenDialogService.CloseDialog();
             if (response.IsOk)
             {
+                if (PermisoAcuerdos && Orden.AcuerdoActivo)
+                    await RadzenDialogService.ShowAlertAsync("El cliente posee un acuerdo activo, revisar si corresponde ingresarle un monto.");
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();
             }

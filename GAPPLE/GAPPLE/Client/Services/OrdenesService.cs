@@ -170,6 +170,7 @@ namespace GAPPLE.Client.Services
                     OrdenDTO r = await response.Content.ReadFromJsonAsync<OrdenDTO>();
                     pedido.IdEstado = r.IdEstado;
                     pedido.DescripcionEstado = r.DescripcionEstado;
+                    pedido.AcuerdoActivo = r.TieneAcuerdoActivo;
                     return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
