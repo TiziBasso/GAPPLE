@@ -113,7 +113,7 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet]
-        public Orden GetOrden(string? codOrden, bool conDetalle, int? idPedido, SqlTransaction trans)
+        public Orden GetOrden(string? codOrden, bool conDetalle, int? idPedido = null, SqlTransaction trans = null)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             Orden? orden = null;
