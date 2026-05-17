@@ -1,0 +1,295 @@
+@page "/Ofertas/excel"
+
+@implements IAsyncDisposable
+
+@inject SeguridadService SeguridadService
+@inject ProductosService ProductosService
+@inject ClientesService ClientesService
+@inject OfertasService OfertasService
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject RadzenDialogService RadzenDialogService
+@inject SignalRService SignalRService
+@inject SesionDTO SesionDTO
+@using GAPPLE.Client.Components.Oferta
+@using GAPPLE.Client.ComponentsUI
+
+@if (showPage)
+{
+    <RadzenText Text="Carga masiva de ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" class="rz-mb-3" />
+
+    <RadzenFieldset AllowCollapse="true" Text="Datos comunes a todas las ofertas del Excel">
+        <RadzenRow Style="margin-top:10px;">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Cliente (opcional, deja vacío para oferta común):" />
+                    <RadzenDropDownDataGrid Data="clientes" @bind-Value="codCliente" AllowSorting="false"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            FilterOperator="StringFilterOperator.Contains" AllowFilteringByAllStringColumns="true"
+                                            TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
+                                            AllowVirtualization="true" AllowClear="true" Change="@(_ => ClearGrid())"
+                                            Name="clientes" Density="Density.Compact" Placeholder="(Oferta común - sin cliente)">
+                        <Columns>
+                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="4rem" />
+                            <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
+                        </Columns>
+                    </RadzenDropDownDataGrid>
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="3">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Línea: *" />
+                    <RadzenDropDown Data="lstLineas" @bind-Value="linea" AllowClear="true"
+                                    Change="@(_ => ClearGrid())" Style="width:100%;" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="2">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Desde: *" />
+                    <RadzenDatePicker @bind-Value="desde" DateFormat="dd/MM/yyyy"
+                                      Min="DateTime.Today.AddDays(-7)" Change="@(_ => ClearGrid())" Style="width:100%;" />
+                </RadzenStack>
+            </RadzenColumn>
+
+            <RadzenColumn Size="2">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Hasta: *" />
+                    <RadzenDatePicker @bind-Value="hasta" DateFormat="dd/MM/yyyy"
+                                      Min="DateTime.Today" Change="@(_ => ClearGrid())" Style="width:100%;" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenFieldset>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0" class="rz-mt-3 rz-mb-2">
+        <CustomFileInput @ref="refFileInput" @bind-FileValue="file" ChangeFile="ClearGrid" />
+        <RadzenIcon Icon="question_mark" @onclick="ShowFormat"
+                    Style="margin-right:5px; height:10px; cursor:pointer; font-size:medium;" title="Formato del Excel" />
+        <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Procesar" Icon="upload"
+                      Click="ProcesarArchivo" Size="ButtonSize.Small" Disabled="isLoading" />
+    </RadzenStack>
+
+    @if (ofertasPreview.Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mt-2 rz-mb-1">
+            Vista previa - se crearán @ofertasPreview.Count oferta(s)
+            @if (!string.IsNullOrWhiteSpace(codCliente))
+            {
+                <span> especial(es) para <strong>@clientes.Find(x => x.CodigoCliente == codCliente)?.RazonSocial</strong></span>
+            }
+        </RadzenText>
+    }
+
+    <RadzenDataGrid @ref="refGrid" Data="ofertasPreview" Density="Density.Compact"
+                    AllowSorting="true" AllowFiltering="true" AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Style="display:grid; min-height:25rem;" EmptyText="Procesá un archivo para ver la vista previa">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Oferta.Nombre)" Title="Título de Oferta" Width="240px" />
+            <RadzenDataGridColumn Property="@nameof(Oferta.Linea)" Title="Línea" Width="120px" />
+            <RadzenDataGridColumn Title="Cant. SKUs" Width="100px" TextAlign="TextAlign.Right">
+                <Template Context="o">
+                    @(string.IsNullOrEmpty(o.Inclusiones) ? 0 : o.Inclusiones.Split('|').Length)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Oferta.Descuento)" Title="Descuento" Width="100px" TextAlign="TextAlign.Right">
+                <Template Context="o">
+                    @o.Descuento.ToString("N1") %
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Oferta.Desde)" Title="Desde" Width="100px" TextAlign="TextAlign.Center">
+                <Template Context="o">
+                    <span>@o.Desde.ToString("dd/MM/yyyy")</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Oferta.Hasta)" Title="Hasta" Width="100px" TextAlign="TextAlign.Center">
+                <Template Context="o">
+                    <span>@o.Hasta.ToString("dd/MM/yyyy")</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="SKUs incluidos" Property="@nameof(Oferta.Inclusiones)">
+                <Template Context="o">
+                    <span style="font-family:monospace; font-size:0.85em;">
+                        @(o.Inclusiones?.Replace("|", ", "))
+                    </span>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-3">
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" Text="Guardar todas"
+                      Click="Guardar" Disabled="@(isLoading || !ofertasPreview.Any())" />
+    </RadzenStack>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    IBrowserFile file;
+    bool showPage, isLoading;
+
+    List<Cliente> clientes = new();
+    List<string> lstLineas = new();
+    string codCliente;
+    string linea;
+    DateTime desde = DateTime.Today;
+    DateTime hasta = DateTime.Today.AddMonths(1);
+
+    List<Oferta> ofertasPreview = new();
+    RadzenDataGrid<Oferta> refGrid;
+    CustomFileInput refFileInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos("Ofertas Excel");
+        if (!permisos.Contains("alta"))
+            NavigationManager.NavigateTo(Variables.ErrorPages.Desautorizado);
+
+        clientes = await ClientesService.GetClientes();
+        lstLineas = await ProductosService.GetLineas();
+
+        showPage = true;
+    }
+
+    private async Task ClearGrid()
+    {
+        if (ofertasPreview.Any())
+        {
+            NotificationService.Notify(NotificationSeverity.Info,
+                "Alguno de los datos cambió", "Procesá el archivo nuevamente");
+            ofertasPreview.Clear();
+            file = null;
+            refFileInput?.Reset();
+            if (refGrid != null) await refGrid.Reload();
+        }
+    }
+
+    private async Task ProcesarArchivo()
+    {
+        if (file == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar un archivo");
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(linea))
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar una línea");
+            return;
+        }
+        if (hasta < desde)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "La fecha hasta no puede ser anterior a la fecha desde");
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            RadzenDialogService.OpenProgressBar("Procesando archivo");
+            await SignalRService.StartConnection();
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5242880);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var req = new OfertaExcelRequest
+            {
+                File = ms.ToArray(),
+                Linea = linea,
+                CodCliente = string.IsNullOrWhiteSpace(codCliente) ? null : codCliente,
+                Desde = desde,
+                Hasta = hasta,
+                ConnectionId = SignalRService.GetConnectionId()
+            };
+
+            var response = await OfertasService.ProcesarArchivoOfertas(req);
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
+            {
+                ofertasPreview = (List<Oferta>)response.Data;
+                if (refGrid != null) await refGrid.Reload();
+                NotificationService.Notify(NotificationSeverity.Success,
+                    $"Se procesaron {ofertasPreview.Count} oferta(s). Revisá la vista previa y presioná Guardar.");
+            }
+            else if (response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (!ofertasPreview.Any()) return;
+
+        var tipo = string.IsNullOrWhiteSpace(codCliente) ? "común(es)" : "especial(es)";
+        var confirm = await DialogService.Confirm(
+            $"Se van a crear {ofertasPreview.Count} oferta(s) {tipo}. ¿Confirmar?",
+            "Carga masiva de ofertas",
+            new() { OkButtonText = "Sí", CancelButtonText = "No" });
+
+        if (confirm != true) return;
+
+        try
+        {
+            isLoading = true;
+            RadzenDialogService.OpenBusyWithLoader("Guardando ofertas...");
+            var response = await OfertasService.PostOfertasMasivo(ofertasPreview);
+            RadzenDialogService.CloseDialog();
+
+            if (response.IsOk)
+            {
+                NotificationService.Notify(NotificationSeverity.Success,
+                    "Carga masiva completada",
+                    $"{ofertasPreview.Count} oferta(s) creada(s) correctamente.");
+                NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(codCliente) ? "/Ofertas" : "/Ofertas/especiales");
+            }
+            else if (response.Errors != null && response.Errors.Count > 0)
+                RadzenDialogService.ShowAlert(response.Errors);
+            else
+                RadzenDialogService.NotifyInternalServerError();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        if (!ofertasPreview.Any() && file == null)
+        {
+            NavigationManager.NavigateTo("/Ofertas");
+            return;
+        }
+
+        if (await DialogService.Confirm(MensajesHelper.Cancel(), MensajesHelper.Title,
+            new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            NavigationManager.NavigateTo("/Ofertas");
+    }
+
+    private async Task ShowFormat()
+    {
+        await DialogService.OpenAsync<FormatoExcelOfertas>("Formato del Excel de carga masiva",
+            null, new() { Width = "fit-content", Height = "fit-content", Style = "max-width:60vw;",
+                          ShowClose = true, CloseDialogOnEsc = true });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await SignalRService.StopConnection();
+    }
+}

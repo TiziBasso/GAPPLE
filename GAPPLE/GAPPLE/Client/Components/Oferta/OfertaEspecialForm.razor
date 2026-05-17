@@ -1,5 +1,6 @@
 ﻿@inject ProductosService ProductosService
 @inject OfertasService OfertasService
+@inject ClientesService ClientesService
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 
@@ -42,15 +43,16 @@
             </RadzenStack>
         </RadzenStack>
 
+        <RadzenStack Orientation="Orientation.Vertical" Gap="5px" Style="width:45%;">
+            <RadzenLabel Text="Cliente:" />
+            <RadzenDropDown @bind-Value="Oferta.CodCliente" Data="clientes" TextProperty="@nameof(Cliente.RazonSocial)" ValueProperty="@nameof(Cliente.CodigoCliente)"
+                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Disabled=DisabledInputs />
+        </RadzenStack>
+
         <RadzenStack Orientation="Orientation.Vertical" Gap="5px" Style="width:100%" class="rz-mb-2">
             <RadzenLabel Text="Detalle:" />
             <RadzenTextArea @bind-Value="Oferta.Descripcion" Disabled=DisabledInputs MaxLength="250" Rows="3" Style="width:100%; resize:none;" />
             <ValidationMessage For="@(() => Oferta.Descripcion)" />
-        </RadzenStack>
-
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-            <RadzenLabel Text="Activa:" />
-            <RadzenCheckBox @bind-Value="@Oferta.Activa" />
         </RadzenStack>
 
         <RadzenFieldset Text="Productos" class="rz-mb-2">
@@ -79,6 +81,7 @@ else
 @code {
     [Parameter] public Oferta Oferta { get; set; }
     [Parameter] public bool DisabledInputs { get; set; }
+    List<Cliente> clientes = new();
     List<ProductoParaOfertas> lstProductos = new List<ProductoParaOfertas>();
     List<ProductoParaOfertas> lstProductosOferta = new List<ProductoParaOfertas>();
     List<string> lstLineas = new();
@@ -92,6 +95,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         lstLineas = await ProductosService.GetLineas();
+        clientes = await ClientesService.GetClientes();
         if (Oferta.IdOferta > 0)
         {
             valorAux = Oferta.Linea;
@@ -148,13 +152,13 @@ else
         Oferta.Inclusiones = string.Join('|', lstProductosOferta.Select(x => x.CodigoProducto));
         if (esNueva)
         {
-            Oferta.Hasta = Oferta.Hasta.AddHours(23).AddMinutes(59).AddSeconds(59);
-            await OfertasService.PostOferta(Oferta);
+            Oferta.Hasta = Oferta.Hasta.AddHours(23).AddMinutes(59).AddSeconds(59) ;
+            await OfertasService.PostOfertaEspecial(Oferta);
             NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         else
         {
-            await OfertasService.PutOferta(Oferta);
+            await OfertasService.PutOfertaEspecial(Oferta);
             NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title, MensajesHelper.SaveSuccess(Oferta.Nombre));
         }
         DialogService.Close(Oferta);

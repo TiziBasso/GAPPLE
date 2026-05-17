@@ -1,0 +1,100 @@
+<RadzenStack Orientation="Orientation.Vertical" Gap="10px">
+    <RadzenText TextStyle="TextStyle.Body2">
+        El archivo debe ser un <strong>.xlsx</strong> sin encabezados (los datos comienzan en la fila 2).
+        Las filas que comparten el mismo "Título de Oferta" se agrupan en una única oferta,
+        con un único descuento.
+    </RadzenText>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+        <div style="max-height:50vh;outline:none" class="rz-data-grid rz-has-paginator rz-datatable rz-datatable-scrollable rz-density-compact">
+            <div class="rz-data-grid-data">
+                <table class="rz-grid-table rz-grid-table-fixed rz-grid-table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">
+                                <span class="rz-column-title headerCustom" style="display:block; height:19px;">@string.Empty</span>
+                            </th>
+                            <th style="width:180px">
+                                <span class="rz-column-title headerCustom">A</span>
+                            </th>
+                            <th style="width:90px">
+                                <span class="rz-column-title headerCustom">B</span>
+                            </th>
+                            <th style="width:90px">
+                                <span class="rz-column-title headerCustom">C</span>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th>
+                                <span class="rz-column-title headerCustom" style="padding:0; height:35px;">1</span>
+                            </th>
+                            <th>
+                                <span class="rz-column-title">Título de Oferta</span>
+                            </th>
+                            <th>
+                                <span class="rz-column-title">SKU</span>
+                            </th>
+                            <th>
+                                <span class="rz-column-title">Descuento</span>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td style="background-color:var(--rz-grid-header-background-color)">
+                                <span style="display:flex; justify-content:center;">2</span>
+                            </td>
+                            <td>Promo Verano</td>
+                            <td>656091</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td style="background-color:var(--rz-grid-header-background-color)">
+                                <span style="display:flex; justify-content:center;">3</span>
+                            </td>
+                            <td>Promo Verano</td>
+                            <td>656092</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td style="background-color:var(--rz-grid-header-background-color)">
+                                <span style="display:flex; justify-content:center;">4</span>
+                            </td>
+                            <td>Promo Verano</td>
+                            <td>656093</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td style="background-color:var(--rz-grid-header-background-color)">
+                                <span style="display:flex; justify-content:center;">5</span>
+                            </td>
+                            <td>Liquidación Invierno</td>
+                            <td>700001</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td style="background-color:var(--rz-grid-header-background-color)">
+                                <span style="display:flex; justify-content:center;">6</span>
+                            </td>
+                            <td>Liquidación Invierno</td>
+                            <td>700002</td>
+                            <td>25</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+        <RadzenText TextStyle="TextStyle.Body2"><strong>Notas:</strong></RadzenText>
+        <ul style="margin:0; padding-left:20px;">
+            <li>El ejemplo de arriba crea <strong>2 ofertas</strong>: "Promo Verano" con 3 SKUs al 10% y "Liquidación Invierno" con 2 SKUs al 25%.</li>
+            <li>Todas las filas que comparten título deben tener el <strong>mismo descuento</strong>.</li>
+            <li>El descuento debe estar entre 0,01 y 100. Se acepta tanto coma como punto decimal.</li>
+            <li>Los SKUs deben pertenecer a la <strong>línea seleccionada</strong> y no estar pasivos.</li>
+            <li>Las fechas Desde / Hasta y el Cliente (si aplica) se eligen <strong>antes</strong> de subir el archivo y aplican a todas las ofertas del Excel.</li>
+        </ul>
+    </RadzenStack>
+</RadzenStack>

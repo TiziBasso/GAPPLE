@@ -22,5 +22,7 @@ namespace GAPPLE.Shared.Model
         public bool Activa { get; set; }
         public string? Inclusiones { get; set; }
         public string? Exclusiones { get; set; }
+        public string CodCliente { get; set; }
+        public string RazonSocial { get; set; }
     }
 }

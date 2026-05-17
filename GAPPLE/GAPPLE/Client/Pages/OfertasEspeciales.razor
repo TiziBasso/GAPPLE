@@ -1,20 +1,27 @@
-﻿@page "/Ofertas"
+﻿@page "/Ofertas/especiales"
 @using GAPPLE.Client.Components.Oferta
 
 @inject SeguridadService SeguridadService
 @inject OfertasService OfertasService
 @inject DialogService DialogService
+@inject ClientesService ClientesService
 @inject ProductosService ProductosService
 
 @if (showPage)
 {
-    <RadzenText Text="Ofertas" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" class="rz-mb-3" />
+    <RadzenText Text="Ofertas especiales" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH4" class="rz-mb-3" />
 
     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End" Style="margin-bottom:10px;">
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Mes:" Component="mes" />
             <RadzenDatePicker @bind-Value="mes" DateFormat="MM/yyyy" Name="mes" Style="width:8rem" ShowDays="false" CurrentDateChanged=@OnCurrentDateChanged />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical" Style="width:350px;">
+            <RadzenLabel Text="Cliente:" Component="cod" />
+            <RadzenDropDown Style="width:100%;" Data="clientes" AllowClear="true" @bind-Value="codCliente" ValueProperty="@nameof(Cliente.CodigoCliente)"
+            TextProperty="@nameof(Cliente.RazonSocial)" />
         </RadzenStack>
 
         <RadzenStack Orientation="Orientation.Vertical">
@@ -27,14 +34,15 @@
     </RadzenStack>
 
     <RadzenButton Icon="add" Size=ButtonSize.Small Text="Agregar oferta" Click="Agregar" ButtonStyle="ButtonStyle.Secondary"
-                  class="rz-mb-2" Disabled="@(isLoading || !listPermisos.Contains("alta"))" />
+    class="rz-mb-2" Disabled="@(isLoading || !listPermisos.Contains("alta"))" />
 
     <RadzenDataGrid @ref=refGrid Data="lstOfertas" AllowSorting="true" IsLoading="@isLoading" Density="Density.Compact" AllowColumnResize="true" FilterMode="FilterMode.Simple"
-                    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
-                    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selected" AllowVirtualization=true Style="height: 65vh;" EmptyText="">
+    FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
+    SelectionMode="DataGridSelectionMode.Single" @bind-Value="selected" AllowVirtualization=true Style="height: 65vh;" EmptyText="">
         <Columns>
             <RadzenDataGridColumn Title="Id" Property="@nameof(Oferta.IdOferta)" TextAlign="TextAlign.Right" Width="100px" />
             <RadzenDataGridColumn Title="Nombre" Property="@nameof(Oferta.Nombre)" TextAlign="TextAlign.Left" Width="300px" />
+            <RadzenDataGridColumn Title="Cliente" Property="@nameof(Oferta.RazonSocial)" TextAlign="TextAlign.Left" Width="300px" />
             <RadzenDataGridColumn Title="Linea" Property="@nameof(Oferta.Linea)" TextAlign="TextAlign.Center" Width="100px" />
             <RadzenDataGridColumn Title="Descuento" Property="@nameof(Oferta.Descuento)" TextAlign="TextAlign.Right" Width="100px">
                 <Template>
@@ -75,6 +83,10 @@ else
 }
 
 @code {
+    List<Cliente> clientes = new();
+    List<string> lstLineas = new();
+    DateTime mes = DateTime.Today.FirstDayOfMonth();
+    string codCliente, linea;
     RadzenDataGrid<Oferta> refGrid;
     List<Oferta> lstOfertas = new();
     bool showPage, isLoading;
@@ -82,16 +94,13 @@ else
     //List<string> listPermisos = new() { "alta" };
     List<string> listPermisos;
 
-    List<string> lstLineas = new();
-    DateTime mes = DateTime.Today.FirstDayOfMonth();
-    string linea;
-
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
         listPermisos = await SeguridadService.GetPermisos("ofertas");
         lstLineas = await ProductosService.GetLineas();
-        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+        clientes = await ClientesService.GetClientes();
+        lstOfertas = await OfertasService.GetOfertasEspeciales(null, linea, mes, null, codCliente);
         showPage = true;
     }
 
@@ -103,7 +112,7 @@ else
     async Task FillOfertas()
     {
         isLoading = true;
-        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+        lstOfertas = await OfertasService.GetOfertasEspeciales(null, linea, mes, null, codCliente);
         await refGrid.Reload();
         isLoading = false;
     }
@@ -111,10 +120,10 @@ else
     async Task Agregar()
     {
         isLoading = true;
-        var response = await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
+        var response = await DialogService.OpenAsync<OfertaEspecialForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
-            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+            lstOfertas = await OfertasService.GetOfertasEspeciales(null, linea, mes, null, codCliente);
             await refGrid.Reload();
         }
         isLoading = false;
@@ -123,10 +132,10 @@ else
     async Task Editar(Oferta oferta)
     {
         isLoading = true;
-        var response = await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
+        var response = await DialogService.OpenAsync<OfertaEspecialForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
-            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+            lstOfertas = await OfertasService.GetOfertasEspeciales(null, linea, mes, null, codCliente);
             await refGrid.Reload();
         }
         isLoading = false;
@@ -135,7 +144,7 @@ else
     async Task Ver(Oferta oferta)
     {
         isLoading = true;
-        await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta }, { "DisabledInputs", true } }, new() { Width = "80vw", Height = "90vh" });
+        await DialogService.OpenAsync<OfertaEspecialForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta }, { "DisabledInputs", true } }, new() { Width = "80vw", Height = "90vh" });
         isLoading = false;
     }
 }
