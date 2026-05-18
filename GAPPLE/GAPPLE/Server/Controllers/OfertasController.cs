@@ -60,7 +60,6 @@ namespace GAPPLE.Server.Controllers
 
         [HttpGet("especiales")]
         public List<Oferta> GetOfertasEspeciales(string nombre, string linea, DateTime? mes, bool? activas, string codCliente)
-        
         {
             DA_Ofertas daO = new(Configuration.GetConnectionString("DefaultConnection"));
             List<Oferta> lstOfertas = new List<Oferta>();

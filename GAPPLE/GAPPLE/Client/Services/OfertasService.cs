@@ -31,7 +31,7 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<Oferta>>(uri);
         }
 
-        public async ValueTask<List<Oferta>> GetOfertasEspeciales(string? nombre, string? linea, DateTime? mes, bool? activas = null, string idCliente = null)
+        public async ValueTask<List<Oferta>> GetOfertasEspeciales(string nombre, string linea, DateTime? mes, bool? activas = null, string idCliente = null)
         {
             string uri = $"{URI_BASE}/especiales";
             Dictionary<string, object> query = new();
@@ -41,8 +41,8 @@ namespace GAPPLE.Client.Services
             if (activas != null) query["activas"] = activas;
             if (idCliente != null) query["codCliente"] = idCliente;
 
-            if (query.Any())
-                uri += $"?{string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray())}";
+            if (query.Count != 0)
+                uri += $"?{string.Join("&", [.. query.Select(x => $"{x.Key}={x.Value}")])}";
 
             return await HttpClient.GetFromJsonAsync<List<Oferta>>(uri);
         }

@@ -234,13 +234,15 @@ namespace GAPPLE.Server.Controllers
                                 if (int.TryParse(row["1"].ToString(), out int cant))
                                     p.CantidadSeleccionada = cant;
 
-                                //mayor a 3 porque existe la columna "originalRow"
-                                if (dt.Columns.Count > 3 && int.TryParse(row["2"].ToString(), out int prob))
+                                if (int.TryParse(row["2"].ToString(), out int prob))
                                     p.CantidadProbador = prob;
 
-                                if (p.CantidadProbador < 0 || p.CantidadSeleccionada < 0)
+                                if (int.TryParse(row["3"].ToString(), out int obs))
+                                    p.CantidadObsequio = obs;
+
+                                if (p.CantidadProbador < 0 || p.CantidadSeleccionada < 0 || p.CantidadObsequio < 0)
                                     ModelState.AddModelError($"En la fila {row["originalRow"]}", "Hay cantidades negativas cargadas");
-                                else if (p.CantidadProbador == 0 && p.CantidadSeleccionada == 0)
+                                else if (p.CantidadProbador == 0 && p.CantidadSeleccionada == 0 && p.CantidadObsequio == 0)
                                     ModelState.AddModelError($"En la fila {row["originalRow"]}", "No hay cantidades cargadas");
                                 else
                                     carga = true;

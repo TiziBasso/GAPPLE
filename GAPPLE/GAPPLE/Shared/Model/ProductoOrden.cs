@@ -7,6 +7,7 @@
         public string Descripcion { get; set; }
         public string Linea { get; set; }
         public int CantidadProbador { get; set; }
+        public int CantidadObsequio { get; set; }
         public int CantidadSeleccionada { get; set; }
         public decimal DescuentoCliente { get; set; } = 0;
         public decimal DescuentoOferta { get; set; } = 0;

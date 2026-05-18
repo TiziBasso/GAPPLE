@@ -173,20 +173,31 @@
             </RadzenRow>
             <RadzenRow Style="margin-top:10px;">
 
-                <RadzenColumn Size="8">
+                <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Notas:" />
                         <RadzenTextArea @bind-Value="orden.ObservacionesZentra" />
                         <ValidationMessage For="@(() => orden.ObservacionesZentra)" />
                     </RadzenStack>
                 </RadzenColumn>
-
+                
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                        <RadzenLabel Text="Ofertas:" />
+                        <RadzenLabel Text="Ofertas comunes:" />
                         <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertas" @bind-Value="ofertasSeleccionadas" Change="RecalcularOfertas"
                                         TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
                                         Placeholder="Seleccionar ofertas..." MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
+                    </RadzenStack>
+                </RadzenColumn>
+
+                <RadzenColumn Size="4">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Ofertas especiales:" />
+                        <RadzenDropDown AllowFiltering="true" AllowVirtualization="true" Data="ofertasEspeciales" @bind-Value="ofertasEspecialesSeleccionadas" Change="RecalcularOfertas"
+                                        TextProperty="@nameof(Oferta.Nombre)" ValueProperty="@nameof(Oferta.IdOferta)" Multiple="true" AllowClear="true"
+                                        Placeholder="@(string.IsNullOrEmpty(orden.CodCliente) ? "Seleccione un cliente primero" : "Seleccionar ofertas especiales...")"
+                                        Disabled="@(string.IsNullOrEmpty(orden.CodCliente))"
+                                        MaxSelectedLabels="2" SelectAllText="Todas" SelectedItemsText="seleccionadas" />
                     </RadzenStack>
                 </RadzenColumn>
             </RadzenRow>
@@ -202,24 +213,32 @@
                         Density="Density.Compact"
                         AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="45px" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="50px"  />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto) >
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="80px" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="300px" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
+                    <Template Context="data">
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                    </Template>
                     <FooterTemplate>
                         <strong>
                             Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
                         </strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="25px" TextAlign="TextAlign.Right" Visible=@(orden.Factura) >
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
+                    <Template Context="data">
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                    </Template>
                     <FooterTemplate>
                         <strong>
                             Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
                         </strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Cant. T" Width="50px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
-                    <Template >
+                <RadzenDataGridColumn Title="Cant. T" Width="150px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
+                    <Template>
                         @(data.CantidadSeleccionada * 2)
                     </Template>
                     <FooterTemplate>
@@ -227,14 +246,25 @@
                             Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())
                         </strong>
                     </FooterTemplate>
-                </RadzenDataGridColumn >                
-                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="40px"  TextAlign="TextAlign.Right" />                
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento"  FormatString="{0:N2}%" TextAlign="TextAlign.Right">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        @if (esAdmin)
+                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obsequios" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="data">
+                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right" Width="100px">
+                    <Template Context="data">
+                        @if (permisoDescuento)
                         {
                             <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
-                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" />
+                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
                         }
                         else
                         {
@@ -242,9 +272,9 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="55px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="75px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
                     <Template>
                         @if (orden.Presupuesto && orden.Factura)
                         {
@@ -308,7 +338,7 @@ else
 
 @code {
     IBrowserFile file;
-    bool showPage, seleccionaVendedor, isLoading, unico, esAdmin;
+    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
     EditContext editContext;
@@ -321,10 +351,12 @@ else
     List<Cliente> clientes = new();
     List<SucursalesPorCliente> sucursalesPorClientes = new();
 
-    List<int> ofertasSeleccionadas = new();
     List<ProductoOrden> lstProductos = new();
     RadzenDataGrid<ProductoOrden> refGrid;
     List<Oferta> ofertas = new();
+    List<Oferta> ofertasEspeciales = new();
+    List<int> ofertasSeleccionadas = new();
+    List<int> ofertasEspecialesSeleccionadas = new();
     Dictionary<string, List<Oferta>> codigosEnOfertas = new();
 
     CustomFileInput refFileInput;
@@ -337,7 +369,7 @@ else
             NavigationManager.NavigateTo(Variables.ErrorPages.Desautorizado);
 
         seleccionaVendedor = permisos.Contains("seleccionaVendedor");
-        esAdmin = SesionDTO.Rol == "1";
+        permisoDescuento = permisos.Contains(Permisos.DescuentoManual);
 
         clientes = await ClientesService.GetClientes(null, null, null, null);
         transportes = await OrdenesService.GetTransportes();
@@ -345,7 +377,11 @@ else
         condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
         zonas = await OrdenesService.GetZonas();
         var aux = await OfertasService.GetOfertas(null, null, null, true);
-        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now & x.Hasta > DateTime.Now)];
+        // Si despues hacemos que este componente sea el de edicion de ordenes, hay que asignar las ofertas seleccionadas en base a las ofertas que tenga la orden
+        // ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+        // ofertasEspecialesSeleccionadas.AddRange(ofertasEspeciales.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+
         editContext = new(orden);
 
         showPage = true;
@@ -358,14 +394,14 @@ else
             if (seleccionaVendedor)
             {
                 orden.Usuario = await DialogService.OpenAsync<SeleccionVendedor>("Seleccionar vendedor", new() { { "Confirma", false } }, new()
-                    {
-                        CloseDialogOnEsc = false,
-                        ShowClose = false,
-                        CloseDialogOnOverlayClick = false,
-                        Style = "max-height:90vh; max-width:60vw;",
-                        Height = "fit-content",
-                        Width = "fit-content"
-                    });
+                {
+                    CloseDialogOnEsc = false,
+                    ShowClose = false,
+                    CloseDialogOnOverlayClick = false,
+                    Style = "max-height:90vh; max-width:60vw;",
+                    Height = "fit-content",
+                    Width = "fit-content"
+                });
                 if (orden.Usuario == null) return;
             }
 
@@ -478,8 +514,22 @@ else
         {
             unico = false;
         }
-        await ClearGrid();
 
+        var aux = await OfertasService.GetOfertas(null, null, null, true);
+        var aux2 = await OfertasService.GetOfertasEspeciales(null, null, null, true, orden.CodCliente);
+        
+        if (orden.Ofertas.Any())
+        {
+            var idsEspecialesPrevias = ofertasEspeciales.Select(o => o.IdOferta).ToList();
+            orden.Ofertas.RemoveAll(x => idsEspecialesPrevias.Contains(x));
+            ofertasEspecialesSeleccionadas.Clear();
+        }
+
+        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+        ofertasEspeciales = [.. aux2.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+        await RecalcularOfertas();
+
+        await ClearGrid();
         RadzenDialogService.CloseDialog();
     }
 
@@ -497,30 +547,70 @@ else
 
     private async Task RecalcularOfertas()
     {
+        var idsComunesActuales = ofertas.Select(o => o.IdOferta).ToList();
+        var idsEspecialesActuales = ofertasEspeciales.Select(o => o.IdOferta).ToList();
+
         orden.Ofertas.Clear();
-        orden.Ofertas.AddRange(ofertasSeleccionadas);
+
+        if (ofertasSeleccionadas != null)
+        {
+            orden.Ofertas.AddRange(
+                ofertasSeleccionadas
+                    .Where(id => idsComunesActuales.Contains(id))
+            );
+        }
+
+        if (ofertasEspecialesSeleccionadas != null)
+        {
+            orden.Ofertas.AddRange(
+                ofertasEspecialesSeleccionadas
+                    .Where(id => idsEspecialesActuales.Contains(id)
+                              && !orden.Ofertas.Contains(id))
+            );
+        }
 
         if (orden.Ofertas != null && orden.Ofertas.Any())
         {
-            var ofertasFiltradas = ofertas.Where(o => orden.Ofertas!.Contains(o.IdOferta));
+            var todas = ofertas.Concat(ofertasEspeciales);
+
+            var ofertasFiltradas = todas
+                .Where(o => orden.Ofertas.Contains(o.IdOferta));
 
             codigosEnOfertas = ofertasFiltradas
-                .SelectMany(o => o.Inclusiones.Split('|').Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
+                .SelectMany(o => (o.Inclusiones ?? string.Empty)
+                    .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(codigo => new
+                    {
+                        CodigoProducto = codigo,
+                        Oferta = o
+                    }))
                 .GroupBy(x => x.CodigoProducto)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.Oferta).ToList()
+                );
         }
         else
+        {
             codigosEnOfertas.Clear();
+        }
 
         foreach (var product in lstProductos)
         {
-            if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+            if (codigosEnOfertas != null
+                && codigosEnOfertas.Any()
+                && codigosEnOfertas.ContainsKey(product.CodigoProducto))
             {
-                var ofertaConDescuentoMasAlto = GetOfertaConMayorDescuento(product.CodigoProducto);
-                product.DescuentoOferta = ofertaConDescuentoMasAlto.Descuento;
+                var ofertaConDescuentoMasAlto =
+                    GetOfertaConMayorDescuento(product.CodigoProducto);
+
+                product.DescuentoOferta =
+                    ofertaConDescuentoMasAlto.Descuento;
             }
             else
+            {
                 product.DescuentoOferta = 0;
+            }
         }
 
         await refGrid.Reload();
@@ -552,14 +642,14 @@ else
             foreach (var product in lstProductos)
             {
                 orden.Detalle!.Add(new OrdenDetalle()
-                    {
-                        Cantidad = product.CantidadSeleccionada,
-                        CantidadProbador = product.CantidadProbador,
-                        CodProducto = product.CodigoProducto,
-                        Descuento = product.DescuentoTotal,
-                        Probador = product.CantidadProbador > 0,
-                        Precio = product.Precio,
-                    });
+                {
+                    Cantidad = product.CantidadSeleccionada,
+                    CantidadProbador = product.CantidadProbador,
+                    CodProducto = product.CodigoProducto,
+                    Descuento = product.DescuentoTotal,
+                    Probador = product.CantidadProbador > 0,
+                    Precio = product.Precio,
+                });
             }
 
             if (!orden.Detalle.Any())
