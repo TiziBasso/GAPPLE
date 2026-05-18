@@ -4,6 +4,7 @@
 @using GAPPLE.Client.Extensiones
 @using GAPPLE.Shared.Helpers
 @using Microsoft.AspNetCore.Components.Authorization
+@using Newtonsoft.Json
 
 @implements IDisposable
 
@@ -14,6 +15,7 @@
 @inject AuthenticationStateProvider AutenticacionProvider
 @inject SeguridadService SeguridadService
 @inject ProductosService ProductosService
+@inject BackupService BackupService
 @inject NavigationManager NavigationManager
 @inject RadzenDialogService RadzenDialogService
 @inject IJSFunction JSFunction
@@ -84,9 +86,9 @@
         <RadzenButton Text="Agregar orden por excel" Icon="attach_file_add" ButtonStyle="ButtonStyle.Info" Size=ButtonSize.Small Click="NuevaOrdenPorArchivo" Visible=@(alta) />
     </RadzenStack>
 
-    <RadzenDataGrid @ref="grid" Data="lstOrdenes" AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
+    <RadzenDataGrid @ref="grid" Data="lstOrdenes" @bind-Settings=Settings AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true"
                     AllowColumnResize=true Density="Density.Compact" AllowVirtualization="true" TItem="Orden" CellContextMenu="OnCellContextMenu"
-                    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+                    EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowColumnPicking=true>
         <Columns>
             <RadzenDataGridColumn Title="ID" Property="@nameof(Orden.Id)" Width="80px" TextAlign="TextAlign.Right" FilterValue="idFilter" Resizable=false>
                 <FilterTemplate>
@@ -168,7 +170,7 @@
 
             <RadzenDataGridColumn Title="Vendedor" Property="@nameof(Orden.Usuario)" Width="150px" MinWidth="10px" />
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && alta)
@@ -176,7 +178,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
@@ -184,7 +186,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="done" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1 && aprueba)
@@ -192,7 +194,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="edit_note" ButtonStyle="ButtonStyle.Warning" title="Cambiar lista de precio" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
@@ -201,7 +203,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Success" title="Exportar a tango" Variant="Variant.Flat"
@@ -210,21 +212,21 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar)
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 1)
                                   @onclick:stopPropagation="true" Click="@(() => CancelarOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar)
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
                                   @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(true || revertir)
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(true || revertir) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="undo" ButtonStyle="ButtonStyle.Danger" title="Volver a pendiente" Variant="Variant.Flat"
@@ -240,7 +242,7 @@
         <ImpresiónOrden Pedido=Resumen
                         Detalle="@(Resumen!.Detalle!.Where(x=>x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).ToList())"
                         Pendientes=@(Resumen!.Detalle!.Any(x=>x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0) ?
-                                    Resumen.Detalle!.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList() : null)
+                                                                                                                                                                    Resumen.Detalle!.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).ToList() : null)
                         Imprimir="@(async()=>await Imprimir())" />
     }
 }
@@ -251,6 +253,22 @@ else
 
 @code {
     ElementReference refIdOrden;
+    DataGridSettings _settings;
+    public DataGridSettings Settings
+    {
+        get
+        {
+            return _settings;
+        }
+        set
+        {
+            if (_settings != value)
+            {
+                _settings = value;
+                InvokeAsync(SettingsChange);
+            }
+        }
+    }
     RadzenDataGrid<Orden> grid;
     List<string> lineas = new();
     List<Estado<int?>> estados = new();
@@ -275,6 +293,7 @@ else
     string zonaFilter, estadoFilter, codOrdenFilter;
     int render;
 
+    string idUsuario;
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
@@ -293,6 +312,13 @@ else
         lineas = await ProductosService.GetLineas();
         estados = await ToolsService.GetEstados<int?>(new() { ShowNull = true, Seccion = SeccionesEstado.Pedidos });
         idEstado = estados[1].Id;
+
+        var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
+        var auth = await autenticacionExt.GetAuthenticationStateAsync();
+        idUsuario = auth.User.FindFirst("IdUsuario").Value;
+        var savedSettings = await Helpers.Functions.ObtenerObjeto(BackupService, "operacionesWeb", idUsuario);
+        if (!string.IsNullOrEmpty(savedSettings))
+            _settings = JsonConvert.DeserializeObject<DataGridSettings>(savedSettings);
         //Parametros de consulta
         showPage = true;
     }
@@ -314,6 +340,11 @@ else
         }
     }
 
+    private async Task SettingsChange()
+    {
+        await Helpers.Functions.GuardarObjeto(BackupService, "operacionesWeb", Settings, idUsuario);
+    }
+
     private async Task FillOrdenes()
     {
         if (desde > hasta)
@@ -327,11 +358,9 @@ else
 
             RadzenDialogService.OpenBusyWithLoader("Cargando...");
             //parametrosconsulta
-            var autenticacionExt = (AutenticacionExtension)AutenticacionProvider;
-            var auth = await autenticacionExt.GetAuthenticationStateAsync();
             lstOrdenes = await OrdenesService.GetOrdenes(desde, hasta.AddHours(23).AddMinutes(59).AddSeconds(59),
                                                         idPedido, codOrden, !presupuesto, razonSocial, linea, null,
-                                                        idEstado, codTango, int.Parse(auth.User.FindFirst("IdUsuario").Value), cancellationToken);
+                                                        idEstado, codTango, int.Parse(idUsuario), cancellationToken);
             RadzenDialogService.CloseDialog();
             StateHasChanged();
             await grid.Reload();

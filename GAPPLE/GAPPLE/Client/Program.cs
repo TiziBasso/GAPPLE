@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using GAPPLE.Client;
 using GAPPLE.Client.Extensiones;
@@ -15,6 +16,8 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), Timeout = TimeSpan.FromDays(2) });
+
+builder.Services.AddBlazoredLocalStorage();
 
 Services(builder.Services);
 
@@ -48,4 +51,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<AcuerdosService>();
     services.AddScoped<ProgressBarService>();
     services.AddScoped<FileService>();
+    services.AddScoped<BackupService>();
 }
