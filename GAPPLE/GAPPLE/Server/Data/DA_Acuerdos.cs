@@ -80,7 +80,7 @@ namespace GAPPLE.Server.Data
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.CommandText = "prc_ins_Acuerdo";
             cmd.Parameters.AddWithValue("@pIdCliente", acuerdo.IdCliente);
-            cmd.Parameters.AddWithValue("@pLinea", acuerdo.Linea);
+            if (!string.IsNullOrEmpty(acuerdo.Linea)) cmd.Parameters.AddWithValue("@pLinea", acuerdo.Linea);
             cmd.Parameters.AddWithValue("@pCondicion", acuerdo.Condicion);
             cmd.Parameters.AddWithValue("@pFechaDesde", acuerdo.FechaDesde);
             cmd.Parameters.AddWithValue("@pFechaHasta", acuerdo.FechaHasta);

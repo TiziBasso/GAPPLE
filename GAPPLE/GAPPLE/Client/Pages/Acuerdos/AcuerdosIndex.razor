@@ -108,7 +108,7 @@
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
                             <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Total ingresado"
-                                          Click="@(() => InfoAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" />
+                                          Click="@(() => InfoAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" Visible="@(acuerdo.IdEstado != AcuerdosEstadoEnum.PendienteAprobacion)" />
                         </Template>
                     </RadzenDataGridColumn>
 
@@ -116,7 +116,8 @@
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
                             <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" title="Editar acuerdo"
-                                          Click="@(() => EditarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true" Visible="@(acuerdo.MontosCargados == 0)" />
+                                          Click="@(() => EditarAcuerdo(cliente, acuerdo))" @onclick:stopPropagation="true"
+                                          Visible="@(acuerdo.IdEstado == AcuerdosEstadoEnum.PendienteAprobacion || acuerdo.MontosCargados == 0)" />
                         </Template>
                     </RadzenDataGridColumn>
 

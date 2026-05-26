@@ -10,7 +10,6 @@ namespace GAPPLE.Shared.Model
 
         public int? IdCliente { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar una linea")]
         public string Linea { get; set; }
 
         public bool Aprobado { get; set; }

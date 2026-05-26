@@ -54,18 +54,20 @@ namespace GAPPLE.Server.Controllers
                     acuerdosClientes.Add(aux);
                 }
 
-                aux.Acuerdos.Add(new()
+                Acuerdo a = new()
                 {
                     IdAcuerdo = (int)row["IdAcuerdo"],
                     IdCliente = aux.IdCliente,
-                    Linea = (string)row["Linea"],
                     Condicion = (string)row["Condicion"],
                     FechaDesde = (DateTime)row["FechaDesde"],
                     FechaHasta = (DateTime)row["FechaHasta"],
                     IdEstado = (AcuerdosEstadoEnum)int.Parse(row["IdEstado"].ToString()),
                     DescripcionEstado = row["DescripcionEstado"].ToString(),
                     MontosCargados = int.Parse(row["MontosCargados"].ToString())
-                });
+                };
+
+                if (row["Linea"] != DBNull.Value) a.Linea = row["Linea"].ToString();
+                aux.Acuerdos.Add(a);
             }
 
             return acuerdosClientes;
