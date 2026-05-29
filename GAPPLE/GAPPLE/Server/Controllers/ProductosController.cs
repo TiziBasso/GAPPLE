@@ -271,6 +271,7 @@ namespace GAPPLE.Server.Controllers
                                     {
                                         aux.CantidadSeleccionada = p.CantidadSeleccionada;
                                         aux.CantidadProbador = p.CantidadProbador;
+                                        aux.CantidadObsequio = p.CantidadObsequio;
                                         productos.Add(aux);
                                     }
                                 }
