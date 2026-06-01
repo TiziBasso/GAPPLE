@@ -10,7 +10,7 @@ namespace GAPPLE.Server.Data
         private string ConnectionString { get; }
         public DA_Comprobantes(string connectionString) => ConnectionString = connectionString;
 
-        public DataTable ObtenerComprobantesCabecera(DateTime fechaDesde, DateTime fechaHasta, string codigoOrden, string codigoTango, bool? mercaderiaIngresada, ComprobanteCabeceraEstadoEnum? idEstado, string razonSocial, int? idComprobante = null)
+        public DataTable ObtenerComprobantesCabecera(DateTime fechaDesde, DateTime fechaHasta, string codigoOrden, string codigoTango, bool? mercaderiaIngresada, ComprobanteCabeceraEstadoEnum? idEstado, string razonSocial, int? idComprobante = null, int? idUsuario = null)
         {
             DataTable dt = new();
             SqlConnection cnn = new(ConnectionString);
@@ -27,6 +27,8 @@ namespace GAPPLE.Server.Data
             if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", (int)idEstado);
             if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocialCliente", razonSocial);
             if (idComprobante != null) cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
+            if (idComprobante != null) cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
+            if (idUsuario != null) cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
 

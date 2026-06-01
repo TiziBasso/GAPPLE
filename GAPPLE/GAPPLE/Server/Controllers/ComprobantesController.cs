@@ -43,7 +43,7 @@ namespace GAPPLE.Server.Controllers
         {
             DA_Comprobantes daC = new(DefaultConnectionString);
             List<ComprobanteCabecera> lstComprobantes = new();
-            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente, request.IdComprobante))
+            using (DataTable dt = daC.ObtenerComprobantesCabecera(request.FechaDesde, request.FechaHasta, request.CodigoOrden, request.CodigoTango, request.MercaderiaIngresada, request.IdEstado, request.RazonSocialCliente, request.IdComprobante, request.IdUsuario))
             {
                 foreach (DataRow row in dt.Rows)
                 {
