@@ -28,7 +28,7 @@ namespace GAPPLE.Shared.Model
 
         public int MontosCargados { get; set; }
 
-        public decimal? TotalCargado { get; set; }
+        public decimal TotalCargado { get; set; }
 
         public object Clone() => MemberwiseClone();
     }

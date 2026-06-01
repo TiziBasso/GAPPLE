@@ -70,7 +70,7 @@
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.IdComprobante)" Title="ID" Width="100px" FormatString="{0:00000000}" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoOrden)" Title="Cód. orden" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.NumeroNC)" Title="Número NC" Width="150px" Resizable=false />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Presupuesto)" Title="Presupuesto" Width="130px" Resizable=false>
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Presupuesto)" Title="Presupuesto" Width="130px" Resizable=false Filterable="false">
                 <Template>
                     <RadzenCheckBox Value="context.Presupuesto" ReadOnly="true" />
                 </Template>
