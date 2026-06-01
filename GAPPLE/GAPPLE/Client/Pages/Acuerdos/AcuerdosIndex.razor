@@ -86,6 +86,8 @@
                         </Template>
                     </RadzenDataGridColumn>
 
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.Vigente)" Title="Total" TextAlign=TextAlign.Center Filterable="false" Width="70px" Groupable="false"/>
+
                     <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteAprobacion
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
