@@ -55,7 +55,7 @@ namespace GAPPLE.Server.Data
                 CommandText  = "prc_ins_Reclamo"
             };
             cmd.Parameters.AddWithValue("@pFecha",      reclamo.Fecha.Date);
-            cmd.Parameters.AddWithValue("@pIdCliente",  reclamo.IdCliente!);
+            cmd.Parameters.AddWithValue("@pCodCliente",  reclamo.CodigoCliente!);
             cmd.Parameters.AddWithValue("@pTipo",       (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",     (int)reclamo.Motivo!);
             if (!string.IsNullOrWhiteSpace(reclamo.CodPedido))
@@ -104,7 +104,7 @@ namespace GAPPLE.Server.Data
                 CommandText = "prc_upd_Reclamo"
             };
             cmd.Parameters.AddWithValue("@pIdReclamo",     reclamo.IdReclamo);
-            cmd.Parameters.AddWithValue("@pIdCliente",     reclamo.IdCliente!);
+            cmd.Parameters.AddWithValue("@pCodCliente",     reclamo.CodigoCliente!);
             cmd.Parameters.AddWithValue("@pTipo",          (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",        (int)reclamo.Motivo!);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", reclamo.EdicionUsuario);
