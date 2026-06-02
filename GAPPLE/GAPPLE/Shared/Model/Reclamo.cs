@@ -12,14 +12,11 @@ namespace GAPPLE.Shared.Model
         [ColumnName("Fecha")]
         public DateTime Fecha { get; set; } = DateTime.Today;
 
-        [ColumnName("IdCliente")]
-        [Required(ErrorMessage = "Debe seleccionar un cliente")]
-        public int? IdCliente { get; set; }
-
         [ColumnName("CodigoCliente")]
+        [Required(ErrorMessage = "Debe seleccionar un cliente")]
         public string CodigoCliente { get; set; }
 
-        [ColumnName("ClienteRazonSocial")]
+        [ColumnName("RazonSocial")]
         public string ClienteRazonSocial { get; set; }
 
         [ColumnName("CodPedido")]

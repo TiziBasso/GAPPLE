@@ -11,7 +11,6 @@
 {
     <RadzenTemplateForm EditContext="editContext" Data="reclamo" TItem="Reclamo" Submit="Guardar"
     Style="display:grid; grid-template-rows:auto 1fr auto; height:100%; gap:8px;">
-        <DataAnnotationsValidator />
 
         <RadzenFieldset Text="Datos del reclamo">
             <RadzenRow Gap="8px">
@@ -19,10 +18,10 @@
                 <RadzenColumn Size=4>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Cliente *" Component="fCliente" />
-                        <RadzenDropDownDataGrid @bind-Value="reclamo.IdCliente"
+                        <RadzenDropDownDataGrid @bind-Value="reclamo.CodigoCliente"
                         Data="clientes"
                         Name="fCliente"
-                        ValueProperty="@nameof(Cliente.IdCliente)"
+                        ValueProperty="@nameof(Cliente.CodigoCliente)"
                         TextProperty="@nameof(Cliente.RazonSocial)"
                         Change="OnClienteChange"
                         AllowFiltering=true
@@ -36,8 +35,8 @@
                                 <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)"   Title="Razón social" />
                             </Columns>
                         </RadzenDropDownDataGrid>
-                        <ValidationMessage For="@(() => reclamo.IdCliente)" />
-                    </RadzenStack>
+                         <ValidationMessage For="@(() => reclamo.CodigoCliente)" />
+                     </RadzenStack>
                 </RadzenColumn>
 
                 <RadzenColumn Size=2>
@@ -129,7 +128,8 @@
                                 <RadzenTextBox @bind-Value="d.DescripcionProducto"
                                 Placeholder="Se completa automáticamente..."
                                 Style="width:100%" MaxLength="500"
-                                Disabled="isLoading" />
+                                Disabled="true"
+                                ReadOnly="true"/>
                             </Template>
                         </RadzenDataGridColumn>
 
@@ -145,7 +145,7 @@
                             </Template>
                         </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn Title="Lote" Width="120px">
+                        <RadzenDataGridColumn Title="Lote" Width="180px">
                             <Template Context="d">
                                 <RadzenTextBox @bind-Value="d.Lote"
                                 Placeholder="Lote"
@@ -267,8 +267,8 @@ else
     private void HandleValidation(object sender, ValidationRequestedEventArgs args)
     {
         messageStore?.Clear();
-        if (reclamo.IdCliente == null)
-            messageStore?.Add(() => reclamo.IdCliente, "Debe seleccionar un cliente");
+        if (string.IsNullOrWhiteSpace(reclamo.CodigoCliente))
+            messageStore?.Add(() => reclamo.CodigoCliente, "Debe seleccionar un cliente");
         if (reclamo.Tipo == null)
             messageStore?.Add(() => reclamo.Tipo, "Debe seleccionar el tipo de reclamo");
         if (reclamo.Motivo == null)
@@ -278,9 +278,9 @@ else
     // ── Cliente: actualiza nombre en cabecera ─────────────────────────────────
     private void OnClienteChange(object value)
     {
-        if (value is int idCliente)
+        if (value is string codCliente)
         {
-            var cli = clientes.FirstOrDefault(c => c.IdCliente == idCliente);
+            var cli = clientes.FirstOrDefault(c => c.CodigoCliente == codCliente);
             if (cli != null)
             {
                 reclamo.CodigoCliente      = cli.CodigoCliente;
@@ -481,4 +481,4 @@ else
         if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
             RadzenDialogService.CloseDialog();
     }
-}
+    }
