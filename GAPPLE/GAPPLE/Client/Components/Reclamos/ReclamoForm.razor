@@ -338,7 +338,7 @@ else
             // Resultado único → autocompletar
             d.SKU                 = resultados[0].CodigoProducto;
             d.DescripcionProducto = resultados[0].Descripcion;
-            await skuGrid.Reload();
+            if (skuGrid != null) await skuGrid.Reload();
             return true;
         }
 
@@ -369,7 +369,7 @@ else
         };
         reclamo.Detalle.Add(linea);
         await Task.Delay(50);
-        await skuGrid.Reload();
+        if (skuGrid != null) await skuGrid.Reload();
         await JSFunction.FocusInput($"sku{linea.NumeroLinea}");
     }
 
@@ -381,7 +381,7 @@ else
             reclamo.Detalle[i].NumeroLinea = i + 1;
 
         await Task.Delay(40);
-        await skuGrid.Reload();
+        if (skuGrid != null) await skuGrid.Reload();
     }
 
     private async Task HandleBuscarSkuLinea(ReclamoDetalle d)
@@ -395,7 +395,7 @@ else
         {
             d.SKU                 = producto.CodigoProducto;
             d.DescripcionProducto = producto.Descripcion;
-            await skuGrid.Reload();
+            if (skuGrid != null) await skuGrid.Reload();
             await Task.Delay(50);
             await JSFunction.InputFocusAndSelect($"cant{d.NumeroLinea}");
         }
@@ -434,7 +434,7 @@ else
             });
         }
 
-        await skuGrid.Reload();
+        if (skuGrid != null) await skuGrid.Reload();
         isLoading = false;
 
         if (reclamo.Detalle.Any())
@@ -479,6 +479,6 @@ else
     private async Task Cancelar()
     {
         if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
-            RadzenDialogService.CloseDialog();
+                       RadzenDialogService.CloseDialog();
     }
-    }
+}
