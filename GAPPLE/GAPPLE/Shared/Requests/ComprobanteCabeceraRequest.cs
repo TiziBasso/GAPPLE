@@ -15,5 +15,6 @@ namespace GAPPLE.Shared.Requests
         public ComprobanteCabeceraEstadoEnum? IdEstado { get; set; }
         public string RazonSocialCliente { get => string.IsNullOrWhiteSpace(_razonSocialCliente) ? null : _razonSocialCliente; set => _razonSocialCliente = value; }
         public bool ConDetalle { get; set; }
+        public int? IdUsuario { get; set; }
     }
 }

@@ -351,10 +351,13 @@ namespace GAPPLE.Server.Controllers
                     };
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
 
-                    using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, producto.CodigoProducto))
+                    if (!string.IsNullOrEmpty(codListaPrecio))
                     {
-                        if (dtP.Rows.Count > 0)
-                            producto.Precio = decimal.Parse(dtP.Rows[0]["Precio"].ToString());
+                        using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, producto.CodigoProducto))
+                        {
+                            if (dtP.Rows.Count > 0)
+                                producto.Precio = decimal.Parse(dtP.Rows[0]["Precio"].ToString());
+                        }
                     }
 
                     productos.Add(producto);

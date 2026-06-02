@@ -18,7 +18,7 @@ namespace GAPPLE.Server.Tools
                 string columnName = colAttr?.Name;
 
                 // 2) Si la columna no existe, seguimos
-                if (!row.Table.Columns.Contains(columnName))
+                if (string.IsNullOrEmpty(columnName) || !row.Table.Columns.Contains(columnName))
                     continue;
 
                 object value = row[columnName];

@@ -32,6 +32,7 @@ namespace GAPPLE.Client.Services
 
         public async ValueTask<List<ComprobanteCabecera>> GetNotasCredito(ComprobanteCabeceraRequest request)
         {
+            request.IdUsuario = SesionDTO.IdUsuario;
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/notacredito/obtener", request);
 
             if (response.StatusCode == HttpStatusCode.OK)

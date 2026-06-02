@@ -7,6 +7,7 @@ namespace GAPPLE.Shared.Helpers
             public static string NotasCredito => "Notas de credito";
             public static string Motivos => "Motivos";
             public static string Acuerdos => "Acuerdos con clientes";
+            public static string Reclamos => "Reclamos";
         }
         public static string Alta => "alta";
         public static string Edicion => "edicion";

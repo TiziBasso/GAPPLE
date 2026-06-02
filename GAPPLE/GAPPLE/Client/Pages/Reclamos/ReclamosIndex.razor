@@ -1,0 +1,368 @@
+@page "/reclamos"
+@using GAPPLE.Client.Components.Reclamos
+
+@inject SeguridadService    SeguridadService
+@inject RadzenDialogService RadzenDialogService
+@inject ReclamosService     ReclamosService
+@inject ClientesService     ClientesService
+
+@if (showPage)
+{
+    <RadzenText TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" Text="Reclamos" class="rz-mb-3" />
+
+    <!-- ── Filtros ─────────────────────────────────────────────────── -->
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="4px" AlignItems="AlignItems.End" class="rz-mb-2">
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Desde:" Component="desde" />
+            <RadzenDatePicker @bind-Value="request.FechaDesde" DateFormat="dd/MM/yyyy" Name="desde" Style="width:8rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Hasta:" Component="hasta" />
+            <RadzenDatePicker @bind-Value="request.FechaHasta" DateFormat="dd/MM/yyyy" Name="hasta" Style="width:8rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Cliente:" Component="cliente" />
+            <TextBoxInput @bind-Value="request.RazonSocialCliente" id="cliente" OnKeyDown="OnKeyDown" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Tipo:" Component="tipo" />
+            <RadzenDropDown TValue="ReclamoTipoEnum?"
+                            Data="@tiposOpciones"
+                            @bind-Value="request.Tipo"
+                            Name="tipo"
+                            ValueProperty="@nameof(Estado<ReclamoTipoEnum?>.Id)"
+                            TextProperty="@nameof(Estado<ReclamoTipoEnum?>.Descripcion)"
+                            AllowClear=true Placeholder="(Todos)"
+                            Style="width:9rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Motivo:" Component="motivo" />
+            <RadzenDropDown TValue="ReclamoMotivoEnum?"
+                            Data="@motivosOpciones"
+                            @bind-Value="request.Motivo"
+                            Name="motivo"
+                            ValueProperty="@nameof(Estado<ReclamoMotivoEnum?>.Id)"
+                            TextProperty="@nameof(Estado<ReclamoMotivoEnum?>.Descripcion)"
+                            AllowClear=true Placeholder="(Todos)"
+                            Style="width:11rem" />
+        </RadzenStack>
+
+        <RadzenButton Click="FillReclamos" ButtonStyle="ButtonStyle.Secondary" Icon="search" Size="ButtonSize.Medium" />
+
+    </RadzenStack>
+
+    <!-- ── Botón nuevo ─────────────────────────────────────────────── -->
+    <RadzenStack Orientation="Orientation.Horizontal" class="rz-mb-2">
+        <RadzenButton Icon="add" Text="Nuevo reclamo" Size="ButtonSize.Small"
+                      Click="NuevoReclamo" Visible="permiteAlta" ButtonStyle="ButtonStyle.Secondary" />
+    </RadzenStack>
+
+    <!-- ── Grilla principal ────────────────────────────────────────── -->
+    <RadzenDataGrid @ref="grid"
+                    Data="reclamos"
+                    TItem="Reclamo"
+                    AllowSorting=true
+                    AllowFiltering=true
+                    ColumnWidth="200px"
+                    Density="Density.Compact"
+                    AllowColumnResize=true
+                    FilterMode="FilterMode.Simple"
+                    Style="height:60vh"
+                    ShowEmptyMessage="false"
+                    ExpandMode="DataGridExpandMode.Single"
+                    RowExpand="OnRowExpand">
+
+        <!-- ── Detalle expandible ──────────────────────────────── -->
+        <Template Context="reclamo">
+            <div class="rz-p-4" style="background:#f8fafc; border-left: 4px solid var(--rz-primary);">
+                @if (reclamo.Detalle.Count == 0)
+                {
+                    <RadzenText Text="Cargando detalle..." TextStyle="TextStyle.Caption" />
+                }
+                else
+                {
+                    <RadzenText Text="Productos afectados (SKUs)" TextStyle="TextStyle.Overline" class="rz-mb-1" />
+                    <RadzenDataGrid Data="reclamo.Detalle" Density="Density.Compact"
+                                    AllowSorting=false AllowFiltering=false ShowEmptyMessage=false
+                                    Style="margin-bottom:12px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.SKU)"                 Title="SKU"          Width="160px" />
+                            <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.DescripcionProducto)" Title="Descripción" />
+                            <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.Cantidad)"            Title="Cant."        Width="70px"  TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.Lote)"                Title="Lote"         Width="120px" />
+                            <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.Vencimiento)"         Title="Vencimiento"  Width="110px"
+                                                  FormatString="{0:dd/MM/yyyy}" Filterable=false TextAlign="TextAlign.Center" />
+                        </Columns>
+                    </RadzenDataGrid>
+
+                    <RadzenRow>
+                        <RadzenColumn Size=6>
+                            <RadzenText Text="Descripción del problema" TextStyle="TextStyle.Overline" />
+                            <RadzenCard Style="padding:8px; font-size:0.82rem;">
+                                @(string.IsNullOrWhiteSpace(reclamo.Descripcion) ? "—" : reclamo.Descripcion)
+                            </RadzenCard>
+                        </RadzenColumn>
+                        <RadzenColumn Size=6>
+                            <RadzenText Text="Resolución / Acción realizada" TextStyle="TextStyle.Overline" />
+                            <RadzenCard Style="padding:8px; font-size:0.82rem; border-left:3px solid var(--rz-success);">
+                                @(string.IsNullOrWhiteSpace(reclamo.Resolucion) ? "—" : reclamo.Resolucion)
+                            </RadzenCard>
+                        </RadzenColumn>
+                    </RadzenRow>
+                }
+            </div>
+        </Template>
+
+        <!-- ── Columnas ────────────────────────────────────────── -->
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Reclamo.IdReclamo)" Title="ID"
+                                  Width="100px" FormatString="{0:00000000}" Filterable=false />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.Fecha)" Title="Fecha"
+                                  Width="100px" FormatString="{0:dd/MM/yyyy}" Filterable=false TextAlign="TextAlign.Center" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.CodPedido)" Title="Cód. Pedido" Width="130px" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.CodigoCliente)" Title="N° Cliente" Width="100px" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.ClienteRazonSocial)" Title="Cliente" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.Tipo)" Title="Tipo"
+                                  Width="100px" Filterable=false TextAlign="TextAlign.Center">
+                <Template Context="r">
+                    <span style="@GetTipoStyle(r.Tipo)" class="rz-badge">
+                        @GetTipoLabel(r.Tipo)
+                    </span>
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.Motivo)" Title="Motivo"
+                                  Width="150px" Filterable=false TextAlign="TextAlign.Center">
+                <Template Context="r">
+                    <span style="@GetMotivoStyle(r.Motivo)" class="rz-badge">
+                        @GetMotivoLabel(r.Motivo)
+                    </span>
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.AltaUsuario)" Title="Alta usuario" Width="120px" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.AltaRegistro)" Title="Alta" Width="130px"
+                                  FormatString="{0:dd/MM/yyyy HH:mm}" Filterable=false TextAlign="TextAlign.Center" />
+
+            <!-- Editar -->
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false
+                                  Visible="permiteEdicion" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template Context="r">
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="edit"
+                                  ButtonStyle="ButtonStyle.Warning"
+                                  Click="@(() => EditarReclamo(r))"
+                                  title="Editar reclamo" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <!-- Eliminar -->
+            <RadzenDataGridColumn Width="35px" Resizable=false Sortable=false Filterable=false
+                                  Visible="permiteEliminar" Frozen=true FrozenPosition="FrozenColumnPosition.Right">
+                <Template Context="r">
+                    <RadzenButton Size="ButtonSize.ExtraSmall" Icon="delete"
+                                  ButtonStyle="ButtonStyle.Danger"
+                                  Click="@(() => EliminarReclamo(r))"
+                                  title="Eliminar reclamo" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showPage;
+    bool permiteAlta, permiteEdicion, permiteEliminar;
+
+    RadzenDataGrid<Reclamo> grid;
+    List<Reclamo> reclamos = [];
+    ReclamoRequest request  = new();
+
+    // Opciones para los dropdowns de filtro
+    List<Estado<ReclamoTipoEnum?>>   tiposOpciones   = [];
+    List<Estado<ReclamoMotivoEnum?>> motivosOpciones = [];
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        // await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos(Permisos.Menu.Reclamos);
+        permiteAlta     = permisos.Contains(Permisos.Alta);
+        permiteEdicion  = permisos.Contains(Permisos.Edicion);
+        permiteEliminar = permisos.Contains(Permisos.Eliminar);
+
+        tiposOpciones = [
+            new Estado<ReclamoTipoEnum?>(ReclamoTipoEnum.Grave,    "Grave"),
+            new Estado<ReclamoTipoEnum?>(ReclamoTipoEnum.Moderado, "Moderado"),
+            new Estado<ReclamoTipoEnum?>(ReclamoTipoEnum.Leve,     "Leve")
+        ];
+
+        motivosOpciones = [
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Vencidos,           "Vencidos"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes,         "Faltantes"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Calidad,           "Calidad / Roturas"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErroresFabricacion,"Errores de fabricación"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Administrativo,    "Administrativo")
+        ];
+
+        await FillReclamos();
+        showPage = true;
+    }
+
+    // ── Carga ──────────────────────────────────────────────────────────────
+    private async Task FillReclamos()
+    {
+        RadzenDialogService.OpenBusyWithLoader("Cargando...");
+        var response = await ReclamosService.GetReclamos(request);
+        RadzenDialogService.CloseDialog();
+
+        if (response == null)
+            RadzenDialogService.NotifyInternalServerError();
+        else
+        {
+            reclamos = response;
+            if (showPage) await grid.Reload();
+        }
+    }
+
+    // ── Expand: carga el detalle bajo demanda ─────────────────────────────
+    private async Task OnRowExpand(Reclamo reclamo)
+    {
+        if (reclamo.Detalle.Count == 0)
+        {
+            var detalle = await ReclamosService.GetReclamoDetalle(reclamo.IdReclamo);
+            reclamo.Detalle = detalle ?? [];
+        }
+    }
+
+    // ── Nuevo ──────────────────────────────────────────────────────────────
+    private Task NuevoReclamo() =>
+        AbrirDialogo("Nuevo reclamo", new Reclamo(), TipoOperacionEnum.Alta, AfterPost);
+
+    // ── Editar ─────────────────────────────────────────────────────────────
+    private async Task EditarReclamo(Reclamo reclamo)
+    {
+        // Asegurar que el detalle esté cargado antes de abrir el form
+        if (reclamo.Detalle.Count == 0)
+        {
+            RadzenDialogService.OpenBusyWithLoader("Cargando...");
+            var detalle = await ReclamosService.GetReclamoDetalle(reclamo.IdReclamo);
+            reclamo.Detalle = detalle ?? [];
+            RadzenDialogService.CloseDialog();
+        }
+        await AbrirDialogo($"Editar reclamo {reclamo.IdReclamo:00000000}", reclamo,
+            TipoOperacionEnum.Edicion, AfterPut);
+    }
+
+    // ── Eliminar ───────────────────────────────────────────────────────────
+    private async Task EliminarReclamo(Reclamo reclamo)
+    {
+        if (!await RadzenDialogService.ConfirmOperation("eliminar",
+            $"el reclamo {reclamo.IdReclamo:00000000} de {reclamo.ClienteRazonSocial}"))
+            return;
+
+        RadzenDialogService.OpenBusyWithLoader("Eliminando...");
+        var response = await ReclamosService.DeleteReclamo(reclamo.IdReclamo);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+        {
+            reclamos.Remove(reclamo);
+            await grid.Reload();
+            RadzenDialogService.NotifyDelete($"Reclamo {reclamo.IdReclamo:00000000}");
+        }
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    // ── Abrir diálogo form ─────────────────────────────────────────────────
+    private async Task AbrirDialogo(string titulo, Reclamo reclamo,
+        TipoOperacionEnum tipoOperacion, Func<Reclamo, Task> afterSave)
+    {
+        await RadzenDialogService.OpenAsync<ReclamoForm>(
+            titulo,
+            new Dictionary<string, object>
+            {
+                { "AfterSave",     EventCallback.Factory.Create<Reclamo>(this, afterSave) },
+                { "Reclamo",       reclamo },
+                { "TipoOperacion", tipoOperacion }
+            },
+            new DialogOptions { Width = "90rem", Height = "85vh" });
+    }
+
+    // ── Callbacks post-guardado ────────────────────────────────────────────
+    private async Task AfterPost(Reclamo reclamo)
+    {
+        reclamos.Insert(0, reclamo);
+        await grid.Reload();
+        RadzenDialogService.CloseDialog();
+        RadzenDialogService.NotifySuccess($"Reclamo {reclamo.IdReclamo:00000000}", "creado");
+    }
+
+    private async Task AfterPut(Reclamo reclamo)
+    {
+        var idx = reclamos.FindIndex(x => x.IdReclamo == reclamo.IdReclamo);
+        if (idx >= 0) reclamos[idx] = reclamo;
+        await grid.Reload();
+        RadzenDialogService.CloseDialog();
+        RadzenDialogService.NotifySuccess($"Reclamo {reclamo.IdReclamo:00000000}", "actualizado");
+    }
+
+    // ── Teclado ────────────────────────────────────────────────────────────
+    private async Task OnKeyDown(string key)
+    {
+        if (key == KeyboardKeys.Enter)
+            await FillReclamos();
+    }
+
+    // ── Helpers de badge ───────────────────────────────────────────────────
+    private static string GetTipoLabel(ReclamoTipoEnum? tipo) => tipo switch
+    {
+        ReclamoTipoEnum.Grave    => "GRAVE",
+        ReclamoTipoEnum.Moderado => "MODERADO",
+        ReclamoTipoEnum.Leve     => "LEVE",
+        _                        => "—"
+    };
+
+    private static string GetTipoStyle(ReclamoTipoEnum? tipo) => tipo switch
+    {
+        ReclamoTipoEnum.Grave    => "background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoTipoEnum.Moderado => "background:#f59e0b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoTipoEnum.Leve     => "background:#10b981;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        _                        => ""
+    };
+
+    private static string GetMotivoLabel(ReclamoMotivoEnum? motivo) => motivo switch
+    {
+        ReclamoMotivoEnum.Vencidos           => "VENCIDOS",
+        ReclamoMotivoEnum.Faltantes          => "FALTANTES",
+        ReclamoMotivoEnum.Calidad            => "CALIDAD",
+        ReclamoMotivoEnum.ErroresFabricacion => "ERRORES FABRIC.",
+        ReclamoMotivoEnum.Administrativo     => "ADMINISTRATIVO",
+        _                                    => "—"
+    };
+
+    private static string GetMotivoStyle(ReclamoMotivoEnum? motivo) => motivo switch
+    {
+        ReclamoMotivoEnum.Vencidos           => "background:#f97316;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.Faltantes          => "background:#3b82f6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.Calidad            => "background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErroresFabricacion => "background:#dc2626;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.Administrativo     => "background:#14b8a6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        _                                    => ""
+    };
+}
