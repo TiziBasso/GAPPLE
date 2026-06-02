@@ -1158,7 +1158,7 @@ namespace GAPPLE.Server.Controllers
                 var aux = GetOrden(orden.CodigoOrden, true, null, null);
                 if (aux == null)
                     ModelState.AddModelError("Realice la busqueda nuevamente.", "No se encontró la orden");
-                else if (aux.IdEstado != 4 || aux.IdEstado != orden.IdEstado)
+                else if (aux.IdEstado != orden.IdEstado)
                     ModelState.AddModelError("Realice la busqueda nuevamente.", "El estado de la orden ha cambiado");
 
                 if (ModelState.ErrorCount == 0)
