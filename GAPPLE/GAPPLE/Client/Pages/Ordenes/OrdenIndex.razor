@@ -230,7 +230,7 @@
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="undo" ButtonStyle="ButtonStyle.Danger" title="Volver a pendiente" Variant="Variant.Flat"
-                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4)
+                                  Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 4 || orden.IdEstado == 2)
                                   @onclick:stopPropagation="true" Click="@(() => RevertirEstadoOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
