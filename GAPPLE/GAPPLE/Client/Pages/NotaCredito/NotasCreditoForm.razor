@@ -278,7 +278,7 @@ else
 
     private async Task ComprobanteSeleccionado(Orden orden, bool cambiaDetalle = false)
     {
-        if (!string.IsNullOrEmpty(comprobante.CodListaPrecio))
+        if (!string.IsNullOrEmpty(orden.CodListaPrecio))
         {
             var aux = listasDePrecio.First(x => x.CodigoTango == orden.CodListaPrecio).IdLista;
             if (comprobante.Detalle.Any() && comprobante.IdListaPrecio != null && aux != comprobante.IdListaPrecio)
@@ -291,6 +291,7 @@ else
             else
                 comprobante.IdListaPrecio = aux;
         }
+        idTipoListaPreciosAux = comprobante.IdListaPrecio;
 
         comprobante.CodigoOrden = orden.CodigoOrden;
         comprobante.Factura = !orden.Presupuesto;
