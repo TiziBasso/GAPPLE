@@ -63,7 +63,8 @@ namespace GAPPLE.Server.Controllers
                     FechaHasta = (DateTime)row["FechaHasta"],
                     IdEstado = (AcuerdosEstadoEnum)int.Parse(row["IdEstado"].ToString()),
                     DescripcionEstado = row["DescripcionEstado"].ToString(),
-                    MontosCargados = int.Parse(row["MontosCargados"].ToString())
+                    MontosCargados = int.Parse(row["MontosCargados"].ToString()),
+                    TotalCargado = decimal.Parse(row["TotalCargado"].ToString())
                 };
 
                 if (row["Linea"] != DBNull.Value) a.Linea = row["Linea"].ToString();

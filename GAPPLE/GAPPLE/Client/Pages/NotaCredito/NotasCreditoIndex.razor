@@ -67,25 +67,20 @@
     <RadzenDataGrid @ref=grid Data="comprobantes" AllowSorting=true AllowFiltering=true ColumnWidth="200px" Density="Density.Compact" AllowColumnResize=true
                     FilterMode="FilterMode.Simple" Style="height:60vh" ShowEmptyMessage="false">
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.IdComprobante)" Title="ID" Width="100px" FormatString="{0:00000000}" Resizable=false>
-                <FilterTemplate>
-
-                </FilterTemplate>
-            </RadzenDataGridColumn>
-            @* <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.TipoComprobante)" Title="Tipo" Width="150px" Resizable=false>
-                <FilterTemplate>
-                </FilterTemplate>
-                <Template>
-                    @TiposComprobantes.ObtenerTipoComprobante(context.TipoComprobante).DescripcionComprobante
-                </Template>
-            </RadzenDataGridColumn> *@
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.IdComprobante)" Title="ID" Width="100px" FormatString="{0:00000000}" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoOrden)" Title="Cód. orden" Width="150px" Resizable=false />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodigoTango)" Title="Cód. tango" Width="150px" Resizable=false />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.NumeroNC)" Title="Número NC" Width="150px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Presupuesto)" Title="Presupuesto" Width="130px" Resizable=false Filterable="false">
+                <Template>
+                    <RadzenCheckBox Value="context.Presupuesto" ReadOnly="true" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.CodCliente)" Title="Cód. cliente" Width="150px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.FechaComprobante)" Title="Fecha" Width="120px" FormatString="{0:dd/MM/yyyy}" Resizable=false Filterable="false" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MotivoDescripcion)" Title="Motivo" Width="100px" />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.EstadoDescripcion)" Title="Estado" Width="100px" Filterable="false" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ImporteTotal)" Title="Total" Width="150px" FormatString="{0:N2}" Filterable="false" />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Observaciones)" Title="Observaciones" Width="100px" />
             <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.MercaderiaIngresada)" Title="Mercadería" Width="150px" Resizable=false Filterable="false">
                 <Template>
                     @if (context.MercaderiaIngresada == null)
@@ -102,10 +97,8 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.Observaciones)" Title="Observaciones" Width="100px" />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteRazonSocial)" Title="Cliente" Width="150px" />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCuit)" Title="Cuit" Width="150px" Resizable=false />
-            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.ClienteCategoriaIVA)" Title="Tipo IVA" Width="100px" Resizable=false />
+            <RadzenDataGridColumn Property="@nameof(ComprobanteCabecera.EstadoDescripcion)" Title="Estado" Width="100px" Filterable="false" />
+
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
@@ -183,11 +176,11 @@ else
     List<ComprobanteCabecera> comprobantes = [];
     ComprobanteCabecera Resumen = null;
     ComprobanteCabeceraRequest request = new()
-        {
-            FechaDesde = DateTime.Today.AddDays(-15),
-            FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
-            IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
-        };
+    {
+        FechaDesde = DateTime.Today.AddDays(-15),
+        FechaHasta = DateTime.Today.AddDays(1).AddSeconds(-1),
+        IdEstado = ComprobanteCabeceraEstadoEnum.Pendiente
+    };
 
     List<Estado<ComprobanteCabeceraEstadoEnum?>> estados = [];
 
@@ -274,7 +267,7 @@ else
 
         if (response.IsOk)
         {
-                nota.NumeroNC = numero;
+            nota.NumeroNC = numero;
             var index = comprobantes.FindIndex(x => x.IdComprobante == nota.IdComprobante);
             var obj = comprobantes[index];
 

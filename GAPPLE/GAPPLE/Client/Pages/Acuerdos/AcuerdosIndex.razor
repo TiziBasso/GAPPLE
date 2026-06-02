@@ -86,6 +86,12 @@
                         </Template>
                     </RadzenDataGridColumn>
 
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.TotalCargado)" Title="Total" Filterable="false" Width="70px" Groupable="false">
+                        <Template>
+                            <span>$@context.TotalCargado.ToString("N2")</span>
+                        </Template>
+                    </RadzenDataGridColumn>
+
                     <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@permiteAprobacion
                                           Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                         <Template Context="acuerdo">
