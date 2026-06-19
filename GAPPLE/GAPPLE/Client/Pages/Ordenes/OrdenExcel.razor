@@ -15,9 +15,9 @@
 @inject SesionDTO SesionDTO
 @inject SignalRService SignalRService
 @inject IJSFunction JSFunction
+@inject IJSFunctionRadzen JSFunctionRadzen
 @using System.Linq
 @using GAPPLE.Client.Components.Ordenes
-@using GAPPLE.Client.ComponentsUI
 @using GAPPLE.Client.Components.Productos
 
 
@@ -206,7 +206,7 @@
         </RadzenFieldset>
 
         <RadzenDataGrid @ref=refGrid Data="lstProductos" Style="display:grid; grid-template-rows: auto 1fr; min-height:30rem;" ShowEmptyMessage=false ColumnWidth="200px"
-                        Density="Density.Compact"
+                        Density="Density.Compact" id="skus"
                         AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
             <HeaderTemplate>
                 <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" Disabled=@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio)) />
@@ -218,10 +218,11 @@
                     <Template Context="data">
                         @if (data.IdProducto == 0)
                         {
-                            <input id="sku-@lstProductos.IndexOf(data)" type="text"
+                            <input id="sku-@lstProductos.IndexOf(data)" type="text" editable-cell
                                    @bind-value="data.CodigoProducto" @bind-value:event="oninput"
                                    @onfocusout="@(() => HandleSKUFocusOut(data))"
-                                   class="rz-textbox" style="width:100%; height:25px;" />
+                                   @onkeydown="@(k => OnKeyDown(k, data))" @onkeydown:preventDefault="shouldPreventDefault"
+                                   class="rz-textbox" style="width:100%; height:20px;" />
                         }
                         else
                         {
@@ -232,8 +233,8 @@
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="300px" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                     <FooterTemplate>
                         <strong>Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
@@ -241,8 +242,8 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)" @onkeydown="@(k => OnKeyDown(k))"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" editable-cell />
                     </Template>
                     <FooterTemplate>
                         <strong>Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
@@ -258,14 +259,14 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obsequios" Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right" Width="100px">
@@ -273,7 +274,8 @@
                         @if (permisoDescuento)
                         {
                             <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
-                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                                           @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                         }
                         else
                         {
@@ -339,7 +341,7 @@ else
 
     bool modoEdicion => !string.IsNullOrEmpty(CodOrden);
 
-    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento;
+    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento, shouldPreventDefault;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
     EditContext editContext;
@@ -438,8 +440,9 @@ else
     {
         lstProductos = orden.Detalle.Select(d => new ProductoOrden
         {
+            IdProducto = d.IdProducto,
             CodigoProducto = d.CodProducto,
-            Descripcion = d.CodProducto, // descripción se actualiza al subir un nuevo Excel
+            Descripcion = d.Descripcion,
             Linea = orden.Linea,
             CantidadSeleccionada = d.Cantidad,
             CantidadProbador = d.CantidadProbador,
@@ -470,13 +473,14 @@ else
 
         var ofertasStr = ofertasSeleccionadas.Any() ? string.Join(",", ofertasSeleccionadas) : null;
 
-        var resultado = await DialogService.OpenAsync<SubirArchivoExcelModal>(
+        await DialogService.OpenAsync<SubirArchivoExcelModal>(
             modoEdicion ? "Actualizar productos desde Excel" : "Cargar productos desde Excel",
             new()
             {
                 { "CodCliente", orden.CodCliente },
                 { "CodListaPrecio", orden.CodListaPrecio },
-                { "OfertasSeleccionadas", ofertasStr }
+                { "OfertasSeleccionadas", ofertasStr },
+                { "Callback" , EventCallback.Factory.Create<List<ProductoArchivo>>(this, AgregarProductos) }
             },
             new()
             {
@@ -488,25 +492,27 @@ else
                 CloseDialogOnOverlayClick = false
             });
 
-        if (resultado is List<ProductoArchivo> productos)
-        {
-            lstProductos = productos.Select(p => new ProductoOrden
-            {
-                IdProducto = p.IdProducto,
-                CodigoProducto = p.CodigoProducto,
-                Descripcion = p.Descripcion,
-                Linea = p.Linea,
-                CantidadSeleccionada = p.CantidadSeleccionada,
-                CantidadProbador = p.CantidadProbador,
-                CantidadObsequio = p.CantidadObsequio,
-                DescuentoCliente = p.DescuentoCliente,
-                Precio = p.Precio,
-                Pasivo = p.Pasivo,
-                CodComplemento = p.CodComplemento
-            }).ToList();
+    }
 
-            await RecalcularOfertas();
-        }
+    private async Task AgregarProductos(List<ProductoArchivo> productos)
+    {
+        DialogService.Close();
+        lstProductos = productos.Select(p => new ProductoOrden
+        {
+            IdProducto = p.IdProducto,
+            CodigoProducto = p.CodigoProducto,
+            Descripcion = p.Descripcion,
+            Linea = p.Linea,
+            CantidadSeleccionada = p.CantidadSeleccionada,
+            CantidadProbador = p.CantidadProbador,
+            CantidadObsequio = p.CantidadObsequio,
+            DescuentoCliente = p.DescuentoCliente,
+            Precio = p.Precio,
+            Pasivo = p.Pasivo,
+            CodComplemento = p.CodComplemento
+        }).ToList();
+
+        await RecalcularOfertas();
     }
 
     private async Task Guardar()
@@ -758,6 +764,29 @@ else
     {
         lstProductos.Remove(producto);
         await refGrid.Reload();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs args, ProductoOrden sku = null)
+    {
+        shouldPreventDefault = false;
+        if (args.Key == KeyboardKeys.Enter && sku != null)
+        {
+            shouldPreventDefault = true;
+            await HandleSKUFocusOut(sku);
+        }
+        if (args.Key == KeyboardKeys.Escape && sku != null)
+        {
+            shouldPreventDefault = true;
+            await EliminarProducto(sku);
+        }
+        else
+        {
+            int cols = 5;
+            if (!permisoDescuento) cols--;
+            if (!orden.Presupuesto) cols--;
+            if (!orden.Factura) cols--;
+            await JSFunctionRadzen.DataGridNavigation(args.Key, "skus", cols);
+        }
     }
 
     public async ValueTask DisposeAsync()

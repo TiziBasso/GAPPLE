@@ -98,6 +98,8 @@
     /// <summary>IDs de ofertas seleccionadas separados por coma. Opcional.</summary>
     [Parameter] public string OfertasSeleccionadas { get; set; }
 
+    [Parameter] public EventCallback<List<ProductoArchivo>> Callback { get; set; }
+
     IBrowserFile file;
     bool isLoading;
     CustomFileInput refCustom;
@@ -129,7 +131,12 @@
         RadzenDialogService.CloseDialog();
 
         if (response.IsOk)
-            DialogService.Close((List<ProductoArchivo>)response.Data);
+        {
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync((List<ProductoArchivo>)response.Data);
+            else
+                DialogService.Close((List<ProductoArchivo>)response.Data);
+        }
         else if (response.Errors != null && response.Errors.Count > 0)
             RadzenDialogService.ShowAlert(response.Errors);
         else
