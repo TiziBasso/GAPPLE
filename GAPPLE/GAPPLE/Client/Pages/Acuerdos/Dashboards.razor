@@ -1,0 +1,349 @@
+@page "/acuerdos/dashboard"
+@using System.Globalization
+
+@inject AcuerdosService AcuerdosService
+@inject SeguridadService SeguridadService
+@inject RadzenDialogService RadzenDialogService
+
+@if (!showPage)
+{
+    <Loader />
+}
+else
+{
+    @* ── Cabecera con filtro de período ── *@
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                 AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="12px" class="rz-mb-6">
+
+        <RadzenText TextStyle="TextStyle.DisplayH5" class="rz-m-0">Dashboard de Descuentos</RadzenText>
+
+        <RadzenCard Variant="Variant.Outlined" Style="padding:0.5rem 1rem;">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                         Wrap="FlexWrap.Wrap" Gap="8px">
+                <RadzenIcon Icon="calendar_today" Style="color:var(--rz-text-disabled-color)" />
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Desde:" Style="font-size:0.75rem" />
+                    <RadzenDatePicker @bind-Value="fechaDesde" DateFormat="dd/MM/yyyy" Style="width:8.5rem" />
+                </RadzenStack>
+                <span style="color:var(--rz-border-color)">|</span>
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Hasta:" Style="font-size:0.75rem" />
+                    <RadzenDatePicker @bind-Value="fechaHasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Style="width:8.5rem" />
+                </RadzenStack>
+                <RadzenButton Text="Actualizar" Icon="refresh" ButtonStyle="ButtonStyle.Primary"
+                              Size="ButtonSize.Small" Click="Actualizar" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+
+    @if (cargando)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate"
+                                   Size="ProgressBarCircularSize.Large"
+                                   Style="display:block;margin:4rem auto;" />
+    }
+    else if (montos != null)
+    {
+        @* ── KPI Cards ── *@
+        <RadzenRow Gap="1rem" class="rz-mb-6">
+
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <div style="background:var(--rz-primary);padding:1rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <RadzenIcon Icon="attach_money" Style="color:white;font-size:1.5rem" />
+                        </div>
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
+                                INVERSIÓN TOTAL DEL PERÍODO
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.H5" class="rz-m-0">
+                                $@inversionTotal.ToString("N2", CultureES)
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <div style="background:var(--rz-info);padding:1rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <RadzenIcon Icon="group" Style="color:white;font-size:1.5rem" />
+                        </div>
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
+                                CLIENTES BENEFICIADOS
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.H5" class="rz-m-0">@clientesBeneficiados</RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <div style="background:var(--rz-secondary);padding:1rem;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <RadzenIcon Icon="show_chart" Style="color:white;font-size:1.5rem" />
+                        </div>
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
+                                PROMEDIO POR CLIENTE
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.H5" class="rz-m-0">
+                                $@promedioPorCliente.ToString("N2", CultureES)
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        @* ── Gráficos ── *@
+        <RadzenRow Gap="1rem" class="rz-mb-6">
+
+            @* Gráfico de líneas *@
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard Variant="Variant.Outlined" Style="height:380px">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-3">Evolución de Inversión (Meses del período)</RadzenText>
+                    @if (evolucionMensual.Count > 1)
+                    {
+                        <RadzenChart Style="height:300px">
+                            <RadzenLineSeries Data="@evolucionMensual" CategoryProperty="Mes" ValueProperty="Total"
+                                              Title="Total ($)" Smooth="true" StrokeWidth="3">
+                                <RadzenMarkers MarkerType="MarkerType.Circle" Size="8" />
+                                <RadzenSeriesDataLabels Visible="false" />
+                            </RadzenLineSeries>
+                            <RadzenCategoryAxis />
+                            <RadzenValueAxis FormatString="${0:N0}" />
+                            <RadzenLegend Visible="false" />
+                        </RadzenChart>
+                    }
+                    else if (evolucionMensual.Count == 1)
+                    {
+                        <RadzenText class="rz-color-secondary rz-mt-4">
+                            Solo hay datos de un mes en el período. Amplíe el rango para ver la evolución.
+                        </RadzenText>
+                    }
+                    else
+                    {
+                        <RadzenText class="rz-color-secondary rz-mt-4">Sin datos para el período seleccionado.</RadzenText>
+                    }
+                </RadzenCard>
+            </RadzenColumn>
+
+            @* Top 10 clientes — barras horizontales custom *@
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard Variant="Variant.Outlined" Style="height:380px;overflow:hidden;display:flex;flex-direction:column">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-3">Top 10 Clientes por Monto</RadzenText>
+                    @if (topClientes.Count > 0)
+                    {
+                        <div style="overflow-y:auto;flex:1;padding-right:4px">
+                            @foreach (var cliente in topClientes)
+                            {
+                                <div class="rz-mb-3">
+                                    <RadzenStack Orientation="Orientation.Horizontal"
+                                                 JustifyContent="JustifyContent.SpaceBetween"
+                                                 AlignItems="AlignItems.Center" class="rz-mb-1">
+                                        <RadzenText Style="font-size:0.8rem;font-weight:500;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                                                    title="@cliente.RazonSocial">
+                                            @cliente.RazonSocial
+                                        </RadzenText>
+                                        <RadzenText Style="font-size:0.8rem;font-weight:700">
+                                            $@FormatShort(cliente.Total)
+                                        </RadzenText>
+                                    </RadzenStack>
+                                    <div style="background:var(--rz-base-200);border-radius:4px;height:10px;width:100%">
+                                        <div style="background:var(--rz-info);border-radius:4px;height:10px;width:@(BarWidth(cliente.Total))%;transition:width 0.4s ease"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <RadzenText class="rz-color-secondary">Sin datos para el período seleccionado.</RadzenText>
+                    }
+                </RadzenCard>
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        @* ── Tabla con buscador ── *@
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap"
+                         Gap="8px" class="rz-mb-1">
+                <div>
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">Detalle de Acuerdos</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                        Listado completo de operaciones en el rango seleccionado
+                    </RadzenText>
+                </div>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="8px">
+                    @if (!string.IsNullOrWhiteSpace(busquedaCliente))
+                    {
+                        <div style="background:var(--rz-info-lighter);border:1px solid var(--rz-info-light);border-radius:0.5rem;padding:0.4rem 0.75rem;white-space:nowrap">
+                            <RadzenText Style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--rz-info-dark)">
+                                Total Filtrado
+                            </RadzenText>
+                            <RadzenText Style="font-size:0.875rem;font-weight:700;color:var(--rz-info-darker)">
+                                $@totalFiltrado.ToString("N2", CultureES)
+                            </RadzenText>
+                        </div>
+                    }
+                    <RadzenTextBox @bind-Value="busquedaCliente" Placeholder="Buscar por cliente..."
+                                   @oninput="OnBusquedaChanged" Style="width:220px" />
+                </RadzenStack>
+            </RadzenStack>
+
+            <RadzenDataGrid Data="@tablaFiltrada" TItem="ClienteResumen" AllowSorting="true"
+                            AllowColumnResize="true" Density="Density.Compact"
+                            ShowEmptyMessage="@(tablaFiltrada.Count == 0)"
+                            EmptyText="@($"No se encontraron resultados para \"{busquedaCliente}\".")"
+                            Style="height:320px" AllowVirtualization="true">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(ClienteResumen.RazonSocial)" Title="Cliente" />
+                    <RadzenDataGridColumn Property="@nameof(ClienteResumen.Total)" Title="Total" TextAlign="TextAlign.Right" Width="160px">
+                        <Template Context="row">
+                            <strong>$@row.Total.ToString("N2", CultureES)</strong>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+}
+
+@code {
+    static readonly CultureInfo CultureES = new("es-AR");
+
+    record MonthData(string Mes, decimal Total);
+    record ClienteResumen(string RazonSocial, decimal Total);
+
+    bool showPage;
+    bool cargando;
+
+    DateTime fechaDesde = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    DateTime fechaHasta = DateTime.Today;
+
+    List<AcuerdoMonto> montos;
+
+    // KPIs
+    decimal inversionTotal;
+    int clientesBeneficiados;
+    decimal promedioPorCliente;
+
+    // Charts
+    List<MonthData> evolucionMensual = [];
+    List<ClienteResumen> topClientes = [];
+    decimal maxTopCliente;
+
+    // Tabla
+    string busquedaCliente = string.Empty;
+    List<ClienteResumen> tablaCompleta = [];
+    List<ClienteResumen> tablaFiltrada = [];
+    decimal totalFiltrado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        showPage = true;
+        await Actualizar();
+    }
+
+    private async Task Actualizar()
+    {
+        cargando = true;
+        StateHasChanged();
+
+        var request = new AcuerdoMontosRequest
+        {
+            FechaDesde = fechaDesde,
+            FechaHasta = fechaHasta
+        };
+
+        var response = await AcuerdosService.GetAcuerdosMontos(request);
+
+        if (response.IsOk)
+        {
+            montos = (List<AcuerdoMonto>)response.Data;
+            ComputeMetrics();
+        }
+        else
+        {
+            montos = [];
+            RadzenDialogService.NotifyInternalServerError();
+        }
+
+        cargando = false;
+    }
+
+    private void ComputeMetrics()
+    {
+        // KPIs
+        inversionTotal = montos.Sum(x => x.Monto);
+        clientesBeneficiados = montos.Select(x => x.IdCliente).Distinct().Count();
+        promedioPorCliente = clientesBeneficiados > 0 ? inversionTotal / clientesBeneficiados : 0;
+
+        // Evolución mensual
+        evolucionMensual = montos
+            .GroupBy(x => new { x.Fecha.Year, x.Fecha.Month })
+            .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+            .Select(g => new MonthData(
+                new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy", CultureES),
+                g.Sum(x => x.Monto)))
+            .ToList();
+
+        // Top 10 clientes
+        topClientes = montos
+            .GroupBy(x => x.RazonSocial)
+            .Select(g => new ClienteResumen(g.Key, g.Sum(x => x.Monto)))
+            .OrderByDescending(x => x.Total)
+            .Take(10)
+            .ToList();
+
+        maxTopCliente = topClientes.Count > 0 ? topClientes[0].Total : 1;
+
+        // Tabla
+        tablaCompleta = montos
+            .GroupBy(x => x.RazonSocial)
+            .Select(g => new ClienteResumen(g.Key, g.Sum(x => x.Monto)))
+            .OrderByDescending(x => x.Total)
+            .ToList();
+
+        AplicarFiltroTabla();
+    }
+
+    private void OnBusquedaChanged(ChangeEventArgs e)
+    {
+        busquedaCliente = e.Value?.ToString() ?? string.Empty;
+        AplicarFiltroTabla();
+    }
+
+    private void AplicarFiltroTabla()
+    {
+        tablaFiltrada = string.IsNullOrWhiteSpace(busquedaCliente)
+            ? tablaCompleta
+            : tablaCompleta
+                .Where(x => x.RazonSocial != null &&
+                    x.RazonSocial.Contains(busquedaCliente, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        totalFiltrado = tablaFiltrada.Sum(x => x.Total);
+    }
+
+    // Ancho de barra Top 10 (0–100)
+    private double BarWidth(decimal valor) =>
+        maxTopCliente > 0 ? (double)(valor / maxTopCliente * 100) : 0;
+
+    // Formato corto: $280k, $1.2M
+    private string FormatShort(decimal valor)
+    {
+        if (valor >= 1_000_000) return $"{(valor / 1_000_000):N1}M";
+        if (valor >= 1_000) return $"{(valor / 1_000):N0}k";
+        return valor.ToString("N0", CultureES);
+    }
+}
