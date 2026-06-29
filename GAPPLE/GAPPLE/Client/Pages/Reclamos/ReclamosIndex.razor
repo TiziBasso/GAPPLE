@@ -126,11 +126,13 @@
             <RadzenDataGridColumn Property="@nameof(Reclamo.Fecha)" Title="Fecha"
                                   Width="100px" FormatString="{0:dd/MM/yyyy}" Filterable=false TextAlign="TextAlign.Center" />
 
-            <RadzenDataGridColumn Property="@nameof(Reclamo.CodPedido)" Title="Cód. Pedido" Width="130px" />
+            <RadzenDataGridColumn Property="@nameof(Reclamo.IdComprobante)" Title="Cód. NC" Width="130px" />
 
             <RadzenDataGridColumn Property="@nameof(Reclamo.CodigoCliente)" Title="N° Cliente" Width="100px" />
 
             <RadzenDataGridColumn Property="@nameof(Reclamo.ClienteRazonSocial)" Title="Cliente" />
+
+            <RadzenDataGridColumn Property="@nameof(Reclamo.NumeroFactura)" Title="N° Fac." />
 
             <RadzenDataGridColumn Property="@nameof(Reclamo.Tipo)" Title="Tipo"
                                   Width="100px" Filterable=false TextAlign="TextAlign.Center">

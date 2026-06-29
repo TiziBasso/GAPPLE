@@ -128,5 +128,15 @@ namespace GAPPLE.Client.Services
 
             return await Response.CreateAsync(response);
         }
+
+        public async ValueTask<List<ComprobanteDetalle>> GetNotaCreditoDetalle(int idComprobante)
+        {
+            var aux = await GetNotasCredito(new() { IdComprobante = idComprobante, ConDetalle = true });
+
+            if (aux != null && aux.Count > 0)
+                return aux.First().Detalle;
+
+            return null;
+        }
     }
 }

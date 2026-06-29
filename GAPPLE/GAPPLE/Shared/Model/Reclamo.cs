@@ -19,8 +19,10 @@ namespace GAPPLE.Shared.Model
         [ColumnName("RazonSocial")]
         public string ClienteRazonSocial { get; set; }
 
-        [ColumnName("CodPedido")]
-        public string CodPedido { get; set; }
+        [ColumnName("CodNotaCredito")]
+        public int IdComprobante { get; set; }
+        [ColumnName("NumeroFactura")]
+        public string NumeroFactura { get; set; }
 
         [ColumnName("Tipo")]
         [Required(ErrorMessage = "Debe seleccionar el tipo de reclamo")]

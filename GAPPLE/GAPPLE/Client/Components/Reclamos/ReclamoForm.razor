@@ -3,6 +3,7 @@
 @inject ReclamosService     ReclamosService
 @inject ProductosService    ProductosService
 @inject ClientesService     ClientesService
+@inject ComprobantesService ComprobantesService
 @inject RadzenDialogService RadzenDialogService
 @inject DialogService       DialogService
 @inject IJSFunction         JSFunction
@@ -35,8 +36,8 @@
                                 <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)"   Title="Razón social" />
                             </Columns>
                         </RadzenDropDownDataGrid>
-                         <ValidationMessage For="@(() => reclamo.CodigoCliente)" />
-                     </RadzenStack>
+                        <ValidationMessage For="@(() => reclamo.CodigoCliente)" />
+                    </RadzenStack>
                 </RadzenColumn>
 
                 <RadzenColumn Size=2>
@@ -71,9 +72,9 @@
 
                 <RadzenColumn Size=3>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
-                        <RadzenLabel Text="Cód. Pedido" Component="fCodPedido" />
-                        <RadzenTextBox @bind-Value="reclamo.CodPedido" Name="fCodPedido"
-                        Placeholder="PED-000000" Style="width:100%" MaxLength="50" />
+                        <RadzenLabel Text="Cód. NC" Component="fCodPedido" />
+                        <RadzenNumeric @bind-Value="reclamo.IdComprobante" Name="fCodPedido" TValue="int"
+                        Placeholder="NC-000000" Style="width:100%" MaxLength="50" Change="@(args => BuscarDetalleNC(args))" />
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -287,6 +288,24 @@ else
                 reclamo.ClienteRazonSocial = cli.RazonSocial;
             }
         }
+    }
+
+    async Task BuscarDetalleNC(int CodNC)
+    {
+        isLoading = true;
+        var lstDetalleNC = await ComprobantesService.GetNotaCreditoDetalle(CodNC);
+        foreach(var item in lstDetalleNC)
+        {
+            reclamo.Detalle.Add(new()
+            {
+                Cantidad = item.Cantidad,
+                SKU = item.CodProducto,
+                DescripcionProducto = item.DescripcionProducto,
+                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+            });
+        }
+        if (skuGrid != null) await skuGrid.Reload();
+        isLoading = false;
     }
 
     private async Task HandleSkuKeyDown(KeyboardEventArgs e, ReclamoDetalle d)

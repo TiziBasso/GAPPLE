@@ -58,8 +58,8 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pCodCliente",  reclamo.CodigoCliente!);
             cmd.Parameters.AddWithValue("@pTipo",       (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",     (int)reclamo.Motivo!);
-            if (!string.IsNullOrWhiteSpace(reclamo.CodPedido))
-                cmd.Parameters.AddWithValue("@pCodPedido", reclamo.CodPedido);
+            if (reclamo.IdComprobante != 0)
+                cmd.Parameters.AddWithValue("@pIdComprobante", reclamo.IdComprobante);
             if (!string.IsNullOrWhiteSpace(reclamo.Descripcion))
                 cmd.Parameters.AddWithValue("@pDescripcion", reclamo.Descripcion);
             if (!string.IsNullOrWhiteSpace(reclamo.Resolucion))
@@ -108,8 +108,8 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pTipo",          (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",        (int)reclamo.Motivo!);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", reclamo.EdicionUsuario);
-            if (!string.IsNullOrWhiteSpace(reclamo.CodPedido))
-                cmd.Parameters.AddWithValue("@pCodPedido", reclamo.CodPedido);
+            if (reclamo.IdComprobante != 0)
+                cmd.Parameters.AddWithValue("@pIdComprobante", reclamo.IdComprobante);
             if (!string.IsNullOrWhiteSpace(reclamo.Descripcion))
                 cmd.Parameters.AddWithValue("@pDescripcion", reclamo.Descripcion);
             if (!string.IsNullOrWhiteSpace(reclamo.Resolucion))
