@@ -1,5 +1,5 @@
 @page "/orden/creacion/excel"
-@page "/orden/edicion/{CodOrden}"
+@* @page "/orden/edicion/{CodOrden}" *@
 
 @implements IAsyncDisposable
 
@@ -214,7 +214,7 @@
                 <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="upload_file" Text="Cargar Excel" Click="AbrirModalExcel" Size="ButtonSize.Small" Disabled="@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio))" />
             </HeaderTemplate>
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="90px">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="100px">
                     <Template Context="data">
                         @if (data.IdProducto == 0)
                         {
@@ -230,26 +230,26 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="300px" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="150px" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="100px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
                     <Template Context="data">
                         <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
                                        ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                     <FooterTemplate>
-                        <strong>Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
+                        <strong>P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="100px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
                     <Template Context="data">
                         <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)" @onkeydown="@(k => OnKeyDown(k))"
                                        ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" editable-cell />
                     </Template>
                     <FooterTemplate>
-                        <strong>Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
+                        <strong>F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Cant. T" Width="150px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
+                <RadzenDataGridColumn Title="Cant. T" Width="100px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
                     <Template>
                         @(data.CantidadSeleccionada * 2)
                     </Template>
@@ -257,17 +257,23 @@
                         <strong>Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Prob." Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
                         <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
                                        ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
+                    <FooterTemplate>
+                        <strong>Prob.: @(lstProductos.Sum(x => x.CantidadProbador).ToString())</strong>
+                    </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obsequios" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obseq." Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
                         <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
                                        ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
+                    <FooterTemplate>
+                        <strong>Obseq.: @(lstProductos.Sum(x => x.CantidadProbador).ToString())</strong>
+                    </FooterTemplate>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right" Width="100px">
                     <Template Context="data">
@@ -283,9 +289,9 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unit." Width="150px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="150px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="200px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
                     <Template>
                         @if (orden.Presupuesto && orden.Factura)
                         {
