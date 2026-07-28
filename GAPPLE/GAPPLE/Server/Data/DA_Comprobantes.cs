@@ -27,7 +27,6 @@ namespace GAPPLE.Server.Data
             if (idEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", (int)idEstado);
             if (razonSocial != null) cmd.Parameters.AddWithValue("@pRazonSocialCliente", razonSocial);
             if (idComprobante != null) cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
-            if (idComprobante != null) cmd.Parameters.AddWithValue("@pIdComprobante", idComprobante);
             if (idUsuario != null) cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);

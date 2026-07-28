@@ -1,4 +1,5 @@
-﻿@page "/orden/creacion/excel"
+@page "/orden/creacion/excel"
+@page "/orden/edicion/{CodOrden}"
 
 @implements IAsyncDisposable
 
@@ -13,9 +14,11 @@
 @inject RadzenDialogService RadzenDialogService
 @inject SesionDTO SesionDTO
 @inject SignalRService SignalRService
+@inject IJSFunction JSFunction
+@inject IJSFunctionRadzen JSFunctionRadzen
 @using System.Linq
 @using GAPPLE.Client.Components.Ordenes
-@using GAPPLE.Client.ComponentsUI
+@using GAPPLE.Client.Components.Productos
 
 
 @if (showPage)
@@ -58,7 +61,6 @@
 
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-
                         <RadzenLabel Text="Entregar en:" Component="sucursalesporcliente" />
                         @if (!unico)
                         {
@@ -98,7 +100,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
-                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact" Change=ClearGrid
+                        <RadzenDropDownDataGrid Data="listasDePrecio" @bind-Value="orden.CodListaPrecio" Disabled="@(SesionDTO.Rol != "1")" Density="Density.Compact" Change="ClearGrid"
                                                 TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.CodigoTango)" AllowVirtualization="true"
                                                 FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true FilterOperator="StringFilterOperator.Contains">
                             <Columns>
@@ -180,7 +182,7 @@
                         <ValidationMessage For="@(() => orden.ObservacionesZentra)" />
                     </RadzenStack>
                 </RadzenColumn>
-                
+
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Ofertas comunes:" />
@@ -203,38 +205,48 @@
             </RadzenRow>
         </RadzenFieldset>
 
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0">
-            <CustomFileInput @ref=refFileInput @bind-FileValue="file" ChangeFile="ClearGrid" />
-            <RadzenIcon Icon="question_mark" @onclick="ShowFormat" Style="margin-right:5px; height:10px; cursor:default;font-size:medium;" title="Formato de excel" />
-            <RadzenButton ButtonStyle="ButtonStyle.Info" Text="Procesar" Icon="upload" Click="ProcesarArchivo" Size="ButtonSize.Small" Disabled=isLoading />
-        </RadzenStack>
-
-        <RadzenDataGrid @ref=refGrid Data="lstProductos" Style="display:grid; min-height:30rem;" ShowEmptyMessage=false ColumnWidth="200px"
-                        Density="Density.Compact"
+        <RadzenDataGrid @ref=refGrid Data="lstProductos" Style="display:grid; grid-template-rows: auto 1fr; min-height:30rem;" ShowEmptyMessage=false ColumnWidth="200px"
+                        Density="Density.Compact" id="skus"
                         AllowSorting=true AllowFiltering=true AllowColumnResize=true FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+            <HeaderTemplate>
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" Disabled=@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio)) />
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled=@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio)) />
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="upload_file" Text="Cargar Excel" Click="AbrirModalExcel" Size="ButtonSize.Small" Disabled="@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio))" />
+            </HeaderTemplate>
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="80px" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="90px">
+                    <Template Context="data">
+                        @if (data.IdProducto == 0)
+                        {
+                            <input id="sku-@lstProductos.IndexOf(data)" type="text" editable-cell
+                                   @bind-value="data.CodigoProducto" @bind-value:event="oninput"
+                                   @onfocusout="@(() => HandleSKUFocusOut(data))"
+                                   @onkeydown="@(k => OnKeyDown(k, data))" @onkeydown:preventDefault="shouldPreventDefault"
+                                   class="rz-textbox" style="width:100%; height:20px;" />
+                        }
+                        else
+                        {
+                            @data.CodigoProducto
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="300px" />
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                     <FooterTemplate>
-                        <strong>
-                            Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
-                        </strong>
+                        <strong>Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)" @onkeydown="@(k => OnKeyDown(k))"
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" editable-cell />
                     </Template>
                     <FooterTemplate>
-                        <strong>
-                            Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())
-                        </strong>
+                        <strong>Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Title="Cant. T" Width="150px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
@@ -242,21 +254,19 @@
                         @(data.CantidadSeleccionada * 2)
                     </Template>
                     <FooterTemplate>
-                        <strong>
-                            Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())
-                        </strong>
+                        <strong>Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obsequios" Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right" Width="100px">
@@ -264,7 +274,8 @@
                         @if (permisoDescuento)
                         {
                             <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
-                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%" />
+                                           @onkeydown="@(k => OnKeyDown(k))" editable-cell
+                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
                         }
                         else
                         {
@@ -278,49 +289,38 @@
                     <Template>
                         @if (orden.Presupuesto && orden.Factura)
                         {
-                            <span>
-                                $@((precio.PrecioTotal * 2).ToString("N2"))
-                            </span>
+                            <span>$@((precio.PrecioTotal * 2).ToString("N2"))</span>
                         }
                         else if (orden.Presupuesto || orden.Factura)
                         {
-                            <span>
-                                $@precio.PrecioTotal.ToString("N2")
-                            </span>
+                            <span>$@precio.PrecioTotal.ToString("N2")</span>
                         }
                         else
                         {
-                            <span>
-                                $@((0).ToString("N2"))
-                            </span>
+                            <span>$@((0).ToString("N2"))</span>
                         }
                     </Template>
                     <FooterTemplate>
                         @if (orden.Presupuesto && orden.Factura)
                         {
-                            <strong>
-                                Total: $@(lstProductos.Sum(x => x.PrecioTotal * 2).ToString("N2"))
-                            </strong>
+                            <strong>Total: $@(lstProductos.Sum(x => x.PrecioTotal * 2).ToString("N2"))</strong>
                         }
                         else if (orden.Presupuesto || orden.Factura)
                         {
-                            <strong>
-                                Total: $@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))
-                            </strong>
+                            <strong>Total: $@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))</strong>
                         }
                         else
                         {
-                            <strong>
-                                Total: $@((0).ToString("N2"))
-                            </strong>
+                            <strong>Total: $@((0).ToString("N2"))</strong>
                         }
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                @* <RadzenDataGridColumn Width="20px" Frozen=true FrozenPosition="FrozenColumnPosition.Right" Resizable=false TextAlign="TextAlign.Center">
-            <Template Context="data">
-            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.ExtraSmall" Click="@(()=>DeleteRow(data))" />
-            </Template>
-            </RadzenDataGridColumn> *@
+                <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="40px" Frozen=true FrozenPosition="FrozenColumnPosition.Right" Resizable=false>
+                    <Template Context="data">
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall"
+                                      Click="@(() => EliminarProducto(data))" @onclick:stopPropagation="true" title="Eliminar" />
+                    </Template>
+                </RadzenDataGridColumn>
             </Columns>
         </RadzenDataGrid>
 
@@ -337,8 +337,11 @@ else
 }
 
 @code {
-    IBrowserFile file;
-    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento;
+    [Parameter] public string CodOrden { get; set; }
+
+    bool modoEdicion => !string.IsNullOrEmpty(CodOrden);
+
+    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento, shouldPreventDefault;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
     EditContext editContext;
@@ -353,14 +356,12 @@ else
 
     List<ProductoOrden> lstProductos = new();
     RadzenDataGrid<ProductoOrden> refGrid;
+    bool isLoadingSKU;
     List<Oferta> ofertas = new();
     List<Oferta> ofertasEspeciales = new();
     List<int> ofertasSeleccionadas = new();
     List<int> ofertasEspecialesSeleccionadas = new();
     Dictionary<string, List<Oferta>> codigosEnOfertas = new();
-
-    CustomFileInput refFileInput;
-    ByteArrayRequest request = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -376,15 +377,142 @@ else
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         condicionesDeVenta = await OrdenesService.GetCondicionesDeVenta();
         zonas = await OrdenesService.GetZonas();
-        var aux = await OfertasService.GetOfertas(null, null, null, true);
-        ofertas = [.. aux.Where(x => x.Desde < DateTime.Now & x.Hasta > DateTime.Now)];
-        // Si despues hacemos que este componente sea el de edicion de ordenes, hay que asignar las ofertas seleccionadas en base a las ofertas que tenga la orden
-        // ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
-        // ofertasEspecialesSeleccionadas.AddRange(ofertasEspeciales.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+
+        if (modoEdicion)
+        {
+            await CargarOrdenExistente();
+        }
+        else
+        {
+            var aux = await OfertasService.GetOfertas(null, null, null, true);
+            ofertas = [.. aux.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+            orden = new() { IdEstado = 1, Linea = "excel" };
+        }
 
         editContext = new(orden);
-
         showPage = true;
+    }
+
+    private async Task CargarOrdenExistente()
+    {
+        orden = await OrdenesService.GetOrden(CodOrden, true);
+        orden.CodigoOrdenOriginal = orden.CodigoOrden;
+
+        if (orden.IdEstado != 1)
+        {
+            await DialogService.Alert("La orden ya cambió de estado y no puede ser editada");
+            NavigationManager.NavigateTo("ordenes");
+            return;
+        }
+
+        orden.Factura = !orden.Presupuesto;
+
+        sucursalesPorClientes = await ClientesService.GetSucursalesPorCliente(orden.CodCliente);
+        if (sucursalesPorClientes.Count == 0)
+        {
+            unico = true;
+            var cliente = clientes.Find(x => x.CodigoCliente == orden.CodCliente);
+            entrega = $"{cliente?.Domicilio}, {cliente?.Localidad}, {cliente?.CodigoPostal}";
+        }
+        else if (sucursalesPorClientes.Count == 1)
+        {
+            unico = true;
+            entrega = sucursalesPorClientes.First().DireccionCompleta;
+        }
+
+        // Cargar ofertas filtrando por vigencia
+        var todasOfertas = await OfertasService.GetOfertas(null, null, null, true);
+        var todasEspeciales = await OfertasService.GetOfertasEspeciales(null, null, null, true, orden.CodCliente);
+        ofertas = [.. todasOfertas.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+        ofertasEspeciales = [.. todasEspeciales.Where(x => x.Desde < DateTime.Now && x.Hasta > DateTime.Now)];
+
+        // Pre-seleccionar las ofertas que tenía la orden
+        ofertasSeleccionadas.AddRange(ofertas.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+        ofertasEspecialesSeleccionadas.AddRange(ofertasEspeciales.Where(o => orden.Ofertas.Contains(o.IdOferta)).Select(x => x.IdOferta));
+
+        // Cargar productos desde el detalle de la orden existente
+        CargarProductosDesdeDetalle();
+
+        await RecalcularOfertas();
+    }
+
+    private void CargarProductosDesdeDetalle()
+    {
+        lstProductos = orden.Detalle.Select(d => new ProductoOrden
+        {
+            IdProducto = d.IdProducto,
+            CodigoProducto = d.CodProducto,
+            Descripcion = d.Descripcion,
+            Linea = orden.Linea,
+            CantidadSeleccionada = d.Cantidad,
+            CantidadProbador = d.CantidadProbador,
+            CantidadObsequio = d.CantidadObsequio,
+            Precio = d.Precio,
+            Pasivo = false
+        }).ToList();
+
+        // Aplicar descuentos manuales desde el detalle
+        foreach (var (producto, detalle) in lstProductos.Zip(orden.Detalle))
+        {
+            producto.DescuentoTotal = detalle.Descuento;
+        }
+    }
+
+    private async Task AbrirModalExcel()
+    {
+        if (string.IsNullOrEmpty(orden.CodCliente))
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar un cliente");
+            return;
+        }
+        if (string.IsNullOrEmpty(orden.CodListaPrecio))
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar una lista de precio");
+            return;
+        }
+
+        var ofertasStr = ofertasSeleccionadas.Any() ? string.Join(",", ofertasSeleccionadas) : null;
+
+        await DialogService.OpenAsync<SubirArchivoExcelModal>(
+            modoEdicion ? "Actualizar productos desde Excel" : "Cargar productos desde Excel",
+            new()
+            {
+                { "CodCliente", orden.CodCliente },
+                { "CodListaPrecio", orden.CodListaPrecio },
+                { "OfertasSeleccionadas", ofertasStr },
+                { "Callback" , EventCallback.Factory.Create<List<ProductoArchivo>>(this, AgregarProductos) }
+            },
+            new()
+            {
+                Width = "fit-content",
+                Height = "fit-content",
+                Style = "max-width:70vw;",
+                ShowClose = true,
+                CloseDialogOnEsc = true,
+                CloseDialogOnOverlayClick = false
+            });
+
+    }
+
+    private async Task AgregarProductos(List<ProductoArchivo> productos)
+    {
+        DialogService.Close();
+        lstProductos = productos.Select(p => new ProductoOrden
+        {
+            IdProducto = p.IdProducto,
+            CodigoProducto = p.CodigoProducto,
+            Descripcion = p.Descripcion,
+            Linea = p.Linea,
+            CantidadSeleccionada = p.CantidadSeleccionada,
+            CantidadProbador = p.CantidadProbador,
+            CantidadObsequio = p.CantidadObsequio,
+            DescuentoCliente = p.DescuentoCliente,
+            Precio = p.Precio,
+            Pasivo = p.Pasivo,
+            CodComplemento = p.CodComplemento
+        }).ToList();
+
+        await RecalcularOfertas();
     }
 
     private async Task Guardar()
@@ -405,14 +533,21 @@ else
                 if (orden.Usuario == null) return;
             }
 
-            if (await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2")}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
+            var montoAprox = orden.Detalle.Sum(x => x.Precio * x.Cantidad * (1 - x.Descuento / 100)).ToString("N2");
+            if (await DialogService.Confirm(MensajesHelper.Confirm("confirmar", $"el pedido por un monto aproximado de ${montoAprox}"), MensajesHelper.Title, new() { OkButtonText = "Sí", CancelButtonText = "No" }) == true)
             {
                 RadzenDialogService.OpenBusyWithLoader("Guardando...");
-                var result = await OrdenesService.PostPedido(orden);
+
+                Response result;
+                if (modoEdicion)
+                    result = await OrdenesService.PutPedido(orden);
+                else
+                    result = await OrdenesService.PostPedido(orden);
+
                 RadzenDialogService.CloseDialog();
+
                 if (result.IsOk)
                 {
-                    //parametros de consulta cambiar en el index para que inicie con los nuevos ingresados
                     NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                     NavigationManager.NavigateTo("ordenes");
                 }
@@ -434,54 +569,9 @@ else
         {
             NotificationService.Notify(NotificationSeverity.Info, "Alguno de los datos de la orden ha cambiado", "Procese el archivo nuevamente");
             lstProductos.Clear();
-            file = null;
             await refGrid.Reload();
         }
     }
-
-    private async Task ProcesarArchivo()
-    {
-        if (file == null)
-            NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar un archivo");
-        else if (string.IsNullOrEmpty(orden.CodCliente))
-            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar un cliente");
-        else if (string.IsNullOrEmpty(orden.CodListaPrecio))
-            NotificationService.Notify(NotificationSeverity.Info, "Debe seleccionar una lista de precio");
-        else
-        {
-            isLoading = true;
-            RadzenDialogService.OpenProgressBar("Procesando archivo");
-            await SignalRService.StartConnection();
-            request.CodListaPrecio = orden.CodListaPrecio;
-            request.CodCliente = orden.CodCliente;
-            request.ConnectionId = SignalRService.GetConnectionId();
-            if (ofertasSeleccionadas.Any())
-                request.OfertasSeleccionadas = string.Join(",", ofertasSeleccionadas);
-
-            using var stream = file.OpenReadStream();
-
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-
-            request.File = ms.ToArray();
-
-            var response = await ProductosService.ProcesarArchivo(request);
-            RadzenDialogService.CloseDialog();
-            if (response.IsOk)
-            {
-                lstProductos = (List<ProductoOrden>)response.Data;
-                await RecalcularOfertas();
-            }
-            else if (response.Errors != null && response.Errors.Count > 0)
-                RadzenDialogService.ShowAlert(response.Errors);
-            else
-                RadzenDialogService.NotifyInternalServerError();
-
-            isLoading = false;
-        }
-    }
-
-
 
     async Task AsignarVariables()
     {
@@ -517,7 +607,7 @@ else
 
         var aux = await OfertasService.GetOfertas(null, null, null, true);
         var aux2 = await OfertasService.GetOfertasEspeciales(null, null, null, true, orden.CodCliente);
-        
+
         if (orden.Ofertas.Any())
         {
             var idsEspecialesPrevias = ofertasEspeciales.Select(o => o.IdOferta).ToList();
@@ -531,12 +621,6 @@ else
 
         await ClearGrid();
         RadzenDialogService.CloseDialog();
-    }
-
-    private async Task DeleteRow(ProductoOrden p)
-    {
-        lstProductos.Remove(p);
-        await refGrid.Reload();
     }
 
     Oferta GetOfertaConMayorDescuento(string codigoProducto)
@@ -553,42 +637,22 @@ else
         orden.Ofertas.Clear();
 
         if (ofertasSeleccionadas != null)
-        {
-            orden.Ofertas.AddRange(
-                ofertasSeleccionadas
-                    .Where(id => idsComunesActuales.Contains(id))
-            );
-        }
+            orden.Ofertas.AddRange(ofertasSeleccionadas.Where(id => idsComunesActuales.Contains(id)));
 
         if (ofertasEspecialesSeleccionadas != null)
-        {
-            orden.Ofertas.AddRange(
-                ofertasEspecialesSeleccionadas
-                    .Where(id => idsEspecialesActuales.Contains(id)
-                              && !orden.Ofertas.Contains(id))
-            );
-        }
+            orden.Ofertas.AddRange(ofertasEspecialesSeleccionadas.Where(id => idsEspecialesActuales.Contains(id) && !orden.Ofertas.Contains(id)));
 
         if (orden.Ofertas != null && orden.Ofertas.Any())
         {
             var todas = ofertas.Concat(ofertasEspeciales);
-
-            var ofertasFiltradas = todas
-                .Where(o => orden.Ofertas.Contains(o.IdOferta));
+            var ofertasFiltradas = todas.Where(o => orden.Ofertas.Contains(o.IdOferta));
 
             codigosEnOfertas = ofertasFiltradas
                 .SelectMany(o => (o.Inclusiones ?? string.Empty)
                     .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(codigo => new
-                    {
-                        CodigoProducto = codigo,
-                        Oferta = o
-                    }))
+                    .Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
                 .GroupBy(x => x.CodigoProducto)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => x.Oferta).ToList()
-                );
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
         }
         else
         {
@@ -597,28 +661,132 @@ else
 
         foreach (var product in lstProductos)
         {
-            if (codigosEnOfertas != null
-                && codigosEnOfertas.Any()
-                && codigosEnOfertas.ContainsKey(product.CodigoProducto))
-            {
-                var ofertaConDescuentoMasAlto =
-                    GetOfertaConMayorDescuento(product.CodigoProducto);
-
-                product.DescuentoOferta =
-                    ofertaConDescuentoMasAlto.Descuento;
-            }
+            if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+                product.DescuentoOferta = GetOfertaConMayorDescuento(product.CodigoProducto).Descuento;
             else
-            {
                 product.DescuentoOferta = 0;
-            }
         }
 
-        await refGrid.Reload();
+        if (refGrid != null)
+            await refGrid.Reload();
     }
 
     private void ChangeDescuento(ProductoOrden p)
     {
         refGrid.UpdateRow(p);
+    }
+
+    private async Task InsertRow()
+    {
+        var nuevaFila = new ProductoOrden { IdProducto = 0, CantidadSeleccionada = 1 };
+        lstProductos.Add(nuevaFila);
+        await refGrid.Reload();
+        await Task.Delay(10);
+        await JSFunction.FocusInput($"sku-{lstProductos.Count - 1}");
+    }
+
+    private async Task HandleSKUFocusOut(ProductoOrden fila)
+    {
+        if (string.IsNullOrWhiteSpace(fila.CodigoProducto) || isLoadingSKU)
+            return;
+
+        isLoadingSKU = true;
+
+        var producto = await ProductosService.GetProductoOrden(fila.CodigoProducto.Trim(), orden.CodListaPrecio);
+
+        if (producto == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Producto no encontrado", $"No se encontró el código '{fila.CodigoProducto}'");
+            lstProductos.Remove(fila);
+        }
+        else if (lstProductos.Any(x => x.CodigoProducto == producto.CodigoProducto && x.IdProducto != 0))
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, "Producto duplicado", $"El producto '{producto.CodigoProducto}' ya está en la lista");
+            lstProductos.Remove(fila);
+        }
+        else
+        {
+            fila.IdProducto = producto.IdProducto;
+            fila.CodigoProducto = producto.CodigoProducto;
+            fila.Descripcion = producto.Descripcion;
+            fila.Linea = producto.Linea;
+            fila.Precio = producto.Precio;
+            fila.DescuentoCliente = producto.DescuentoCliente;
+            fila.CodComplemento = producto.CodComplemento;
+        }
+
+        await refGrid.Reload();
+        isLoadingSKU = false;
+    }
+
+    private async Task HandleBuscarSKU()
+    {
+        await RadzenDialogService.OpenAsync<ProductoBusqueda>(
+            "Búsqueda de SKU",
+            new()
+            {
+                { "Pasivo", false },
+                { "MultiSelect", true },
+                { "CodListaPrecio", orden.CodListaPrecio },
+                { "CallbackMultiple", EventCallback.Factory.Create<List<ProductoOrden>>(this, OnBuscarSKU) }
+            },
+            new() { Width = "60rem", Height = "90vh" });
+    }
+
+    private async Task OnBuscarSKU(List<ProductoOrden> seleccionados)
+    {
+        RadzenDialogService.CloseDialog();
+        RadzenDialogService.OpenBusy("Cargando...");
+
+        foreach (var producto in seleccionados)
+        {
+            if (!lstProductos.Any(x => x.CodigoProducto == producto.CodigoProducto && x.IdProducto != 0))
+            {
+                lstProductos.Add(new ProductoOrden
+                {
+                    IdProducto = producto.IdProducto,
+                    CodigoProducto = producto.CodigoProducto,
+                    Descripcion = producto.Descripcion,
+                    Linea = producto.Linea,
+                    Precio = producto.Precio,
+                    DescuentoCliente = producto.DescuentoCliente,
+                    CodComplemento = producto.CodComplemento,
+                    CantidadSeleccionada = 1
+                });
+            }
+        }
+
+        await RecalcularOfertas();
+        RadzenDialogService.CloseDialog();
+    }
+
+    private async Task EliminarProducto(ProductoOrden producto)
+    {
+        lstProductos.Remove(producto);
+        await refGrid.Reload();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs args, ProductoOrden sku = null)
+    {
+        shouldPreventDefault = false;
+        if (args.Key == KeyboardKeys.Enter && sku != null)
+        {
+            shouldPreventDefault = true;
+            await HandleSKUFocusOut(sku);
+        }
+        if (args.Key == KeyboardKeys.Escape && sku != null)
+        {
+            shouldPreventDefault = true;
+            await EliminarProducto(sku);
+        }
+        else
+        {
+            int cols = 5;
+            if (!permisoDescuento) cols--;
+            if (!orden.Presupuesto) cols--;
+            if (!orden.Factura) cols--;
+            await JSFunctionRadzen.DataGridNavigation(args.Key, "skus", cols);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -632,7 +800,7 @@ else
 
         if (!orden.Factura && !orden.Presupuesto)
         {
-            NotificationService.Notify(NotificationSeverity.Info, "Debe ingrear al menos 1 tipo de pedido");
+            NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar al menos 1 tipo de pedido");
             error = true;
         }
 
@@ -660,49 +828,13 @@ else
             }
             else
             {
-                orden.Linea = string.Join(",", lstProductos.Select(x => x.Linea).Distinct());
+                var lineas = lstProductos.Select(x => x.Linea).Where(x => !string.IsNullOrEmpty(x)).Distinct();
+                if (lineas.Any())
+                    orden.Linea = string.Join(",", lineas);
+                // si no hay líneas en los productos (cargados desde detalle existente), se mantiene orden.Linea original
             }
         }
 
         return !error;
-    }
-
-    int cantidadFacturada(ProductoOrden productoOrden)
-    {
-        int cantidadFacturado = 0;
-        int resto = productoOrden.CantidadSeleccionada % 2;
-        if (orden.Factura && orden.Presupuesto)
-        {
-            cantidadFacturado = productoOrden.CantidadSeleccionada / 2;
-            if (resto != 0)
-                cantidadFacturado += resto;
-
-        }
-        else if (orden.Factura)
-        {
-            cantidadFacturado = productoOrden.CantidadSeleccionada;
-        }
-        return cantidadFacturado;
-    }
-
-    int cantidadPresupuestada(ProductoOrden productoOrden)
-    {
-        int cantidadPresupuestado = 0;
-        if (orden.Factura && orden.Presupuesto)
-        {
-            cantidadPresupuestado = productoOrden.CantidadSeleccionada / 2;
-
-        }
-        else if (orden.Presupuesto)
-        {
-            cantidadPresupuestado = productoOrden.CantidadSeleccionada;
-        }
-        return cantidadPresupuestado;
-
-    }
-
-    private async Task ShowFormat()
-    {
-        await DialogService.OpenAsync<FormatoExcel>("Formato de carga del excel", null, new() { Width = "fit-content", Height = "fit-content", Style = "max-width:60vw;", ShowClose = true, CloseDialogOnEsc = true });
     }
 }

@@ -35,6 +35,14 @@
         var scriptElement2 = document.getElementById('scriptVersionado');
         scriptElement2.src = scriptUrl2;
     </script>
+    <script id="scriptVersionadoRadzen"></script>
+    <script>
+        var currentDate = new Date();
+        var timestamp = currentDate.getTime();
+        var scriptUrl2 = './Scripts/jsRadzen.js?v=' + timestamp;
+        var scriptElement2 = document.getElementById('scriptVersionadoRadzen');
+        scriptElement2.src = scriptUrl2;
+    </script>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

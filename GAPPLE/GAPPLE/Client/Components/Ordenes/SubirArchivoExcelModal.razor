@@ -1,0 +1,161 @@
+@implements IAsyncDisposable
+
+@inject ProductosService ProductosService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject RadzenDialogService RadzenDialogService
+@inject SignalRService SignalRService
+@inject FileService FileService
+
+@using GAPPLE.Client.ComponentsUI
+
+<CustomFileInput @ref=refCustom @bind-FileValue=file />
+
+<hr />
+
+
+<RadzenText TextStyle="TextStyle.DisplayH6" TextAlign="TextAlign.Center" Style="display:flex; align-items:center; justify-content:center;">
+    Formato de carga del excel
+    <RadzenButton Size=ButtonSize.ExtraSmall ButtonStyle=ButtonStyle.Info Icon="download" Click="DownloadTemplate" Style="margin-left:5px;" />
+</RadzenText>
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+    <div style="outline:none" class="rz-data-grid rz-has-paginator rz-datatable rz-datatable-scrollable rz-density-compact">
+        <div class="rz-data-grid-data">
+            <table class="rz-grid-table rz-grid-table-fixed rz-grid-table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:30px;">
+                            <span class="rz-column-title headerCustom" style="display:block; height:19px;">@string.Empty</span>
+                        </th>
+                        <th style="width:70px">
+                            <span class="rz-column-title headerCustom">A</span>
+                        </th>
+                        <th style="width:50px">
+                            <span class="rz-column-title headerCustom">B</span>
+                        </th>
+                        <th style="width:50px">
+                            <span class="rz-column-title headerCustom">C</span>
+                        </th>
+                        <th style="width:50px">
+                            <span class="rz-column-title headerCustom">D</span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span class="rz-column-title headerCustom" style="padding:0; height:35px;">1</span>
+                        </th>
+                        <th>
+                            <span class="rz-column-title">Código del <br />producto</span>
+                        </th>
+                        <th>
+                            <span class="rz-column-title">Cantidad</span>
+                        </th>
+                        <th>
+                            <span class="rz-column-title">Cantidad <br />Probador</span>
+                        </th>
+                        <th>
+                            <span class="rz-column-title">Cantidad <br />Obsequio</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="background-color:var(--rz-grid-header-background-color)">
+                            <span style="display:flex; justify-content:center;">2</span>
+                        </td>
+                        <td>656091</td>
+                        <td>5</td>
+                        <td>3</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:var(--rz-grid-header-background-color)">
+                            <span style="display:flex; justify-content:center;">3</span>
+                        </td>
+                        <td>8023</td>
+                        <td></td>
+                        <td></td>
+                        <td>1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="2rem" class="rz-mt-4">
+    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="file_upload" Text="Procesar" Click="Procesar" />
+</RadzenStack>
+
+@code {
+    /// <summary>Código de cliente para aplicar descuentos por artículo. Opcional.</summary>
+    [Parameter] public string CodCliente { get; set; }
+
+    /// <summary>Código de lista de precios para calcular precios del servidor. Opcional.</summary>
+    [Parameter] public string CodListaPrecio { get; set; }
+
+    /// <summary>IDs de ofertas seleccionadas separados por coma. Opcional.</summary>
+    [Parameter] public string OfertasSeleccionadas { get; set; }
+
+    [Parameter] public EventCallback<List<ProductoArchivo>> Callback { get; set; }
+
+    IBrowserFile file;
+    bool isLoading;
+    CustomFileInput refCustom;
+    ByteArrayRequest request = new();
+
+    private async Task Procesar()
+    {
+        if (file == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Info, "Debe ingresar un archivo");
+            return;
+        }
+
+        isLoading = true;
+        RadzenDialogService.OpenProgressBar("Procesando archivo");
+        await SignalRService.StartConnection();
+
+        request.CodListaPrecio = CodListaPrecio ?? string.Empty;
+        request.CodCliente = CodCliente ?? string.Empty;
+        request.ConnectionId = SignalRService.GetConnectionId();
+        request.OfertasSeleccionadas = OfertasSeleccionadas;
+
+        using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        request.File = ms.ToArray();
+
+        var response = await ProductosService.ProcesarArchivo(request);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+        {
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync((List<ProductoArchivo>)response.Data);
+            else
+                DialogService.Close((List<ProductoArchivo>)response.Data);
+        }
+        else if (response.Errors != null && response.Errors.Count > 0)
+            RadzenDialogService.ShowAlert(response.Errors);
+        else
+            RadzenDialogService.NotifyInternalServerError();
+
+        isLoading = false;
+    }
+
+    private async Task DownloadTemplate()
+    {
+        RadzenDialogService.OpenBusy("Descargando...");
+        await FileService.DownloadTemplate(["Cód. del producto", "Cantidad", "Probadores", "Obsequios"], "Productos");
+        RadzenDialogService.CloseDialog();
+    }
+
+    private void Cancelar() => DialogService.Close(null);
+
+    public async ValueTask DisposeAsync()
+    {
+        await SignalRService.StopConnection();
+    }
+}

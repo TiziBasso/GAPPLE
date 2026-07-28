@@ -208,7 +208,7 @@ namespace GAPPLE.Server.Controllers
         {
             try
             {
-                List<ProductoOrden> productos = new();
+                List<ProductoArchivo> productos = new();
                 SignalRController srC = new();
                 ClientesController cC = new(Configuration);
                 DataTable dt = ManejoDeArchivos.ExcelToDataTable(req.File, false, true);
@@ -219,12 +219,12 @@ namespace GAPPLE.Server.Controllers
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        ProductoOrden p = null;
+                        ProductoArchivo p = null;
                         bool carga = false;
                         if (!string.IsNullOrEmpty(row["0"].ToString().Trim()))
                         {
                             var cod = row["0"].ToString().Trim();
-                            p = ObtenerProductoOrden($"%{cod}", req.CodListaPrecio);
+                            p = ObtenerProductoArchivo($"%{cod}", req.CodListaPrecio);
                             if (p == null)
                                 ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El código {cod} no sé encontró");
                             else if (p.Pasivo)
@@ -255,32 +255,40 @@ namespace GAPPLE.Server.Controllers
 
                         if (carga)
                         {
-                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto)) p.DescuentoCliente = prodCliente.First(x => x.CodProducto == p.CodigoProducto).Descuento;
+                            if (prodCliente.Any(x => x.CodProducto == p.CodigoProducto))
+                                p.DescuentoCliente = prodCliente.First(x => x.CodProducto == p.CodigoProducto).Descuento;
+
+                            p.DescuentoTotal = p.DescuentoCliente;
+                            p.PrecioConDescuento = p.Precio * (1 - p.DescuentoTotal / 100);
+                            p.PrecioTotal = p.PrecioConDescuento * p.CantidadSeleccionada;
+
                             productos.Add(p);
+
                             if (p.CodComplemento != null)
                             {
-                                var aux = ObtenerProductoOrden(p.CodComplemento, req.CodListaPrecio);
-                                if (aux.Pasivo) //puede pasar?
+                                var aux = ObtenerProductoArchivo(p.CodComplemento, req.CodListaPrecio);
+                                if (aux.Pasivo)
                                     ModelState.AddModelError($"En la fila {row["originalRow"]}", $"El producto complemento {p.CodComplemento} se encuentra pasivo");
                                 else
                                 {
                                     if (productos.Exists(x => x.CodigoProducto == aux.CodigoProducto))
                                     {
-                                        productos.First(x => x.CodigoProducto == aux.CodigoProducto).CantidadSeleccionada += p.CantidadSeleccionada;
-                                        productos.First(x => x.CodigoProducto == aux.CodigoProducto).CantidadProbador += p.CantidadProbador;
+                                        var existing = productos.First(x => x.CodigoProducto == aux.CodigoProducto);
+                                        existing.CantidadSeleccionada += p.CantidadSeleccionada;
+                                        existing.CantidadProbador += p.CantidadProbador;
+                                        existing.PrecioTotal = existing.PrecioConDescuento * existing.CantidadSeleccionada;
                                     }
                                     else
                                     {
                                         aux.CantidadSeleccionada = p.CantidadSeleccionada;
                                         aux.CantidadProbador = p.CantidadProbador;
                                         aux.CantidadObsequio = p.CantidadObsequio;
+                                        aux.PrecioTotal = aux.PrecioConDescuento * aux.CantidadSeleccionada;
                                         productos.Add(aux);
                                     }
                                 }
                             }
-
                         }
-
 
                         i++;
                         await srC.CambiarPorcentajeTarea(HubContext.Clients, req.ConnectionId, (i * 100 / dt.Rows.Count));
@@ -301,6 +309,39 @@ namespace GAPPLE.Server.Controllers
                 //log
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        internal ProductoArchivo ObtenerProductoArchivo(string codProducto, string codListaPrecio)
+        {
+            ProductoArchivo p = null;
+            DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
+            using (DataTable dt = daP.ObtenerProductos(codProducto, null, null, null, null, null))
+            {
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    p = new()
+                    {
+                        IdProducto = int.Parse(row["IdProducto"].ToString()),
+                        CodigoProducto = row["CodigoProducto"].ToString()!,
+                        Descripcion = row["Descripcion"].ToString()!,
+                        Linea = row["Linea"].ToString(),
+                        Pasivo = bool.Parse(row["Pasivo"].ToString())
+                    };
+                    if (row["CodigoRelacionado"] != DBNull.Value)
+                        p.CodComplemento = row["CodigoRelacionado"].ToString();
+
+                    using (DataTable dtP = daP.ObtenerPrecio(codListaPrecio, null, p.CodigoProducto))
+                    {
+                        if (dtP.Rows.Count > 0)
+                        {
+                            p.Precio = decimal.Parse(dtP.Rows[0]["Precio"].ToString());
+                            p.PrecioConDescuento = p.Precio;
+                        }
+                    }
+                }
+            }
+            return p;
         }
 
         internal ProductoOrden ObtenerProductoOrden(string codProducto, string codListaPrecio)

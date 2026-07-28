@@ -30,8 +30,8 @@
     <HeaderTemplate>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
-                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" Disabled=@Disabled />
-                <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled=@Disabled />
+                    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto" Click="@InsertRow" Size="ButtonSize.Small" Disabled=@Disabled />
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto" Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled=@Disabled />
 
                 @if (IngresarLineaManual)
                 {

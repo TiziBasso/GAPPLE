@@ -166,7 +166,7 @@ namespace GAPPLE.Client.Services
             {
                 var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/procesar", req);
                 if (response.StatusCode == HttpStatusCode.OK)
-                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<List<ProductoOrden>>());
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<List<ProductoArchivo>>());
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                     return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
