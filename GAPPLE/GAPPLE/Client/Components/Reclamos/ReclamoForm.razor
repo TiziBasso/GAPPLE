@@ -1,3 +1,4 @@
+@using System.Globalization
 @using GAPPLE.Client.Components.Productos
 
 @inject ReclamosService     ReclamosService
@@ -25,12 +26,15 @@
                         ValueProperty="@nameof(Cliente.CodigoCliente)"
                         TextProperty="@nameof(Cliente.RazonSocial)"
                         Change="OnClienteChange"
+                        LoadData="OnLoadClientes"
                         AllowFiltering=true
                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                        AllowFilteringByAllStringColumns=true
-                        AllowVirtualization=true
+                        FilterDelay="400"
+                        IsLoading="cargandoClientes"
+                        EmptyText="@(clientesFiltro?.Trim().Length >= 2 ? "Sin resultados" : "Escriba al menos 2 letras para buscar...")"
                         Density="Density.Compact"
-                        Style="width:100%">
+                        Style="width:100%"
+                        PopupStyle="max-height:320px; overflow-y:auto; overflow-x:hidden;">
                             <Columns>
                                 <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código"      Width="80px" />
                                 <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)"   Title="Razón social" />
@@ -72,9 +76,18 @@
 
                 <RadzenColumn Size=3>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
-                        <RadzenLabel Text="Cód. NC" Component="fCodPedido" />
-                        <RadzenNumeric @bind-Value="reclamo.IdComprobante" Name="fCodPedido" TValue="int"
-                        Placeholder="NC-000000" Style="width:100%" MaxLength="50" Change="@(args => BuscarDetalleNC(args))" />
+                        <RadzenLabel Text="Nota de crédito" Component="fCodNC" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
+                            <RadzenTextBox @bind-Value="reclamo.NumeroFactura" Name="fCodNC"
+                            Placeholder="Nº de NC" Style="width:100%" Disabled="cargandoNC" MaxLength="50"
+                            Change="@(args => BuscarDetalleNC(args))" />
+                            <RadzenButton Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary"
+                            Click="@(() => BuscarDetalleNC(reclamo.NumeroFactura))"
+                            Disabled="@(cargandoNC || string.IsNullOrWhiteSpace(reclamo.NumeroFactura))"
+                            title="Cargar productos de la NC" IsBusy="cargandoNC" />
+                        </RadzenStack>
+                        <RadzenText Visible="cargandoNC" TextStyle="TextStyle.Caption"
+                        Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -83,101 +96,88 @@
 
         <RadzenFieldset Text="Productos afectados (SKUs)" Style="overflow-y:auto;">
 
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="6px" class="rz-mb-2">
-                <RadzenButton Icon="add" Text="Agregar SKU"
-                Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"
-                Click="AgregarSku" Disabled="isLoading" />
-                <RadzenButton Icon="search" Text="Buscar producto"
-                Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"
-                Click="HandleBuscarSKU" Disabled="isLoading" />
-            </RadzenStack>
+            <RadzenDataGrid @ref="skuGrid" Data="reclamo.Detalle" TItem="ReclamoDetalle"
+            Style="min-height: 180px;" Density="Density.Compact" IsLoading="isLoading"
+            AllowAlternatingRows="false" EmptyText="@string.Empty" class="rz-mt-1">
+                <HeaderTemplate>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
+                            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto"
+                            Click="@AgregarSku" Size="ButtonSize.Small" Disabled="isLoading" />
+                            <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto"
+                            Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled="isLoading" />
+                        </RadzenStack>
 
-            @if (reclamo.Detalle.Count == 0)
-            {
-                <RadzenText Text="No hay productos agregados. Haga clic en 'Agregar SKU' o en 'Buscar producto'."
-                TextStyle="TextStyle.Caption"
-                style="color:var(--rz-text-secondary-color); font-style:italic;" />
-            }
-            else
-            {
-                <RadzenDataGrid @ref="skuGrid"
-                Data="reclamo.Detalle"
-                Density="Density.Compact"
-                AllowSorting=false AllowFiltering=false ShowEmptyMessage=false
-                IsLoading="isLoading">
-                    <Columns>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="5rem" Style="width: fit-content;">
+                            <RadzenLabel Style="text-wrap:nowrap">
+                                Total de líneas: <strong>@(totalLineas)</strong>
+                            </RadzenLabel>
+                            <RadzenLabel Style="text-wrap: nowrap; margin-right: 1.5rem;">
+                                Total unidades: <strong>@(totalUnidades)</strong>
+                            </RadzenLabel>
+                        </RadzenStack>
+                    </RadzenStack>
+                    <ValidationMessage For="@(() => reclamo.Detalle)" />
+                    @if (reclamo.Detalle.Count == 0)
+                    {
+                        <RadzenText Text="No hay productos agregados. Use 'Agregar producto', 'Buscar producto' o ingrese un número de NC."
+                        TextStyle="TextStyle.Caption"
+                        style="color:var(--rz-text-secondary-color); font-style:italic;" />
+                    }
+                </HeaderTemplate>
+                <Columns>
 
-                        <RadzenDataGridColumn Title="Cód. Producto / SKU *" Width="180px">
-                            <Template Context="d">
-                                <RadzenStack Orientation="Orientation.Horizontal" Gap="2px" AlignItems="AlignItems.Center">
-                                    <input id="@($"sku{d.NumeroLinea}")"
-                                    type="text"
-                                    value="@d.SKU"
-                                    @oninput="@(e => d.SKU = e.Value?.ToString())"
-                                    @onkeydown="@(e => HandleSkuKeyDown(e, d))"
-                                    @onfocusout="@(() => HandleSkuFocusOut(d))"
-                                    readonly="@isLoading"
-                                    placeholder="Código producto..."
-                                    class="rz-textbox table-input-padding"
-                                    style="width:100%; height:25px;" />
-                                </RadzenStack>
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Cód. prod. *" TextAlign="TextAlign.Right" Width="130px" OrderIndex="0">
+                        <Template Context="d">
+                            <input id="@($"sku{d.NumeroLinea}")" type="text" value="@d.SKU"
+                            @oninput="@(e => d.SKU = e.Value?.ToString())"
+                            @onkeydown="@(e => HandleSkuKeyDown(e, d))"
+                            @onfocusout="@(() => HandleSkuFocusOut(d))"
+                            arrowKeyBlocker enterKeyBlocker readonly="@isLoading"
+                            placeholder="Código producto..."
+                            class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
+                        </Template>
+                    </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn Title="Descripción del producto">
-                            <Template Context="d">
-                                <RadzenTextBox @bind-Value="d.DescripcionProducto"
-                                Placeholder="Se completa automáticamente..."
-                                Style="width:100%" MaxLength="500"
-                                Disabled="true"
-                                ReadOnly="true"/>
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(ReclamoDetalle.DescripcionProducto)" Title="Descripción" TextAlign="TextAlign.Left" />
 
-                        <RadzenDataGridColumn Title="Cant." Width="80px">
-                            <Template Context="d">
-                                <input id="@($"cant{d.NumeroLinea}")"
-                                type="number" min="1"
-                                value="@d.Cantidad"
-                                @onchange="@(e => d.Cantidad = int.TryParse(e.Value?.ToString(), out int v) ? v : 1)"
-                                @onkeydown="@(e => HandleCantKeyDown(e, d))"
-                                class="rz-textbox table-input-padding"
-                                style="width:100%; height:25px; text-align:right;" />
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Cant" TextAlign="TextAlign.Right" Width="65px">
+                        <Template Context="d">
+                            <input id="@($"cant{d.NumeroLinea}")" type="number" min="1" @bind-value="d.Cantidad"
+                            @onkeydown="@(e => HandleCantKeyDown(e, d))" @onfocusout="@(() => OnFocusOutCant(d))"
+                            arrowKeyBlocker enterKeyBlocker disabled="@isLoading"
+                            class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
+                        </Template>
+                    </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn Title="Lote" Width="180px">
-                            <Template Context="d">
-                                <RadzenTextBox @bind-Value="d.Lote"
-                                Placeholder="Lote"
-                                Style="width:100%" MaxLength="100"
-                                Disabled="isLoading" />
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Lote" Width="150px">
+                        <Template Context="d">
+                            <input id="@($"lote{d.NumeroLinea}")" type="text" value="@d.Lote"
+                            @oninput="@(e => d.Lote = e.Value?.ToString())"
+                            @onkeydown="@(e => HandleLoteKeyDown(e, d))"
+                            maxlength="100" disabled="@isLoading"
+                            placeholder="Lote"
+                            class="rz-textbox table-input-padding" style="width:100%; height:25px;" />
+                        </Template>
+                    </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn Title="Vencimiento" Width="145px">
-                            <Template Context="d">
-                                <RadzenDatePicker @bind-Value="d.Vencimiento"
-                                DateFormat="dd/MM/yyyy"
-                                Style="width:100%"
-                                Disabled="isLoading" />
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Vencimiento" Width="145px">
+                        <Template Context="d">
+                            <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="dd/MM/yyyy"
+                            Style="width:100%" Disabled="isLoading" />
+                        </Template>
+                    </RadzenDataGridColumn>
 
-                        <RadzenDataGridColumn Title="" Width="45px" TextAlign="TextAlign.Center"
-                        Resizable=false Sortable=false>
-                            <Template Context="d">
-                                <RadzenButton Size="ButtonSize.ExtraSmall" Icon="close"
-                                ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat"
-                                Click="@(() => QuitarSku(d))"
-                                Disabled="isLoading"
-                                title="Quitar fila" />
-                            </Template>
-                        </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
+                        <Template Context="d">
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall"
+                            Disabled="isLoading" Click="@(args => QuitarSku(d))"
+                            @onclick:stopPropagation="true" title="Eliminar" />
+                        </Template>
+                    </RadzenDataGridColumn>
 
-                    </Columns>
-                </RadzenDataGrid>
-            }
+                </Columns>
+            </RadzenDataGrid>
         </RadzenFieldset>
 
         <RadzenFieldset Text="Descripción y resolución">
@@ -225,7 +225,13 @@ else
     Reclamo          reclamo;
     bool             showPage;
     bool             isLoading;
+    bool             cargandoNC;
+    int?             ultimoIdComprobanteCargado;
+    int              totalLineas, totalUnidades;
     List<Cliente>    clientes = [];
+    bool             cargandoClientes;
+    string           clientesFiltro;
+    const int        MaxResultadosCliente = 50;
     EditContext       editContext;
     ValidationMessageStore messageStore;
     RadzenDataGrid<ReclamoDetalle> skuGrid;
@@ -254,13 +260,21 @@ else
             new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Administrativo,     "Administrativo")
         ];
 
-        clientes = await ClientesService.GetClientes() ?? [];
+        // No se precarga el padrón completo de clientes (puede ser muy grande):
+        // solo se trae el cliente ya seleccionado (edición), si corresponde.
+        // El resto se busca a demanda desde OnLoadClientes mientras el usuario escribe.
+        if (!string.IsNullOrWhiteSpace(reclamo.CodigoCliente))
+            clientes = await ClientesService.GetClientes(codCliente: reclamo.CodigoCliente) ?? [];
+
+        if (int.TryParse(reclamo.NumeroFactura, out int idComprobanteInicial) && idComprobanteInicial > 0)
+            ultimoIdComprobanteCargado = idComprobanteInicial;
 
         editContext  = new(reclamo);
         editContext.OnValidationRequested += HandleValidation;
         editContext.OnFieldChanged        += (s, e) => messageStore?.Clear(e.FieldIdentifier);
         messageStore = new(editContext);
 
+        SetTotales();
         showPage = true;
     }
 
@@ -290,22 +304,130 @@ else
         }
     }
 
-    async Task BuscarDetalleNC(int CodNC)
+    // ── Cliente: búsqueda a demanda (no se carga todo el padrón en memoria) ───
+    private async Task OnLoadClientes(LoadDataArgs args)
     {
-        isLoading = true;
-        var lstDetalleNC = await ComprobantesService.GetNotaCreditoDetalle(CodNC);
-        foreach(var item in lstDetalleNC)
+        clientesFiltro = args.Filter;
+
+        if (string.IsNullOrWhiteSpace(args.Filter) || args.Filter.Trim().Length < 2)
         {
-            reclamo.Detalle.Add(new()
-            {
-                Cantidad = item.Cantidad,
-                SKU = item.CodProducto,
-                DescripcionProducto = item.DescripcionProducto,
-                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-            });
+            // Sin texto de búsqueda: solo se conserva visible el cliente ya seleccionado (si hay).
+            clientes = !string.IsNullOrWhiteSpace(reclamo.CodigoCliente)
+                ? clientes.Where(c => c.CodigoCliente == reclamo.CodigoCliente).ToList()
+                : [];
+            return;
         }
+
+        cargandoClientes = true;
+        StateHasChanged();
+
+        var filtro = args.Filter.Trim();
+        var porRazonSocial = ClientesService.GetClientes(razonSocial: filtro);
+        var porCodigo      = ClientesService.GetClientes(codCliente: filtro);
+        await Task.WhenAll(porRazonSocial.AsTask(), porCodigo.AsTask());
+
+        clientes = (porRazonSocial.Result ?? [])
+            .Concat(porCodigo.Result ?? [])
+            .GroupBy(c => c.CodigoCliente)
+            .Select(g => g.First())
+            .OrderBy(c => c.RazonSocial)
+            .Take(MaxResultadosCliente)
+            .ToList();
+
+        cargandoClientes = false;
+    }
+
+    // ── Nota de crédito: trae y agrega sus productos al reclamo ───────────────
+    private async Task BuscarDetalleNC(string numeroNC)
+    {
+        if (cargandoNC)
+            return;
+
+        if (!int.TryParse(numeroNC?.Trim(), out int idComprobante) || idComprobante <= 0)
+        {
+            if (!string.IsNullOrWhiteSpace(numeroNC))
+                RadzenDialogService.Notify(NotificationSeverity.Warning,
+                    "Número de NC inválido",
+                    "Ingrese solo el número de la nota de crédito.");
+            return;
+        }
+
+        if (ultimoIdComprobanteCargado == idComprobante)
+            return;
+
+        cargandoNC = true;
+        StateHasChanged();
+
+        NotaCreditoResumen resumen;
+        try
+        {
+            resumen = await ComprobantesService.GetNotaCreditoResumen(idComprobante);
+        }
+        catch
+        {
+            resumen = null;
+        }
+
+        if (resumen == null || (resumen.CodCliente == null && resumen.Detalle.Count == 0))
+        {
+            cargandoNC = false;
+            RadzenDialogService.Notify(NotificationSeverity.Warning,
+                "Nota de crédito no encontrada",
+                $"No se encontró información para la NC {idComprobante}.");
+            return;
+        }
+
+        // Autocompletar cliente ─────────────────────────────────────────────
+        if (!string.IsNullOrWhiteSpace(resumen.CodCliente))
+        {
+            bool hayConflicto = !string.IsNullOrWhiteSpace(reclamo.CodigoCliente)
+                                 && reclamo.CodigoCliente != resumen.CodCliente;
+
+            bool asignar = !hayConflicto || await RadzenDialogService.Confirm(
+                $"La NC {idComprobante} pertenece al cliente \"{resumen.ClienteRazonSocial}\", distinto del ya seleccionado. ¿Desea reemplazarlo?",
+                MensajesHelper.Title, RadzenHelper.Confirm()) == true;
+
+            if (asignar)
+            {
+                reclamo.CodigoCliente      = resumen.CodCliente;
+                reclamo.ClienteRazonSocial = resumen.ClienteRazonSocial;
+
+                if (!clientes.Any(c => c.CodigoCliente == resumen.CodCliente))
+                    clientes.Add(new Cliente { CodigoCliente = resumen.CodCliente, RazonSocial = resumen.ClienteRazonSocial });
+            }
+        }
+
+        // Agregar productos ──────────────────────────────────────────────────
+        int agregados = 0;
+        foreach (var item in resumen.Detalle)
+        {
+            if (reclamo.Detalle.Any(d => d.SKU == item.CodProducto))
+                continue;
+
+            reclamo.Detalle.Add(new ReclamoDetalle
+            {
+                SKU                 = item.CodProducto,
+                DescripcionProducto = item.DescripcionProducto,
+                Cantidad            = item.Cantidad > 0 ? item.Cantidad : 1,
+                NumeroLinea         = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+            });
+            agregados++;
+        }
+
+        ultimoIdComprobanteCargado = idComprobante;
+        cargandoNC = false;
+
         if (skuGrid != null) await skuGrid.Reload();
-        isLoading = false;
+        SetTotales();
+
+        if (agregados > 0)
+            RadzenDialogService.Notify(NotificationSeverity.Success,
+                "Productos cargados",
+                $"Se agregaron {agregados} producto(s) de la NC {idComprobante}.");
+        else if (resumen.Detalle.Count > 0)
+            RadzenDialogService.Notify(NotificationSeverity.Info,
+                "Sin productos nuevos",
+                "Los productos de esa NC ya estaban cargados en el reclamo.");
     }
 
     private async Task HandleSkuKeyDown(KeyboardEventArgs e, ReclamoDetalle d)
@@ -316,6 +438,16 @@ else
         {
             d.SKU               = null;
             d.DescripcionProducto = null;
+        }
+        else if (e.Key == KeyboardKeys.Up)
+        {
+            var prev = reclamo.Detalle.FirstOrDefault(x => x.NumeroLinea == d.NumeroLinea - 1);
+            if (prev != null) await JSFunction.InputFocusAndSelect($"sku{prev.NumeroLinea}");
+        }
+        else if (e.Key == KeyboardKeys.Down)
+        {
+            var next = reclamo.Detalle.FirstOrDefault(x => x.NumeroLinea == d.NumeroLinea + 1);
+            if (next != null) await JSFunction.InputFocusAndSelect($"sku{next.NumeroLinea}");
         }
     }
 
@@ -373,6 +505,22 @@ else
     private async Task HandleCantKeyDown(KeyboardEventArgs e, ReclamoDetalle d)
     {
         if (e.Key == KeyboardKeys.Enter)
+            await JSFunction.InputFocusAndSelect($"lote{d.NumeroLinea}");
+        else if (e.Key == KeyboardKeys.Up)
+        {
+            var prev = reclamo.Detalle.FirstOrDefault(x => x.NumeroLinea == d.NumeroLinea - 1);
+            if (prev != null) await JSFunction.InputFocusAndSelect($"cant{prev.NumeroLinea}");
+        }
+        else if (e.Key == KeyboardKeys.Down)
+        {
+            var next = reclamo.Detalle.FirstOrDefault(x => x.NumeroLinea == d.NumeroLinea + 1);
+            if (next != null) await JSFunction.InputFocusAndSelect($"cant{next.NumeroLinea}");
+        }
+    }
+
+    private async Task HandleLoteKeyDown(KeyboardEventArgs e, ReclamoDetalle d)
+    {
+        if (e.Key == KeyboardKeys.Enter)
         {
             var next = reclamo.Detalle.FirstOrDefault(x => x.NumeroLinea == d.NumeroLinea + 1);
             if (next != null)
@@ -380,26 +528,38 @@ else
         }
     }
 
+    private void OnFocusOutCant(ReclamoDetalle d)
+    {
+        if (d.Cantidad <= 0)
+            d.Cantidad = 1;
+        SetTotales();
+    }
+
     private async Task AgregarSku()
     {
         var linea = new ReclamoDetalle
         {
+            Cantidad    = 1,
             NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
         };
         reclamo.Detalle.Add(linea);
-        await Task.Delay(50);
+        SetTotales();
         if (skuGrid != null) await skuGrid.Reload();
+        await Task.Delay(1);
         await JSFunction.FocusInput($"sku{linea.NumeroLinea}");
     }
 
     private async Task QuitarSku(ReclamoDetalle d)
     {
+        if (await RadzenDialogService.Confirm(MensajesHelper.Confirm("eliminar", "la línea"), MensajesHelper.Title, RadzenHelper.Confirm()) != true)
+            return;
+
         reclamo.Detalle.Remove(d);
 
         for (int i = 0; i < reclamo.Detalle.Count; i++)
             reclamo.Detalle[i].NumeroLinea = i + 1;
 
-        await Task.Delay(40);
+        SetTotales();
         if (skuGrid != null) await skuGrid.Reload();
     }
 
@@ -453,6 +613,7 @@ else
             });
         }
 
+        SetTotales();
         if (skuGrid != null) await skuGrid.Reload();
         isLoading = false;
 
@@ -461,6 +622,12 @@ else
             await Task.Delay(50);
             await JSFunction.InputFocusAndSelect($"cant{reclamo.Detalle.Last().NumeroLinea}");
         }
+    }
+
+    private void SetTotales()
+    {
+        totalLineas   = reclamo.Detalle.Count;
+        totalUnidades = reclamo.Detalle.Sum(x => x.Cantidad);
     }
 
     private async Task Guardar()
@@ -480,12 +647,16 @@ else
         if (!await RadzenDialogService.ConfirmOperation())
             return;
 
+        RadzenDialogService.OpenBusyWithLoader("Guardando...");
+
         var response = TipoOperacion switch
         {
             TipoOperacionEnum.Alta    => await ReclamosService.PostReclamo(reclamo),
             TipoOperacionEnum.Edicion => await ReclamosService.PutReclamo(reclamo),
             _                         => null
         };
+
+        RadzenDialogService.CloseDialog();
 
         if (response == null || response.IsInternalServerError)
             RadzenDialogService.NotifyInternalServerError();
@@ -501,3 +672,9 @@ else
                        RadzenDialogService.CloseDialog();
     }
 }
+
+<style>
+    .table-input-padding input {
+        padding: 5px !important;
+    }
+</style>

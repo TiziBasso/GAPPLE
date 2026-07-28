@@ -43,23 +43,23 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        // ─── Insertar cabecera ────────────────────────────────────────────────────
-        public int InsertarReclamo(Reclamo reclamo)
+        // ─── Insertar cabecera (dentro de una transacción) ────────────────────────
+        public int InsertarReclamo(Reclamo reclamo, SqlTransaction transaction)
         {
             DataTable dt = new();
-            using SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
             {
-                Connection   = cnn,
-                CommandType  = CommandType.StoredProcedure,
-                CommandText  = "prc_ins_Reclamo"
+                Connection  = transaction.Connection,
+                Transaction = transaction,
+                CommandType = CommandType.StoredProcedure,
+                CommandText = "prc_ins_Reclamo"
             };
             cmd.Parameters.AddWithValue("@pFecha",      reclamo.Fecha.Date);
             cmd.Parameters.AddWithValue("@pCodCliente",  reclamo.CodigoCliente!);
             cmd.Parameters.AddWithValue("@pTipo",       (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",     (int)reclamo.Motivo!);
-            if (reclamo.IdComprobante != 0)
-                cmd.Parameters.AddWithValue("@pIdComprobante", reclamo.IdComprobante);
+            if (!string.IsNullOrWhiteSpace(reclamo.NumeroFactura))
+                cmd.Parameters.AddWithValue("@pCodPedido", reclamo.NumeroFactura);
             if (!string.IsNullOrWhiteSpace(reclamo.Descripcion))
                 cmd.Parameters.AddWithValue("@pDescripcion", reclamo.Descripcion);
             if (!string.IsNullOrWhiteSpace(reclamo.Resolucion))
@@ -70,13 +70,13 @@ namespace GAPPLE.Server.Data
             return int.Parse(dt.Rows[0]["IdReclamo"].ToString()!);
         }
 
-        // ─── Insertar una línea de detalle ────────────────────────────────────────
-        public void InsertarReclamoDetalle(int idReclamo, ReclamoDetalle detalle)
+        // ─── Insertar una línea de detalle (dentro de una transacción) ────────────
+        public void InsertarReclamoDetalle(int idReclamo, ReclamoDetalle detalle, SqlTransaction transaction)
         {
-            using SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
             {
-                Connection  = cnn,
+                Connection  = transaction.Connection,
+                Transaction = transaction,
                 CommandType = CommandType.StoredProcedure,
                 CommandText = "prc_ins_ReclamoDetalle"
             };
@@ -89,17 +89,16 @@ namespace GAPPLE.Server.Data
                 cmd.Parameters.AddWithValue("@pLote", detalle.Lote);
             if (detalle.Vencimiento != null)
                 cmd.Parameters.AddWithValue("@pVencimiento", detalle.Vencimiento.Value.Date);
-            cnn.Open();
             cmd.ExecuteNonQuery();
         }
 
-        // ─── Actualizar cabecera ──────────────────────────────────────────────────
-        public void ActualizarReclamo(Reclamo reclamo)
+        // ─── Actualizar cabecera (dentro de una transacción) ──────────────────────
+        public void ActualizarReclamo(Reclamo reclamo, SqlTransaction transaction)
         {
-            using SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
             {
-                Connection  = cnn,
+                Connection  = transaction.Connection,
+                Transaction = transaction,
                 CommandType = CommandType.StoredProcedure,
                 CommandText = "prc_upd_Reclamo"
             };
@@ -108,43 +107,40 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pTipo",          (int)reclamo.Tipo!);
             cmd.Parameters.AddWithValue("@pMotivo",        (int)reclamo.Motivo!);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", reclamo.EdicionUsuario);
-            if (reclamo.IdComprobante != 0)
-                cmd.Parameters.AddWithValue("@pIdComprobante", reclamo.IdComprobante);
+            if (!string.IsNullOrWhiteSpace(reclamo.NumeroFactura))
+                cmd.Parameters.AddWithValue("@pCodPedido", reclamo.NumeroFactura);
             if (!string.IsNullOrWhiteSpace(reclamo.Descripcion))
                 cmd.Parameters.AddWithValue("@pDescripcion", reclamo.Descripcion);
             if (!string.IsNullOrWhiteSpace(reclamo.Resolucion))
                 cmd.Parameters.AddWithValue("@pResolucion", reclamo.Resolucion);
-            cnn.Open();
             cmd.ExecuteNonQuery();
         }
 
-        // ─── Eliminar detalle de un reclamo (para reimportar al editar) ───────────
-        public void EliminarReclamoDetalle(int idReclamo)
+        // ─── Eliminar detalle de un reclamo (dentro de una transacción) ───────────
+        public void EliminarReclamoDetalle(int idReclamo, SqlTransaction transaction)
         {
-            using SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
             {
-                Connection  = cnn,
+                Connection  = transaction.Connection,
+                Transaction = transaction,
                 CommandType = CommandType.StoredProcedure,
                 CommandText = "prc_del_ReclamoDetalle"
             };
             cmd.Parameters.AddWithValue("@pIdReclamo", idReclamo);
-            cnn.Open();
             cmd.ExecuteNonQuery();
         }
 
-        // ─── Eliminar cabecera ────────────────────────────────────────────────────
-        public void EliminarReclamo(int idReclamo)
+        // ─── Eliminar cabecera (dentro de una transacción) ────────────────────────
+        public void EliminarReclamo(int idReclamo, SqlTransaction transaction)
         {
-            using SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
             {
-                Connection  = cnn,
+                Connection  = transaction.Connection,
+                Transaction = transaction,
                 CommandType = CommandType.StoredProcedure,
                 CommandText = "prc_del_Reclamo"
             };
             cmd.Parameters.AddWithValue("@pIdReclamo", idReclamo);
-            cnn.Open();
             cmd.ExecuteNonQuery();
         }
     }

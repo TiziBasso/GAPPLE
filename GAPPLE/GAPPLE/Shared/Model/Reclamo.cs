@@ -19,9 +19,8 @@ namespace GAPPLE.Shared.Model
         [ColumnName("RazonSocial")]
         public string ClienteRazonSocial { get; set; }
 
-        [ColumnName("CodNotaCredito")]
-        public int IdComprobante { get; set; }
         [ColumnName("NumeroFactura")]
+        [MaxLength(50, ErrorMessage = "El número de NC no puede superar los 50 caracteres")]
         public string NumeroFactura { get; set; }
 
         [ColumnName("Tipo")]
