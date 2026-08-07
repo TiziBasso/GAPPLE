@@ -163,12 +163,12 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems=AlignItems.Center Style="height:100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="F:" />
-                            <RadzenCheckBox @bind-Value="@orden.Factura" />
+                            <RadzenCheckBox @bind-Value="@orden.Factura" TValue="bool" Change="ChequearFactura" />
                         </RadzenStack>
 
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
                             <RadzenLabel Text="P:" />
-                            <RadzenCheckBox @bind-Value="@orden.Presupuesto" />
+                            <RadzenCheckBox @bind-Value="@orden.Presupuesto" TValue="bool" Change="ChequearPresupuesto" />
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
@@ -214,7 +214,7 @@
                 <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="upload_file" Text="Cargar Excel" Click="AbrirModalExcel" Size="ButtonSize.Small" Disabled="@(string.IsNullOrEmpty(orden.CodCliente) || string.IsNullOrEmpty(orden.CodListaPrecio))" />
             </HeaderTemplate>
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="90px">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CodigoProducto)" Title="Cód." Width="100px">
                     <Template Context="data">
                         @if (data.IdProducto == 0)
                         {
@@ -230,52 +230,80 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="300px" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
-                    <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
-                    </Template>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Descripcion)" Title="Descripción" Width="150px">
                     <FooterTemplate>
-                        <strong>Total P: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
+                        <strong style="display:block; text-align:right;">Totales:</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="150px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant. P" Width="100px" TextAlign="TextAlign.Right" Visible=@(orden.Presupuesto)>
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadSeleccionada Min="0" TValue="int" Disabled="@(orden.Presupuesto)" @onkeydown="@(k => OnKeyDown(k))"
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" editable-cell />
+                        <NumberInput TValue="int" @bind-Value="data.CantidadSeleccionada"
+                                     OnChange="@(_ => ActualizarComplemento(data))"
+                                     OnKeyDown="OnGridKeyDown"
+                                     Class="rz-textbox-grid editable-cell"
+                                     Style="width:100%; height:20px;"
+                                     arrowKeyBlocker />
                     </Template>
                     <FooterTemplate>
-                        <strong>Total F: @(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
+                        <strong>@(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Cant. T" Width="150px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.CantidadSeleccionada)" Title="Cant F." Width="100px" TextAlign="TextAlign.Right" Visible=@(orden.Factura)>
+                    <Template Context="data">
+                        <NumberInput TValue="int" @bind-Value="data.CantidadSeleccionada"
+                                     OnChange="@(_ => ActualizarComplemento(data))"
+                                     OnKeyDown="OnGridKeyDown"
+                                     Class="rz-textbox-grid editable-cell"
+                                     Style="width:100%; height:20px;"
+                                     arrowKeyBlocker
+                                     disabled=@orden.Presupuesto />
+                    </Template>
+                    <FooterTemplate>
+                        <strong>@(lstProductos.Sum(x => x.CantidadSeleccionada).ToString())</strong>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Cant. T" Width="100px" TextAlign="TextAlign.Right" Context="data" Visible=@(orden.Factura && orden.Presupuesto)>
                     <Template>
                         @(data.CantidadSeleccionada * 2)
                     </Template>
                     <FooterTemplate>
-                        <strong>Total: @(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())</strong>
+                        <strong>@(lstProductos.Sum(x => x.CantidadSeleccionada * 2).ToString())</strong>
                     </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Probadores" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadProbador)" Title="Prob." Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadProbador Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
+                        <NumberInput TValue="int" @bind-Value="data.CantidadProbador"
+                                     OnKeyDown="OnGridKeyDown"
+                                     Class="rz-textbox-grid editable-cell"
+                                     Style="width:100%; height:20px;"
+                                     arrowKeyBlocker />
                     </Template>
+                    <FooterTemplate>
+                        <strong>@(lstProductos.Sum(x => x.CantidadProbador).ToString())</strong>
+                    </FooterTemplate>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obsequios" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Visible=@(orden.Factura || orden.Presupuesto) Property="@nameof(ProductoOrden.CantidadObsequio)" Title="Obseq." Width="100px" TextAlign="TextAlign.Right">
                     <Template Context="data">
-                        <RadzenNumeric @bind-Value=data.CantidadObsequio Min="0" TValue="int" @onkeydown="@(k => OnKeyDown(k))" editable-cell
-                                       ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
+                        <NumberInput TValue="int" @bind-Value="data.CantidadObsequio"
+                                     OnKeyDown="OnGridKeyDown"
+                                     Class="rz-textbox-grid editable-cell"
+                                     Style="width:100%; height:20px;"
+                                     arrowKeyBlocker />
                     </Template>
+                    <FooterTemplate>
+                        <strong>@(lstProductos.Sum(x => x.CantidadObsequio).ToString())</strong>
+                    </FooterTemplate>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(ProductoOrden.DescuentoTotal)" Title="Descuento" FormatString="{0:N2}%" TextAlign="TextAlign.Right" Width="100px">
                     <Template Context="data">
                         @if (permisoDescuento)
                         {
-                            <RadzenNumeric @bind-Value=data.DescuentoTotal Min="0" Max="100" TValue="decimal" Change="@(args => ChangeDescuento(data))"
-                                           @onkeydown="@(k => OnKeyDown(k))" editable-cell
-                                           ShowUpDown=false AutoCompleteType="AutoCompleteType.Off" TextAlign="TextAlign.Right" Style="width:100%; height:20px;" />
+                            <NumberInput TValue="decimal" @bind-Value="data.DescuentoTotal"
+                                         OnChange="@(_ => OnDescuentoChange(data))"
+                                         OnKeyDown="OnGridKeyDown"
+                                         Class="rz-textbox-grid editable-cell"
+                                         Style="width:100%; height:20px;"
+                                         arrowKeyBlocker />
                         }
                         else
                         {
@@ -283,9 +311,9 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unitario" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
-                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="100px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.Precio)" Title="Unit." Width="150px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioConDescuento)" Title="Unit. c/desc" Width="150px" FormatString="${0:N2}" TextAlign="TextAlign.Right" />
+                <RadzenDataGridColumn Property="@nameof(ProductoOrden.PrecioTotal)" Context="precio" Title="Total" Width="200px" FormatString="${0:N2}" TextAlign="TextAlign.Right">
                     <Template>
                         @if (orden.Presupuesto && orden.Factura)
                         {
@@ -303,15 +331,15 @@
                     <FooterTemplate>
                         @if (orden.Presupuesto && orden.Factura)
                         {
-                            <strong>Total: $@(lstProductos.Sum(x => x.PrecioTotal * 2).ToString("N2"))</strong>
+                            <strong>$@(lstProductos.Sum(x => x.PrecioTotal * 2).ToString("N2"))</strong>
                         }
                         else if (orden.Presupuesto || orden.Factura)
                         {
-                            <strong>Total: $@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))</strong>
+                            <strong>$@(lstProductos.Sum(x => x.PrecioTotal).ToString("N2"))</strong>
                         }
                         else
                         {
-                            <strong>Total: $@((0).ToString("N2"))</strong>
+                            <strong>$@((0).ToString("N2"))</strong>
                         }
                     </FooterTemplate>
                 </RadzenDataGridColumn>
@@ -342,6 +370,7 @@ else
     bool modoEdicion => !string.IsNullOrEmpty(CodOrden);
 
     bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento, shouldPreventDefault;
+    bool esPresupuestoOriginal;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
     EditContext editContext;
@@ -397,6 +426,7 @@ else
     {
         orden = await OrdenesService.GetOrden(CodOrden, true);
         orden.CodigoOrdenOriginal = orden.CodigoOrden;
+        esPresupuestoOriginal = orden.Presupuesto;
 
         if (orden.IdEstado != 1)
         {
@@ -497,23 +527,69 @@ else
     private async Task AgregarProductos(List<ProductoArchivo> productos)
     {
         DialogService.Close();
-        lstProductos = productos.Select(p => new ProductoOrden
+
+        if (modoEdicion)
         {
-            IdProducto = p.IdProducto,
-            CodigoProducto = p.CodigoProducto,
-            Descripcion = p.Descripcion,
-            Linea = p.Linea,
-            CantidadSeleccionada = p.CantidadSeleccionada,
-            CantidadProbador = p.CantidadProbador,
-            CantidadObsequio = p.CantidadObsequio,
-            DescuentoCliente = p.DescuentoCliente,
-            Precio = p.Precio,
-            Pasivo = p.Pasivo,
-            CodComplemento = p.CodComplemento
-        }).ToList();
+            // El servidor ya incluye los complementos en la respuesta.
+            // Identificamos cuáles son complementos automáticos (no cargados explícitamente por el usuario)
+            // para no bloquearlos con el chequeo de duplicados.
+            var codigosComplemento = productos
+                .Where(p => !string.IsNullOrEmpty(p.CodComplemento))
+                .Select(p => p.CodComplemento)
+                .ToHashSet();
+
+            var duplicados = productos
+                .Where(p => !codigosComplemento.Contains(p.CodigoProducto))
+                .Where(p => lstProductos.Any(x => x.CodigoProducto == p.CodigoProducto && x.IdProducto != 0))
+                .Select(p => p.CodigoProducto)
+                .ToList();
+
+            if (duplicados.Any())
+            {
+                NotificationService.Notify(NotificationSeverity.Error,
+                    "Productos duplicados",
+                    $"Los siguientes productos ya están en la orden y no fueron agregados: {string.Join(", ", duplicados)}");
+                return;
+            }
+
+            foreach (var p in productos)
+            {
+                var existente = lstProductos.FirstOrDefault(x => x.CodigoProducto == p.CodigoProducto && x.IdProducto != 0);
+                if (existente != null && codigosComplemento.Contains(p.CodigoProducto))
+                {
+                    // Complemento ya en la lista: solo actualizamos la cantidad
+                    existente.CantidadSeleccionada = p.CantidadSeleccionada;
+                    existente.CantidadProbador = p.CantidadProbador;
+                }
+                else if (existente == null)
+                {
+                    lstProductos.Add(MapearProductoArchivo(p));
+                }
+            }
+        }
+        else
+        {
+            // En alta: el servidor ya trae los complementos, reemplazamos la lista completa
+            lstProductos = productos.Select(MapearProductoArchivo).ToList();
+        }
 
         await RecalcularOfertas();
     }
+
+    private ProductoOrden MapearProductoArchivo(ProductoArchivo p) => new()
+    {
+        IdProducto = p.IdProducto,
+        CodigoProducto = p.CodigoProducto,
+        Descripcion = p.Descripcion,
+        Linea = p.Linea,
+        CantidadSeleccionada = p.CantidadSeleccionada,
+        CantidadProbador = p.CantidadProbador,
+        CantidadObsequio = p.CantidadObsequio,
+        DescuentoCliente = p.DescuentoCliente,
+        Precio = p.Precio,
+        Pasivo = p.Pasivo,
+        CodComplemento = p.CodComplemento
+    };
 
     private async Task Guardar()
     {
@@ -671,9 +747,19 @@ else
             await refGrid.Reload();
     }
 
-    private void ChangeDescuento(ProductoOrden p)
+    private async Task OnGridKeyDown(string key)
     {
-        refGrid.UpdateRow(p);
+        int cols = 5;
+        if (!permisoDescuento) cols--;
+        if (!orden.Presupuesto) cols--;
+        if (!orden.Factura) cols--;
+        await JSFunctionRadzen.DataGridNavigation(key, "skus", cols);
+    }
+
+    private void OnDescuentoChange(ProductoOrden producto)
+    {
+        producto.DescuentoTotal = Math.Min(100, Math.Max(0, producto.DescuentoTotal));
+        refGrid.UpdateRow(producto);
     }
 
     private async Task InsertRow()
@@ -699,6 +785,11 @@ else
             NotificationService.Notify(NotificationSeverity.Info, "Producto no encontrado", $"No se encontró el código '{fila.CodigoProducto}'");
             lstProductos.Remove(fila);
         }
+        else if (producto.Pasivo)
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, "Producto pasivo", $"El producto '{producto.CodigoProducto}' se encuentra pasivo");
+            lstProductos.Remove(fila);
+        }
         else if (lstProductos.Any(x => x.CodigoProducto == producto.CodigoProducto && x.IdProducto != 0))
         {
             NotificationService.Notify(NotificationSeverity.Warning, "Producto duplicado", $"El producto '{producto.CodigoProducto}' ya está en la lista");
@@ -713,6 +804,8 @@ else
             fila.Precio = producto.Precio;
             fila.DescuentoCliente = producto.DescuentoCliente;
             fila.CodComplemento = producto.CodComplemento;
+
+            await AgregarComplementoSiCorresponde(fila);
         }
 
         await refGrid.Reload();
@@ -742,7 +835,7 @@ else
         {
             if (!lstProductos.Any(x => x.CodigoProducto == producto.CodigoProducto && x.IdProducto != 0))
             {
-                lstProductos.Add(new ProductoOrden
+                var nueva = new ProductoOrden
                 {
                     IdProducto = producto.IdProducto,
                     CodigoProducto = producto.CodigoProducto,
@@ -752,7 +845,9 @@ else
                     DescuentoCliente = producto.DescuentoCliente,
                     CodComplemento = producto.CodComplemento,
                     CantidadSeleccionada = 1
-                });
+                };
+                lstProductos.Add(nueva);
+                await AgregarComplementoSiCorresponde(nueva);
             }
         }
 
@@ -762,6 +857,17 @@ else
 
     private async Task EliminarProducto(ProductoOrden producto)
     {
+        if (!string.IsNullOrEmpty(producto.CodComplemento))
+        {
+            var complemento = lstProductos.FirstOrDefault(x => x.CodigoProducto == producto.CodComplemento);
+            if (complemento != null)
+            {
+                complemento.CantidadSeleccionada -= producto.CantidadSeleccionada;
+                if (complemento.CantidadSeleccionada <= 0)
+                    lstProductos.Remove(complemento);
+            }
+        }
+
         lstProductos.Remove(producto);
         await refGrid.Reload();
     }
@@ -792,6 +898,66 @@ else
     public async ValueTask DisposeAsync()
     {
         await SignalRService.StopConnection();
+    }
+
+    // Síncrono: el complemento siempre está en lista porque se agrega junto con el principal
+    private void ActualizarComplemento(ProductoOrden producto)
+    {
+        if (string.IsNullOrEmpty(producto.CodComplemento)) return;
+
+        var complemento = lstProductos.FirstOrDefault(x => x.CodigoProducto == producto.CodComplemento);
+        if (complemento == null) return;
+
+        complemento.CantidadSeleccionada = producto.CantidadSeleccionada;
+        refGrid.UpdateRow(complemento);
+    }
+
+    // Agrega el complemento a la lista si el producto lo tiene y aún no está cargado
+    private async Task AgregarComplementoSiCorresponde(ProductoOrden producto)
+    {
+        if (string.IsNullOrEmpty(producto.CodComplemento)) return;
+        if (lstProductos.Any(x => x.CodigoProducto == producto.CodComplemento)) return;
+
+        var complemento = await ProductosService.GetProductoOrden(producto.CodComplemento, orden.CodListaPrecio);
+        if (complemento != null)
+        {
+            complemento.CantidadSeleccionada = producto.CantidadSeleccionada;
+            lstProductos.Add(complemento);
+        }
+    }
+
+    private async Task ChequearFactura()
+    {
+        if (!modoEdicion || !orden.Factura) return;
+
+        if (orden.Factura == esPresupuestoOriginal)
+        {
+            string aux = orden.CodigoOrdenOriginal.Substring(1);
+            var response = await OrdenesService.GetOrden($"F{aux}", false);
+            if (response != null)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Ya existe una orden del tipo factura");
+                orden.Factura = false;
+                orden.Presupuesto = true;
+            }
+        }
+    }
+
+    private async Task ChequearPresupuesto()
+    {
+        if (!modoEdicion || !orden.Presupuesto) return;
+
+        if (orden.Presupuesto == !esPresupuestoOriginal)
+        {
+            string aux = orden.CodigoOrdenOriginal.Substring(1);
+            var response = await OrdenesService.GetOrden($"X{aux}", false);
+            if (response != null)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Ya existe una orden del tipo presupuesto");
+                orden.Factura = true;
+                orden.Presupuesto = false;
+            }
+        }
     }
 
     bool Validar()

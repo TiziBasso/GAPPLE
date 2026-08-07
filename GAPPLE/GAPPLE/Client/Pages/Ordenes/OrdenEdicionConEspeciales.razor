@@ -1,3 +1,4 @@
+@* @page "/orden/edicion/{CodOrden}" — ruta movida a OrdenExcel *@
 @* Ruta desactivada: la edición de órdenes ahora se realiza desde OrdenExcel (@page "/orden/edicion/{CodOrden}") *@
 
 @inject SeguridadService SeguridadService
@@ -545,7 +546,7 @@ else
                 ln.Probador = product.Probador;
                 ln.TieneObsequio = ln.CantidadObsequio > 0;
                 ln.DescuentoFinal = product.DescuentoFinal;
-                if (ln.DescuentoFinal > 0) product.ModificadoManual = true;
+                if (ln.DescuentoFinal > 0) ln.ModificadoManual = true;
             }
             Cards.Clear();
             foreach (var group in grouped)

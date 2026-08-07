@@ -374,11 +374,11 @@ namespace GAPPLE.Server.Controllers
             return p;
         }
 
-        internal List<ProductoOrden> ObtenerProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio)
+        internal List<ProductoOrden> ObtenerProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio, bool? pasivo = null)
         {
             List<ProductoOrden> productos = new();
             DA_Producto daP = new DA_Producto(Configuration.GetConnectionString("DefaultConnection"));
-            using (DataTable dt = daP.ObtenerProductos(codProducto, descripcion, null, null, linea, null))
+            using (DataTable dt = daP.ObtenerProductos(codProducto, descripcion, null, pasivo, linea, null))
             {
 
                 foreach (DataRow row in dt.Rows)
@@ -424,11 +424,11 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpGet("orden/varios")]
-        public IActionResult GetProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio)
+        public IActionResult GetProductosOrden(string codProducto, string descripcion, string linea, string codListaPrecio, bool? pasivo = null)
         {
             try
             {
-                return Ok(ObtenerProductosOrden(codProducto, descripcion, linea, codListaPrecio));
+                return Ok(ObtenerProductosOrden(codProducto, descripcion, linea, codListaPrecio, pasivo));
             }
             catch (Exception ex)
             {

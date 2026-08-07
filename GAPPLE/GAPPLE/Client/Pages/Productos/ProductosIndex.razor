@@ -86,6 +86,8 @@
                                   Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Id_STA))" Title="Cód. Tango" FilterOperator="FilterOperator.Contains"
+                                  Width="300px" Groupable="false" Resizable="false" />
             @* <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
                                   Frozen="true" FrozenPosition="FrozenColumnPosition.Left">
                 <Template Context="producto">
