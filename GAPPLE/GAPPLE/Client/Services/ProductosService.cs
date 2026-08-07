@@ -48,6 +48,7 @@ namespace GAPPLE.Client.Services
         }
 
         public async ValueTask<List<ProductoOrden>> GetProductosOrden(string codigoProducto, string descripcion, string linea, string codListaPrecio,
+                                                                        bool? pasivo = null,
                                                                         CancellationTokenSource cancellationToken = null)
         {
             Dictionary<string, object> query = new();
@@ -55,6 +56,7 @@ namespace GAPPLE.Client.Services
             if (descripcion != null) query["descripcion"] = WebUtility.UrlEncode($"%{descripcion.Trim()}%");
             if (linea != null) query["linea"] = linea;
             query["codListaPrecio"] = codListaPrecio;
+            if (pasivo != null) query["pasivo"] = pasivo;
             var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}").ToArray());
 
             var response = cancellationToken == null

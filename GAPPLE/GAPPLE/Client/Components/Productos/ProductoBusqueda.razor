@@ -117,7 +117,7 @@ else
         {
             isLoading = true;
             RadzenDialogService.OpenBusyWithLoader("Buscando...");
-            skus = await ProductosService.GetProductosOrden(codProducto, descripcion, descripcionLinea, CodListaPrecio, cancellationToken);
+            skus = await ProductosService.GetProductosOrden(codProducto, descripcion, descripcionLinea, CodListaPrecio, Pasivo, cancellationToken);
             RadzenDialogService.CloseDialog();
             isLoading = false;
             StateHasChanged();
