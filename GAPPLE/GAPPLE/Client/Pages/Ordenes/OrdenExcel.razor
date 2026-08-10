@@ -468,24 +468,47 @@ else
 
     private void CargarProductosDesdeDetalle()
     {
-        lstProductos = orden.Detalle.Select(d => new ProductoOrden
-        {
-            IdProducto = d.IdProducto,
-            CodigoProducto = d.CodProducto,
-            Descripcion = d.Descripcion,
-            Linea = orden.Linea,
-            CantidadSeleccionada = d.Cantidad,
-            CantidadProbador = d.CantidadProbador,
-            CantidadObsequio = d.CantidadObsequio,
-            Precio = d.Precio,
-            Pasivo = false
-        }).ToList();
+        // Construir mapa de ofertas preseleccionadas para derivar DescuentoCliente correcto.
+        // detalle.Descuento ya tiene la oferta anterior "horneada"; necesitamos el descuento base
+        // para que RecalcularOfertas() la re-aplique y el total resulte idéntico al guardado.
+        var todasPreseleccionadas = ofertas.Concat(ofertasEspeciales)
+            .Where(o => orden.Ofertas.Contains(o.IdOferta));
 
-        // Aplicar descuentos manuales desde el detalle
-        foreach (var (producto, detalle) in lstProductos.Zip(orden.Detalle))
+        var codigosPreseleccionados = todasPreseleccionadas
+            .SelectMany(o => (o.Inclusiones ?? string.Empty)
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(codigo => new { CodigoProducto = codigo, Oferta = o }))
+            .GroupBy(x => x.CodigoProducto)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Oferta).ToList());
+
+        lstProductos = orden.Detalle.Select(d =>
         {
-            producto.DescuentoTotal = detalle.Descuento;
-        }
+            var producto = new ProductoOrden
+            {
+                IdProducto = d.IdProducto,
+                CodigoProducto = d.CodProducto,
+                Descripcion = d.Descripcion,
+                Linea = orden.Linea,
+                CantidadSeleccionada = d.Cantidad,
+                CantidadProbador = d.CantidadProbador,
+                CantidadObsequio = d.CantidadObsequio,
+                Precio = d.Precio,
+                Pasivo = false
+                // DescuentoManual queda en null: el sistema no lo toca,
+                // solo el usuario lo asigna desde la UI.
+            };
+
+            // Derivar DescuentoCliente puro restando el efecto de la oferta previa
+            decimal descuentoOferta = 0;
+            if (codigosPreseleccionados.TryGetValue(d.CodProducto, out var ofertasDelProducto))
+                descuentoOferta = ofertasDelProducto.OrderByDescending(o => o.Descuento).First().Descuento;
+
+            producto.DescuentoCliente = descuentoOferta > 0 && descuentoOferta < 100
+                ? 100m - (1m - d.Descuento / 100m) / (1m - descuentoOferta / 100m) * 100m
+                : d.Descuento;
+
+            return producto;
+        }).ToList();
     }
 
     private async Task AbrirModalExcel()
@@ -737,7 +760,7 @@ else
 
         foreach (var product in lstProductos)
         {
-            if (codigosEnOfertas != null && codigosEnOfertas.Any() && codigosEnOfertas.ContainsKey(product.CodigoProducto))
+            if (codigosEnOfertas != null && codigosEnOfertas.Any() && !string.IsNullOrEmpty(product.CodigoProducto) && codigosEnOfertas.ContainsKey(product.CodigoProducto))
                 product.DescuentoOferta = GetOfertaConMayorDescuento(product.CodigoProducto).Descuento;
             else
                 product.DescuentoOferta = 0;
@@ -773,8 +796,15 @@ else
 
     private async Task HandleSKUFocusOut(ProductoOrden fila)
     {
-        if (string.IsNullOrWhiteSpace(fila.CodigoProducto) || isLoadingSKU)
+        if (isLoadingSKU)
             return;
+
+        if (string.IsNullOrWhiteSpace(fila.CodigoProducto))
+        {
+            lstProductos.Remove(fila);
+            await refGrid.Reload();
+            return;
+        }
 
         isLoadingSKU = true;
 
@@ -808,7 +838,7 @@ else
             await AgregarComplementoSiCorresponde(fila);
         }
 
-        await refGrid.Reload();
+        await RecalcularOfertas();
         isLoadingSKU = false;
     }
 
