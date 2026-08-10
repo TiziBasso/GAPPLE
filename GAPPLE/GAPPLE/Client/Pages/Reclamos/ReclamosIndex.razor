@@ -135,6 +135,8 @@
 
             <RadzenDataGridColumn Property="@nameof(Reclamo.NumeroFactura)" Title="Cód. NC" Width="130px" />
 
+            <RadzenDataGridColumn Property="@nameof(Reclamo.NFAC)" Title="Cód. NC" Width="130px" />
+
             <RadzenDataGridColumn Property="@nameof(Reclamo.Tipo)" Title="Tipo"
                                   Width="100px" Filterable=false TextAlign="TextAlign.Center">
                 <Template Context="r">
@@ -217,9 +219,17 @@ else
         motivosOpciones = [
             new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Vencidos,           "Vencidos"),
             new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes,         "Faltantes"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Calidad,           "Calidad / Roturas"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErroresFabricacion,"Errores de fabricación"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Administrativo,    "Administrativo")
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.BultosCruzados,           "Bultos cruzados"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.CortoVencimiento,"Corto vencimiento"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Devolucion,    "Devolución"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorEnvio,    "Error de envío"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorAdministrativo,    "Error de administración"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCargaVendedor,    "Error carga vendedor"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorFabricacion,    "Error fabricación"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.FaltanteCDA,    "FaltanteCDA"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeCalidad,    "Problema de calidad"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProductoIncompleto,    "Producto incompleto"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeEmpaque,    "Problema de empaque")
         ];
 
         await FillReclamos();

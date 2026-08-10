@@ -23,6 +23,9 @@ namespace GAPPLE.Shared.Model
         [MaxLength(50, ErrorMessage = "El número de NC no puede superar los 50 caracteres")]
         public string NumeroFactura { get; set; }
 
+        [ColumnName("NFAC")]
+        public string NFAC { get; set; }
+
         [ColumnName("Tipo")]
         [Required(ErrorMessage = "Debe seleccionar el tipo de reclamo")]
         public ReclamoTipoEnum? Tipo { get; set; }

@@ -1,18 +1,18 @@
 @using System.Globalization
 @using GAPPLE.Client.Components.Productos
 
-@inject ReclamosService     ReclamosService
-@inject ProductosService    ProductosService
-@inject ClientesService     ClientesService
+@inject ReclamosService ReclamosService
+@inject ProductosService ProductosService
+@inject ClientesService ClientesService
 @inject ComprobantesService ComprobantesService
 @inject RadzenDialogService RadzenDialogService
-@inject DialogService       DialogService
-@inject IJSFunction         JSFunction
+@inject DialogService DialogService
+@inject IJSFunction JSFunction
 
 @if (showPage)
 {
     <RadzenTemplateForm EditContext="editContext" Data="reclamo" TItem="Reclamo" Submit="Guardar"
-    Style="display:grid; grid-template-rows:auto 1fr auto; height:100%; gap:8px;">
+                        Style="display:grid; grid-template-rows:auto 1fr auto; height:100%; gap:8px;">
 
         <RadzenFieldset Text="Datos del reclamo">
             <RadzenRow Gap="8px">
@@ -21,23 +21,23 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Cliente *" Component="fCliente" />
                         <RadzenDropDownDataGrid @bind-Value="reclamo.CodigoCliente"
-                        Data="clientes"
-                        Name="fCliente"
-                        ValueProperty="@nameof(Cliente.CodigoCliente)"
-                        TextProperty="@nameof(Cliente.RazonSocial)"
-                        Change="OnClienteChange"
-                        LoadData="OnLoadClientes"
-                        AllowFiltering=true
-                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                        FilterDelay="400"
-                        IsLoading="cargandoClientes"
-                        EmptyText="@(clientesFiltro?.Trim().Length >= 2 ? "Sin resultados" : "Escriba al menos 2 letras para buscar...")"
-                        Density="Density.Compact"
-                        Style="width:100%"
-                        PopupStyle="max-height:320px; overflow-y:auto; overflow-x:hidden;">
+                                                Data="clientes"
+                                                Name="fCliente"
+                                                ValueProperty="@nameof(Cliente.CodigoCliente)"
+                                                TextProperty="@nameof(Cliente.RazonSocial)"
+                                                Change="OnClienteChange"
+                                                LoadData="OnLoadClientes"
+                                                AllowFiltering=true
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                FilterDelay="400"
+                                                IsLoading="cargandoClientes"
+                                                EmptyText="@(clientesFiltro?.Trim().Length >= 2 ? "Sin resultados" : "Escriba al menos 2 letras para buscar...")"
+                                                Density="Density.Compact"
+                                                Style="width:100%"
+                                                PopupStyle="max-height:320px; overflow-y:auto; overflow-x:hidden;">
                             <Columns>
-                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código"      Width="80px" />
-                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)"   Title="Razón social" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="80px" />
+                                <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón social" />
                             </Columns>
                         </RadzenDropDownDataGrid>
                         <ValidationMessage For="@(() => reclamo.CodigoCliente)" />
@@ -48,13 +48,13 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Tipo *" Component="fTipo" />
                         <RadzenDropDown TValue="ReclamoTipoEnum?"
-                        @bind-Value="reclamo.Tipo"
-                        Data="tiposOpciones"
-                        Name="fTipo"
-                        ValueProperty="@nameof(Estado<ReclamoTipoEnum?>.Id)"
-                        TextProperty="@nameof(Estado<ReclamoTipoEnum?>.Descripcion)"
-                        Placeholder="Seleccione..."
-                        Style="width:100%" />
+                                        @bind-Value="reclamo.Tipo"
+                                        Data="tiposOpciones"
+                                        Name="fTipo"
+                                        ValueProperty="@nameof(Estado<ReclamoTipoEnum?>.Id)"
+                                        TextProperty="@nameof(Estado<ReclamoTipoEnum?>.Descripcion)"
+                                        Placeholder="Seleccione..."
+                                        Style="width:100%" />
                         <ValidationMessage For="@(() => reclamo.Tipo)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -63,49 +63,57 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Motivo *" Component="fMotivo" />
                         <RadzenDropDown TValue="ReclamoMotivoEnum?"
-                        @bind-Value="reclamo.Motivo"
-                        Data="motivosOpciones"
-                        Name="fMotivo"
-                        ValueProperty="@nameof(Estado<ReclamoMotivoEnum?>.Id)"
-                        TextProperty="@nameof(Estado<ReclamoMotivoEnum?>.Descripcion)"
-                        Placeholder="Seleccione..."
-                        Style="width:100%" />
+                                        @bind-Value="reclamo.Motivo"
+                                        Data="motivosOpciones"
+                                        Name="fMotivo"
+                                        ValueProperty="@nameof(Estado<ReclamoMotivoEnum?>.Id)"
+                                        TextProperty="@nameof(Estado<ReclamoMotivoEnum?>.Descripcion)"
+                                        Placeholder="Seleccione..."
+                                        Style="width:100%" />
                         <ValidationMessage For="@(() => reclamo.Motivo)" />
                     </RadzenStack>
                 </RadzenColumn>
 
-                <RadzenColumn Size=3>
+                <RadzenColumn Size=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Nota de crédito" Component="fCodNC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
                             <RadzenTextBox @bind-Value="reclamo.NumeroFactura" Name="fCodNC"
-                            Placeholder="Nº de NC" Style="width:100%" Disabled="cargandoNC" MaxLength="50"
-                            Change="@(args => BuscarDetalleNC(args))" />
+                                           Placeholder="Nº de NC" Style="width:100%" Disabled="cargandoNC" MaxLength="50"
+                                           Change="@(args => BuscarDetalleNC(args))" />
                             <RadzenButton Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary"
-                            Click="@(() => BuscarDetalleNC(reclamo.NumeroFactura))"
-                            Disabled="@(cargandoNC || string.IsNullOrWhiteSpace(reclamo.NumeroFactura))"
-                            title="Cargar productos de la NC" IsBusy="cargandoNC" />
+                                          Click="@(() => BuscarDetalleNC(reclamo.NumeroFactura))"
+                                          Disabled="@(cargandoNC || string.IsNullOrWhiteSpace(reclamo.NumeroFactura))"
+                                          title="Cargar productos de la NC" IsBusy="cargandoNC" />
                         </RadzenStack>
                         <RadzenText Visible="cargandoNC" TextStyle="TextStyle.Caption"
-                        Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
+                                    Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
                     </RadzenStack>
                 </RadzenColumn>
-
+                <RadzenColumn Size="2">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
+                        <RadzenLabel Text="N Factura" Component="fNFAC" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
+                            <RadzenTextBox @bind-Value="reclamo.NFAC" Name="fNFAC"
+                                           Placeholder="Nº Factura" Style="width:100%" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenColumn>
             </RadzenRow>
         </RadzenFieldset>
 
         <RadzenFieldset Text="Productos afectados (SKUs)" Style="overflow-y:auto;">
 
             <RadzenDataGrid @ref="skuGrid" Data="reclamo.Detalle" TItem="ReclamoDetalle"
-            Style="min-height: 180px;" Density="Density.Compact" IsLoading="isLoading"
-            AllowAlternatingRows="false" EmptyText="@string.Empty" class="rz-mt-1">
+                            Style="min-height: 180px;" Density="Density.Compact" IsLoading="isLoading"
+                            AllowAlternatingRows="false" EmptyText="@string.Empty" class="rz-mt-1">
                 <HeaderTemplate>
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Style="width: 100%;">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="width: fit-content;">
                             <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="add" Text="Agregar producto"
-                            Click="@AgregarSku" Size="ButtonSize.Small" Disabled="isLoading" />
+                                          Click="@AgregarSku" Size="ButtonSize.Small" Disabled="isLoading" />
                             <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="search" Text="Buscar producto"
-                            Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled="isLoading" />
+                                          Click="@HandleBuscarSKU" Size="ButtonSize.Small" Disabled="isLoading" />
                         </RadzenStack>
 
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="5rem" Style="width: fit-content;">
@@ -121,8 +129,8 @@
                     @if (reclamo.Detalle.Count == 0)
                     {
                         <RadzenText Text="No hay productos agregados. Use 'Agregar producto', 'Buscar producto' o ingrese un número de NC."
-                        TextStyle="TextStyle.Caption"
-                        style="color:var(--rz-text-secondary-color); font-style:italic;" />
+                                    TextStyle="TextStyle.Caption"
+                                    style="color:var(--rz-text-secondary-color); font-style:italic;" />
                     }
                 </HeaderTemplate>
                 <Columns>
@@ -130,12 +138,12 @@
                     <RadzenDataGridColumn Title="Cód. prod. *" TextAlign="TextAlign.Right" Width="130px" OrderIndex="0">
                         <Template Context="d">
                             <input id="@($"sku{d.NumeroLinea}")" type="text" value="@d.SKU"
-                            @oninput="@(e => d.SKU = e.Value?.ToString())"
-                            @onkeydown="@(e => HandleSkuKeyDown(e, d))"
-                            @onfocusout="@(() => HandleSkuFocusOut(d))"
-                            arrowKeyBlocker enterKeyBlocker readonly="@isLoading"
-                            placeholder="Código producto..."
-                            class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
+                                   @oninput="@(e => d.SKU = e.Value?.ToString())"
+                                   @onkeydown="@(e => HandleSkuKeyDown(e, d))"
+                                   @onfocusout="@(() => HandleSkuFocusOut(d))"
+                                   arrowKeyBlocker enterKeyBlocker readonly="@isLoading"
+                                   placeholder="Código producto..."
+                                   class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
                         </Template>
                     </RadzenDataGridColumn>
 
@@ -144,35 +152,35 @@
                     <RadzenDataGridColumn Title="Cant" TextAlign="TextAlign.Right" Width="65px">
                         <Template Context="d">
                             <input id="@($"cant{d.NumeroLinea}")" type="number" min="1" @bind-value="d.Cantidad"
-                            @onkeydown="@(e => HandleCantKeyDown(e, d))" @onfocusout="@(() => OnFocusOutCant(d))"
-                            arrowKeyBlocker enterKeyBlocker disabled="@isLoading"
-                            class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
+                                   @onkeydown="@(e => HandleCantKeyDown(e, d))" @onfocusout="@(() => OnFocusOutCant(d))"
+                                   arrowKeyBlocker enterKeyBlocker disabled="@isLoading"
+                                   class="rz-textbox table-input-padding" style="width:100%; height:25px; text-align:right;" />
                         </Template>
                     </RadzenDataGridColumn>
 
                     <RadzenDataGridColumn Title="Lote" Width="150px">
                         <Template Context="d">
                             <input id="@($"lote{d.NumeroLinea}")" type="text" value="@d.Lote"
-                            @oninput="@(e => d.Lote = e.Value?.ToString())"
-                            @onkeydown="@(e => HandleLoteKeyDown(e, d))"
-                            maxlength="100" disabled="@isLoading"
-                            placeholder="Lote"
-                            class="rz-textbox table-input-padding" style="width:100%; height:25px;" />
+                                   @oninput="@(e => d.Lote = e.Value?.ToString())"
+                                   @onkeydown="@(e => HandleLoteKeyDown(e, d))"
+                                   maxlength="100" disabled="@isLoading"
+                                   placeholder="Lote"
+                                   class="rz-textbox table-input-padding" style="width:100%; height:25px;" />
                         </Template>
                     </RadzenDataGridColumn>
 
                     <RadzenDataGridColumn Title="Vencimiento" Width="145px">
                         <Template Context="d">
                             <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="dd/MM/yyyy"
-                            Style="width:100%" Disabled="isLoading" />
+                                              Style="width:100%" Disabled="isLoading" />
                         </Template>
                     </RadzenDataGridColumn>
 
                     <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
                         <Template Context="d">
                             <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall"
-                            Disabled="isLoading" Click="@(args => QuitarSku(d))"
-                            @onclick:stopPropagation="true" title="Eliminar" />
+                                          Disabled="isLoading" Click="@(args => QuitarSku(d))"
+                                          @onclick:stopPropagation="true" title="Eliminar" />
                         </Template>
                     </RadzenDataGridColumn>
 
@@ -186,8 +194,8 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Descripción del problema" Component="fDescripcion" />
                         <RadzenTextArea @bind-Value="reclamo.Descripcion" Name="fDescripcion"
-                        Rows=4 Style="width:100%; resize:vertical;"
-                        Placeholder="Detalle el reclamo del cliente..." MaxLength="2000" />
+                                        Rows=4 Style="width:100%; resize:vertical;"
+                                        Placeholder="Detalle el reclamo del cliente..." MaxLength="2000" />
                         <ValidationMessage For="@(() => reclamo.Descripcion)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -195,8 +203,8 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Resolución / Acción realizada" Component="fResolucion" />
                         <RadzenTextArea @bind-Value="reclamo.Resolucion" Name="fResolucion"
-                        Rows=4 Style="width:100%; resize:vertical;"
-                        Placeholder="Indique la resolución tomada (ej: NC, devolución, etc)..." MaxLength="2000" />
+                                        Rows=4 Style="width:100%; resize:vertical;"
+                                        Placeholder="Indique la resolución tomada (ej: NC, devolución, etc)..." MaxLength="2000" />
                         <ValidationMessage For="@(() => reclamo.Resolucion)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -204,9 +212,9 @@
         </RadzenFieldset>
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceAround">
-            <RadzenButton Icon="cancel" Text="Cancelar"       ButtonStyle="ButtonStyle.Danger"  Click="Cancelar" />
-            <RadzenButton Icon="save"   Text="Guardar reclamo" ButtonStyle="ButtonStyle.Success"
-            ButtonType="ButtonType.Submit" Disabled="isLoading" />
+            <RadzenButton Icon="cancel" Text="Cancelar" ButtonStyle="ButtonStyle.Danger" Click="Cancelar" />
+            <RadzenButton Icon="save" Text="Guardar reclamo" ButtonStyle="ButtonStyle.Success"
+                          ButtonType="ButtonType.Submit" Disabled="isLoading" />
         </RadzenStack>
 
     </RadzenTemplateForm>
@@ -218,21 +226,21 @@ else
 
 @code {
 
-    [Parameter] public EventCallback<Reclamo> AfterSave     { get; set; }
-    [Parameter] public Reclamo                Reclamo       { get; set; }
-    [Parameter] public TipoOperacionEnum      TipoOperacion { get; set; }
+    [Parameter] public EventCallback<Reclamo> AfterSave { get; set; }
+    [Parameter] public Reclamo Reclamo { get; set; }
+    [Parameter] public TipoOperacionEnum TipoOperacion { get; set; }
 
-    Reclamo          reclamo;
-    bool             showPage;
-    bool             isLoading;
-    bool             cargandoNC;
-    int?             ultimoIdComprobanteCargado;
-    int              totalLineas, totalUnidades;
-    List<Cliente>    clientes = [];
-    bool             cargandoClientes;
-    string           clientesFiltro;
-    const int        MaxResultadosCliente = 50;
-    EditContext       editContext;
+    Reclamo reclamo;
+    bool showPage;
+    bool isLoading;
+    bool cargandoNC;
+    int? ultimoIdComprobanteCargado;
+    int totalLineas, totalUnidades;
+    List<Cliente> clientes = [];
+    bool cargandoClientes;
+    string clientesFiltro;
+    const int MaxResultadosCliente = 50;
+    EditContext editContext;
     ValidationMessageStore messageStore;
     RadzenDataGrid<ReclamoDetalle> skuGrid;
 
@@ -269,9 +277,9 @@ else
         if (int.TryParse(reclamo.NumeroFactura, out int idComprobanteInicial) && idComprobanteInicial > 0)
             ultimoIdComprobanteCargado = idComprobanteInicial;
 
-        editContext  = new(reclamo);
+        editContext = new(reclamo);
         editContext.OnValidationRequested += HandleValidation;
-        editContext.OnFieldChanged        += (s, e) => messageStore?.Clear(e.FieldIdentifier);
+        editContext.OnFieldChanged += (s, e) => messageStore?.Clear(e.FieldIdentifier);
         messageStore = new(editContext);
 
         SetTotales();
@@ -298,7 +306,7 @@ else
             var cli = clientes.FirstOrDefault(c => c.CodigoCliente == codCliente);
             if (cli != null)
             {
-                reclamo.CodigoCliente      = cli.CodigoCliente;
+                reclamo.CodigoCliente = cli.CodigoCliente;
                 reclamo.ClienteRazonSocial = cli.RazonSocial;
             }
         }
@@ -323,7 +331,7 @@ else
 
         var filtro = args.Filter.Trim();
         var porRazonSocial = ClientesService.GetClientes(razonSocial: filtro);
-        var porCodigo      = ClientesService.GetClientes(codCliente: filtro);
+        var porCodigo = ClientesService.GetClientes(codCliente: filtro);
         await Task.WhenAll(porRazonSocial.AsTask(), porCodigo.AsTask());
 
         clientes = (porRazonSocial.Result ?? [])
@@ -389,7 +397,7 @@ else
 
             if (asignar)
             {
-                reclamo.CodigoCliente      = resumen.CodCliente;
+                reclamo.CodigoCliente = resumen.CodCliente;
                 reclamo.ClienteRazonSocial = resumen.ClienteRazonSocial;
 
                 if (!clientes.Any(c => c.CodigoCliente == resumen.CodCliente))
@@ -405,12 +413,12 @@ else
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
-            {
-                SKU                 = item.CodProducto,
-                DescripcionProducto = item.DescripcionProducto,
-                Cantidad            = item.Cantidad > 0 ? item.Cantidad : 1,
-                NumeroLinea         = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-            });
+                {
+                    SKU = item.CodProducto,
+                    DescripcionProducto = item.DescripcionProducto,
+                    Cantidad = item.Cantidad > 0 ? item.Cantidad : 1,
+                    NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+                });
             agregados++;
         }
 
@@ -436,7 +444,7 @@ else
             await JSFunction.OnBlurInput($"sku{d.NumeroLinea}");
         else if (e.Key == KeyboardKeys.Escape)
         {
-            d.SKU               = null;
+            d.SKU = null;
             d.DescripcionProducto = null;
         }
         else if (e.Key == KeyboardKeys.Up)
@@ -487,7 +495,7 @@ else
         if (resultados.Count == 1)
         {
             // Resultado único → autocompletar
-            d.SKU                 = resultados[0].CodigoProducto;
+            d.SKU = resultados[0].CodigoProducto;
             d.DescripcionProducto = resultados[0].Descripcion;
             if (skuGrid != null) await skuGrid.Reload();
             return true;
@@ -538,10 +546,10 @@ else
     private async Task AgregarSku()
     {
         var linea = new ReclamoDetalle
-        {
-            Cantidad    = 1,
-            NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-        };
+            {
+                Cantidad = 1,
+                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+            };
         reclamo.Detalle.Add(linea);
         SetTotales();
         if (skuGrid != null) await skuGrid.Reload();
@@ -572,7 +580,7 @@ else
 
         if (resultado is ProductoOrden producto)
         {
-            d.SKU                 = producto.CodigoProducto;
+            d.SKU = producto.CodigoProducto;
             d.DescripcionProducto = producto.Descripcion;
             if (skuGrid != null) await skuGrid.Reload();
             await Task.Delay(50);
@@ -585,11 +593,11 @@ else
         await RadzenDialogService.OpenAsync<ProductoBusqueda>(
             "Búsqueda de productos",
             new Dictionary<string, object>
-            {
+                {
                 { "Pasivo",          false },
                 { "MultiSelect",     true  },
                 { "CallbackMultiple", EventCallback.Factory.Create<List<ProductoOrden>>(this, OnProductosSeleccionados) }
-            },
+                },
             new DialogOptions { Width = "60rem", Height = "90vh" });
     }
 
@@ -605,12 +613,12 @@ else
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
-            {
-                SKU                 = p.CodigoProducto,
-                DescripcionProducto = p.Descripcion,
-                Cantidad            = 1,
-                NumeroLinea         = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-            });
+                {
+                    SKU = p.CodigoProducto,
+                    DescripcionProducto = p.Descripcion,
+                    Cantidad = 1,
+                    NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+                });
         }
 
         SetTotales();
@@ -626,7 +634,7 @@ else
 
     private void SetTotales()
     {
-        totalLineas   = reclamo.Detalle.Count;
+        totalLineas = reclamo.Detalle.Count;
         totalUnidades = reclamo.Detalle.Sum(x => x.Cantidad);
     }
 
@@ -651,9 +659,9 @@ else
 
         var response = TipoOperacion switch
         {
-            TipoOperacionEnum.Alta    => await ReclamosService.PostReclamo(reclamo),
+            TipoOperacionEnum.Alta => await ReclamosService.PostReclamo(reclamo),
             TipoOperacionEnum.Edicion => await ReclamosService.PutReclamo(reclamo),
-            _                         => null
+            _ => null
         };
 
         RadzenDialogService.CloseDialog();
@@ -669,7 +677,7 @@ else
     private async Task Cancelar()
     {
         if (!editContext.IsModified() || await RadzenDialogService.CancelOperation())
-                       RadzenDialogService.CloseDialog();
+            RadzenDialogService.CloseDialog();
     }
 }
 

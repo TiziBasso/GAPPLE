@@ -64,6 +64,8 @@ namespace GAPPLE.Server.Data
                 cmd.Parameters.AddWithValue("@pDescripcion", reclamo.Descripcion);
             if (!string.IsNullOrWhiteSpace(reclamo.Resolucion))
                 cmd.Parameters.AddWithValue("@pResolucion", reclamo.Resolucion);
+            if (!string.IsNullOrWhiteSpace(reclamo.NFAC))
+                cmd.Parameters.AddWithValue("@pNFAC", reclamo.NFAC);
             cmd.Parameters.AddWithValue("@pAltaUsuario", reclamo.AltaUsuario);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
