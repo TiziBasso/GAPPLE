@@ -14,6 +14,7 @@ namespace GAPPLE.Shared.Enums
         FaltanteCDA = 10,
         ProblemaDeCalidad = 11,
         ProblemaDeEmpaque = 12,
-        ProductoIncompleto = 13
+        ProductoIncompleto = 13,
+        ErrorCliente = 16
     }
 }

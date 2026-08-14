@@ -17,7 +17,7 @@
         <RadzenFieldset Text="Datos del reclamo">
             <RadzenRow Gap="8px">
 
-                <RadzenColumn Size=4>
+                <RadzenColumn Size=12 SizeMD=6 SizeLG=4>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Cliente *" Component="fCliente" />
                         <RadzenDropDownDataGrid @bind-Value="reclamo.CodigoCliente"
@@ -44,7 +44,7 @@
                     </RadzenStack>
                 </RadzenColumn>
 
-                <RadzenColumn Size=2>
+                <RadzenColumn Size=6 SizeMD=3 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Tipo *" Component="fTipo" />
                         <RadzenDropDown TValue="ReclamoTipoEnum?"
@@ -59,7 +59,7 @@
                     </RadzenStack>
                 </RadzenColumn>
 
-                <RadzenColumn Size=3>
+                <RadzenColumn Size=6 SizeMD=3 SizeLG=3>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Motivo *" Component="fMotivo" />
                         <RadzenDropDown TValue="ReclamoMotivoEnum?"
@@ -74,7 +74,7 @@
                     </RadzenStack>
                 </RadzenColumn>
 
-                <RadzenColumn Size=2>
+                <RadzenColumn Size=12 SizeMD=6 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Nota de crédito" Component="fCodNC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
@@ -90,7 +90,7 @@
                                     Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
                     </RadzenStack>
                 </RadzenColumn>
-                <RadzenColumn Size="2">
+                <RadzenColumn Size=12 SizeMD=6 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="N Factura" Component="fNFAC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
@@ -190,7 +190,7 @@
 
         <RadzenFieldset Text="Descripción y resolución">
             <RadzenRow Gap="8px">
-                <RadzenColumn Size=6>
+                <RadzenColumn Size=12 SizeLG=6>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Descripción del problema" Component="fDescripcion" />
                         <RadzenTextArea @bind-Value="reclamo.Descripcion" Name="fDescripcion"
@@ -199,7 +199,7 @@
                         <ValidationMessage For="@(() => reclamo.Descripcion)" />
                     </RadzenStack>
                 </RadzenColumn>
-                <RadzenColumn Size=6>
+                <RadzenColumn Size=12 SizeLG=6>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Resolución / Acción realizada" Component="fResolucion" />
                         <RadzenTextArea @bind-Value="reclamo.Resolucion" Name="fResolucion"
@@ -261,11 +261,20 @@ else
         ];
 
         motivosOpciones = [
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Vencidos,           "Vencidos"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes,          "Faltantes"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Calidad,            "Calidad / Roturas"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErroresFabricacion, "Errores de fabricación"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Administrativo,     "Administrativo")
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.BultosCruzados, "Bultos cruzados"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Devolucion, "Devolución"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.CortoVencimiento, "Corto vencimiento"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorFabricacion, "Error de fabricación"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorAdministrativo, "Error administrativo"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCargaVendedor, "Error de carga del vendedor"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorEnvio, "Error de envío"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes, "Faltante"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.FaltanteCDA, "Faltante CDA"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCliente, "Error cliente"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeCalidad, "Problema de calidad"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeEmpaque, "Problema de empaque"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProductoIncompleto, "Producto incompleto"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Vencidos,"Vencidos"),
         ];
 
         // No se precarga el padrón completo de clientes (puede ser muy grande):
@@ -413,12 +422,12 @@ else
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
-                {
-                    SKU = item.CodProducto,
-                    DescripcionProducto = item.DescripcionProducto,
-                    Cantidad = item.Cantidad > 0 ? item.Cantidad : 1,
-                    NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-                });
+            {
+                SKU = item.CodProducto,
+                DescripcionProducto = item.DescripcionProducto,
+                Cantidad = item.Cantidad > 0 ? item.Cantidad : 1,
+                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+            });
             agregados++;
         }
 
@@ -546,10 +555,10 @@ else
     private async Task AgregarSku()
     {
         var linea = new ReclamoDetalle
-            {
-                Cantidad = 1,
-                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-            };
+        {
+            Cantidad = 1,
+            NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+        };
         reclamo.Detalle.Add(linea);
         SetTotales();
         if (skuGrid != null) await skuGrid.Reload();
@@ -613,12 +622,12 @@ else
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
-                {
-                    SKU = p.CodigoProducto,
-                    DescripcionProducto = p.Descripcion,
-                    Cantidad = 1,
-                    NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
-                });
+            {
+                SKU = p.CodigoProducto,
+                DescripcionProducto = p.Descripcion,
+                Cantidad = 1,
+                NumeroLinea = reclamo.Detalle.Any() ? reclamo.Detalle.Max(x => x.NumeroLinea) + 1 : 1
+            });
         }
 
         SetTotales();
