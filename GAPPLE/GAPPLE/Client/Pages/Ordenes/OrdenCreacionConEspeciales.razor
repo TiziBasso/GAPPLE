@@ -109,7 +109,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Cond.Venta:" />
-                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
+                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="@(!permisoCondicionVenta)"
                         AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
                         TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
                             <Columns>
@@ -307,6 +307,24 @@
             </RadzenColumn>
         </RadzenRow>
 
+        @if (TotalPedido > 0)
+        {
+            <RadzenRow class="rz-mt-2">
+                <RadzenColumn Size="12">
+                    <div style="text-align:right; font-size:1.1rem; font-weight:bold; padding: 0.5rem 1rem; background: var(--rz-base-200); border-radius: 4px;">
+                        @if (orden.Factura && orden.Presupuesto)
+                        {
+                            <span>Total del pedido (x2): $@((TotalPedido * 2).ToString("N2"))</span>
+                        }
+                        else
+                        {
+                            <span>Total del pedido: $@TotalPedido.ToString("N2")</span>
+                        }
+                    </div>
+                </RadzenColumn>
+            </RadzenRow>
+        }
+
         <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
             <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Cancelar" Click="Cancelar" />
             <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="save" ButtonType="ButtonType.Submit" Text="Guardar" />
@@ -412,8 +430,14 @@ else
 
     Dictionary<string, decimal> descuentosPersonalizados = new();
 
-    bool showForm, showCards, unico, seleccionaVendedor;
+    bool showForm, showCards, unico, seleccionaVendedor, permisoCondicionVenta;
     int propiedad = 0;
+
+    decimal TotalPedido =>
+        Cards.SelectMany(c => c.Products).Sum(p => p.PrecioConDescuento * p.CantidadSeleccionada) +
+        lstProductosDifLinea
+            .Where(p => !Cards.SelectMany(c => c.Products).Any(cp => cp.CodigoProducto == p.CodigoProducto))
+            .Sum(p => p.PrecioConDescuento * p.CantidadSeleccionada);
 
     List<Transporte> transportes = new();
     List<ListaDePrecios> listasDePrecio = new();
@@ -438,6 +462,7 @@ else
             NavigationManager.NavigateTo(Variables.ErrorPages.Desautorizado);
 
         seleccionaVendedor = permisos.Contains("seleccionaVendedor");
+        permisoCondicionVenta = permisos.Contains(Permisos.CondicionVenta);
 
         lstLineas = await ProductosService.GetLineas();
         clientes = await ClientesService.GetClientes(null, null, null, null);

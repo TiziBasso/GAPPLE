@@ -115,7 +115,7 @@
                 <RadzenColumn Size="4">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Cond.Venta:" />
-                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="true"
+                        <RadzenDropDownDataGrid Data="condicionesDeVenta" @bind-Value="orden.CondicionVenta" Density="Density.Compact" AllowSorting=false Disabled="@(!permisoCondicionVenta)"
                                                 AllowFiltering=true FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive FilterOperator=StringFilterOperator.Contains AllowFilteringByAllStringColumns=true
                                                 TextProperty="@nameof(CondicionDeVenta.Descripcion)" ValueProperty="@nameof(CondicionDeVenta.CodigoTango)" AllowVirtualization="true">
                             <Columns>
@@ -369,7 +369,7 @@ else
 
     bool modoEdicion => !string.IsNullOrEmpty(CodOrden);
 
-    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento, shouldPreventDefault;
+    bool showPage, seleccionaVendedor, isLoading, unico, permisoDescuento, permisoCondicionVenta, shouldPreventDefault;
     bool esPresupuestoOriginal;
     string entrega;
     Orden orden = new() { IdEstado = 1, Linea = "excel" };
@@ -400,6 +400,7 @@ else
 
         seleccionaVendedor = permisos.Contains("seleccionaVendedor");
         permisoDescuento = permisos.Contains(Permisos.DescuentoManual);
+        permisoCondicionVenta = permisos.Contains(Permisos.CondicionVenta);
 
         clientes = await ClientesService.GetClientes(null, null, null, null);
         transportes = await OrdenesService.GetTransportes();

@@ -217,19 +217,20 @@ else
         ];
 
         motivosOpciones = [
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.BultosCruzados,     "Bultos cruzados"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Devolucion,         "Devolución"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.CortoVencimiento,   "Corto Vencimiento"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorFabricacion,   "Error Fabricación"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorAdministrativo,"Error administrativo"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCargaVendedor, "Error carga vendedor"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorEnvio,         "Error de envío"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes,          "Faltante"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.FaltanteCDA,        "Faltantes CDA"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCliente,       "Error Cliente"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeCalidad,  "Problema de Calidad"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeEmpaque,  "Problema de Empaque"),
+            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProductoIncompleto, "Producto incompleto"),
             new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Vencidos,           "Vencidos"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Faltantes,         "Faltantes"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.BultosCruzados,           "Bultos cruzados"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.CortoVencimiento,"Corto vencimiento"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.Devolucion,    "Devolución"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorEnvio,    "Error de envío"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorAdministrativo,    "Error de administración"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorCargaVendedor,    "Error carga vendedor"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ErrorFabricacion,    "Error fabricación"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.FaltanteCDA,    "FaltanteCDA"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeCalidad,    "Problema de calidad"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProductoIncompleto,    "Producto incompleto"),
-            new Estado<ReclamoMotivoEnum?>(ReclamoMotivoEnum.ProblemaDeEmpaque,    "Problema de empaque")
         ];
 
         await FillReclamos();
@@ -361,21 +362,39 @@ else
 
     private static string GetMotivoLabel(ReclamoMotivoEnum? motivo) => motivo switch
     {
+        ReclamoMotivoEnum.BultosCruzados     => "BULTOS CRUZADOS",
+        ReclamoMotivoEnum.Devolucion         => "DEVOLUCIÓN",
+        ReclamoMotivoEnum.CortoVencimiento   => "CORTO VENCIMIENTO",
+        ReclamoMotivoEnum.ErrorFabricacion   => "ERROR FABRICACIÓN",
+        ReclamoMotivoEnum.ErrorAdministrativo => "ERROR ADMINISTRATIVO",
+        ReclamoMotivoEnum.ErrorCargaVendedor => "ERROR CARGA VENDEDOR",
+        ReclamoMotivoEnum.ErrorEnvio         => "ERROR DE ENVÍO",
+        ReclamoMotivoEnum.Faltantes          => "FALTANTE",
+        ReclamoMotivoEnum.FaltanteCDA        => "FALTANTES CDA",
+        ReclamoMotivoEnum.ErrorCliente       => "ERROR CLIENTE",
+        ReclamoMotivoEnum.ProblemaDeCalidad  => "PROBLEMA DE CALIDAD",
+        ReclamoMotivoEnum.ProblemaDeEmpaque  => "PROBLEMA DE EMPAQUE",
+        ReclamoMotivoEnum.ProductoIncompleto => "PRODUCTO INCOMPLETO",
         ReclamoMotivoEnum.Vencidos           => "VENCIDOS",
-        ReclamoMotivoEnum.Faltantes          => "FALTANTES",
-        ReclamoMotivoEnum.Calidad            => "CALIDAD",
-        ReclamoMotivoEnum.ErroresFabricacion => "ERRORES FABRIC.",
-        ReclamoMotivoEnum.Administrativo     => "ADMINISTRATIVO",
         _                                    => "—"
     };
 
     private static string GetMotivoStyle(ReclamoMotivoEnum? motivo) => motivo switch
     {
-        ReclamoMotivoEnum.Vencidos           => "background:#f97316;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.BultosCruzados     => "background:#0ea5e9;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.Devolucion         => "background:#a855f7;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.CortoVencimiento   => "background:#f59e0b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErrorFabricacion   => "background:#dc2626;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErrorAdministrativo => "background:#14b8a6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErrorCargaVendedor => "background:#64748b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErrorEnvio         => "background:#6366f1;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
         ReclamoMotivoEnum.Faltantes          => "background:#3b82f6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
-        ReclamoMotivoEnum.Calidad            => "background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
-        ReclamoMotivoEnum.ErroresFabricacion => "background:#dc2626;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
-        ReclamoMotivoEnum.Administrativo     => "background:#14b8a6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.FaltanteCDA        => "background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ErrorCliente       => "background:#ec4899;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ProblemaDeCalidad  => "background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ProblemaDeEmpaque  => "background:#10b981;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.ProductoIncompleto => "background:#84cc16;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
+        ReclamoMotivoEnum.Vencidos           => "background:#f97316;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;",
         _                                    => ""
     };
 }
