@@ -74,7 +74,7 @@
                     </RadzenStack>
                 </RadzenColumn>
 
-                <RadzenColumn Size=12 SizeMD=6 SizeLG=2>
+                <RadzenColumn Size=12 SizeMD=4 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Nota de crédito" Component="fCodNC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
@@ -90,7 +90,7 @@
                                     Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
                     </RadzenStack>
                 </RadzenColumn>
-                <RadzenColumn Size=12 SizeMD=6 SizeLG=2>
+                <RadzenColumn Size=12 SizeMD=4 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="N Factura" Component="fNFAC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
@@ -102,7 +102,7 @@
             </RadzenRow>
         </RadzenFieldset>
 
-        <RadzenFieldset Text="Productos afectados (SKUs)" Style="overflow-y:auto;">
+        <RadzenFieldset Text="Productos afectados (SKUs)" Style="overflow-y:auto;min-height:250px;">
 
             <RadzenDataGrid @ref="skuGrid" Data="reclamo.Detalle" TItem="ReclamoDetalle"
                             Style="min-height: 180px;" Density="Density.Compact" IsLoading="isLoading"
