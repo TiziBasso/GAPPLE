@@ -133,7 +133,10 @@ else
             {
                 Acuerdo.IdAcuerdo = ((Acuerdo)response.Data).IdAcuerdo;
                 RadzenDialogService.NotifySuccess();
-                AcuerdoCliente.Acuerdos.Add(Acuerdo);
+                if (TipoOperacion == TipoOperacionEnum.Alta)
+                    AcuerdoCliente.Acuerdos.Add(Acuerdo);
+                else
+                    AcuerdoCliente.Acuerdos = [Acuerdo];
                 if (OnSave.HasDelegate)
                     await OnSave.InvokeAsync(AcuerdoCliente);
             }
