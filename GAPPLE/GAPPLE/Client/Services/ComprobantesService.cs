@@ -128,5 +128,15 @@ namespace GAPPLE.Client.Services
 
             return await Response.CreateAsync(response);
         }
+
+        public async ValueTask<NotaCreditoResumen> GetNotaCreditoResumen(int idComprobante)
+        {
+            var response = await HttpClient.GetAsync($"{URI_BASE}/notacredito/{idComprobante}/resumen");
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<NotaCreditoResumen>();
+
+            return null;
+        }
     }
 }

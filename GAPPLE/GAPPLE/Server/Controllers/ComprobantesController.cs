@@ -99,6 +99,69 @@ namespace GAPPLE.Server.Controllers
             return lstComprobantes;
         }
 
+        // GET api/comprobantes/notacredito/{idComprobante}/resumen
+        // Endpoint liviano: trae el cliente y las líneas de la NC (sin el resto de la cabecera),
+        // pensado para consumidores externos como el módulo de Reclamos.
+        [HttpGet("notacredito/{idComprobante}/resumen")]
+        public IActionResult GetNotaCreditoResumen(int idComprobante)
+        {
+            try
+            {
+                DA_Comprobantes daC = new(DefaultConnectionString);
+
+                // Rango de fechas amplio y válido para SQL Server (evita SqlDateTime overflow con DateTime.MinValue);
+                // no filtra nada porque la búsqueda real es por @pIdComprobante.
+                DateTime fechaMin = new(1900, 1, 1);
+                DateTime fechaMax = new(2100, 1, 1);
+
+                string codCliente = null, razonSocial = null;
+                using (DataTable dtc = daC.ObtenerComprobantesCabecera(fechaMin, fechaMax, null, null, null, null, null, idComprobante, null))
+                {
+                    if (dtc.Rows.Count > 0)
+                    {
+                        DataRow row = dtc.Rows[0];
+                        if (row["CodigoCliente"] != DBNull.Value) codCliente = row["CodigoCliente"].ToString();
+                        if (row["RazonSocial"] != DBNull.Value) razonSocial = row["RazonSocial"].ToString();
+                    }
+                }
+
+                List<ComprobanteDetalle> detalle = new();
+                using (DataTable dtd = daC.ObtenerComprobantesDetalle(idComprobante))
+                {
+                    foreach (DataRow rowd in dtd.Rows)
+                    {
+                        detalle.Add(new ComprobanteDetalle
+                        {
+                            IdProducto = Convert.ToInt32(rowd["IdProducto"]),
+                            IdComprobante = idComprobante,
+                            NumeroLinea = int.Parse(rowd["Linea"].ToString()),
+                            CodProducto = rowd["CodProducto"].ToString(),
+                            DescripcionProducto = rowd["Descripcion"].ToString(),
+                            Cantidad = int.Parse(rowd["Cantidad"].ToString()),
+                            Precio = decimal.Parse(rowd["Precio"].ToString()),
+                            Descuento = decimal.Parse(rowd["Descuento"].ToString()),
+                            Detalle = rowd["Detalle"].ToString()
+                        });
+                    }
+                }
+
+                if (codCliente == null && detalle.Count == 0)
+                    return Ok(null);
+
+                return Ok(new NotaCreditoResumen
+                {
+                    IdComprobante = idComprobante,
+                    CodCliente = codCliente,
+                    ClienteRazonSocial = razonSocial,
+                    Detalle = detalle
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
+        }
+
         [HttpPost("notacredito")]
         public IActionResult PostNotaCredito(ComprobanteCabecera comprobante)
         {
