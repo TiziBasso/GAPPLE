@@ -90,12 +90,20 @@
                                     Style="color:var(--rz-text-secondary-color)" Text="Buscando productos de la NC..." />
                     </RadzenStack>
                 </RadzenColumn>
-                <RadzenColumn Size=12 SizeMD=4 SizeLG=2>
+                <RadzenColumn Size=6 SizeMD=4 SizeLG=2>
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="N Factura" Component="fNFAC" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
                             <RadzenTextBox @bind-Value="reclamo.NFAC" Name="fNFAC"
                                            Placeholder="Nº Factura" Style="width:100%" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size=6 SizeMD=4 SizeLG=2>
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
+                        <RadzenLabel Text="Fecha:" Component="fec" />
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
+                            <RadzenDatePicker @bind-Value="reclamo.Fecha"></RadzenDatePicker>
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
