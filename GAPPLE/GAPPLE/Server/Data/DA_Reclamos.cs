@@ -1,4 +1,4 @@
-using GAPPLE.Shared.Model;
+﻿using GAPPLE.Shared.Model;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -24,6 +24,22 @@ namespace GAPPLE.Server.Data
                 cmd.Parameters.AddWithValue("@pRazonSocial", razonSocialCliente);
             if (tipo != null)   cmd.Parameters.AddWithValue("@pTipo",   tipo);
             if (motivo != null) cmd.Parameters.AddWithValue("@pMotivo", motivo);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+
+        // ─── Dataset plano para el dashboard (una fila por linea de detalle) ─────
+        public DataTable ObtenerReclamosDashboard(DateTime fechaDesde, DateTime fechaHasta)
+        {
+            DataTable dt = new();
+            using SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_ReclamosDashboard";
+            cmd.CommandTimeout = 120;
+            cmd.Parameters.AddWithValue("@pFechaDesde", fechaDesde.Date);
+            cmd.Parameters.AddWithValue("@pFechaHasta", fechaHasta.Date);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);
             return dt;

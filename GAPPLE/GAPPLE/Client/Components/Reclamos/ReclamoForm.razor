@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @using GAPPLE.Client.Components.Productos
 
 @inject ReclamosService ReclamosService
@@ -426,7 +426,9 @@ else
         int agregados = 0;
         foreach (var item in resumen.Detalle)
         {
-            if (reclamo.Detalle.Any(d => d.SKU == item.CodProducto))
+            // Solo se saltea si ya existe una linea de ese producto todavia sin lote: si el
+            // usuario ya le cargo el lote, se agrega otra linea para poder diferenciarlos.
+            if (ExisteLineaSinLote(item.CodProducto))
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
@@ -625,8 +627,8 @@ else
 
         foreach (var p in productos)
         {
-            // Evitar duplicados
-            if (reclamo.Detalle.Any(d => d.SKU == p.CodigoProducto))
+            // Evitar duplicados: solo cuando ya hay una linea de ese producto sin lote cargado
+            if (ExisteLineaSinLote(p.CodigoProducto))
                 continue;
 
             reclamo.Detalle.Add(new ReclamoDetalle
@@ -655,6 +657,30 @@ else
         totalUnidades = reclamo.Detalle.Sum(x => x.Cantidad);
     }
 
+    /// <summary>
+    /// Indica si el detalle ya tiene una linea de ese producto sin lote cargado. Es la unica
+    /// situacion en la que no tiene sentido agregar otra linea del mismo SKU.
+    /// </summary>
+    private bool ExisteLineaSinLote(string codProducto) =>
+        reclamo.Detalle.Any(d => string.Equals(d.SKU, codProducto, StringComparison.OrdinalIgnoreCase)
+                                 && string.IsNullOrWhiteSpace(d.Lote));
+
+    /// <summary>
+    /// Misma regla que valida el server: el SKU puede repetirse mientras el lote sea distinto.
+    /// </summary>
+    private List<string> ObtenerLineasRepetidas() =>
+        [.. reclamo.Detalle
+            .Where(d => !string.IsNullOrWhiteSpace(d.SKU))
+            .GroupBy(d => new
+            {
+                SKU = d.SKU.Trim().ToUpperInvariant(),
+                Lote = (d.Lote ?? string.Empty).Trim().ToUpperInvariant()
+            })
+            .Where(g => g.Count() > 1)
+            .Select(g => string.IsNullOrEmpty(g.Key.Lote)
+                            ? $"{g.Key.SKU} (sin lote)"
+                            : $"{g.Key.SKU} (lote {g.Key.Lote})")];
+
     private async Task Guardar()
     {
         if (!editContext.Validate())
@@ -666,6 +692,15 @@ else
         if (reclamo.Detalle.Count == 0)
         {
             RadzenDialogService.ShowAlert("Debe agregar al menos un SKU afectado.");
+            return;
+        }
+
+        var repetidas = ObtenerLineasRepetidas();
+        if (repetidas.Count > 0)
+        {
+            RadzenDialogService.ShowAlert(
+                $"Hay líneas repetidas con el mismo producto y lote: {string.Join(", ", repetidas)}. " +
+                "Para reclamar el mismo producto en varias líneas, cargue un lote distinto en cada una.");
             return;
         }
 

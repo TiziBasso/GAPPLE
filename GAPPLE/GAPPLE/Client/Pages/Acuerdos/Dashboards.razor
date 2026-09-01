@@ -1,4 +1,4 @@
-@page "/acuerdos/dashboard"
+﻿@page "/acuerdos/dashboard"
 @using System.Globalization
 
 @inject AcuerdosService AcuerdosService
@@ -183,37 +183,30 @@ else
                     </RadzenText>
                 </div>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="8px">
-                    @if (clientesSeleccionados?.Any() == true)
+                    @if (!string.IsNullOrWhiteSpace(busquedaCliente))
                     {
                         <div style="background:var(--rz-info-lighter);border:1px solid var(--rz-info-light);border-radius:0.5rem;padding:0.4rem 0.75rem;white-space:nowrap">
                             <RadzenText Style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--rz-info-dark)">
-                                Total Filtrado
+                                Total Filtrado (@tablaDetalle.Count)
                             </RadzenText>
                             <RadzenText Style="font-size:0.875rem;font-weight:700;color:var(--rz-info-darker)">
                                 $@totalFiltrado.ToString("N2", CultureES)
                             </RadzenText>
                         </div>
                     }
-                    <RadzenDropDown Data="@clientesDropdown"
-                                    Value="@clientesSeleccionados"
-                                    ValueChanged="@((IEnumerable<string> v) => OnClientesChanged(v))"
-                                    Multiple="true" Chips="true"
-                                    Placeholder="Filtrar por cliente(s)..." AllowClear="true"
-                                    AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                    Style="min-width:260px;max-width:420px" />
+                    <input type="text" @bind-value="busquedaCliente" @bind-value:event="oninput"
+                           class="rz-textbox" style="min-width:260px;max-width:420px" placeholder="Buscar por cliente..." autocomplete="off" />
                 </RadzenStack>
             </RadzenStack>
 
-            <RadzenDataGrid Data="@tablaDetalle" TItem="DetalleRow" AllowSorting="true"
+            <RadzenDataGrid Data="@tablaDetalle" TItem="ClienteResumen" AllowSorting="true"
                             AllowColumnResize="true" Density="Density.Compact"
                             ShowEmptyMessage="@(tablaDetalle.Count == 0)"
                             EmptyText="@MensajeVacio"
                             Style="height:340px" AllowVirtualization="true">
                 <Columns>
-                    <RadzenDataGridColumn Property="@nameof(DetalleRow.Cliente)" Title="Cliente" MinWidth="140px" />
-                    <RadzenDataGridColumn Property="@nameof(DetalleRow.TipoAcuerdo)" Title="Tipo de acuerdo" MinWidth="120px" />
-                    <RadzenDataGridColumn Property="@nameof(DetalleRow.Mes)" Title="Mes" Width="100px" TextAlign="TextAlign.Center" />
-                    <RadzenDataGridColumn Property="@nameof(DetalleRow.Total)" Title="Monto" TextAlign="TextAlign.Right" Width="140px">
+                    <RadzenDataGridColumn Property="@nameof(ClienteResumen.RazonSocial)" Title="Cliente" MinWidth="140px" />
+                    <RadzenDataGridColumn Property="@nameof(ClienteResumen.Total)" Title="Monto" TextAlign="TextAlign.Right" Width="160px">
                         <Template Context="row">
                             <strong>$@row.Total.ToString("N2", CultureES)</strong>
                         </Template>
@@ -229,7 +222,6 @@ else
 
     record MonthData(string Mes, decimal Total);
     record ClienteResumen(string RazonSocial, decimal Total);
-    record DetalleRow(string Cliente, string TipoAcuerdo, string Mes, int Anio, int NumMes, decimal Total);
 
     bool showPage;
     bool cargando;
@@ -250,15 +242,23 @@ else
     decimal maxTopCliente;
 
     // Tabla
-    IEnumerable<string> clientesSeleccionados;
-    List<string> clientesDropdown = [];
+    string busquedaCliente = string.Empty;
     List<ClienteResumen> tablaCompleta = [];
-    List<DetalleRow> tablaDetalle = [];
-    decimal totalFiltrado;
 
-    string MensajeVacio => clientesSeleccionados?.Any() == true
-        ? "Sin datos para los clientes seleccionados."
-        : "Seleccione uno o más clientes para ver el detalle.";
+    // Filtrado en tiempo real sobre el listado ya calculado.
+    List<ClienteResumen> tablaDetalle =>
+        string.IsNullOrWhiteSpace(busquedaCliente)
+            ? tablaCompleta
+            : tablaCompleta
+                .Where(x => x.RazonSocial != null &&
+                            x.RazonSocial.Contains(busquedaCliente.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+    decimal totalFiltrado => tablaDetalle.Sum(x => x.Total);
+
+    string MensajeVacio => string.IsNullOrWhiteSpace(busquedaCliente)
+        ? "Sin datos para el período seleccionado."
+        : $"Sin resultados para \"{busquedaCliente}\".";
 
     protected override async Task OnInitializedAsync()
     {
@@ -327,57 +327,8 @@ else
             .OrderByDescending(x => x.Total)
             .ToList();
 
-        clientesDropdown = montos
-            .Select(x => x.RazonSocial)
-            .Where(x => x != null)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        // Reset selección al recargar datos
-        clientesSeleccionados = null;
-        AplicarFiltroTabla();
-    }
-
-    private void OnClientesChanged(IEnumerable<string> valores)
-    {
-        clientesSeleccionados = valores;
-        AplicarFiltroTabla();
-    }
-
-    private void AplicarFiltroTabla()
-    {
-        if (clientesSeleccionados?.Any() != true)
-        {
-            tablaDetalle = [];
-            totalFiltrado = 0;
-            return;
-        }
-
-        var seleccionados = clientesSeleccionados.ToHashSet();
-
-        tablaDetalle = montos
-            .Where(x => seleccionados.Contains(x.RazonSocial))
-            .GroupBy(x => new
-            {
-                x.RazonSocial,
-                Tipo = string.IsNullOrWhiteSpace(x.Condicion) ? "(Sin tipo)" : x.Condicion,
-                x.Fecha.Year,
-                x.Fecha.Month
-            })
-            .Select(g => new DetalleRow(
-                g.Key.RazonSocial,
-                g.Key.Tipo,
-                new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy", CultureES),
-                g.Key.Year,
-                g.Key.Month,
-                g.Sum(x => x.Monto)))
-            .OrderBy(x => x.Cliente)
-            .ThenBy(x => x.TipoAcuerdo)
-            .ThenBy(x => x.Anio).ThenBy(x => x.NumMes)
-            .ToList();
-
-        totalFiltrado = tablaDetalle.Sum(x => x.Total);
+        // Reset del buscador al recargar datos
+        busquedaCliente = string.Empty;
     }
 
     // Ancho de barra Top 10 — string con punto decimal para CSS

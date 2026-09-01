@@ -90,6 +90,12 @@ namespace GAPPLE.Shared.Model
 
         public int Unidades { get; set; }
 
+        /// <summary>
+        /// Importe total del pedido (suma de las líneas con descuentos aplicados).
+        /// Lo devuelve el SP de cabecera; si todavía no está publicado llega en null.
+        /// </summary>
+        public decimal? ImporteTotal { get; set; }
+
         public bool Aprobado { get; set; }
 
         public string Usuario { get; set; } = null;

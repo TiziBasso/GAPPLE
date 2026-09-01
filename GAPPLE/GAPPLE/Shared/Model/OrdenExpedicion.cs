@@ -40,6 +40,16 @@
 
         public bool Impreso { get; set; }
 
+        /// <summary>
+        /// Cantidad total de unidades marcadas como probador en la orden.
+        /// </summary>
+        public int CantidadProbadores { get; set; }
+
+        /// <summary>
+        /// Indica que la orden lleva probadores y, por lo tanto, genera un segundo pedido en Tango.
+        /// </summary>
+        public bool TieneProbadores => CantidadProbadores > 0;
+
         public List<OrdenExpedicionDetalle> Detalle { get; set; }
     }
 

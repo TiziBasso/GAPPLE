@@ -1,6 +1,7 @@
 ﻿using GAPPLE.Server.Data;
 using GAPPLE.Server.Tools;
 using GAPPLE.Shared.Model;
+using GAPPLE.Shared.Helpers;
 using Integra.Web.Server.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -283,6 +284,14 @@ namespace GAPPLE.Server.Controllers
                                         aux.CantidadSeleccionada = p.CantidadSeleccionada;
                                         aux.CantidadProbador = p.CantidadProbador;
                                         aux.CantidadObsequio = p.CantidadObsequio;
+
+                                        // El complemento entra siempre bonificado. Sin esto la carga
+                                        // por excel lo dejaba a precio de lista (descuento 0).
+                                        aux.DescuentoCliente = 0;
+                                        aux.DescuentoOferta = 0;
+                                        aux.DescuentoTotal = DescuentosHelper.Complemento;
+                                        aux.PrecioConDescuento = aux.Precio * (1 - aux.DescuentoTotal / 100);
+
                                         aux.PrecioTotal = aux.PrecioConDescuento * aux.CantidadSeleccionada;
                                         productos.Add(aux);
                                     }

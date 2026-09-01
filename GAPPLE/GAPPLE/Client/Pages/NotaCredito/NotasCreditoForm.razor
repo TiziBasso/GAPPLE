@@ -17,9 +17,11 @@
 @if (showPage)
 {
     <RadzenTemplateForm Data="comprobante" TItem="ComprobanteCabecera" Submit="Guardar" EditContext="editContext"
-    Style="display: grid;grid-template-rows: auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
+    Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
+
+        <RadzenText TextStyle="TextStyle.DisplayH5" TextAlign="TextAlign.Center" Text="@TituloPagina" class="rz-mb-0" />
 
         <RadzenFieldset AllowCollapse="true" Text="@($"Datos de cabecera {comprobante.ClienteRazonSocial}")">
             <RadzenStack Orientation="Orientation.Horizontal" Gap="10px">
@@ -48,7 +50,14 @@
                         <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
                     </RadzenStack>
                 </RadzenColumn>
-                <RadzenColumn Size="3">
+                <RadzenColumn Size="2">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenLabel Text="Fecha del pedido:" />
+                        <input type="text" class="rz-textbox" style="width:100%" value="@FechaOrdenTexto" disabled
+                               title="Fecha de creación del pedido referenciado" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="2">
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Observaciones:" />
                         <TextAreaInput @bind-Value="comprobante.Observaciones" disabled=@disableInput />
@@ -159,6 +168,12 @@ else
     List<ListaDePrecios> listasDePrecio = [];
     List<Motivo> motivos = [];
     List<Deposito> depositos = [];
+    List<Deposito> depositosTodos = [];
+
+    /// <summary>Fecha de creación del pedido referenciado. Es informativa, no se persiste.</summary>
+    DateTime? fechaOrden;
+
+    private string FechaOrdenTexto => fechaOrden?.ToString("dd/MM/yyyy") ?? "—";
     bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput;
     int? idTipoListaPreciosAux;
     CuerpoComprobante refCuerpo;
@@ -183,8 +198,8 @@ else
         permisoLineaManual = permisos.Contains(Permisos.LineaManual);
 
         listasDePrecio = await OrdenesService.GetListasDePrecio();
-        motivos = await MotivosService.GetMotivos(null, null, false, null);
-        depositos = await DepositosService.GetDepositos(null, null, null);
+        motivos = await MotivosService.GetMotivos(null, null, false, null) ?? [];
+        depositosTodos = await DepositosService.GetDepositos(null, null, null) ?? [];
 
         if (tipoOperacion == TipoOperacionEnum.Alta)
         {
@@ -243,6 +258,9 @@ else
             }
         }
 
+        FiltrarDepositosPorMotivos();
+        await CargarFechaOrden();
+
         idTipoListaPreciosAux = comprobante.IdListaPrecio;
 
         var lista = listasDePrecio.Find(x => x.IdLista == idTipoListaPreciosAux);
@@ -294,6 +312,7 @@ else
         idTipoListaPreciosAux = comprobante.IdListaPrecio;
 
         comprobante.CodigoOrden = orden.CodigoOrden;
+        fechaOrden = orden.Creacion;
         comprobante.Factura = !orden.Presupuesto;
         comprobante.Presupuesto = orden.Presupuesto;
         comprobante.CodListaPrecio = orden.CodListaPrecio;
@@ -341,7 +360,52 @@ else
         }
     }
 
+    /// <summary>
+    /// Mientras la NC no esta guardada no hay ID, asi que se muestra "Nueva". Una vez
+    /// guardada (o al abrir una existente) se muestra el numero con el mismo formato que
+    /// la pantalla de archivos.
+    /// </summary>
+    private string TituloPagina => comprobante != null && comprobante.IdComprobante > 0
+        ? $"Nota de crédito {comprobante.IdComprobante:00000}"
+        : "Nueva nota de crédito";
+
+    /// <summary>
+    /// Al abrir una NC ya cargada solo se tiene el código de orden, así que se busca el pedido
+    /// para mostrar su fecha de creación.
+    /// </summary>
+    private async Task CargarFechaOrden()
+    {
+        if (string.IsNullOrWhiteSpace(comprobante?.CodigoOrden))
+        {
+            fechaOrden = null;
+            return;
+        }
+
+        var ordenReferencia = await OrdenesService.GetOrden(comprobante.CodigoOrden, false);
+        fechaOrden = ordenReferencia?.Creacion;
+    }
+
     private void BackPage() => NavigationManager.NavigateTo("notascredito");
+
+    /// <summary>
+    /// Solo se ofrecen los depositos que estan vinculados a algun motivo (cualquiera de ellos).
+    /// Si la NC ya tiene cargado un deposito que hoy no esta vinculado, se conserva para no perder el dato.
+    /// </summary>
+    private void FiltrarDepositosPorMotivos()
+    {
+        var idsVinculados = motivos
+            .Where(m => m.IdDeposito != null)
+            .Select(m => m.IdDeposito.Value)
+            .ToHashSet();
+
+        depositos = depositosTodos.Where(d => idsVinculados.Contains(d.IdDeposito)).ToList();
+
+        if (comprobante?.IdDeposito != null && !depositos.Any(d => d.IdDeposito == comprobante.IdDeposito))
+        {
+            var actual = depositosTodos.Find(d => d.IdDeposito == comprobante.IdDeposito);
+            if (actual != null) depositos.Insert(0, actual);
+        }
+    }
 
     private async Task ChangeMotivo()
     {
@@ -382,7 +446,11 @@ else
 
             if (response.IsOk)
             {
-                RadzenDialogService.NotifySuccess();
+                // El server devuelve el comprobante con el IdComprobante asignado en el alta.
+                if (response.Data is ComprobanteCabecera guardado && guardado.IdComprobante > 0)
+                    comprobante.IdComprobante = guardado.IdComprobante;
+
+                RadzenDialogService.NotifySuccess($"La nota de crédito {comprobante.IdComprobante:00000}");
                 // ParametrosDeConsulta.Save(ParametrosDeConsulta.Pages.NotasCredito, new()
                 //                 {
                 //                     { "request", new ComprobanteCabeceraRequest()

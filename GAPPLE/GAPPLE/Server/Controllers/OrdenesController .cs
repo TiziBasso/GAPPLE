@@ -63,6 +63,7 @@ namespace GAPPLE.Server.Controllers
                         AprobadoFinanzas = bool.Parse(row["AprobadoContaduria"].ToString()),
                         Usuario = row["AltaUsuario"].ToString()
                     };
+                    o.ImporteTotal = LeerDecimal(row, "ImporteTotal");
                     if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
                     if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();
@@ -908,11 +909,34 @@ namespace GAPPLE.Server.Controllers
                     };
                     if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                     if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
+                    orden.CantidadProbadores = LeerEntero(row, "CantidadProbadores");
                     ordenes.Add(orden);
                 }
             }
 
             return ordenes;
+        }
+
+        /// <summary>
+        /// Lee una columna entera del DataRow solo si el SP la devuelve. Evita romper si la base
+        /// todavia no tiene aplicado el script del stored procedure.
+        /// </summary>
+        private static int LeerEntero(DataRow row, string columna)
+        {
+            if (!row.Table.Columns.Contains(columna)) return 0;
+            if (row[columna] == DBNull.Value) return 0;
+            return int.TryParse(row[columna].ToString(), out int valor) ? valor : 0;
+        }
+
+        /// <summary>
+        /// Igual que <see cref="LeerEntero"/> pero para importes: devuelve null cuando el SP
+        /// todavia no expone la columna, para que la grilla muestre el guion en vez de un 0 falso.
+        /// </summary>
+        private static decimal? LeerDecimal(DataRow row, string columna)
+        {
+            if (!row.Table.Columns.Contains(columna)) return null;
+            if (row[columna] == DBNull.Value) return null;
+            return decimal.TryParse(row[columna].ToString(), out decimal valor) ? valor : null;
         }
 
         [HttpGet("expedicion")]
@@ -976,6 +1000,9 @@ namespace GAPPLE.Server.Controllers
                     i++;
                 }
             }
+
+            orden.CantidadProbadores = orden.Detalle.Sum(x => x.CantidadProbador);
+
             return orden;
         }
 

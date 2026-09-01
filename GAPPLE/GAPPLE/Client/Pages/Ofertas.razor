@@ -5,6 +5,7 @@
 @inject OfertasService OfertasService
 @inject DialogService DialogService
 @inject ProductosService ProductosService
+@inject NotificationService NotificationService
 
 @if (showPage)
 {
@@ -20,6 +21,12 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Linea:" Component="cod" />
             <RadzenDropDown Data="lstLineas" @bind-Value="linea" AllowClear="true" Style="width:15rem" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Estado:" Component="estado" />
+            <RadzenDropDown Data=@Variables.Clasificaciones @bind-Value=@activas Name="estado" Style="width:9rem"
+                            ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion) Placeholder="(Todas)" AllowClear="true" />
         </RadzenStack>
 
         <RadzenButton Click="FillOfertas" IsBusy=isLoading ButtonStyle=ButtonStyle.Secondary Icon="search" Size="ButtonSize.Medium" />
@@ -51,9 +58,27 @@
                     <span>@context.Hasta.ToString("dd/MM/yyyy")</span>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Activa" TextAlign="TextAlign.Center" Width="50px">
+            <RadzenDataGridColumn Title="Activa" Property="@nameof(Oferta.Activa)" TextAlign="TextAlign.Center" Width="90px">
                 <Template>
-                    <RadzenCheckBox @bind-Value="context.Activa" ReadOnly="true" />
+                    @if (context.Activa)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Activa" />
+                    }
+                    else
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Inactiva" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px" Sortable="false">
+                <Template>
+                    <RadzenButton Icon="@(context.Activa ? "toggle_on" : "toggle_off")"
+                                  ButtonStyle="@(context.Activa ? ButtonStyle.Success : ButtonStyle.Light)"
+                                  Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true"
+                                  title="@(context.Activa ? "Desactivar oferta" : "Activar oferta")"
+                                  Disabled="@(isLoading || !listPermisos.Contains("edicion"))"
+                                  Click="@(() => AlternarActiva(context))" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px">
@@ -61,6 +86,13 @@
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar oferta" Click="@(() => Editar(context))" />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px" Sortable="false">
+                <Template>
+                    <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true"
+                                  title="Duplicar oferta" Disabled="@(isLoading || !listPermisos.Contains("alta"))" Click="@(() => Duplicar(context))" />
+                </Template>
+            </RadzenDataGridColumn>
+
             <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="35px">
                 <Template>
                     <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Ver oferta" Click="@(() => Ver(context))" />
@@ -85,13 +117,14 @@ else
     List<string> lstLineas = new();
     DateTime mes = DateTime.Today.FirstDayOfMonth();
     string linea;
+    bool? activas;
 
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
         listPermisos = await SeguridadService.GetPermisos("ofertas");
         lstLineas = await ProductosService.GetLineas();
-        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
         showPage = true;
     }
 
@@ -103,7 +136,7 @@ else
     async Task FillOfertas()
     {
         isLoading = true;
-        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+        lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
         await refGrid.Reload();
         isLoading = false;
     }
@@ -114,7 +147,7 @@ else
         var response = await DialogService.OpenAsync<OfertaForm>($"Nueva oferta", new() { { "Oferta", new Oferta() } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
-            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
             await refGrid.Reload();
         }
         isLoading = false;
@@ -126,7 +159,7 @@ else
         var response = await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta } }, new() { Width = "80vw", Height = "90vh" });
         if (response != null)
         {
-            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, null);
+            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
             await refGrid.Reload();
         }
         isLoading = false;
@@ -138,4 +171,83 @@ else
         await DialogService.OpenAsync<OfertaForm>($"Oferta {oferta.Nombre}", new() { { "Oferta", oferta }, { "DisabledInputs", true } }, new() { Width = "80vw", Height = "90vh" });
         isLoading = false;
     }
+
+    /// <summary>
+    /// Activa o desactiva la oferta sin necesidad de abrir el formulario.
+    /// </summary>
+    async Task AlternarActiva(Oferta oferta)
+    {
+        string accion = oferta.Activa ? "desactivar" : "activar";
+
+        if (await DialogService.Confirm($"¿Desea {accion} la oferta \"{oferta.Nombre}\"?", MensajesHelper.Title,
+                                        new() { OkButtonText = "Sí", CancelButtonText = "No" }) != true)
+            return;
+
+        isLoading = true;
+
+        var payload = new Oferta
+        {
+            IdOferta = oferta.IdOferta,
+            Nombre = oferta.Nombre,
+            Descripcion = oferta.Descripcion,
+            Linea = oferta.Linea,
+            Descuento = oferta.Descuento,
+            Desde = oferta.Desde,
+            Hasta = oferta.Hasta,
+            Inclusiones = oferta.Inclusiones,
+            Exclusiones = oferta.Exclusiones,
+            Activa = !oferta.Activa
+        };
+
+        var response = await OfertasService.PutOferta(payload);
+
+        if (response.IsOk)
+        {
+            oferta.Activa = payload.Activa;
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title,
+                                       $"La oferta \"{oferta.Nombre}\" quedó {(oferta.Activa ? "activa" : "inactiva")}");
+            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
+            await refGrid.Reload();
+        }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title, "No se pudo actualizar la oferta");
+
+        isLoading = false;
+    }
+
+    /// <summary>
+    /// Abre el formulario con una copia de la oferta seleccionada (borrador nuevo).
+    /// Solo hace falta ajustar el porcentaje o las fechas y guardar.
+    /// </summary>
+    async Task Duplicar(Oferta oferta)
+    {
+        isLoading = true;
+
+        var copia = new Oferta
+        {
+            IdOferta = 0,
+            Nombre = RecortarNombre($"{oferta.Nombre} (copia)"),
+            Descripcion = oferta.Descripcion,
+            Linea = oferta.Linea,
+            Descuento = oferta.Descuento,
+            Desde = DateTime.Today,
+            Hasta = DateTime.Today.FirstDayOfMonth().AddMonths(1).AddDays(-1),
+            Activa = true,
+            Inclusiones = oferta.Inclusiones,
+            Exclusiones = oferta.Exclusiones
+        };
+
+        var response = await DialogService.OpenAsync<OfertaForm>($"Duplicar oferta {oferta.Nombre}",
+            new() { { "Oferta", copia } }, new() { Width = "80vw", Height = "90vh" });
+
+        if (response != null)
+        {
+            lstOfertas = await OfertasService.GetOfertas(null, linea, mes, activas);
+            await refGrid.Reload();
+        }
+
+        isLoading = false;
+    }
+
+    static string RecortarNombre(string nombre) => nombre.Length > 50 ? nombre[..50] : nombre;
 }

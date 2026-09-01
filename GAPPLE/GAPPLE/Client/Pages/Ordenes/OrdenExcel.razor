@@ -1,4 +1,4 @@
-@page "/orden/creacion/excel"
+﻿@page "/orden/creacion/excel"
 @page "/orden/edicion/{CodOrden}"
 
 @implements IAsyncDisposable
@@ -552,16 +552,16 @@ else
     {
         DialogService.Close();
 
+        // El servidor ya incluye los complementos en la respuesta.
+        // Identificamos cuáles son complementos automáticos (no cargados explícitamente por el
+        // usuario) para no bloquearlos con el chequeo de duplicados y para bonificarlos.
+        var codigosComplemento = productos
+            .Where(p => !string.IsNullOrEmpty(p.CodComplemento))
+            .Select(p => p.CodComplemento)
+            .ToHashSet();
+
         if (modoEdicion)
         {
-            // El servidor ya incluye los complementos en la respuesta.
-            // Identificamos cuáles son complementos automáticos (no cargados explícitamente por el usuario)
-            // para no bloquearlos con el chequeo de duplicados.
-            var codigosComplemento = productos
-                .Where(p => !string.IsNullOrEmpty(p.CodComplemento))
-                .Select(p => p.CodComplemento)
-                .ToHashSet();
-
             var duplicados = productos
                 .Where(p => !codigosComplemento.Contains(p.CodigoProducto))
                 .Where(p => lstProductos.Any(x => x.CodigoProducto == p.CodigoProducto && x.IdProducto != 0))
@@ -587,33 +587,45 @@ else
                 }
                 else if (existente == null)
                 {
-                    lstProductos.Add(MapearProductoArchivo(p));
+                    lstProductos.Add(MapearProductoArchivo(p, codigosComplemento.Contains(p.CodigoProducto)));
                 }
             }
         }
         else
         {
             // En alta: el servidor ya trae los complementos, reemplazamos la lista completa
-            lstProductos = productos.Select(MapearProductoArchivo).ToList();
+            lstProductos = productos
+                .Select(p => MapearProductoArchivo(p, codigosComplemento.Contains(p.CodigoProducto)))
+                .ToList();
         }
 
         await RecalcularOfertas();
     }
 
-    private ProductoOrden MapearProductoArchivo(ProductoArchivo p) => new()
+    private ProductoOrden MapearProductoArchivo(ProductoArchivo p, bool esComplemento = false)
     {
-        IdProducto = p.IdProducto,
-        CodigoProducto = p.CodigoProducto,
-        Descripcion = p.Descripcion,
-        Linea = p.Linea,
-        CantidadSeleccionada = p.CantidadSeleccionada,
-        CantidadProbador = p.CantidadProbador,
-        CantidadObsequio = p.CantidadObsequio,
-        DescuentoCliente = p.DescuentoCliente,
-        Precio = p.Precio,
-        Pasivo = p.Pasivo,
-        CodComplemento = p.CodComplemento
-    };
+        var producto = new ProductoOrden
+        {
+            IdProducto = p.IdProducto,
+            CodigoProducto = p.CodigoProducto,
+            Descripcion = p.Descripcion,
+            Linea = p.Linea,
+            CantidadSeleccionada = p.CantidadSeleccionada,
+            CantidadProbador = p.CantidadProbador,
+            CantidadObsequio = p.CantidadObsequio,
+            DescuentoCliente = p.DescuentoCliente,
+            Precio = p.Precio,
+            Pasivo = p.Pasivo,
+            CodComplemento = p.CodComplemento
+        };
+
+        // El complemento entra bonificado. Se asigna como descuento manual para que el
+        // recálculo de ofertas no lo pise con un 0.
+        if (esComplemento)
+            producto.DescuentoTotal = DescuentosHelper.Complemento;
+
+        return producto;
+    }
 
     private async Task Guardar()
     {
@@ -953,6 +965,10 @@ else
         if (complemento != null)
         {
             complemento.CantidadSeleccionada = producto.CantidadSeleccionada;
+
+            // El complemento acompaña al principal: entra siempre bonificado.
+            complemento.DescuentoTotal = DescuentosHelper.Complemento;
+
             lstProductos.Add(complemento);
         }
     }

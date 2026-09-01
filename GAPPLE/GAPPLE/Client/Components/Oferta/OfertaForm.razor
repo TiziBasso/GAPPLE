@@ -31,13 +31,13 @@
 
             <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
                 <RadzenLabel Text="Fecha desde:" />
-                <RadzenDatePicker @bind-Value="Oferta.Desde" Disabled=DisabledInputs DateFormat="dd/MM/yyyy" Min="DateTime.Today.AddDays(-7)" Style="width:10rem" />
+                <RadzenDatePicker @bind-Value="Oferta.Desde" Disabled=DisabledInputs DateFormat="dd/MM/yyyy" Min="@minDesde" Style="width:10rem" />
                 <ValidationMessage For="@(() => Oferta.Desde)" />
             </RadzenStack>
 
             <RadzenStack Orientation="Orientation.Vertical" Gap="5px">
                 <RadzenLabel Text="Fecha hasta:" />
-                <RadzenDatePicker @bind-Value="Oferta.Hasta" Disabled=DisabledInputs DateFormat="dd/MM/yyyy" Min="DateTime.Today" Style="width:10rem" />
+                <RadzenDatePicker @bind-Value="Oferta.Hasta" Disabled=DisabledInputs DateFormat="dd/MM/yyyy" Min="@minHasta" Style="width:10rem" />
                 <ValidationMessage For="@(() => Oferta.Hasta)" />
             </RadzenStack>
         </RadzenStack>
@@ -48,9 +48,13 @@
             <ValidationMessage For="@(() => Oferta.Descripcion)" />
         </RadzenStack>
 
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-            <RadzenLabel Text="Activa:" />
-            <RadzenCheckBox @bind-Value="@Oferta.Activa" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" AlignItems="AlignItems.Center" class="rz-mb-2">
+            <RadzenCheckBox @bind-Value="@Oferta.Activa" Disabled=DisabledInputs Name="activa" />
+            <RadzenLabel Text="Oferta activa" Component="activa" Style="cursor:pointer" />
+            @if (!Oferta.Activa)
+            {
+                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="No se aplicará a los pedidos" />
+            }
         </RadzenStack>
 
         <RadzenFieldset Text="Productos" class="rz-mb-2">
@@ -88,20 +92,33 @@ else
     string valorAux;
 
     bool esNueva;
+    DateTime? minDesde, minHasta;
 
     protected override async Task OnInitializedAsync()
     {
         lstLineas = await ProductosService.GetLineas();
-        if (Oferta.IdOferta > 0)
+
+        esNueva = Oferta.IdOferta == 0;
+
+        // Una oferta ya existente puede tener fechas pasadas: no se restringe el calendario para
+        // poder editarla (por ejemplo, para desactivarla o corregir el período).
+        minDesde = esNueva ? DateTime.Today.AddDays(-7) : null;
+        minHasta = esNueva ? DateTime.Today : null;
+
+        // Se precargan los productos tanto al editar como al duplicar (el duplicado llega con
+        // IdOferta = 0 pero con las inclusiones de la oferta original).
+        if (!string.IsNullOrWhiteSpace(Oferta.Linea))
         {
             valorAux = Oferta.Linea;
             await BuscarProductos();
-            List<string> incluidos = Oferta.Inclusiones!.Split('|').ToList();
-            lstProductosOferta.AddRange(lstProductos.Where(x => incluidos.Exists(e => e == x.CodigoProducto)));
-            lstProductosOferta.ForEach(x => lstProductos.Remove(x));
+
+            if (!string.IsNullOrWhiteSpace(Oferta.Inclusiones))
+            {
+                List<string> incluidos = Oferta.Inclusiones.Split('|').ToList();
+                lstProductosOferta.AddRange(lstProductos.Where(x => incluidos.Exists(e => e == x.CodigoProducto)));
+                lstProductosOferta.ForEach(x => lstProductos.Remove(x));
+            }
         }
-        else
-            esNueva = true;
 
         editContext = new(Oferta);
         showForm = true;

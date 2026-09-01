@@ -5,6 +5,7 @@
 @using GAPPLE.Shared.Helpers
 @using Microsoft.AspNetCore.Components.Authorization
 @using Newtonsoft.Json
+@using System.Globalization
 
 @implements IDisposable
 
@@ -156,6 +157,19 @@
                 </FilterTemplate>
             </RadzenDataGridColumn>
 
+            <RadzenDataGridColumn Title="Importe total" Property="@nameof(Orden.ImporteTotal)" Width="140px" TextAlign="TextAlign.Right" Filterable=false Resizable=false>
+                <Template>
+                    @if (context.ImporteTotal == null)
+                    {
+                        <span style="color:var(--rz-text-disabled-color)">—</span>
+                    }
+                    else
+                    {
+                        <span>$ @(context.ImporteTotal.Value.ToString("N2", CultureAR))</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+
             <RadzenDataGridColumn Title="Entrega" Property="@nameof(Orden.FechaEntrega)" Width="120px" FormatString="{0:dd/MM/yyyy}" TextAlign="TextAlign.Center" FilterValue="entregaFilter" Resizable=false>
                 <FilterTemplate>
                     <RadzenDatePicker @bind-Value=entregaFilter AllowClear=true Style="width:100%" DateFormat="dd/MM/yyyy" />
@@ -252,6 +266,8 @@ else
 }
 
 @code {
+    static readonly CultureInfo CultureAR = new("es-AR");
+
     ElementReference refIdOrden;
     DataGridSettings _settings;
     public DataGridSettings Settings

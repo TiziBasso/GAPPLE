@@ -1,4 +1,4 @@
-using GAPPLE.Client.Entities;
+﻿using GAPPLE.Client.Entities;
 using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Requests;
@@ -36,6 +36,20 @@ namespace GAPPLE.Client.Services
 
             if (response.StatusCode == HttpStatusCode.OK)
                 return await response.Content.ReadFromJsonAsync<List<Reclamo>>();
+            return null;
+        }
+
+        // ─── GET dataset plano para el dashboard ──────────────────────────────────
+        public async ValueTask<List<ReclamoDashboardLinea>> GetDashboard(DateTime fechaDesde, DateTime fechaHasta)
+        {
+            string uri = $"{URI_BASE}/dashboard" +
+                         $"?fechaDesde={fechaDesde:yyyy-MM-dd}" +
+                         $"&fechaHasta={fechaHasta:yyyy-MM-dd}";
+
+            var response = await HttpClient.GetAsync(uri);
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadFromJsonAsync<List<ReclamoDashboardLinea>>();
             return null;
         }
 

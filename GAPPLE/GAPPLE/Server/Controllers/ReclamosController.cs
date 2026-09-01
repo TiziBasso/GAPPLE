@@ -1,4 +1,4 @@
-using GAPPLE.Server.Data;
+﻿using GAPPLE.Server.Data;
 using GAPPLE.Server.Tools;
 using GAPPLE.Shared.Enums;
 using GAPPLE.Shared.Model;
@@ -38,6 +38,66 @@ namespace GAPPLE.Server.Controllers
                     lista.Add(DataRowHelper.MapDataRowTo<Reclamo>(row));
 
                 return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        // GET api/reclamos/dashboard?fechaDesde=...&fechaHasta=...
+        // Devuelve una fila por linea de detalle, con la marca (Linea) resuelta contra el
+        // maestro de productos. El dashboard hace todas las agregaciones en el cliente.
+        [HttpGet("dashboard")]
+        public IActionResult GetReclamosDashboard(DateTime fechaDesde, DateTime fechaHasta)
+        {
+            try
+            {
+                DA_Reclamos daR = new(DefaultConnection);
+                DA_Producto daP = new(DefaultConnection);
+
+                // Maestro SKU -> Marca (Linea). Una sola lectura para todo el dataset.
+                Dictionary<string, string> marcaPorSku = new(StringComparer.OrdinalIgnoreCase);
+                using (DataTable dtProductos = daP.ObtenerProductos(null, null, null, null, null))
+                {
+                    foreach (DataRow row in dtProductos.Rows)
+                    {
+                        string codigo = row["CodigoProducto"]?.ToString()?.Trim();
+                        if (string.IsNullOrWhiteSpace(codigo)) continue;
+                        marcaPorSku[codigo] = row["Linea"] == DBNull.Value ? null : row["Linea"].ToString();
+                    }
+                }
+
+                List<ReclamoDashboardLinea> lineas = [];
+                using (DataTable dt = daR.ObtenerReclamosDashboard(fechaDesde, fechaHasta))
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        string sku = row["SKU"] == DBNull.Value ? null : row["SKU"].ToString()?.Trim();
+
+                        ReclamoDashboardLinea linea = new()
+                        {
+                            IdReclamo = int.Parse(row["IdReclamo"].ToString()!),
+                            Fecha = DateTime.Parse(row["Fecha"].ToString()!),
+                            CodigoCliente = row["CodigoCliente"]?.ToString(),
+                            RazonSocial = row["RazonSocial"]?.ToString(),
+                            Tipo = (ReclamoTipoEnum)int.Parse(row["Tipo"].ToString()!),
+                            Motivo = (ReclamoMotivoEnum)int.Parse(row["Motivo"].ToString()!),
+                            SKU = sku,
+                            Cantidad = row["Cantidad"] == DBNull.Value ? 0 : int.Parse(row["Cantidad"].ToString()!)
+                        };
+
+                        linea.Marca = sku != null
+                                      && marcaPorSku.TryGetValue(sku, out string marca)
+                                      && !string.IsNullOrWhiteSpace(marca)
+                                          ? marca.Trim()
+                                          : ReclamoDashboardLinea.SinMarca;
+
+                        lineas.Add(linea);
+                    }
+                }
+
+                return Ok(lineas);
             }
             catch (Exception ex)
             {
@@ -168,14 +228,23 @@ namespace GAPPLE.Server.Controllers
             if (reclamo.Detalle.Any(d => d.Cantidad <= 0))
                 return "Las cantidades de todas las líneas deben ser mayores a cero";
 
+            // Un mismo SKU puede repetirse en varias lineas siempre que el lote sea distinto
+            // (es la forma de reclamar el mismo producto para lotes diferentes). Solo se rechaza
+            // cuando se repite la combinacion SKU + lote.
             var duplicados = reclamo.Detalle
-                .GroupBy(d => d.SKU.Trim(), StringComparer.OrdinalIgnoreCase)
+                .GroupBy(d => new
+                {
+                    SKU = d.SKU.Trim().ToUpperInvariant(),
+                    Lote = (d.Lote ?? string.Empty).Trim().ToUpperInvariant()
+                })
                 .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
+                .Select(g => string.IsNullOrEmpty(g.Key.Lote)
+                                ? $"{g.Key.SKU} (sin lote)"
+                                : $"{g.Key.SKU} (lote {g.Key.Lote})")
                 .ToList();
 
             if (duplicados.Count > 0)
-                return $"Hay productos duplicados en el detalle: {string.Join(", ", duplicados)}";
+                return $"Hay líneas repetidas con el mismo producto y lote: {string.Join(", ", duplicados)}";
 
             return null;
         }

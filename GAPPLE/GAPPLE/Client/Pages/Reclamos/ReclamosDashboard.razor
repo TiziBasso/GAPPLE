@@ -1,0 +1,660 @@
+﻿@page "/reclamos/dashboard"
+@using System.Globalization
+@using GAPPLE.Shared.Enums
+
+@inject SeguridadService SeguridadService
+@inject ReclamosService ReclamosService
+@inject RadzenDialogService RadzenDialogService
+
+@if (!showPage)
+{
+    <Loader />
+}
+else
+{
+    @* ─────────────── Cabecera y filtros de período ─────────────── *@
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                 AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="12px" class="rz-mb-4">
+
+        <RadzenText TextStyle="TextStyle.DisplayH5" class="rz-m-0">Dashboard de Reclamos</RadzenText>
+
+        <RadzenCard Variant="Variant.Outlined" Style="padding:0.5rem 1rem;">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="8px">
+
+                <RadzenButton Text="Mes actual" Size="ButtonSize.Small" Variant="Variant.Flat"
+                              ButtonStyle="@(EsMesActual ? ButtonStyle.Primary : ButtonStyle.Light)"
+                              Click="@(() => AplicarPreset(false))" />
+                <RadzenButton Text="Año completo (YTD)" Size="ButtonSize.Small" Variant="Variant.Flat"
+                              ButtonStyle="@(EsYtd ? ButtonStyle.Primary : ButtonStyle.Light)"
+                              Click="@(() => AplicarPreset(true))" />
+
+                <span style="color:var(--rz-border-color)">|</span>
+
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Desde:" Style="font-size:0.75rem" />
+                    <RadzenDatePicker @bind-Value="fechaDesde" DateFormat="dd/MM/yyyy" Style="width:8.5rem" />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                    <RadzenLabel Text="Hasta:" Style="font-size:0.75rem" />
+                    <RadzenDatePicker @bind-Value="fechaHasta" DateFormat="dd/MM/yyyy" Max="DateTime.Today" Style="width:8.5rem" />
+                </RadzenStack>
+
+                <RadzenButton Text="Actualizar" Icon="refresh" ButtonStyle="ButtonStyle.Primary"
+                              Size="ButtonSize.Small" Click="Actualizar" Disabled="cargando" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+
+    @if (cargando)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate"
+                                   Size="ProgressBarCircularSize.Large" Style="display:block;margin:4rem auto;" />
+    }
+    else if (lineas == null || lineas.Count == 0)
+    {
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenText class="rz-color-secondary rz-m-0">No hay reclamos registrados en el período seleccionado.</RadzenText>
+        </RadzenCard>
+    }
+    else
+    {
+        @* ─────────────── KPI cards ─────────────── *@
+        <RadzenRow Gap="1rem" class="rz-mb-4">
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">TOTAL RECLAMOS</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@(totalReclamos.ToString("N0", CultureES))</RadzenText>
+                            <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
+                                Pico máx: <b style="color:var(--rz-danger)">@mesPico</b>
+                            </RadzenText>
+                        </RadzenStack>
+                        <div class="kpi-icono" style="background:var(--rz-primary-lighter)">
+                            <RadzenIcon Icon="assignment" Style="color:var(--rz-primary)" />
+                        </div>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">UNIDADES AFECTADAS</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@(unidadesAfectadas.ToString("N0", CultureES))</RadzenText>
+                            <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Suma de todos los productos</RadzenText>
+                        </RadzenStack>
+                        <div class="kpi-icono" style="background:var(--rz-warning-lighter)">
+                            <RadzenIcon Icon="inventory_2" Style="color:var(--rz-warning)" />
+                        </div>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary rz-mb-2" Style="font-size:0.7rem">RECLAMOS POR GRAVEDAD</RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.End">
+                        @foreach (var tipo in ReclamosVisual.Gravedades)
+                        {
+                            <RadzenStack Gap="2px" AlignItems="AlignItems.Center">
+                                <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
+                                    <span class="punto" style="background:@ReclamosVisual.TipoColor(tipo)"></span>@ReclamosVisual.TipoLabel(tipo)
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H6" class="rz-m-0" Style="@($"color:{ReclamosVisual.TipoColor(tipo)}")">
+                                    @(CasosDeGravedad(tipo).ToString("N0", CultureES))
+                                </RadzenText>
+                            </RadzenStack>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                        <RadzenStack Gap="2px">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">MARCA PRINCIPAL</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" class="rz-m-0" Style="color:var(--rz-info)">@marcaPrincipal</RadzenText>
+                            <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Marca con más incidencias</RadzenText>
+                        </RadzenStack>
+                        <div class="kpi-icono" style="background:var(--rz-info-lighter)">
+                            <RadzenIcon Icon="sell" Style="color:var(--rz-info)" />
+                        </div>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        @* ─────────────── Gráficos ─────────────── *@
+        <RadzenRow Gap="1rem" class="rz-mb-4">
+
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard Variant="Variant.Outlined" Style="height:380px">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Distribución por Tipo de Reclamo</RadzenText>
+                    <RadzenChart Style="height:300px">
+                        <RadzenDonutSeries Data="@distribucionMotivos" CategoryProperty="Motivo" ValueProperty="Cantidad"
+                                           Title="Reclamos" Fills="@coloresMotivos">
+                            <TooltipTemplate Context="d">
+                                <div style="padding:2px 4px">
+                                    <b>@d.Motivo</b><br />
+                                    @d.Cantidad.ToString("N0", CultureES) reclamos (@d.Porcentaje.ToString("N1", CultureES)%)
+                                </div>
+                            </TooltipTemplate>
+                        </RadzenDonutSeries>
+                        <RadzenLegend Position="LegendPosition.Right" />
+                    </RadzenChart>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard Variant="Variant.Outlined" Style="height:380px">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Evolución Mensual (Total Reclamos)</RadzenText>
+                    <RadzenChart Style="height:300px">
+                        <RadzenLineSeries Data="@evolucionMensual" CategoryProperty="Mes" ValueProperty="Cantidad"
+                                          Title="Total reclamos por mes" Smooth="true" StrokeWidth="3">
+                            <RadzenMarkers MarkerType="MarkerType.Circle" Size="8" />
+                            <RadzenSeriesDataLabels Visible="false" />
+                        </RadzenLineSeries>
+                        <RadzenCategoryAxis />
+                        <RadzenValueAxis FormatString="{0:N0}" />
+                        <RadzenLegend Visible="false" />
+                    </RadzenChart>
+                </RadzenCard>
+            </RadzenColumn>
+
+        </RadzenRow>
+
+        @* ─────────────── Matriz de impacto: gravedad x marca ─────────────── *@
+        <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                         AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="8px" class="rz-mb-3">
+                <div>
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">Matriz de Impacto por Marca</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                        Gravedad contra marca — @(verUnidades ? "unidades afectadas (piezas)" : "cantidad de reclamos (casos)")
+                    </RadzenText>
+                </div>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+                    <RadzenButton Text="N° Reclamos" Size="ButtonSize.Small" Variant="Variant.Flat"
+                                  ButtonStyle="@(verUnidades ? ButtonStyle.Light : ButtonStyle.Primary)"
+                                  Click="@(() => verUnidades = false)" />
+                    <RadzenButton Text="Unidades Afectadas" Size="ButtonSize.Small" Variant="Variant.Flat"
+                                  ButtonStyle="@(verUnidades ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                  Click="@(() => verUnidades = true)" />
+                </RadzenStack>
+            </RadzenStack>
+
+            <div class="tabla-scroll" style="max-height:none">
+                <table class="tabla-matriz">
+                    <thead>
+                        <tr>
+                            <th class="col-etiqueta">Gravedad</th>
+                            @foreach (var marca in marcas)
+                            {
+                                <th class="col-num">@marca</th>
+                            }
+                            <th class="col-num col-total">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tipo in ReclamosVisual.Gravedades)
+                        {
+                            <tr>
+                                <td class="col-etiqueta">
+                                    <span class="punto" style="background:@ReclamosVisual.TipoColor(tipo)"></span>
+                                    <b style="color:@ReclamosVisual.TipoColor(tipo)">@ReclamosVisual.TipoLabel(tipo)</b>
+                                </td>
+                                @foreach (var marca in marcas)
+                                {
+                                    <td class="col-num">@(ValorGravedad(tipo, marca).ToString("N0", CultureES))</td>
+                                }
+                                <td class="col-num col-total">@(TotalGravedad(tipo).ToString("N0", CultureES))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary rz-mt-2">
+                Un reclamo con productos de varias marcas se cuenta en cada marca, por eso la suma de las
+                columnas puede superar el total de casos de la fila.
+            </RadzenText>
+        </RadzenCard>
+
+        @* ─────────────── Matriz completa de motivos x marca ─────────────── *@
+        <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                         AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="8px" class="rz-mb-3">
+                <div>
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">Detalle de Motivos</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">Apertura completa por marca</RadzenText>
+                </div>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="8px">
+                    <input type="text" @bind-value="busquedaMotivo" @bind-value:event="oninput"
+                           class="rz-textbox" style="width:12rem" placeholder="Buscar motivo..." autocomplete="off" />
+                    <RadzenDropDown Data="@marcas" @bind-Value="marcaSeleccionada" AllowClear="true"
+                                    Placeholder="Todas las marcas" Style="width:12rem" />
+                </RadzenStack>
+            </RadzenStack>
+
+            <div class="tabla-scroll">
+                <table class="tabla-matriz">
+                    <thead>
+                        <tr>
+                            <th class="col-etiqueta">Motivo / Tipo</th>
+                            @foreach (var marca in MarcasVisibles)
+                            {
+                                <th class="col-num">@marca</th>
+                            }
+                            <th class="col-num col-total">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (FilasMotivosVisibles.Count == 0)
+                        {
+                            <tr>
+                                <td class="col-etiqueta" colspan="@(MarcasVisibles.Count + 2)" style="text-align:center;color:var(--rz-text-disabled-color)">
+                                    Sin motivos que coincidan con el filtro.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var fila in FilasMotivosVisibles)
+                            {
+                                <tr>
+                                    <td class="col-etiqueta">@fila.Motivo</td>
+                                    @foreach (var marca in MarcasVisibles)
+                                    {
+                                        <td class="col-num">@(fila.Casos(marca).ToString("N0", CultureES))</td>
+                                    }
+                                    <td class="col-num col-total">@fila.Total.ToString("N0", CultureES)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </RadzenCard>
+
+        @* ─────────────── Top 5 clientes ─────────────── *@
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                         AlignItems="AlignItems.Center" class="rz-mb-3">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">Top 5 Clientes con Más Reclamos</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">Por frecuencia y gravedad</RadzenText>
+            </RadzenStack>
+
+            <table class="tabla-matriz">
+                <thead>
+                    <tr>
+                        <th class="col-etiqueta">Cliente</th>
+                        <th class="col-num">N° Reclamos</th>
+                        <th class="col-etiqueta">Gravedad principal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cliente in topClientes)
+                    {
+                        <tr>
+                            <td class="col-etiqueta">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10px">
+                                    <div class="avatar-cliente">@Inicial(cliente.RazonSocial)</div>
+                                    <div>
+                                        <div style="font-weight:600">@cliente.RazonSocial</div>
+                                        <div style="font-size:0.72rem;color:var(--rz-text-tertiary-color)">Cód: @cliente.CodigoCliente</div>
+                                    </div>
+                                </RadzenStack>
+                            </td>
+                            <td class="col-num"><b>@(cliente.Casos.ToString("N0", CultureES))</b></td>
+                            <td class="col-etiqueta">
+                                <span class="punto" style="background:@ReclamosVisual.TipoColor(cliente.Gravedad)"></span>
+                                <span style="color:@ReclamosVisual.TipoColor(cliente.Gravedad);font-weight:600">
+                                    @ReclamosVisual.TipoLabel(cliente.Gravedad)
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </RadzenCard>
+    }
+}
+
+@code {
+    static readonly CultureInfo CultureES = new("es-AR");
+
+    // Etiquetas fijas: Blazor WebAssembly puede correr con globalizacion recortada
+    // y devolver los meses en ingles.
+    static readonly string[] MesesCortos =
+        ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+    record MotivoSlice(string Motivo, int Cantidad, double Porcentaje);
+    record MesPunto(string Mes, int Cantidad);
+    record ClienteTop(string CodigoCliente, string RazonSocial, int Casos, ReclamoTipoEnum Gravedad);
+
+    class FilaMotivo
+    {
+        public string Motivo { get; init; }
+        public int Total { get; init; }
+        public Dictionary<string, int> PorMarca { get; init; } = [];
+        public int Casos(string marca) => PorMarca.TryGetValue(marca, out int v) ? v : 0;
+    }
+
+    bool showPage, cargando, verUnidades;
+
+    DateTime fechaDesde = new(DateTime.Today.Year, 1, 1);
+    DateTime fechaHasta = DateTime.Today;
+
+    static DateTime InicioMes => new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    static DateTime InicioAnio => new(DateTime.Today.Year, 1, 1);
+
+    bool EsMesActual => fechaDesde.Date == InicioMes && fechaHasta.Date == DateTime.Today;
+    bool EsYtd => fechaDesde.Date == InicioAnio && fechaHasta.Date == DateTime.Today;
+
+    List<ReclamoDashboardLinea> lineas;
+
+    // KPIs
+    int totalReclamos, unidadesAfectadas;
+    string marcaPrincipal = "—";
+    string mesPico = "—";
+    Dictionary<ReclamoTipoEnum, int> casosPorGravedad = [];
+
+    // Gráficos
+    List<MotivoSlice> distribucionMotivos = [];
+    List<MesPunto> evolucionMensual = [];
+    string[] coloresMotivos = [];
+
+    // Matrices
+    List<string> marcas = [];
+    Dictionary<string, int> gravedadCasos = [];      // clave: "tipo|marca"
+    Dictionary<string, int> gravedadUnidades = [];   // clave: "tipo|marca"
+    List<FilaMotivo> filasMotivos = [];
+
+    // Filtros de la matriz de motivos
+    string busquedaMotivo = string.Empty;
+    string marcaSeleccionada;
+
+    List<ClienteTop> topClientes = [];
+
+    // ── Vistas derivadas de los filtros ───────────────────────────────────────
+    List<string> MarcasVisibles =>
+        string.IsNullOrWhiteSpace(marcaSeleccionada)
+            ? marcas
+            : new List<string> { marcaSeleccionada };
+
+    List<FilaMotivo> FilasMotivosVisibles
+    {
+        get
+        {
+            IEnumerable<FilaMotivo> filtradas = filasMotivos;
+
+            if (!string.IsNullOrWhiteSpace(busquedaMotivo))
+                filtradas = filtradas.Where(f => f.Motivo.Contains(busquedaMotivo.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            // Con una marca seleccionada se ocultan las filas sin datos para esa marca.
+            if (!string.IsNullOrWhiteSpace(marcaSeleccionada))
+                filtradas = filtradas.Where(f => f.Casos(marcaSeleccionada) > 0);
+
+            return [.. filtradas];
+        }
+    }
+
+    // ── Ciclo de vida ─────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        showPage = true;
+        await Actualizar();
+    }
+
+    private void AplicarPreset(bool anioCompleto)
+    {
+        fechaHasta = DateTime.Today;
+        fechaDesde = anioCompleto ? InicioAnio : InicioMes;
+    }
+
+    private async Task Actualizar()
+    {
+        cargando = true;
+        StateHasChanged();
+
+        if (fechaHasta < fechaDesde)
+            (fechaDesde, fechaHasta) = (fechaHasta, fechaDesde);
+
+        lineas = await ReclamosService.GetDashboard(fechaDesde, fechaHasta);
+
+        if (lineas == null)
+        {
+            lineas = [];
+            RadzenDialogService.NotifyInternalServerError();
+        }
+        else
+        {
+            // Normalizacion defensiva: ninguna agrupacion por marca debe recibir null.
+            foreach (var l in lineas.Where(x => string.IsNullOrWhiteSpace(x.Marca)))
+                l.Marca = ReclamoDashboardLinea.SinMarca;
+
+            Calcular();
+        }
+
+        cargando = false;
+    }
+
+    // ── Cálculo de todas las métricas ─────────────────────────────────────────
+    private void Calcular()
+    {
+        // Cabeceras únicas: una linea por reclamo, para no contar dos veces los casos.
+        var cabeceras = lineas
+            .GroupBy(x => x.IdReclamo)
+            .Select(g => g.First())
+            .ToList();
+
+        totalReclamos = cabeceras.Count;
+        unidadesAfectadas = lineas.Sum(x => x.Cantidad);
+
+        casosPorGravedad = cabeceras
+            .GroupBy(x => x.Tipo)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Marcas presentes, ordenadas alfabéticamente para que las columnas sean estables.
+        marcas = lineas
+            .Select(x => x.Marca)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        marcaPrincipal = marcas
+            .Select(m => (Marca: m, Casos: CasosDistintos(lineas.Where(x => x.Marca == m))))
+            .OrderByDescending(x => x.Casos)
+            .Select(x => x.Marca)
+            .FirstOrDefault() ?? "—";
+
+        // Distribución por motivo (todas las categorías con datos).
+        var porMotivo = cabeceras
+            .GroupBy(x => x.Motivo)
+            .Select(g => new { Motivo = ReclamosVisual.MotivoLabel(g.Key), Cantidad = g.Count() })
+            .OrderByDescending(x => x.Cantidad)
+            .ToList();
+
+        distribucionMotivos = [.. porMotivo.Select(x => new MotivoSlice(
+            x.Motivo,
+            x.Cantidad,
+            totalReclamos > 0 ? (double)x.Cantidad * 100 / totalReclamos : 0))];
+
+        coloresMotivos = [.. Enumerable.Range(0, distribucionMotivos.Count).Select(ReclamosVisual.ColorMarca)];
+
+        // Evolución mensual: se recorren todos los meses del rango para que los huecos den 0.
+        var porMes = cabeceras
+            .GroupBy(x => new { x.Fecha.Year, x.Fecha.Month })
+            .ToDictionary(g => (g.Key.Year, g.Key.Month), g => g.Count());
+
+        evolucionMensual = [];
+        DateTime cursor = new(fechaDesde.Year, fechaDesde.Month, 1);
+        DateTime fin = new(fechaHasta.Year, fechaHasta.Month, 1);
+        while (cursor <= fin)
+        {
+            porMes.TryGetValue((cursor.Year, cursor.Month), out int cantidad);
+            string mes = MesesCortos[cursor.Month - 1];
+            string etiqueta = cursor.Year == fin.Year ? mes : $"{mes} {cursor:yy}";
+            evolucionMensual.Add(new MesPunto(etiqueta, cantidad));
+            cursor = cursor.AddMonths(1);
+        }
+
+        var pico = evolucionMensual.OrderByDescending(x => x.Cantidad).FirstOrDefault();
+        mesPico = pico != null && pico.Cantidad > 0 ? pico.Mes : "—";
+
+        // Matriz gravedad x marca (casos y unidades).
+        gravedadCasos = [];
+        gravedadUnidades = [];
+        foreach (var grupo in lineas.GroupBy(x => new { x.Tipo, x.Marca }))
+        {
+            string clave = Clave(grupo.Key.Tipo, grupo.Key.Marca);
+            gravedadCasos[clave] = CasosDistintos(grupo);
+            gravedadUnidades[clave] = grupo.Sum(x => x.Cantidad);
+        }
+
+        // Matriz motivo x marca.
+        filasMotivos = [.. lineas
+            .GroupBy(x => x.Motivo)
+            .Select(g => new FilaMotivo
+            {
+                Motivo = ReclamosVisual.MotivoLabel(g.Key),
+                Total = CasosDistintos(g),
+                PorMarca = g.GroupBy(x => x.Marca)
+                            .ToDictionary(m => m.Key, m => CasosDistintos(m))
+            })
+            .OrderByDescending(f => f.Total)];
+
+        // Top 5 clientes con la gravedad predominante (empate: gana la más severa).
+        topClientes = [.. cabeceras
+            .GroupBy(x => new { x.CodigoCliente, x.RazonSocial })
+            .Select(g => new ClienteTop(
+                g.Key.CodigoCliente,
+                g.Key.RazonSocial,
+                g.Count(),
+                g.GroupBy(x => x.Tipo)
+                 .OrderByDescending(t => t.Count())
+                 .ThenBy(t => (int)t.Key)
+                 .First().Key))
+            .OrderByDescending(c => c.Casos)
+            .ThenBy(c => c.RazonSocial)
+            .Take(5)];
+
+        busquedaMotivo = string.Empty;
+        marcaSeleccionada = null;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static int CasosDistintos(IEnumerable<ReclamoDashboardLinea> origen) =>
+        origen.Select(x => x.IdReclamo).Distinct().Count();
+
+    private static string Clave(ReclamoTipoEnum tipo, string marca) => $"{(int)tipo}|{marca}";
+
+    private int CasosDeGravedad(ReclamoTipoEnum tipo) =>
+        casosPorGravedad.TryGetValue(tipo, out int v) ? v : 0;
+
+    private int ValorGravedad(ReclamoTipoEnum tipo, string marca)
+    {
+        var origen = verUnidades ? gravedadUnidades : gravedadCasos;
+        return origen.TryGetValue(Clave(tipo, marca), out int v) ? v : 0;
+    }
+
+    private int TotalGravedad(ReclamoTipoEnum tipo) =>
+        verUnidades
+            ? lineas.Where(x => x.Tipo == tipo).Sum(x => x.Cantidad)
+            : CasosDeGravedad(tipo);
+
+    private static string Inicial(string razonSocial) =>
+        string.IsNullOrWhiteSpace(razonSocial) ? "?" : razonSocial.Trim()[..1].ToUpper();
+}
+
+<style>
+    .kpi-icono {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .punto {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    .tabla-scroll {
+        max-height: 340px;
+        overflow: auto;
+        border: 1px solid var(--rz-border-color);
+        border-radius: 0.5rem;
+    }
+
+    .tabla-matriz {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+        .tabla-matriz thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--rz-base-200);
+            color: var(--rz-text-secondary-color);
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--rz-border-color);
+        }
+
+        .tabla-matriz tbody td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--rz-border-color);
+        }
+
+        .tabla-matriz tbody tr:hover td {
+            background: var(--rz-base-100);
+        }
+
+    .col-etiqueta {
+        text-align: left;
+    }
+
+    .col-num {
+        text-align: center;
+    }
+
+    .col-total {
+        font-weight: 700;
+        background: var(--rz-base-100);
+    }
+
+    .avatar-cliente {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--rz-info-lighter);
+        color: var(--rz-info-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+</style>

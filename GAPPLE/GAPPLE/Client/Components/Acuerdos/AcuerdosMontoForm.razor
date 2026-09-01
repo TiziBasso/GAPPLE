@@ -78,6 +78,8 @@
                                   Name="fecha"
                                   DateFormat="dd/MM/yyyy HH:mm"
                                   ShowTime="true"
+                                  Min="@MinFecha"
+                                  Max="@MaxFecha"
                                   Style="width:100%" />
 
                 <ValidationMessage For="@(() => AcuerdoMonto.Fecha)" />
@@ -153,6 +155,19 @@ else
     EditContext editContext;
     ValidationMessageStore messageStore;
 
+    // Limites del calendario: el ultimo dia del acuerdo se toma completo (hasta 23:59:59),
+    // porque el picker carga tambien la hora.
+    private DateTime? MinFecha => Acuerdo?.FechaDesde?.Date;
+
+    private DateTime? MaxFecha
+    {
+        get
+        {
+            var hasta = Acuerdo?.FechaHasta;
+            return hasta?.Date.AddDays(1).AddTicks(-1);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         disabledInput = TipoOperacion == TipoOperacionEnum.Edicion;
@@ -174,7 +189,12 @@ else
         if (AcuerdoMonto.Monto == 0)
             messageStore?.Add(() => AcuerdoMonto.Monto, "El monto no puede ser 0");
 
-        if (AcuerdoMonto.Fecha < Acuerdo.FechaDesde || AcuerdoMonto.Fecha > Acuerdo.FechaHasta)
+        // El picker tiene ShowTime, asi que la fecha viene con hora. Se compara solo el dia:
+        // de lo contrario cualquier carga en el ultimo dia del acuerdo con hora distinta de
+        // 00:00 quedaba fuera de rango y no se podia guardar ni editar.
+        if (Acuerdo != null
+            && (AcuerdoMonto.Fecha.Date < Acuerdo.FechaDesde?.Date
+                || AcuerdoMonto.Fecha.Date > Acuerdo.FechaHasta?.Date))
             messageStore?.Add(() => AcuerdoMonto.Fecha, $"La fecha debe estar entre {Acuerdo.FechaDesde:dd/MM/yyyy} y {Acuerdo.FechaHasta:dd/MM/yyyy}");
 
     }
