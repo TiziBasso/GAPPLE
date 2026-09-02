@@ -204,7 +204,7 @@ else
     // ── Init ───────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        // await SeguridadService.ValidatePageAccess();
+        //await SeguridadService.ValidatePageAccess();
         var permisos = await SeguridadService.GetPermisos(Permisos.Menu.Reclamos);
         permiteAlta     = permisos.Contains(Permisos.Alta);
         permiteEdicion  = permisos.Contains(Permisos.Edicion);

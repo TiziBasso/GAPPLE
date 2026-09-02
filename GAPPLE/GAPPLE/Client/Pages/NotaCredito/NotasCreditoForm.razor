@@ -17,7 +17,7 @@
 @if (showPage)
 {
     <RadzenTemplateForm Data="comprobante" TItem="ComprobanteCabecera" Submit="Guardar" EditContext="editContext"
-    Style="display: grid;grid-template-rows: auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
+                        Style="display: grid;grid-template-rows: auto auto auto 1fr auto;height: calc(100vh - 83px); gap:10px;">
         <DataAnnotationsValidator />
         <CustomValidation @ref="customValidation" />
 
@@ -45,7 +45,7 @@
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
                             <TextBoxInput @bind-Value="comprobante.CodigoOrden" style="width:90%" disabled=@true />
                             <RadzenButton Size="ButtonSize.Medium" Icon="list" Style="width:10%" ButtonStyle="ButtonStyle.Secondary" Disabled="disableInput"
-                            Click="@(() => SeleccionarComprobanteReferencia(async c => await ComprobanteSeleccionado(c, false), ComprobanteCancelado))" />
+                                          Click="@(() => SeleccionarComprobanteReferencia(async c => await ComprobanteSeleccionado(c, false), ComprobanteCancelado))" />
                         </RadzenStack>
                         <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
                     </RadzenStack>
@@ -86,11 +86,11 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Lista de precios:" />
                         <RadzenDropDownDataGrid TValue="int?" Data="listasDePrecio" @bind-Value="idTipoListaPreciosAux" Disabled="@(disableInput || !permisoListaPrecioManual)"
-                        Density="Density.Compact"
-                        TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.IdLista)"
-                        Change=@(args=>HandleListaPreciosChange()) AllowVirtualization="true"
-                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true
-                        FilterOperator="StringFilterOperator.Contains">
+                                                Density="Density.Compact"
+                                                TextProperty="@nameof(ListaDePrecios.Descripcion)" ValueProperty="@nameof(ListaDePrecios.IdLista)"
+                                                Change=@(args=>HandleListaPreciosChange()) AllowVirtualization="true"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFilteringByAllStringColumns=true
+                                                FilterOperator="StringFilterOperator.Contains">
                             <Columns>
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Código" Width="4.5rem" />
                                 <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
@@ -104,8 +104,8 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Ingresa mercadería:" Component="mercaderia" />
                         <RadzenDropDown Data=@Variables.Mercaderia @bind-Value=@comprobante.MercaderiaIngresada Name="mercaderia"
-                        ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion) Disabled="@disableInput"
-                        Placeholder="No ingresa" />
+                                        ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion) Disabled="@disableInput"
+                                        Placeholder="No ingresa" />
                     </RadzenStack>
                 </RadzenColumn>
 
@@ -113,8 +113,8 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Motivo:" />
                         <RadzenDropDown Data="motivos" @bind-Value="comprobante.IdMotivo" Change=ChangeMotivo Disabled="@disableInput"
-                        TextProperty="@nameof(Motivo.Descripcion)" ValueProperty="@nameof(Motivo.IdMotivo)" AllowVirtualization="true"
-                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
+                                        TextProperty="@nameof(Motivo.Descripcion)" ValueProperty="@nameof(Motivo.IdMotivo)" AllowVirtualization="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
                         <ValidationMessage For="@(() => comprobante.IdMotivo)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -123,8 +123,8 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="0">
                         <RadzenLabel Text="Deposito:" />
                         <RadzenDropDown Data="depositos" @bind-Value="comprobante.IdDeposito" Disabled="@(disableInput || (!permisoDepositoManual && !motivoNull))"
-                        TextProperty="@nameof(Deposito.DescripcionCod)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
-                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
+                                        TextProperty="@nameof(Deposito.DescripcionCod)" ValueProperty="@nameof(Deposito.IdDeposito)" AllowVirtualization="true"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains" />
                         <ValidationMessage For="@(() => comprobante.IdDeposito)" />
                     </RadzenStack>
                 </RadzenColumn>
@@ -132,8 +132,20 @@
 
         </RadzenFieldset>
 
+        @if (tipoOperacion == TipoOperacionEnum.Edicion)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5px">
+                <RadzenButton Icon="folder_open" Text="Archivos" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Click="IrAArchivos" />
+                @if (cantidadArchivos.HasValue)
+                {
+                    <RadzenLabel Text=@(cantidadArchivos == 0 ? "Sin archivos cargados" : $"{cantidadArchivos} archivo(s) cargado(s)")
+                                 Style="color: var(--rz-text-tertiary-color)" />
+                }
+            </RadzenStack>
+        }
+
         <CuerpoComprobante @ref="refCuerpo" Comprobante="comprobante" Lineas="comprobante.Detalle"
-        ModificarPreciosUnitarios="permisoModificarPreciosUnitarios" Disabled=@disableInput />
+                           ModificarPreciosUnitarios="permisoModificarPreciosUnitarios" Disabled=@disableInput />
 
         <RadzenStack JustifyContent="JustifyContent.Center" Gap="3rem" Orientation="Orientation.Horizontal" class="rz-mt-2">
             @if (tipoOperacion == TipoOperacionEnum.Lectura)
@@ -160,6 +172,7 @@ else
     TipoOperacionEnum tipoOperacion;
 
     bool showPage, editMode, isLoading;
+    int? cantidadArchivos;
     ComprobanteCabecera comprobante;
     EditContext editContext;
     ValidationMessageStore messageStore;
@@ -255,6 +268,9 @@ else
                     await RadzenDialogService.ShowAlertAsync("La nota de crédito no se encuentra en estado \"Pendiente\" y no puede ser editada", MensajesHelper.Title);
                     BackPage();
                 }
+
+                if (tipoOperacion == TipoOperacionEnum.Edicion && comprobante != null)
+                    cantidadArchivos = (await ComprobantesService.GetArchivos(comprobante.IdComprobante)).Count;
             }
         }
 
@@ -386,6 +402,15 @@ else
     }
 
     private void BackPage() => NavigationManager.NavigateTo("notascredito");
+
+    private async Task IrAArchivos()
+    {
+        if (!editContext.IsModified() || await RadzenDialogService.Confirm("Tiene cambios sin guardar que no serán guardados al navegar. ¿Desea continuar?", MensajesHelper.Title, RadzenHelper.Confirm()) == true)
+        {
+            var returnUrl = Uri.EscapeDataString($"/notascredito/edicion/{comprobante.IdComprobante}");
+            NavigationManager.NavigateTo($"/notacreditoarchivos/{comprobante.IdComprobante}?returnUrl={returnUrl}");
+        }
+    }
 
     /// <summary>
     /// Solo se ofrecen los depositos que estan vinculados a algun motivo (cualquiera de ellos).

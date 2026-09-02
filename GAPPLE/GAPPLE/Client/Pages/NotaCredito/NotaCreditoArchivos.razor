@@ -51,6 +51,7 @@ else
 
 @code {
     [Parameter] public int IdComprobante { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "returnUrl")] public string ReturnUrl { get; set; }
     List<NotaCreditoArchivo> notaCreditoArchivos = new();
     RadzenDataGrid<NotaCreditoArchivo> grid;
     bool showForm;
@@ -129,5 +130,5 @@ else
                                             ShowClose = false
                                         });
 
-    void Volver() => NavigationManager.NavigateTo($"/notascredito");
+    void Volver() => NavigationManager.NavigateTo(!string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "/notascredito");
 }
