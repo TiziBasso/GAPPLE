@@ -53,4 +53,5 @@ static void Services(IServiceCollection services)
     services.AddScoped<FileService>();
     services.AddScoped<ReclamosService>();
     services.AddScoped<BackupService>();
+    services.AddScoped<StockService>();
 }

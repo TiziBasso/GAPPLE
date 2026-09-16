@@ -1,0 +1,420 @@
+@page "/stock"
+@using System.Globalization
+
+@inject SeguridadService SeguridadService
+@inject StockService StockService
+@inject NotificationService NotificationService
+
+@if (!showPage)
+{
+    <Loader />
+}
+else
+{
+    @* ─────────────── Cabecera ─────────────── *@
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                 AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="12px" class="rz-mb-4">
+
+        <RadzenText TextStyle="TextStyle.DisplayH5" class="rz-m-0">Stock</RadzenText>
+
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="8px">
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary rz-m-0">
+                @(ultimaLectura == null ? "" : $"Actualizado: {ultimaLectura:HH:mm} hs")
+            </RadzenText>
+            <RadzenButton Text="Actualizar" Icon="refresh" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                          Click="Actualizar" Disabled="cargando"
+                          title="Vuelve a leer el stock consolidado que Tango deja en la base" />
+        </RadzenStack>
+    </RadzenStack>
+
+    @* ─────────────── KPI cards ─────────────── *@
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+
+        <RadzenColumn Size="12" SizeSM="6" SizeMD="3">
+            <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="2px">
+                        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">STOCK TOTAL CONSOLIDADO</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalConsolidado)</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Dep. 01 + Dep. 6</RadzenText>
+                    </RadzenStack>
+                    <div class="kpi-icono" style="background:var(--rz-primary-lighter)">
+                        <RadzenIcon Icon="inventory_2" Style="color:var(--rz-primary)" />
+                    </div>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeSM="6" SizeMD="3">
+            <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="2px">
+                        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
+                            <span class="punto" style="background:var(--rz-info)"></span>DEPÓSITO 01 (AVELLANEDA)
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalDep01)</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
+                            Disponible para ventas — participación:
+                            <b style="color:var(--rz-info)">@Porcentaje(totalDep01)</b>
+                        </RadzenText>
+                    </RadzenStack>
+                    <div class="kpi-icono" style="background:var(--rz-info-lighter)">
+                        <RadzenIcon Icon="store" Style="color:var(--rz-info)" />
+                    </div>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeSM="6" SizeMD="3">
+            <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="2px">
+                        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
+                            <span class="punto" style="background:var(--rz-warning)"></span>DEPÓSITO 6 (PROD. TERMINADO)
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalDep06)</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
+                            Pendiente envío a Dep. 01 — participación:
+                            <b style="color:var(--rz-warning-dark)">@Porcentaje(totalDep06)</b>
+                        </RadzenText>
+                    </RadzenStack>
+                    <div class="kpi-icono" style="background:var(--rz-warning-lighter)">
+                        <RadzenIcon Icon="widgets" Style="color:var(--rz-warning)" />
+                    </div>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeSM="6" SizeMD="3">
+            <RadzenCard Variant="Variant.Outlined" Style="height:100%">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                             JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Gap="2px">
+                        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">SKUS CON STOCK EN DEP. 6</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H4" class="rz-m-0" Style="color:var(--rz-success-dark)">@($"{skusEnDep06} SKUs")</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Con saldo en planta</RadzenText>
+                    </RadzenStack>
+                    <div class="kpi-icono" style="background:var(--rz-success-lighter)">
+                        <RadzenIcon Icon="list_alt" Style="color:var(--rz-success)" />
+                    </div>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+    </RadzenRow>
+
+    @* ─────────────── Buscador y filtros ─────────────── *@
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-3">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                     AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="12px">
+
+            <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
+                <RadzenLabel Text="Buscar:" Component="busqueda" Style="font-size:0.75rem" />
+                <input type="text" id="busqueda" class="rz-textbox" style="width:22rem;max-width:100%"
+                       placeholder="Buscar por código, SKU o producto..." autocomplete="off"
+                       value="@busqueda" @oninput="BusquedaChange" />
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="12px">
+
+                <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
+                    <RadzenLabel Text="Marca:" Component="marca" Style="font-size:0.75rem" />
+                    <RadzenDropDown Data="marcas" @bind-Value="marcaSeleccionada" Name="marca"
+                                    Placeholder="Todas las marcas" AllowClear="true" Style="width:12rem"
+                                    Change="@(args => AplicarFiltros())" />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
+                    <RadzenLabel Text="Ubicación:" Component="ubicacion" Style="font-size:0.75rem" />
+                    <RadzenDropDown Data="ubicaciones" @bind-Value="ubicacionSeleccionada" Name="ubicacion"
+                                    ValueProperty="Valor" TextProperty="Texto" Style="width:12rem"
+                                    Change="@(args => AplicarFiltros())" />
+                </RadzenStack>
+
+                <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light"
+                              Size="ButtonSize.Small" Click="LimpiarFiltros" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    @* ─────────────── Grilla de existencias ─────────────── *@
+    <RadzenCard Variant="Variant.Outlined" Style="padding:0">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                     AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="8px" class="encabezado-grilla">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10px">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">Existencias consolidadas</RadzenText>
+                <RadzenBadge Text="@($"{filtrados.Count} productos")" BadgeStyle="BadgeStyle.Light" />
+            </RadzenStack>
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary rz-m-0">
+                <RadzenIcon Icon="info" Style="font-size:0.9rem;vertical-align:middle;color:var(--rz-info)" />
+                Sumatoria automática (Dep. 01 + Dep. 6).
+            </RadzenText>
+        </RadzenStack>
+
+        <RadzenDataGrid @ref="refGrid" Data="filtrados" TItem="StockConsolidado"
+                        AllowSorting="true" AllowColumnResize="true" AllowVirtualization="true"
+                        Density="Density.Compact" IsLoading="cargando" Style="height:58vh"
+                        EmptyText="No se encontraron productos con los filtros seleccionados.">
+            <Columns>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Codigo)"
+                                      Title="Código / SKU" Width="130px">
+                    <Template Context="item">
+                        <b>@item.Codigo</b>
+                    </Template>
+                    <FooterTemplate>
+                        <b class="rz-color-secondary">TOTAL ACUMULADO:</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Descripcion)"
+                                      Title="Producto / Descripción" Width="340px" />
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Marca)"
+                                      Title="Marca" Width="150px">
+                    <Template Context="item">
+                        <RadzenBadge Text="@item.Marca" BadgeStyle="@EstiloMarca(item.Marca)" Style="font-size:0.65rem" />
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Dep01)"
+                                      Title="Dep. 01 (Avellaneda)" Width="150px" TextAlign="TextAlign.Right">
+                    <Template Context="item">
+                        @Numero(item.Dep01)
+                    </Template>
+                    <FooterTemplate>
+                        <b style="color:var(--rz-info)">@Numero(totalDep01)</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Dep06)"
+                                      Title="Dep. 6 (Prod. Terminado)" Width="160px" TextAlign="TextAlign.Right">
+                    <Template Context="item">
+                        @if (item.Dep06 > 0)
+                        {
+                            <b style="color:var(--rz-warning-dark)">@Numero(item.Dep06)</b>
+                        }
+                        else
+                        {
+                            <span class="rz-color-secondary">0</span>
+                        }
+                    </Template>
+                    <FooterTemplate>
+                        <b style="color:var(--rz-warning-dark)">@Numero(totalDep06)</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Pendientes)"
+                                      Title="Pendientes" Width="120px" TextAlign="TextAlign.Right">
+                    <Template Context="item">
+                        @if (item.Pendientes > 0)
+                        {
+                            <b style="color:var(--rz-danger)">@Numero(item.Pendientes)</b>
+                        }
+                        else
+                        {
+                            <span class="rz-color-secondary">0</span>
+                        }
+                    </Template>
+                    <FooterTemplate>
+                        <b style="color:var(--rz-danger)">@Numero(totalPendientes)</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.TotalStock)"
+                                      Title="TOTAL STOCK" Width="130px" TextAlign="TextAlign.Right">
+                    <Template Context="item">
+                        <b style="color:var(--rz-success-dark)">@Numero(item.TotalStock)</b>
+                    </Template>
+                    <FooterTemplate>
+                        <b style="color:var(--rz-success-dark)">@Numero(totalConsolidado)</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+}
+
+@code {
+    // Formato argentino explicito: el Client corre con globalizacion recortada, asi que
+    // no se depende de CultureInfo("es-AR") para los separadores de miles.
+    static readonly NumberFormatInfo FormatoAR = new()
+    {
+        NumberGroupSeparator = ".",
+        NumberDecimalSeparator = ",",
+        NumberGroupSizes = [3]
+    };
+
+    class Ubicacion
+    {
+        public string Valor { get; init; }
+        public string Texto { get; init; }
+    }
+
+    const string UbicacionTodas = "ALL";
+    const string UbicacionDep06 = "DEP06";
+    const string UbicacionDep01 = "DEP01";
+
+    readonly List<Ubicacion> ubicaciones =
+    [
+        new Ubicacion { Valor = UbicacionTodas, Texto = "Todos los Productos" },
+        new Ubicacion { Valor = UbicacionDep06, Texto = "Dep. 6" },
+        new Ubicacion { Valor = UbicacionDep01, Texto = "Dep. 01" }
+    ];
+
+    RadzenDataGrid<StockConsolidado> refGrid;
+
+    bool showPage, cargando;
+    DateTime? ultimaLectura;
+
+    List<StockConsolidado> stock = [];
+    List<StockConsolidado> filtrados = [];
+    List<string> marcas = [];
+
+    // Filtros
+    string busqueda = string.Empty;
+    string marcaSeleccionada;
+    string ubicacionSeleccionada = UbicacionTodas;
+
+    // Totales del pie de la grilla y de las KPI: siempre sobre lo que se esta viendo
+    decimal totalDep01, totalDep06, totalPendientes, totalConsolidado;
+    int skusEnDep06;
+
+    // ── Ciclo de vida ────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        // await SeguridadService.ValidatePageAccess();
+        showPage = true;
+        await Actualizar();
+    }
+
+    private async Task Actualizar()
+    {
+        cargando = true;
+        StateHasChanged();
+
+        var datos = await StockService.GetStock();
+
+        cargando = false;
+
+        if (datos == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Stock",
+                                       "No se pudo leer el stock. Reintentá en unos segundos.");
+            return;
+        }
+
+        stock = datos;
+        marcas = [.. stock.Select(x => x.Marca)
+                          .Where(x => !string.IsNullOrWhiteSpace(x))
+                          .Distinct()
+                          .OrderBy(x => x)];
+
+        if (marcaSeleccionada != null && !marcas.Contains(marcaSeleccionada))
+            marcaSeleccionada = null;
+
+        ultimaLectura = DateTime.Now;
+
+        await AplicarFiltros();
+    }
+
+    // ── Filtros ──────────────────────────────────────────────────────────────────
+    private async Task BusquedaChange(ChangeEventArgs args)
+    {
+        busqueda = args.Value?.ToString() ?? string.Empty;
+        await AplicarFiltros();
+    }
+
+    private async Task LimpiarFiltros()
+    {
+        busqueda = string.Empty;
+        marcaSeleccionada = null;
+        ubicacionSeleccionada = UbicacionTodas;
+        await AplicarFiltros();
+    }
+
+    private async Task AplicarFiltros()
+    {
+        IEnumerable<StockConsolidado> resultado = stock;
+
+        // Busqueda libre por codigo/SKU o descripcion, sin distinguir mayusculas.
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            string texto = busqueda.Trim();
+            resultado = resultado.Where(x =>
+                (x.Codigo ?? "").Contains(texto, StringComparison.OrdinalIgnoreCase) ||
+                (x.Descripcion ?? "").Contains(texto, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(marcaSeleccionada))
+            resultado = resultado.Where(x => x.Marca == marcaSeleccionada);
+
+        // "Dep. 6" / "Dep. 01" = productos CON saldo en ese deposito.
+        if (ubicacionSeleccionada == UbicacionDep06)
+            resultado = resultado.Where(x => x.Dep06 > 0);
+        else if (ubicacionSeleccionada == UbicacionDep01)
+            resultado = resultado.Where(x => x.Dep01 > 0);
+
+        filtrados = [.. resultado];
+
+        totalDep01 = filtrados.Sum(x => x.Dep01);
+        totalDep06 = filtrados.Sum(x => x.Dep06);
+        totalPendientes = filtrados.Sum(x => x.Pendientes);
+        totalConsolidado = totalDep01 + totalDep06;
+        skusEnDep06 = filtrados.Count(x => x.Dep06 > 0);
+
+        StateHasChanged();
+
+        // La grilla esta virtualizada: sin Reload puede quedar mostrando el dataset anterior.
+        if (refGrid != null)
+            await refGrid.Reload();
+    }
+
+    // ── Helpers de presentacion ──────────────────────────────────────────────────
+    private static string Numero(decimal valor) => valor.ToString("N0", FormatoAR);
+
+    private string Porcentaje(decimal parte)
+        => totalConsolidado == 0 ? "0,0%" : (parte * 100 / totalConsolidado).ToString("N1", FormatoAR) + "%";
+
+    private static BadgeStyle EstiloMarca(string marca) => (marca ?? "").ToUpperInvariant() switch
+    {
+        "CLARIDGE" => BadgeStyle.Info,
+        "DOROTHY GRAY" => BadgeStyle.Primary,
+        "INECTO" => BadgeStyle.Success,
+        "COLOR FLASH" => BadgeStyle.Danger,
+        "REEF" => BadgeStyle.Warning,
+        _ => BadgeStyle.Light
+    };
+}
+
+<style>
+    .kpi-icono {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .punto {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    .encabezado-grilla {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--rz-border-color);
+        background: var(--rz-base-100);
+    }
+
+</style>

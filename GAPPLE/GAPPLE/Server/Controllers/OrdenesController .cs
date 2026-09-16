@@ -64,6 +64,7 @@ namespace GAPPLE.Server.Controllers
                         Usuario = row["AltaUsuario"].ToString()
                     };
                     o.ImporteTotal = LeerDecimal(row, "ImporteTotal");
+                    o.CantidadProbadores = LeerEntero(row, "CantidadProbadores");
                     if (row["NroPedidoTango"] != DBNull.Value) o.NROTANGO = row["NroPedidoTango"].ToString();
                     if (row["Observaciones"] != DBNull.Value) o.Notas = row["Observaciones"].ToString();
                     if (row["ObservacionesZentra"] != DBNull.Value) o.ObservacionesZentra = row["ObservacionesZentra"].ToString();

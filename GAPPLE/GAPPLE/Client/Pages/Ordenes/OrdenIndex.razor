@@ -143,6 +143,25 @@
                     @(context.CodigoTangoProbador != null ? context.CodigoTangoProbador : "NO")
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Orden.TieneProbadores)" Title="Probadores" Width="110px" MinWidth="20px"
+                                  TextAlign="TextAlign.Center" FilterValue="probadoresFilter" Resizable=false>
+                <FilterTemplate>
+                    <RadzenDropDown Data=@Variables.Clasificaciones @bind-Value=probadoresFilter Style="width:100%"
+                                    ValueProperty=@nameof(Opcion.Id) TextProperty=@nameof(Opcion.Descripcion) Placeholder="(Todos)" />
+                </FilterTemplate>
+                <Template>
+                    @if (context.TieneProbadores)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"SI ({context.CantidadProbadores})")"
+                                     title="Lleva probadores: genera un segundo pedido" />
+                    }
+                    else
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="NO" title="No lleva probadores" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+
             <RadzenDataGridColumn Title="Tango Obsequio" Property="@nameof(Orden.CodigoTangoObsequio)" Width="150px" FilterOperator="FilterOperator.Contains" MinWidth="20px">
                 <Template>
                     @(context.CodigoTangoObsequio != null ? context.CodigoTangoObsequio : "NO")
@@ -251,6 +270,16 @@
         </Columns>
     </RadzenDataGrid>
 
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center"
+                 Gap="8px" class="rz-mt-2 contador-pedidos">
+        @if (conProbadores > 0)
+        {
+            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"Con probadores: {conProbadores}")"
+                         title="Pedidos que generan un segundo pedido" />
+        }
+        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@($"Pedidos: {lstOrdenes.Count}")" />
+    </RadzenStack>
+
     @if (showResumen)
     {
         <ImpresiónOrden Pedido=Resumen
@@ -304,6 +333,9 @@ else
 
     //filters variables
     int? idFilter, unidadesFilter;
+    bool? probadoresFilter;
+
+    int conProbadores => lstOrdenes.Count(x => x.TieneProbadores);
     DateTime? creacionFilter, entregaFilter;
     List<string> zonasFilter = new(), estadosFilter = new();
     string zonaFilter, estadoFilter, codOrdenFilter;
@@ -624,3 +656,9 @@ else
         cancellationToken.Dispose();
     }
 }
+
+<style>
+    .contador-pedidos {
+        width: 100%;
+    }
+</style>
