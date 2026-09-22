@@ -217,11 +217,6 @@ else
             return;
 
         var ids = vendedoresAsignados.Where(v => !idsAdminFijos.Contains(v.IdUsuario)).Select(v => v.IdUsuario).ToList();
-        if (!ids.Any())
-        {
-            await RadzenDialogService.ShowAlertAsync("Debe asignar al menos un vendedor", MensajesHelper.Title);
-            return;
-        }
 
         if (!await RadzenDialogService.ConfirmOperation())
             return;
