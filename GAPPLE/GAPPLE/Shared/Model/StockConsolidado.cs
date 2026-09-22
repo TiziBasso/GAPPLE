@@ -27,6 +27,6 @@ namespace GAPPLE.Shared.Model
         public decimal Pendientes { get; set; }
 
         /// <summary>Sumatoria automatica por fila: deposito 01 + deposito 6.</summary>
-        public decimal TotalStock => Dep01 + Dep06;
+        public decimal TotalStock => Dep01 + Dep06 - Pendientes;
     }
 }

@@ -37,7 +37,7 @@ else
                     <RadzenStack Gap="2px">
                         <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">STOCK TOTAL CONSOLIDADO</RadzenText>
                         <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalConsolidado)</RadzenText>
-                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Dep. 01 + Dep. 6</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Dep. 01 + Dep. 6 - Pendientes</RadzenText>
                     </RadzenStack>
                     <div class="kpi-icono" style="background:var(--rz-primary-lighter)">
                         <RadzenIcon Icon="inventory_2" Style="color:var(--rz-primary)" />
@@ -364,7 +364,7 @@ else
         totalDep01 = filtrados.Sum(x => x.Dep01);
         totalDep06 = filtrados.Sum(x => x.Dep06);
         totalPendientes = filtrados.Sum(x => x.Pendientes);
-        totalConsolidado = totalDep01 + totalDep06;
+        totalConsolidado = totalDep01 + totalDep06 - totalPendientes;
         skusEnDep06 = filtrados.Count(x => x.Dep06 > 0);
 
         StateHasChanged();
