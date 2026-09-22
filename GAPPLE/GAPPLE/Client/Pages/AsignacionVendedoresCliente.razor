@@ -1,0 +1,242 @@
+@page "/clientes/vendedores"
+
+@inject SeguridadService SeguridadService
+@inject ClientesService ClientesService
+@inject VendedoresPorClienteService VendedoresPorClienteService
+@inject RadzenDialogService RadzenDialogService
+
+@if (showForm)
+{
+    <RadzenText Text="Asignación de vendedores por cliente" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+
+    <RadzenRow Gap="1rem" class="rz-mb-3">
+        <RadzenColumn Size="5">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+                <RadzenLabel Text="Cliente:" />
+                <RadzenDropDownDataGrid Data="clientes" @bind-Value="clienteSeleccionado" AllowSorting="false"
+                                        AllowFiltering="true" AllowVirtualization="true" Density="Density.Compact"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        TextProperty="@nameof(Cliente.RazonSocial)"
+                                        Change="OnClienteChange" Style="width:100%">
+                    <Columns>
+                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="5rem" />
+                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
+                    </Columns>
+                </RadzenDropDownDataGrid>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (clienteSeleccionado != null)
+    {
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="5">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" Text="Vendedores asignados" class="rz-mb-2" />
+                    <RadzenDataGrid @ref="gridAsignados" Data="vendedoresAsignados" Density="Density.Compact" EmptyText="Sin vendedores asignados"
+                                    ShowEmptyMessage="true" Style="height:45vh">
+                        <Columns>
+                            <RadzenDataGridColumn Title="Vendedor">
+                                <Template Context="item">
+                                    @item.ApellidoYNombre
+                                    @if (EsPendiente(item))
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Pendiente de guardar" class="rz-ml-2" />
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Property="@nameof(VendedorPorCliente.NombreUsuario)" Title="Usuario" Width="120px" />
+                            <RadzenDataGridColumn Width="50px" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                                <Template Context="item">
+                                    @if (!EsAdminFijo(item))
+                                    {
+                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat"
+                                                      Size="ButtonSize.ExtraSmall" Click="@(() => QuitarVendedor(item))"
+                                                      @onclick:stopPropagation="true" />
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+                        <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Click="Cancelar" Disabled="@(!HayCambios)" />
+                        <RadzenButton Icon="save" ButtonStyle="ButtonStyle.Success" Text="Guardar" Click="Guardar" Disabled="@(!HayCambios)" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="7">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" Text="Todos los usuarios" class="rz-mb-2" />
+                    <RadzenDataGrid @ref="gridUsuarios" Data="todosLosUsuarios" Density="Density.Compact" AllowFiltering="true"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    FilterMode="FilterMode.Simple" EmptyText="No hay usuarios" Style="height:45vh">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(Usuario.ApellidoYNombre)" Title="Apellido y nombre" />
+                            <RadzenDataGridColumn Property="@nameof(Usuario.NombreUsuario)" Title="Usuario" Width="120px" />
+                            <RadzenDataGridColumn Width="60px" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                                <Template Context="u">
+                                    @if (!vendedoresAsignados.Any(v => v.IdUsuario == u.IdUsuario))
+                                    {
+                                        <RadzenButton Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat"
+                                                      Size="ButtonSize.ExtraSmall" Click="@(() => AgregarVendedor(u))"
+                                                      @onclick:stopPropagation="true" />
+                                    }
+                                    else
+                                    {
+                                        <RadzenIcon Icon="check" style="color: var(--rz-success)" />
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showForm;
+    Cliente clienteSeleccionado;
+    List<Cliente> clientes = new();
+    List<Usuario> todosLosUsuarios = new();
+    List<VendedorPorCliente> vendedoresAsignados = new();
+    List<VendedorPorCliente> snapshot = new();
+    HashSet<int> idsAdminFijos = new();
+    HashSet<int> idsOriginales = new();
+
+    RadzenDataGrid<VendedorPorCliente> gridAsignados;
+    RadzenDataGrid<Usuario> gridUsuarios;
+
+    bool HayCambios => clienteSeleccionado != null && !IdsActuales.SetEquals(idsOriginales.Where(id => !idsAdminFijos.Contains(id)));
+
+    HashSet<int> IdsActuales => vendedoresAsignados.Where(v => !idsAdminFijos.Contains(v.IdUsuario)).Select(v => v.IdUsuario).ToHashSet();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        clientes = await ClientesService.GetClientes() ?? new();
+        todosLosUsuarios = await SeguridadService.GetUsuarios(null, null, null, false, false) ?? new();
+        idsAdminFijos = todosLosUsuarios.Where(u => u.Perfil == 1).Select(u => u.IdUsuario).ToHashSet();
+        showForm = true;
+    }
+
+    async Task OnClienteChange(object value) => await CargarVendedoresAsignados();
+
+    async Task CargarVendedoresAsignados()
+    {
+        if (clienteSeleccionado?.IdCliente == null)
+        {
+            vendedoresAsignados = new();
+            idsOriginales = new();
+            snapshot = new();
+            return;
+        }
+
+        vendedoresAsignados = await VendedoresPorClienteService.GetVendedoresPorCliente(clienteSeleccionado.IdCliente.Value) ?? new();
+        idsOriginales = vendedoresAsignados.Select(v => v.IdUsuario).ToHashSet();
+        AgregarAdminsFijos();
+        GuardarSnapshot();
+        await ReloadGrids();
+    }
+
+    void AgregarAdminsFijos()
+    {
+        foreach (var admin in todosLosUsuarios.Where(u => idsAdminFijos.Contains(u.IdUsuario)))
+        {
+            if (!vendedoresAsignados.Any(v => v.IdUsuario == admin.IdUsuario))
+                vendedoresAsignados.Insert(0, new VendedorPorCliente
+                {
+                    IdCliente = clienteSeleccionado.IdCliente.Value,
+                    IdUsuario = admin.IdUsuario,
+                    NombreUsuario = admin.NombreUsuario,
+                    ApellidoYNombre = admin.ApellidoYNombre
+                });
+        }
+    }
+
+    void GuardarSnapshot() => snapshot = vendedoresAsignados.Select(Clonar).ToList();
+
+    VendedorPorCliente Clonar(VendedorPorCliente v) => new()
+    {
+        IdCliente = v.IdCliente,
+        IdUsuario = v.IdUsuario,
+        NombreUsuario = v.NombreUsuario,
+        ApellidoYNombre = v.ApellidoYNombre
+    };
+
+    async Task ReloadGrids()
+    {
+        if (gridAsignados != null) await gridAsignados.Reload();
+        if (gridUsuarios != null) await gridUsuarios.Reload();
+    }
+
+    bool EsAdminFijo(VendedorPorCliente item) => idsAdminFijos.Contains(item.IdUsuario);
+
+    bool EsPendiente(VendedorPorCliente item) => !EsAdminFijo(item) && !idsOriginales.Contains(item.IdUsuario);
+
+    async Task AgregarVendedor(Usuario u)
+    {
+        if (vendedoresAsignados.Any(v => v.IdUsuario == u.IdUsuario))
+            return;
+
+        vendedoresAsignados.Add(new VendedorPorCliente
+        {
+            IdCliente = clienteSeleccionado.IdCliente.Value,
+            IdUsuario = u.IdUsuario,
+            NombreUsuario = u.NombreUsuario,
+            ApellidoYNombre = u.ApellidoYNombre
+        });
+
+        await ReloadGrids();
+    }
+
+    async Task QuitarVendedor(VendedorPorCliente item)
+    {
+        vendedoresAsignados.Remove(item);
+        await ReloadGrids();
+    }
+
+    async Task Cancelar()
+    {
+        if (!HayCambios || await RadzenDialogService.CancelOperation())
+        {
+            vendedoresAsignados = snapshot.Select(Clonar).ToList();
+            await ReloadGrids();
+        }
+    }
+
+    async Task Guardar()
+    {
+        if (clienteSeleccionado?.IdCliente == null)
+            return;
+
+        var ids = vendedoresAsignados.Where(v => !idsAdminFijos.Contains(v.IdUsuario)).Select(v => v.IdUsuario).ToList();
+        if (!ids.Any())
+        {
+            await RadzenDialogService.ShowAlertAsync("Debe asignar al menos un vendedor", MensajesHelper.Title);
+            return;
+        }
+
+        if (!await RadzenDialogService.ConfirmOperation())
+            return;
+
+        RadzenDialogService.OpenBusyWithLoader("Guardando...");
+        var ok = await VendedoresPorClienteService.PostVendedoresPorCliente(clienteSeleccionado.IdCliente.Value, ids);
+
+        if (ok)
+            await CargarVendedoresAsignados();
+
+        RadzenDialogService.CloseDialog();
+
+        if (ok)
+            RadzenDialogService.NotifySuccess();
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+}

@@ -1,4 +1,5 @@
 ﻿@inject SeguridadService SeguridadService
+@inject VendedoresPorClienteService VendedoresPorClienteService
 @inject DialogService DialogService
 
 @if (showModal)
@@ -21,12 +22,22 @@ else
 
 @code {
     [Parameter] public bool Confirma { get; set; } = true;
+    [Parameter] public int? IdCliente { get; set; }
+
     bool showModal;
     List<Usuario> lstVendedores;
     Usuario selected = new();
     protected override async Task OnInitializedAsync()
     {
         lstVendedores = await SeguridadService.GetUsuarios(null, null, null, false, false);
+
+        if (IdCliente.HasValue)
+        {
+            var nombreDefault = await VendedoresPorClienteService.GetVendedorDefault(IdCliente.Value);
+            if (!string.IsNullOrEmpty(nombreDefault))
+                selected = lstVendedores.FirstOrDefault(u => u.NombreUsuario == nombreDefault) ?? selected;
+        }
+
         showModal = true;
     }
 

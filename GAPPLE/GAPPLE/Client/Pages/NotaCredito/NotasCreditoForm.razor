@@ -187,7 +187,7 @@ else
     DateTime? fechaOrden;
 
     private string FechaOrdenTexto => fechaOrden?.ToString("dd/MM/yyyy") ?? "—";
-    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput;
+    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput, seleccionaVendedor;
     int? idTipoListaPreciosAux;
     CuerpoComprobante refCuerpo;
 
@@ -209,6 +209,7 @@ else
         permisoDepositoManual = permisos.Contains(Permisos.DepositoManual);
         permisoDescuentoManual = permisos.Contains(Permisos.DescuentoManual);
         permisoLineaManual = permisos.Contains(Permisos.LineaManual);
+        seleccionaVendedor = permisos.Contains("seleccionaVendedor");
 
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         motivos = await MotivosService.GetMotivos(null, null, false, null) ?? [];
@@ -462,6 +463,24 @@ else
     {
         if (editContext.Validate() && await Validar() && await RadzenDialogService.ConfirmOperation())
         {
+            if (seleccionaVendedor && tipoOperacion != TipoOperacionEnum.Edicion)
+            {
+                comprobante.AltaUsuario = await RadzenDialogService.OpenAsync<SeleccionVendedor>("Seleccionar vendedor",
+                    new() { { "IdCliente", comprobante.IdCliente }, { "Confirma", false } },
+                    new()
+                    {
+                        CloseDialogOnEsc = false,
+                        ShowClose = false,
+                        CloseDialogOnOverlayClick = false,
+                        Style = "max-height:90vh; max-width:60vw;",
+                        Height = "fit-content",
+                        Width = "fit-content"
+                    });
+
+                if (comprobante.AltaUsuario == null)
+                    return;
+            }
+
             RadzenDialogService.OpenBusyWithLoader("Guardando...");
             comprobante.ImporteTotal = comprobante.Detalle.Sum(x => x.PrecioTotal);
             var response = tipoOperacion == TipoOperacionEnum.Edicion
