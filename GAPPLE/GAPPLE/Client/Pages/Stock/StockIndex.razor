@@ -225,6 +225,16 @@ else
                 </RadzenDataGridColumn>
 
                 <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.TotalStock)"
+                                      Title="TOTAL S/PEND." Width="130px" TextAlign="TextAlign.Right">
+                    <Template Context="item">
+                        <b style="color:var(--rz-success-dark)">@Numero((item.TotalStock+item.Pendientes))</b>
+                    </Template>
+                    <FooterTemplate>
+                        <b style="color:var(--rz-success-dark)">@Numero((totalConsolidado+totalPendientes))</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.TotalStock)"
                                       Title="TOTAL STOCK" Width="130px" TextAlign="TextAlign.Right">
                     <Template Context="item">
                         <b style="color:var(--rz-success-dark)">@Numero(item.TotalStock)</b>
