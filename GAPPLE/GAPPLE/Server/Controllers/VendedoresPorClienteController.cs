@@ -68,5 +68,36 @@ namespace GAPPLE.Server.Controllers
             }
             catch (Exception ex) { return StatusCode(500, ex.Message); }
         }
+
+        [HttpGet("porvendedor")]
+        public List<Cliente> GetClientesPorVendedor(int idUsuario)
+        {
+            DA_VendedoresPorCliente da = new(DefaultConnectionString);
+            List<Cliente> lista = new();
+            using DataTable dt = da.ObtenerClientesPorVendedor(idUsuario);
+            foreach (DataRow row in dt.Rows)
+            {
+                lista.Add(new Cliente
+                {
+                    IdCliente = Convert.ToInt32(row["IdCliente"]),
+                    CodigoCliente = row["CodigoCliente"].ToString(),
+                    RazonSocial = row["RazonSocial"].ToString()
+                });
+            }
+            return lista;
+        }
+
+        [HttpPost("porvendedor")]
+        public IActionResult PostClientesPorVendedor(int idUsuario, [FromBody] List<int> idClientes)
+        {
+            try
+            {
+                DA_VendedoresPorCliente da = new(DefaultConnectionString);
+                string ids = string.Join(",", idClientes);
+                da.PersistirClientesPorVendedor(idUsuario, ids);
+                return Ok();
+            }
+            catch (Exception ex) { return StatusCode(500, ex.Message); }
+        }
     }
 }

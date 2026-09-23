@@ -55,5 +55,30 @@ namespace GAPPLE.Server.Data
             cnn.Open();
             cmd.ExecuteNonQuery();
         }
+
+        public DataTable ObtenerClientesPorVendedor(int idUsuario)
+        {
+            DataTable dt = new();
+            using SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_ClientesPorVendedor";
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+
+        public void PersistirClientesPorVendedor(int idUsuario, string idClientesCsv)
+        {
+            using SqlConnection cnn = new(ConnectionString);
+            SqlCommand cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_ClientesPorVendedor";
+            cmd.Parameters.AddWithValue("@pIdUsuario", idUsuario);
+            cmd.Parameters.AddWithValue("@pIdClientes", idClientesCsv);
+            cnn.Open();
+            cmd.ExecuteNonQuery();
+        }
     }
 }

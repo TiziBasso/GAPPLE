@@ -33,5 +33,16 @@ namespace GAPPLE.Client.Services
             var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}?idCliente={idCliente}", idUsuarios);
             return response.IsSuccessStatusCode;
         }
+
+        public async ValueTask<List<Cliente>> GetClientesPorVendedor(int idUsuario)
+        {
+            return await HttpClient.GetFromJsonAsync<List<Cliente>>($"{URI_BASE}/porvendedor?idUsuario={idUsuario}") ?? new();
+        }
+
+        public async ValueTask<bool> PostClientesPorVendedor(int idUsuario, List<int> idClientes)
+        {
+            var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/porvendedor?idUsuario={idUsuario}", idClientes);
+            return response.IsSuccessStatusCode;
+        }
     }
 }
