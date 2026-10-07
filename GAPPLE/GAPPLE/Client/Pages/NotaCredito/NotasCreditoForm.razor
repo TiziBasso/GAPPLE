@@ -187,7 +187,9 @@ else
     DateTime? fechaOrden;
 
     private string FechaOrdenTexto => fechaOrden?.ToString("dd/MM/yyyy") ?? "—";
-    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput, seleccionaVendedor;
+    bool permisoListaPrecioManual, permisoModificarPreciosUnitarios, permisoDescuentoManual, permisoDepositoManual, permisoLineaManual, motivoNull, disableInput, seleccionaVendedor, permisoSumarIVA;
+    /// <summary>Si la NC guardada ya tenia el IVA sumado al total (se deduce al abrirla, no se persiste).</summary>
+    bool teniaIVA;
     int? idTipoListaPreciosAux;
     CuerpoComprobante refCuerpo;
 
@@ -210,6 +212,7 @@ else
         permisoDescuentoManual = permisos.Contains(Permisos.DescuentoManual);
         permisoLineaManual = permisos.Contains(Permisos.LineaManual);
         seleccionaVendedor = permisos.Contains("seleccionaVendedor");
+        permisoSumarIVA = permisos.Contains(Permisos.SumarIVA);
 
         listasDePrecio = await OrdenesService.GetListasDePrecio();
         motivos = await MotivosService.GetMotivos(null, null, false, null) ?? [];
@@ -271,7 +274,10 @@ else
                 }
 
                 if (tipoOperacion == TipoOperacionEnum.Edicion && comprobante != null)
+                {
                     cantidadArchivos = (await ComprobantesService.GetArchivos(comprobante.IdComprobante)).Count;
+                    teniaIVA = TieneIVASumado(comprobante);
+                }
             }
         }
 
@@ -485,8 +491,19 @@ else
                     return;
             }
 
+            // El total se recalcula siempre desde el neto de las lineas, asi el IVA nunca se suma dos veces
+            decimal neto = comprobante.Detalle.Sum(x => x.PrecioTotal);
+            bool sumarIVA = false;
+            if (comprobante.Factura && permisoSumarIVA)
+            {
+                var respuesta = await ConfirmarIVA(neto);
+                if (respuesta == null)
+                    return;
+                sumarIVA = respuesta.Value;
+            }
+
             RadzenDialogService.OpenBusyWithLoader("Guardando...");
-            comprobante.ImporteTotal = comprobante.Detalle.Sum(x => x.PrecioTotal);
+            comprobante.ImporteTotal = sumarIVA ? ConIVA(neto) : neto;
             var response = tipoOperacion == TipoOperacionEnum.Edicion
                             ? await ComprobantesService.PutNotaCredito(comprobante)
                             : await ComprobantesService.PostNotaCredito(comprobante);
@@ -514,6 +531,32 @@ else
             else
                 RadzenDialogService.NotifyInternalServerError();
         }
+    }
+
+    private static decimal ConIVA(decimal neto) => Math.Round(neto * (1 + DescuentosHelper.IVA / 100), 2);
+
+    /// <summary>
+    /// No se guarda si la NC tiene IVA: se deduce comparando el total guardado con el neto de las lineas.
+    /// </summary>
+    private static bool TieneIVASumado(ComprobanteCabecera nc)
+    {
+        decimal neto = nc.Detalle.Sum(x => x.PrecioTotal);
+        return neto != 0 && Math.Abs(nc.ImporteTotal - ConIVA(neto)) < Math.Abs(nc.ImporteTotal - neto);
+    }
+
+    /// <summary>
+    /// Devuelve true si se suma el IVA, false si no, o null si el usuario cerro el dialogo (se cancela el guardado).
+    /// </summary>
+    private async Task<bool?> ConfirmarIVA(decimal neto)
+    {
+        var ar = new System.Globalization.CultureInfo("es-AR");
+        string mensaje = $"Neto: $ {neto.ToString("N2", ar)} — Total con IVA {DescuentosHelper.IVA}%: $ {ConIVA(neto).ToString("N2", ar)}. ";
+        mensaje += teniaIVA
+            ? "Esta NC ya tenía el IVA sumado. ¿Mantener el IVA en el total?"
+            : "¿Desea sumar el IVA al total?";
+
+        return await RadzenDialogService.Confirm(mensaje, "IVA - Nota de crédito Factura",
+            new ConfirmOptions { OkButtonText = "Sí, sumar IVA", CancelButtonText = "No, sin IVA", CloseDialogOnEsc = false });
     }
 
     private void Validar(object sender, ValidationRequestedEventArgs args)
