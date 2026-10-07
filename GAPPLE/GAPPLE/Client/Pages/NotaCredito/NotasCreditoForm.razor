@@ -45,7 +45,7 @@
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
                             <TextBoxInput @bind-Value="comprobante.CodigoOrden" style="width:90%" disabled=@true />
                             <RadzenButton Size="ButtonSize.Medium" Icon="list" Style="width:10%" ButtonStyle="ButtonStyle.Secondary" Disabled="disableInput"
-                                          Click="@(() => SeleccionarComprobanteReferencia(async c => await ComprobanteSeleccionado(c, false), ComprobanteCancelado))" />
+                                          Click="@(() => SeleccionarComprobanteReferencia(ComprobanteSeleccionado, ComprobanteCancelado))" />
                         </RadzenStack>
                         <ValidationMessage For="@(() => comprobante.CodigoOrden)" />
                     </RadzenStack>
@@ -297,7 +297,7 @@ else
         showPage = true;
     }
 
-    private async Task SeleccionarComprobanteReferencia(Action<Orden> Seleccionada, Action Cancelada)
+    private async Task SeleccionarComprobanteReferencia(Func<Orden, Task> Seleccionada, Action Cancelada)
     {
         await RadzenDialogService.OpenAsync<SeleccionarOrdenReferenciaNC>("Seleccionar pedido referencia", new() {
             { "RazonSocialCliente", comprobante.ClienteRazonSocial},
@@ -311,15 +311,19 @@ else
         RadzenDialogService.CloseDialog();
     }
 
-    private async Task ComprobanteSeleccionado(Orden orden, bool cambiaDetalle = false)
+    private async Task ComprobanteSeleccionado(Orden orden)
     {
+        var recalcularPrecios = false;
         if (!string.IsNullOrEmpty(orden.CodListaPrecio))
         {
             var aux = listasDePrecio.First(x => x.CodigoTango == orden.CodListaPrecio).IdLista;
             if (comprobante.Detalle.Any() && comprobante.IdListaPrecio != null && aux != comprobante.IdListaPrecio)
             {
-                if (await RadzenDialogService.Confirm("La lista de precio del comprobante seleccionado no es igual a la seleccionada anteriormente, si continua deberá cargar los productos nuevamente", MensajesHelper.Title, RadzenHelper.Confirm("Continuar", "Cancelar")) == true)
+                if (await RadzenDialogService.Confirm("La lista de precio del comprobante seleccionado no es igual a la seleccionada anteriormente, si continua se recalcularán los precios unitarios", MensajesHelper.Title, RadzenHelper.Confirm("Continuar", "Cancelar")) == true)
+                {
                     comprobante.IdListaPrecio = aux;
+                    recalcularPrecios = true;
+                }
                 else
                     return;
             }
@@ -334,15 +338,10 @@ else
         comprobante.Presupuesto = orden.Presupuesto;
         comprobante.CodListaPrecio = orden.CodListaPrecio;
 
-        if (cambiaDetalle)
-        {
-            var ordenConDetalle = await OrdenesService.GetOrden(orden.CodigoOrden, true);
-            comprobante.Detalle.Clear();
-            comprobante.Detalle = [.. ordenConDetalle.Detalle.Select(x => new ComprobanteDetalle(x))];
-        }
-
         RadzenDialogService.CloseDialog();
 
+        if (recalcularPrecios)
+            await RecalcularPrecios();
     }
 
     private async Task HandleListaPreciosChange()
@@ -359,22 +358,27 @@ else
             comprobante.IdListaPrecio = lista.IdLista;
             comprobante.CodListaPrecio = lista.CodigoTango;
 
-            RadzenDialogService.OpenBusy("Cargando...");
-
-            comprobante.Detalle.RemoveAll(x => x.IdProducto == 0);
-            await refCuerpo.ReloadGrid();
-
-            foreach (var ln in comprobante.Detalle)
-            {
-                var sku = await ProductosService.GetProductoOrden(ln.CodProducto, comprobante.CodListaPrecio);
-                ln.Precio = sku.Precio;
-            }
-            RadzenDialogService.CloseDialog();
+            await RecalcularPrecios();
         }
         else
         {
             idTipoListaPreciosAux = comprobante.IdListaPrecio;
         }
+    }
+
+    private async Task RecalcularPrecios()
+    {
+        RadzenDialogService.OpenBusy("Cargando...");
+
+        comprobante.Detalle.RemoveAll(x => x.IdProducto == 0);
+        await refCuerpo.ReloadGrid();
+
+        foreach (var ln in comprobante.Detalle)
+        {
+            var sku = await ProductosService.GetProductoOrden(ln.CodProducto, comprobante.CodListaPrecio);
+            ln.Precio = sku.Precio;
+        }
+        RadzenDialogService.CloseDialog();
     }
 
     /// <summary>
