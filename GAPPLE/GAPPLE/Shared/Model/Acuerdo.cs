@@ -20,6 +20,9 @@ namespace GAPPLE.Shared.Model
 
         public DateTime? FechaHasta { get; set; }
 
+        /// <summary>Monto que debe alcanzar el cliente para que se aplique el descuento del acuerdo.</summary>
+        public decimal? MontoAAlcanzar { get; set; }
+
         public AcuerdosEstadoEnum? IdEstado { get; set; }
 
         public bool Vigente => FechaDesde == null || FechaHasta == null ? false : FechaDesde.Value < DateTime.Now & DateTime.Now < FechaHasta.Value;

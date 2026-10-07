@@ -117,8 +117,8 @@
             RadzenDialogService.CloseDialog();
             if (response.IsOk)
             {
-                if (PermisoAcuerdos && Orden.AcuerdoActivo)
-                    await RadzenDialogService.ShowAlertAsync("El cliente posee un acuerdo activo, revisar si corresponde ingresarle un monto.");
+                if (PermisoAcuerdos && !string.IsNullOrEmpty(Orden.MensajeAcuerdo))
+                    await RadzenDialogService.ShowAlertAsync(Orden.MensajeAcuerdo.Split('\n').ToList(), MensajesHelper.Title);
                 NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.SaveSuccess());
                 DialogService.Close();
             }

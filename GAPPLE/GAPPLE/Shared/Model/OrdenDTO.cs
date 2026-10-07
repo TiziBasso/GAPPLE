@@ -39,7 +39,9 @@
         public bool Presupuesto { get; set; }
         public string EdicionUsuario { get; set; }
         public bool TieneAcuerdoActivo { get; set; } = false;
-        
+        /// <summary>Detalle de los acuerdos del cliente y si el pedido alcanza su monto.</summary>
+        public string MensajeAcuerdo { get; set; }
+
         //public string TipoIVA { get; set; } = "RI";
         //public string CUITCliente { get; set; }
         //public int? ID_GVA01 { get; set; }

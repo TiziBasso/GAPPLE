@@ -62,6 +62,7 @@ namespace GAPPLE.Server.Data
             if (acuerdo.FechaDesde != null) cmd.Parameters.AddWithValue("@pFechaDesde", acuerdo.FechaDesde);
             if (acuerdo.FechaHasta != null) cmd.Parameters.AddWithValue("@pFechaHasta", acuerdo.FechaHasta);
             if (acuerdo.IdEstado != null) cmd.Parameters.AddWithValue("@pIdEstado", acuerdo.IdEstado);
+            if (acuerdo.MontoAAlcanzar != null) cmd.Parameters.AddWithValue("@pMontoAAlcanzar", acuerdo.MontoAAlcanzar);
             cmd.Parameters.AddWithValue("@pEdicionUsuario", acuerdo.EdicionUsuario);
 
             cnn.Open();
@@ -85,6 +86,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pFechaDesde", acuerdo.FechaDesde);
             cmd.Parameters.AddWithValue("@pFechaHasta", acuerdo.FechaHasta);
             cmd.Parameters.AddWithValue("@pIdEstado", acuerdo.IdEstado);
+            if (acuerdo.MontoAAlcanzar != null) cmd.Parameters.AddWithValue("@pMontoAAlcanzar", acuerdo.MontoAAlcanzar);
             cmd.Parameters.AddWithValue("@pAltaUsuario", acuerdo.AltaUsuario);
             SqlDataAdapter da = new(cmd);
             da.Fill(dt);

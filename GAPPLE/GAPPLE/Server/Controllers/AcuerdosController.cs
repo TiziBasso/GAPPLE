@@ -68,6 +68,9 @@ namespace GAPPLE.Server.Controllers
                 };
 
                 if (row["Linea"] != DBNull.Value) a.Linea = row["Linea"].ToString();
+                // La columna puede no existir si todavia no se aplico el script de SCRUM-130
+                if (row.Table.Columns.Contains("MontoAAlcanzar") && row["MontoAAlcanzar"] != DBNull.Value)
+                    a.MontoAAlcanzar = decimal.Parse(row["MontoAAlcanzar"].ToString()!);
                 aux.Acuerdos.Add(a);
             }
 

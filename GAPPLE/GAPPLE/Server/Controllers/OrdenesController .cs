@@ -446,17 +446,54 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
+        /// <summary>
+        /// SCRUM-130: un acuerdo activo y vigente del cliente (de la linea del pedido, o sin linea) solo aplica
+        /// si el importe del pedido alcanza su monto a alcanzar. Los acuerdos sin monto aplican siempre.
+        /// </summary>
+        private void EvaluarAcuerdos(OrdenDTO pedido, decimal importePedido)
+        {
+            var acuerdos = new AcuerdosController(Configuration)
+                .ObtenerAcuerdos(new() { CodCliente = pedido.CodigoCliente, IdEstado = AcuerdosEstadoEnum.Activo })
+                .Where(x => x.CodigoCliente == pedido.CodigoCliente) // el filtro por codigo es LIKE
+                .SelectMany(x => x.Acuerdos)
+                .Where(a => a.Vigente && (string.IsNullOrEmpty(a.Linea) || a.Linea == pedido.Linea))
+                .ToList();
+
+            if (!acuerdos.Any())
+                return;
+
+            var ar = new System.Globalization.CultureInfo("es-AR");
+            var alcanzados = acuerdos.Where(a => a.MontoAAlcanzar == null || importePedido >= a.MontoAAlcanzar).ToList();
+            var noAlcanzados = acuerdos.Except(alcanzados).ToList();
+
+            pedido.TieneAcuerdoActivo = alcanzados.Any();
+
+            var lineas = new List<string>();
+            if (alcanzados.Any())
+                lineas.Add("El pedido alcanza el monto del acuerdo, revisar si corresponde ingresarle un monto:");
+            lineas.AddRange(alcanzados.Select(a => a.MontoAAlcanzar == null
+                ? $"• {a.Condicion} (sin monto a alcanzar)"
+                : $"• {a.Condicion}: pedido $ {importePedido.ToString("N2", ar)} / monto a alcanzar $ {a.MontoAAlcanzar.Value.ToString("N2", ar)}"));
+            if (noAlcanzados.Any())
+                lineas.Add("No alcanza el monto (no corresponde aplicar el acuerdo):");
+            lineas.AddRange(noAlcanzados.Select(a =>
+                $"• {a.Condicion}: pedido $ {importePedido.ToString("N2", ar)} / monto a alcanzar $ {a.MontoAAlcanzar!.Value.ToString("N2", ar)}"));
+
+            pedido.MensajeAcuerdo = string.Join("\n", lineas);
+        }
+
         [HttpPut("aprobacion/{idUsuario:int}")]
         public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] OrdenDTO pedido)
         {
             SqlTransaction trans = null;
             try
             {
+                IEnumerable<Orden> pedidos;
                 using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                 {
 
                     DA_Ordenes daO = new(cnn.ConnectionString);
-                    var pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
+                    pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
                     var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
 
                     cnn.Open();
@@ -476,7 +513,10 @@ namespace GAPPLE.Server.Controllers
                     trans.Commit();
                     cnn.Close();
                 }
-                pedido.TieneAcuerdoActivo = new AcuerdosController(Configuration).ObtenerAcuerdos(new() { CodCliente = pedido.CodigoCliente, IdEstado = AcuerdosEstadoEnum.Activo }).Any(x => x.Acuerdos.Any(y => y.Vigente));
+                // Importe de la orden completa (pedido F y X), sin los cancelados
+                decimal importePedido = pedidos.Where(x => x.IdEstado != 2 && x.CodigoOrden.Substring(2) == pedido.CodigoOrden.Substring(2))
+                                               .Sum(x => x.ImporteTotal ?? 0);
+                EvaluarAcuerdos(pedido, importePedido);
                 return Ok(pedido);
             }
             catch (Exception ex)

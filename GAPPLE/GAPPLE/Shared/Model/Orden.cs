@@ -123,6 +123,7 @@ namespace GAPPLE.Shared.Model
         public string CodigoTangoProbador { get; set; }
         public string CodigoTangoObsequio { get; set; }
         public bool AcuerdoActivo { get; set; }
+        public string MensajeAcuerdo { get; set; }
     }
     public class NotEmptyAttribute : ValidationAttribute
     {

@@ -171,6 +171,7 @@ namespace GAPPLE.Client.Services
                     pedido.IdEstado = r.IdEstado;
                     pedido.DescripcionEstado = r.DescripcionEstado;
                     pedido.AcuerdoActivo = r.TieneAcuerdoActivo;
+                    pedido.MensajeAcuerdo = r.MensajeAcuerdo;
                     return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
