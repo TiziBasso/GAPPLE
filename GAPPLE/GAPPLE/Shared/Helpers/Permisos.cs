@@ -8,6 +8,7 @@ namespace GAPPLE.Shared.Helpers
             public static string Motivos => "Motivos";
             public static string Acuerdos => "Acuerdos con clientes";
             public static string Reclamos => "Reclamos";
+            public static string Clientes => "Clientes";
         }
         public static string Alta => "alta";
         public static string Edicion => "edicion";
@@ -43,5 +44,6 @@ namespace GAPPLE.Shared.Helpers
         public static string Archivos => "archivos";
         public static string Montos => "montos";
         public static string CondicionVenta => "condicionVenta";
+        public static string DescargarListaPrecios => "descargarListaPrecios";
     }
 }
