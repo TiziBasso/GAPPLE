@@ -278,6 +278,23 @@ namespace GAPPLE.Client.Services
             }
         }
 
+        public async ValueTask<Response> MarcarArmado(List<OrdenExpedicion> ordenes, bool armado)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/armado/{SesionDTO.Nombre}?armado={armado}", ordenes);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "MarcarArmado");
+                return new(HttpStatusCode.InternalServerError);
+            }
+        }
+
         public async Task<CantidadesProductosDashboard> GetCantidadesDeProductos(int idUsuario)
         {
             return await HttpClient.GetFromJsonAsync<CantidadesProductosDashboard>($"{URI_BASE}/cantidadesproductos?idUsuario={idUsuario}");

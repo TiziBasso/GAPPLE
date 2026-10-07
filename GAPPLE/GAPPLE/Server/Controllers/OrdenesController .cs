@@ -951,6 +951,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                     if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
                     orden.CantidadProbadores = LeerEntero(row, "CantidadProbadores");
+                    orden.Armado = EstaArmada(row);
                     ordenes.Add(orden);
                 }
             }
@@ -968,6 +969,12 @@ namespace GAPPLE.Server.Controllers
             if (row[columna] == DBNull.Value) return 0;
             return int.TryParse(row[columna].ToString(), out int valor) ? valor : 0;
         }
+
+        /// <summary>
+        /// SCRUM-149: false si el SP todavia no devuelve la columna Armado.
+        /// </summary>
+        private static bool EstaArmada(DataRow row) =>
+            row.Table.Columns.Contains("Armado") && row["Armado"] != DBNull.Value && Convert.ToBoolean(row["Armado"]);
 
         /// <summary>
         /// Igual que <see cref="LeerEntero"/> pero para importes: devuelve null cuando el SP
@@ -1091,6 +1098,16 @@ namespace GAPPLE.Server.Controllers
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 foreach (var orden in ordenes)
                 {
+                    // SCRUM-149: solo se despachan ordenes armadas (se valida contra la base, no contra lo que manda el cliente)
+                    using (DataTable dtCab = daO.ObtenerOrdenExpediciones(orden.Orden))
+                    {
+                        if (dtCab.Rows.Count == 0 || !EstaArmada(dtCab.Rows[0]))
+                        {
+                            ModelState.AddModelError("error", $"La orden {orden.Orden} no está armada");
+                            continue;
+                        }
+                    }
+
                     var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
                     if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadAprobadaX"].ToString()) != 0 ||
@@ -1125,6 +1142,33 @@ namespace GAPPLE.Server.Controllers
                     return Ok();
                 else
                     return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null) trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// SCRUM-149: marca (o desmarca) como armados todos los pedidos (F y X) de las ordenes recibidas.
+        /// </summary>
+        [HttpPost("armado/{nombreUsuario}")]
+        public IActionResult PostOrdenesArmado(List<OrdenExpedicion> ordenes, string nombreUsuario, bool armado = true)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+                using SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                cnn.Open();
+                trans = cnn.BeginTransaction();
+                foreach (var orden in ordenes)
+                    foreach (var id in orden.IdPedidos.Split(","))
+                        daO.PersistirPedidoArmado(id.Trim(), armado, nombreUsuario, trans);
+                trans.Commit();
+
+                return Ok();
             }
             catch (Exception ex)
             {
