@@ -80,6 +80,12 @@
                     <RadzenNumeric TValue="int" @bind-Value="producto.Orden" Change="@(() => Change(producto))" ShowUpDown=false TextAlign="TextAlign.Right" />
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.OrdenDeposito))" Title="Orden depósito" FilterOperator="FilterOperator.Contains"
+                                  Width="150px" Filterable=false Groupable="false" Resizable="false">
+                <Template Context="producto">
+                    <RadzenNumeric TValue="int?" @bind-Value="producto.OrdenDeposito" Change="@(() => Change(producto))" ShowUpDown=false TextAlign="TextAlign.Right" />
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Clasificacion))" Title="Clasificación" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"

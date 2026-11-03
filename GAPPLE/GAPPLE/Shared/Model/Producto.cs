@@ -14,6 +14,7 @@ namespace GAPPLE.Shared.Model
 
         public bool Pasivo { get; set; }
         public int Orden { get; set; }
+        public int? OrdenDeposito { get; set; }
 
         public decimal? PorcentajeIVA { get; set; }
 
