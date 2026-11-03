@@ -255,7 +255,7 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" title="Revertir aprobación" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
                                   @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
