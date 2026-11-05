@@ -255,11 +255,11 @@
             <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(eliminar) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
-                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
+                    <RadzenButton Icon="amend" ButtonStyle="ButtonStyle.Danger" title="Revertir aprobación" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Visible=@(orden.IdEstado == 3)
                                   @onclick:stopPropagation="true" Click="@(() => RevertirConfirmacionOrden(orden))" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(true || revertir) Pickable="false"
+            <RadzenDataGridColumn Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Visible=@(revertir) Pickable="false"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px">
                 <Template Context="orden">
                     <RadzenButton Icon="undo" ButtonStyle="ButtonStyle.Danger" title="Volver a pendiente" Variant="Variant.Flat"
@@ -354,7 +354,7 @@ else
         eliminar = permisos.Contains("eliminar");
         cambiaLista = permisos.Contains("cambiaLista");
         tango = permisos.Contains("tango");
-        revertir = permisos.Contains("revertir");
+        revertir = permisos.Contains(Permisos.Revertir);
         permisoAcuerdos = permisos.Contains("acuerdos");
 
         lineas = await ProductosService.GetLineas();

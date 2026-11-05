@@ -39,7 +39,8 @@
         {
             @if (ShowPendiente)
             {
-                <table style="border-collapse: collapse;width: 100%;">
+                @* Mismo tamaño que PageData.razor (13.3pt ≈ 12pt impreso) *@
+                <table style="border-collapse: collapse;width: 100%;font-size: 13.3pt;">
                     <tfoot style="font-style: italic;">
                         <tr>
                             <th colspan="6" style="border: 1px solid black;border-right: none;border-left: none;">PENDIENTES</th>
@@ -54,7 +55,7 @@
                         </tr>
                         @foreach (var item in Pendiente)
                         {
-                            <tr style="border-bottom:1px solid; margin-bottom:5px; margin-top:5px; line-height:1.5;">
+                            <tr style="border-bottom:1px solid; margin-bottom:5px; margin-top:5px; line-height:1.25;">
                                 <td style="text-align: end;padding:1px;">@item.NumLinea</td>
                                 <td style="text-align: center;padding:1px;">@item.CodProducto</td>
                                 <td style="padding:1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@item.DescripcionProducto</td>

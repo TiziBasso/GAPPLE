@@ -103,7 +103,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" Gap="2px">
                         <RadzenLabel Text="Fecha:" Component="fec" />
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0" Style="width:100%">
-                            <RadzenDatePicker @bind-Value="reclamo.Fecha"></RadzenDatePicker>
+                            <RadzenDatePicker @bind-Value="reclamo.Fecha" DateFormat="dd/MM/yyyy"></RadzenDatePicker>
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenColumn>
@@ -179,7 +179,7 @@
 
                     <RadzenDataGridColumn Title="Vencimiento" Width="145px">
                         <Template Context="d">
-                            <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="dd/MM/yyyy"
+                            <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="MM/yyyy"
                                               Style="width:100%" Disabled="isLoading" />
                         </Template>
                     </RadzenDataGridColumn>

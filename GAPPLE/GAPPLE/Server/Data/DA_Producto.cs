@@ -70,7 +70,7 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
-        public void EditarProducto(string idProducto, bool pasivo, int orden)
+        public void EditarProducto(string idProducto, bool pasivo, int orden, int? ordenDeposito)
         {
             SqlConnection cnn = new(ConnectionString);
             SqlCommand cmd = new()
@@ -82,6 +82,7 @@ namespace GAPPLE.Server.Data
             cmd.Parameters.AddWithValue("@pIdProducto", idProducto);
             cmd.Parameters.AddWithValue("@pPasivo", pasivo);
             cmd.Parameters.AddWithValue("@pOrden", orden);
+            cmd.Parameters.AddWithValue("@pOrdenDeposito", (object?)ordenDeposito ?? DBNull.Value);
             cnn.Open();
             cmd.ExecuteNonQuery();
             cnn.Close();

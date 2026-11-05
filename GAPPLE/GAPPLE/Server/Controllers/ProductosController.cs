@@ -43,6 +43,7 @@ namespace GAPPLE.Server.Controllers
                         Pasivo = bool.Parse(row["Pasivo"].ToString()),
                         Orden = int.Parse(row["Orden"].ToString()),
                     };
+                    if (dt.Columns.Contains("OrdenDeposito") && row["OrdenDeposito"] != DBNull.Value) producto.OrdenDeposito = int.Parse(row["OrdenDeposito"].ToString()!);
                     if (row["ID_STA"] != DBNull.Value) producto.Id_STA = int.Parse(row["ID_STA"].ToString()!);
                     if (row["Observaciones"] != DBNull.Value) producto.Observaciones = row["Observaciones"].ToString()!;
                     if (row["Linea"] != DBNull.Value) producto.Linea = row["Linea"].ToString()!;
@@ -57,7 +58,7 @@ namespace GAPPLE.Server.Controllers
         public IActionResult PutProducto([FromBody] Producto producto)
         {
             DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
-            daP.EditarProducto(producto.CodigoProducto, producto.Pasivo, producto.Orden);
+            daP.EditarProducto(producto.CodigoProducto, producto.Pasivo, producto.Orden, producto.OrdenDeposito);
             return Ok();
         }
 

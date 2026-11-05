@@ -668,7 +668,7 @@ namespace GAPPLE.Server.Controllers
             pedido.ID_GVA24 = ordenFull.ID_GVA24;
             pedido.ID_GVA10 = ordenFull.ID_GVA10;
             pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
-            pedido.ID_STA22 = 23;
+            pedido.ID_STA22 = 47;
             pedido.FECHA_PEDIDO = orden.Creacion.Value;
             pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
             pedido.ID_MONEDA = "1";
@@ -756,7 +756,7 @@ namespace GAPPLE.Server.Controllers
                 pedido.ID_GVA24 = ordenFull.ID_GVA24;
                 pedido.ID_GVA10 = ordenFull.ID_GVA10;
                 pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
-                pedido.ID_STA22 = 23;
+                pedido.ID_STA22 = 47;
                 pedido.FECHA_PEDIDO = orden.Creacion.Value;
                 pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
                 pedido.ID_MONEDA = "1";
@@ -846,7 +846,7 @@ namespace GAPPLE.Server.Controllers
                 pedido.ID_GVA24 = ordenFull.ID_GVA24;
                 pedido.ID_GVA10 = ordenFull.ID_GVA10;
                 pedido.ID_GVA23 = ordenFull.ID_GVA23.HasValue ? ordenFull.ID_GVA23 : 1;
-                pedido.ID_STA22 = 23;
+                pedido.ID_STA22 = 47;
                 pedido.FECHA_PEDIDO = orden.Creacion.Value;
                 pedido.FECHA_ENTREGA = orden.FechaEntrega != null ? orden.FechaEntrega.Value.AddDays(1) : null;
                 pedido.ID_MONEDA = "1";

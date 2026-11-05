@@ -37,7 +37,7 @@ else
                     <RadzenStack Gap="2px">
                         <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">STOCK TOTAL CONSOLIDADO</RadzenText>
                         <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalConsolidado)</RadzenText>
-                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Dep. 01 + Dep. 6 - Pendientes</RadzenText>
+                        <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">Dep. PT + Dep. 6 - Pendientes</RadzenText>
                     </RadzenStack>
                     <div class="kpi-icono" style="background:var(--rz-primary-lighter)">
                         <RadzenIcon Icon="inventory_2" Style="color:var(--rz-primary)" />
@@ -52,7 +52,7 @@ else
                              JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                     <RadzenStack Gap="2px">
                         <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary" Style="font-size:0.7rem">
-                            <span class="punto" style="background:var(--rz-info)"></span>DEPÓSITO 01 (AVELLANEDA)
+                            <span class="punto" style="background:var(--rz-info)"></span>DEPÓSITO PT
                         </RadzenText>
                         <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalDep01)</RadzenText>
                         <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
@@ -77,7 +77,7 @@ else
                         </RadzenText>
                         <RadzenText TextStyle="TextStyle.H4" class="rz-m-0">@Numero(totalDep06)</RadzenText>
                         <RadzenText Style="font-size:0.72rem" class="rz-color-secondary">
-                            Pendiente envío a Dep. 01 — participación:
+                            Pendiente envío a Dep. PT — participación:
                             <b style="color:var(--rz-warning-dark)">@Porcentaje(totalDep06)</b>
                         </RadzenText>
                     </RadzenStack>
@@ -150,7 +150,7 @@ else
             </RadzenStack>
             <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary rz-m-0">
                 <RadzenIcon Icon="info" Style="font-size:0.9rem;vertical-align:middle;color:var(--rz-info)" />
-                Sumatoria automática (Dep. 01 + Dep. 6).
+                Sumatoria automática (Dep. PT + Dep. 6).
             </RadzenText>
         </RadzenStack>
 
@@ -181,7 +181,7 @@ else
                 </RadzenDataGridColumn>
 
                 <RadzenDataGridColumn TItem="StockConsolidado" Property="@nameof(StockConsolidado.Dep01)"
-                                      Title="Dep. 01 (Avellaneda)" Width="150px" TextAlign="TextAlign.Right">
+                                      Title="Dep. PT (Avellaneda)" Width="150px" TextAlign="TextAlign.Right">
                     <Template Context="item">
                         @Numero(item.Dep01)
                     </Template>
@@ -267,13 +267,13 @@ else
 
     const string UbicacionTodas = "ALL";
     const string UbicacionDep06 = "DEP06";
-    const string UbicacionDep01 = "DEP01";
+    const string UbicacionDep01 = "DEP_PT";
 
     readonly List<Ubicacion> ubicaciones =
     [
         new Ubicacion { Valor = UbicacionTodas, Texto = "Todos los Productos" },
         new Ubicacion { Valor = UbicacionDep06, Texto = "Dep. 6" },
-        new Ubicacion { Valor = UbicacionDep01, Texto = "Dep. 01" }
+        new Ubicacion { Valor = UbicacionDep01, Texto = "Dep. PT" }
     ];
 
     RadzenDataGrid<StockConsolidado> refGrid;
