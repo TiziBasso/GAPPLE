@@ -495,19 +495,24 @@ namespace GAPPLE.Server.Data
             cmd.ExecuteNonQuery();
         }
 
-        public void PersistirPedidoImpresion(string idPedido, string nombreUsuario)
+        public void PersistirPedidoImpresion(string idPedido, string nombreUsuario, bool impreso = true, SqlTransaction? transaction = null)
         {
-            using (SqlConnection cnn = new(ConnectionString))
+            SqlConnection cnn = transaction?.Connection ?? new(ConnectionString);
+            try
             {
                 SqlCommand cmd = cnn.CreateCommand();
+                cmd.Transaction = transaction;
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "prc_upd_PedidosCabecera";
                 cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
-                cmd.Parameters.AddWithValue("@pImpreso", true);
+                cmd.Parameters.AddWithValue("@pImpreso", impreso);
                 cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
-                cnn.Open();
+                if (transaction == null) cnn.Open();
                 cmd.ExecuteNonQuery();
-                cnn.Close();
+            }
+            finally
+            {
+                if (transaction == null) cnn.Dispose();
             }
         }
 
