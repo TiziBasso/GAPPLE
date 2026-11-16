@@ -3,14 +3,21 @@
 @if (showModal)
 {
     <div id="print" style="">
-        @for (int i = 0; i < cantPages; i++)
+        @* Va dentro del contenido impreso porque el iframe de impresión no carga el CSS de la app.
+           table-layout fixed + nowrap: ninguna celda pasa a 2 renglones (lo que no entra se corta con "…"),
+           así cada fila ocupa siempre una línea y el cálculo de líneas por página se mantiene. *@
+        <style>
+            .exp-tabla { table-layout: fixed; border-collapse: collapse; width: 100%; font-size: 13.3pt; }
+            .exp-tabla th, .exp-tabla td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        </style>
+        @for (int i = 0; i < paginas.Count; i++)
         {
-            GetData(i);
-            <Page Orden=Orden PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint && i == cantPages - 1) Imprimir="Imprimir"
-                  Detalle="detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
+            var pagina = paginas[i];
+            <Page Orden=Orden PageNum="i + 1" CantPages="paginas.Count" ShouldPrint=@(ShouldPrint && i == paginas.Count - 1) Imprimir="Imprimir"
+                  Detalle="pagina.Detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
                   ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
                   ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
-                  ShowPendiente="showPendientes" Pendiente="pendienteRemain" />
+                  ShowPendiente="pagina.ShowPendientes" Pendiente="pagina.Pendientes" />
         }
     </div>
 }
@@ -20,20 +27,26 @@
     [Parameter] public EventCallback Imprimir { get; set; }
     [Parameter] public bool ShouldPrint { get; set; } = true;
 
-    bool showPendientes;
-    List<OrdenExpedicionDetalle> detalle = new();
-    List<OrdenExpedicionDetalle> pendiente = new();
-    List<OrdenExpedicionDetalle> pendienteRemain = new();
-    List<OrdenExpedicionDetalle> detalleCompleto = new();
+    private class Pagina
+    {
+        public List<OrdenExpedicionDetalle> Detalle { get; set; } = new();
+        public List<OrdenExpedicionDetalle> Pendientes { get; set; } = new();
+        public bool ShowPendientes { get; set; }
+    }
 
+    List<Pagina> paginas = new();
 
     bool showModal;
-    int cantPages = 1, lineasXPag0 = 36, lineasXPagN = 40;
+    const int lineasXPag0 = 36, lineasXPagN = 40;
+    // Fila "Total" al pie del detalle y las 2 filas de encabezado de PENDIENTES
+    const int lineasTotal = 1, lineasEncabezadoPendientes = 2;
 
     protected override void OnInitialized()
     {
-        detalleCompleto.AddRange(
-            Orden.Detalle.Where(x => x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0).Select(x => new OrdenExpedicionDetalle()
+        // Líneas aprobadas (lo que se arma). Cada renglón aparece una sola vez.
+        var aprobados = Orden.Detalle
+            .Where(x => x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0)
+            .Select(x => new OrdenExpedicionDetalle()
             {
                 DescripcionProducto = x.DescripcionProducto,
                 NumLinea = x.NumLinea,
@@ -53,108 +66,69 @@
                 CantidadProbadorAprobadaX = x.CantidadProbadorAprobadaX,
                 CantidadProbadorAprobadaF = x.CantidadProbadorAprobadaF,
             })
-        );
+            .ToList();
 
-        // Pendientes
-        if (Orden.Detalle.Any(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0))
-        {
-            detalleCompleto.AddRange(
-                Orden.Detalle.Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0).Select(x => new OrdenExpedicionDetalle()
-                {
-                    DescripcionProducto = x.DescripcionProducto,
-                    NumLinea = x.NumLinea,
-                    CodProducto = x.CodProducto,
-                    CantidadF = x.CantidadF - x.CantidadAprobadaF,
-                    CantidadX = x.CantidadX - x.CantidadAprobadaX,
-                    CantidadAprobadaF = 0,
-                    CantidadAprobadaX = 0,
+        // Pendientes: se arman SOLO desde Orden.Detalle. Antes se filtraba sobre la lista combinada
+        // (aprobados + pendientes) y una línea aprobada parcialmente aparecía dos veces.
+        var pendientes = Orden.Detalle
+            .Where(x => x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0 || x.CantidadObsequioPendiente > 0)
+            .Select(x => new OrdenExpedicionDetalle()
+            {
+                DescripcionProducto = x.DescripcionProducto,
+                NumLinea = x.NumLinea,
+                CodProducto = x.CodProducto,
+                CantidadF = x.CantidadF - x.CantidadAprobadaF,
+                CantidadX = x.CantidadX - x.CantidadAprobadaX,
+                CantidadAprobadaF = 0,
+                CantidadAprobadaX = 0,
 
-                    CantidadObsequioX = x.CantidadObsequioX - x.CantidadObsequioAprobadaX,
-                    CantidadObsequioF = x.CantidadObsequioF - x.CantidadObsequioAprobadaF,
-                    CantidadObsequioAprobadaX = 0,
-                    CantidadObsequioAprobadaF = 0,
+                CantidadObsequioX = x.CantidadObsequioX - x.CantidadObsequioAprobadaX,
+                CantidadObsequioF = x.CantidadObsequioF - x.CantidadObsequioAprobadaF,
+                CantidadObsequioAprobadaX = 0,
+                CantidadObsequioAprobadaF = 0,
 
-                    CantidadProbadorX = x.CantidadProbadorX - x.CantidadProbadorAprobadaX,
-                    CantidadProbadorF = x.CantidadProbadorF - x.CantidadProbadorAprobadaF,
-                    CantidadProbadorAprobadaX = 0,
-                    CantidadProbadorAprobadaF = 0,
-                })
-            );
-        }
+                CantidadProbadorX = x.CantidadProbadorX - x.CantidadProbadorAprobadaX,
+                CantidadProbadorF = x.CantidadProbadorF - x.CantidadProbadorAprobadaF,
+                CantidadProbadorAprobadaX = 0,
+                CantidadProbadorAprobadaF = 0,
+            })
+            .ToList();
 
-        int sumLineas = detalleCompleto!.Count + 1 + detalleCompleto.Sum(x => (x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0) ? 1 : 0);
-
-        if (sumLineas / lineasXPag0 > 0)
-        {
-            var aux = ((sumLineas - lineasXPag0) / lineasXPagN);
-            if (((sumLineas - lineasXPag0) % lineasXPagN) > 0) aux++;
-            cantPages += aux;
-        }
-
-        pendiente = detalleCompleto.Where(x => x.CantidadObsequioPendiente > 0 || x.CantidadPendiente > 0 || x.CantidadProbadorPendiente > 0).ToList();
-
+        paginas = Paginar(aprobados, pendientes);
         showModal = true;
     }
 
-    // private void GetData(int page)
-    // {
-    //     int showed = page == 0 ? 0 : lineasXPag0 + (lineasXPagN * (page - 1)),
-    //         remaining = page == 0 ? lineasXPag0 : lineasXPagN;
-
-    //     if(remaining > 0)
-    //         detalle = Orden.Detalle.Skip(showed)?.Take(remaining).ToList();
-
-    //     int total = Orden.Detalle.Count;
-    //     showPendientes = showed + remaining >= total;
-    // }
-
-    private void GetData(int page)
+    // Reparte las filas en páginas consumiendo cada fila una sola vez:
+    // primero los aprobados y, cuando se terminan, los pendientes en el espacio que queda.
+    // Así no se repiten SKUs ni quedan páginas vacías.
+    private static List<Pagina> Paginar(List<OrdenExpedicionDetalle> aprobados, List<OrdenExpedicionDetalle> pendientes)
     {
-        int showed = page == 0
-            ? 0
-            : lineasXPag0 + (lineasXPagN * (page - 1));
+        var result = new List<Pagina>();
+        int iAprobado = 0, iPendiente = 0;
 
-        int remaining = page == 0
-            ? lineasXPag0
-            : lineasXPagN;
-
-        int totalDetalle = detalleCompleto.Count;
-
-        // =========================
-        // DETALLE
-        // =========================
-        detalle = new List<OrdenExpedicionDetalle>();
-
-        if (remaining > 0 && showed < totalDetalle)
+        do
         {
-            detalle = detalleCompleto
-                .Where(x => x.CantidadAprobada > 0 || x.CantidadProbadorAprobada > 0 || x.CantidadObsequioAprobada > 0)
-                .Skip(showed)
-                .Take(remaining)
-                .ToList();
+            int capacidad = result.Count == 0 ? lineasXPag0 : lineasXPagN;
+            var pagina = new Pagina();
+
+            if (iAprobado < aprobados.Count)
+            {
+                pagina.Detalle = aprobados.Skip(iAprobado).Take(capacidad - lineasTotal).ToList();
+                iAprobado += pagina.Detalle.Count;
+                capacidad -= pagina.Detalle.Count + lineasTotal;
+            }
+
+            if (iAprobado >= aprobados.Count && iPendiente < pendientes.Count && capacidad > lineasEncabezadoPendientes)
+            {
+                pagina.Pendientes = pendientes.Skip(iPendiente).Take(capacidad - lineasEncabezadoPendientes).ToList();
+                iPendiente += pagina.Pendientes.Count;
+                pagina.ShowPendientes = true;
+            }
+
+            result.Add(pagina);
         }
+        while (iAprobado < aprobados.Count || iPendiente < pendientes.Count);
 
-        int usadosDetalle = detalle.Count;
-        int espacioRestante = remaining - usadosDetalle;
-
-        // =========================
-        // PENDIENTES
-        // =========================
-        pendienteRemain = new List<OrdenExpedicionDetalle>();
-
-        if (espacioRestante > 0)
-        {
-            // Cuántos pendientes ya deberían haberse mostrado en páginas anteriores
-            int pendientesSkip = Math.Max(0, showed - totalDetalle);
-
-            pendienteRemain = pendiente
-                .Skip(pendientesSkip)
-                .Take(espacioRestante)
-                .ToList();
-        }
-
-        // Mostrar pendientes solo si ya se terminaron los detalles
-        showPendientes = showed + remaining >= totalDetalle;
+        return result;
     }
-
 }

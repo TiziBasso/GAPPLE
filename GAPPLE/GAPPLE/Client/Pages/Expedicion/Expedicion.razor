@@ -102,7 +102,8 @@
         <div id="datos" style="height:0; overflow:hidden;">
             @for (int i = 0; i < expedicionesPrint.Count; i++)
             {
-                <ImpresionExpediciones Orden=expedicionesPrint[i] Imprimir="@(()=>Print("datos"))" />
+                @* Imprime todo el bloque "datos" una sola vez: lo dispara solo la última orden *@
+                <ImpresionExpediciones Orden=expedicionesPrint[i] Imprimir="@(()=>Print("datos"))" ShouldPrint="@(i == expedicionesPrint.Count - 1)" />
             }
         </div>
     }
