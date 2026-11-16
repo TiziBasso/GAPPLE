@@ -1130,6 +1130,8 @@ namespace GAPPLE.Server.Controllers
             try
             {
                 daO.RevertirOrden(idOrden, nombreUsuario);
+                // Al revertir, la impresion previa deja de ser valida: al re-aprobar hay que volver a imprimir.
+                daO.PersistirPedidoImpresion(idOrden, nombreUsuario, false);
                 return Ok();
             }
             catch (Exception ex)
@@ -1199,6 +1201,8 @@ namespace GAPPLE.Server.Controllers
                         cnn.Open();
                         trans = cnn.BeginTransaction();
                         daO.PersistirPedidoEstado(aux.Id.ToString(), (int)aux.IdEstado, orden.Usuario, trans);
+                        // Al revertir, la impresion previa deja de ser valida: al re-aprobar hay que volver a imprimir.
+                        daO.PersistirPedidoImpresion(aux.Id.ToString(), orden.Usuario, false, trans);
                         foreach (var linea in aux.Detalle)
                         {
                             daO.UpdatePedidoDetalle(aux.CodigoOrden, linea.CodProducto, linea.Cantidad, linea.CantidadProbador, linea.CantidadObsequio, trans);
