@@ -1,5 +1,7 @@
 ﻿using GAPPLE.Server.Data;
+using GAPPLE.Server.Helpers;
 using GAPPLE.Server.Tools;
+using System.Globalization;
 using GAPPLE.Shared.Model;
 using GAPPLE.Shared.Helpers;
 using Integra.Web.Server.Controllers;
@@ -418,6 +420,214 @@ namespace GAPPLE.Server.Controllers
             return productos;
         }
 
+
+        /// <summary>
+        /// Precio vigente de cada producto en una lista de precios: { CodigoProducto: Precio }.
+        /// Reutiliza prc_get_ProductosParaOfertas (una llamada por línea) porque ya devuelve
+        /// CodigoProducto + Precio para la lista indicada. Los productos sin precio no se incluyen.
+        /// </summary>
+        [HttpGet("precioslista")]
+        public IActionResult GetPreciosLista(string codLista)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(codLista))
+                    return BadRequest("Debe indicar la lista de precios");
+
+                DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+                Dictionary<string, decimal> precios = new(StringComparer.OrdinalIgnoreCase);
+                foreach (var linea in GetLineas().Where(x => !string.IsNullOrWhiteSpace(x)))
+                {
+                    using DataTable dt = daP.GetProductosParaOfertas(linea, codLista);
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        if (row["Precio"] == DBNull.Value) continue;
+                        precios[row["CodigoProducto"].ToString()!.Trim()] = Convert.ToDecimal(row["Precio"]);
+                    }
+                }
+                return Ok(precios);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Descarga en Excel el orden de impresión (Orden / Orden depósito) de los productos que
+        /// cumplen los mismos filtros que la grilla del maestro. El archivo se edita y se vuelve
+        /// a subir con <see cref="ImportarOrdenExcel"/>.
+        /// </summary>
+        [HttpGet("orden/excel")]
+        public IActionResult ExportarOrdenExcel(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea)
+        {
+            try
+            {
+                var productos = GetProductosDTO(codigoProducto, descripcion, clasificado, pasivo, linea)
+                    .OrderBy(x => x.Orden)
+                    .ThenBy(x => x.CodigoProducto);
+
+                DataTable dt = new();
+                dt.Columns.Add(ColumnaExcelCodigo, typeof(string));
+                dt.Columns.Add("Descripción", typeof(string));
+                dt.Columns.Add("Línea", typeof(string));
+                dt.Columns.Add(ColumnaExcelOrden, typeof(int));
+                dt.Columns.Add(ColumnaExcelOrdenDeposito, typeof(int));
+
+                foreach (var p in productos)
+                    dt.Rows.Add(p.CodigoProducto, p.Descripcion, p.Linea, p.Orden, (object?)p.OrdenDeposito ?? DBNull.Value);
+
+                return new Export().ToExcel(dt);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        private const string ColumnaExcelCodigo = "Código", ColumnaExcelOrden = "Orden", ColumnaExcelOrdenDeposito = "Orden depósito";
+
+        /// <summary>
+        /// Actualiza masivamente Orden / Orden depósito desde un Excel con columnas
+        /// "Código", "Orden" y/o "Orden depósito" (el mismo formato que descarga <see cref="ExportarOrdenExcel"/>).
+        /// Valida el archivo completo antes de guardar: si hay algún error no se actualiza nada.
+        /// Orden vacío = se mantiene el valor actual; Orden depósito vacío = se borra.
+        /// Devuelve la cantidad de productos actualizados.
+        /// </summary>
+        [HttpPost("orden/importar")]
+        public IActionResult ImportarOrdenExcel(ByteArrayRequest req)
+        {
+            SqlTransaction? trans = null;
+            try
+            {
+                DataTable dt;
+                try
+                {
+                    dt = ManejoDeArchivos.ExcelToDataTable(req.File, true, true);
+                }
+                catch
+                {
+                    ModelState.AddModelError("El archivo", "No se pudo leer. Verifique que sea un .xlsx con encabezados en la primera fila");
+                    return BadRequest(ModelState);
+                }
+
+                string? colCodigo = BuscarColumna(dt, "CODIGO", "CODIGOPRODUCTO", "CODPRODUCTO", "CODDELPRODUCTO");
+                string? colOrden = BuscarColumna(dt, "ORDEN", "ORDENIMPRESION", "ORDENDEIMPRESION");
+                string? colOrdenDeposito = BuscarColumna(dt, "ORDENDEPOSITO");
+
+                if (colCodigo == null)
+                    ModelState.AddModelError("El archivo", $"Falta la columna \"{ColumnaExcelCodigo}\"");
+                if (colOrden == null && colOrdenDeposito == null)
+                    ModelState.AddModelError("El archivo", $"Debe tener la columna \"{ColumnaExcelOrden}\" y/o \"{ColumnaExcelOrdenDeposito}\"");
+                if (dt.Rows.Count == 0)
+                    ModelState.AddModelError("El archivo", "No tiene filas para procesar");
+                if (ModelState.ErrorCount > 0)
+                    return BadRequest(ModelState);
+
+                var productos = GetProductosDTO(null, null, null, null, null)
+                    .Where(x => !string.IsNullOrWhiteSpace(x.CodigoProducto))
+                    .GroupBy(x => x.CodigoProducto!.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+                HashSet<string> codigosLeidos = new(StringComparer.OrdinalIgnoreCase);
+                List<Producto> cambios = new();
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    string fila = $"Fila {row["originalRow"]}";
+                    string codigo = row[colCodigo!].ToString()!.Trim();
+
+                    if (string.IsNullOrEmpty(codigo))
+                    {
+                        ModelState.AddModelError(fila, "La columna código está vacía");
+                        continue;
+                    }
+                    if (!codigosLeidos.Add(codigo))
+                    {
+                        ModelState.AddModelError(fila, $"El código {codigo} está repetido en el archivo");
+                        continue;
+                    }
+                    if (!productos.TryGetValue(codigo, out var actual))
+                    {
+                        ModelState.AddModelError(fila, $"El código {codigo} no se encontró");
+                        continue;
+                    }
+
+                    int orden = actual.Orden;
+                    int? ordenDeposito = actual.OrdenDeposito;
+
+                    if (colOrden != null)
+                    {
+                        string valor = row[colOrden].ToString()!.Trim();
+                        if (valor != string.Empty)
+                        {
+                            if (TryParseEntero(valor, out int o) && o >= 0) orden = o;
+                            else ModelState.AddModelError(fila, $"El orden \"{valor}\" del código {codigo} no es un número entero válido");
+                        }
+                    }
+
+                    if (colOrdenDeposito != null)
+                    {
+                        string valor = row[colOrdenDeposito].ToString()!.Trim();
+                        if (valor == string.Empty) ordenDeposito = null;
+                        else if (TryParseEntero(valor, out int od) && od >= 0) ordenDeposito = od;
+                        else ModelState.AddModelError(fila, $"El orden depósito \"{valor}\" del código {codigo} no es un número entero válido");
+                    }
+
+                    if (orden != actual.Orden || ordenDeposito != actual.OrdenDeposito)
+                    {
+                        cambios.Add(new Producto
+                        {
+                            CodigoProducto = actual.CodigoProducto,
+                            Pasivo = actual.Pasivo,
+                            Orden = orden,
+                            OrdenDeposito = ordenDeposito
+                        });
+                    }
+                }
+
+                if (ModelState.ErrorCount > 0)
+                    return BadRequest(ModelState);
+
+                if (cambios.Count > 0)
+                {
+                    using SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                    DA_Producto daP = new(cnn.ConnectionString);
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var p in cambios)
+                        daP.EditarProducto(p.CodigoProducto!, p.Pasivo, p.Orden, p.OrdenDeposito, trans);
+                    trans.Commit();
+                }
+
+                return Ok(cambios.Count);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null)
+                    trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        private static string? BuscarColumna(DataTable dt, params string[] nombres) =>
+            nombres.FirstOrDefault(n => dt.Columns.Contains(n));
+
+        /// <summary>Acepta "5" y también "5.0"/"5,0" (Excel puede guardar los enteros como decimales).</summary>
+        private static bool TryParseEntero(string valor, out int resultado)
+        {
+            if (int.TryParse(valor, NumberStyles.Integer, CultureInfo.InvariantCulture, out resultado))
+                return true;
+
+            if (decimal.TryParse(valor.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal d)
+                && d == decimal.Truncate(d) && d >= int.MinValue && d <= int.MaxValue)
+            {
+                resultado = (int)d;
+                return true;
+            }
+
+            return false;
+        }
 
         [HttpGet("orden")]
         public IActionResult GetProductoOrden(string codProducto, string codListaPrecio)

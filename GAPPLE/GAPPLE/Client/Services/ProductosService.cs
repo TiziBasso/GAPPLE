@@ -162,6 +162,60 @@ namespace GAPPLE.Client.Services
                 return false;
         }
 
+        /// <summary>Precio vigente por código de producto para la lista indicada.</summary>
+        public async ValueTask<Dictionary<string, decimal>> GetPreciosLista(string codLista, CancellationTokenSource? cancellationToken = null)
+        {
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/precioslista?codLista={WebUtility.UrlEncode(codLista)}",
+                                                     cancellationToken?.Token ?? CancellationToken.None);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(await response.Content.ReadFromJsonAsync<Dictionary<string, decimal>>() ?? new(), StringComparer.OrdinalIgnoreCase);
+
+            Logger.LogError("GetPreciosLista {codLista}: {status}", codLista, response.StatusCode);
+            return null;
+        }
+
+        /// <summary>Descarga el Excel con el orden de impresión de los productos filtrados.</summary>
+        public async ValueTask<byte[]?> ExportarOrdenExcel(string? codigoProducto, string? descripcion, bool? clasificado, bool? pasivo, string? linea)
+        {
+            Dictionary<string, object> query = new();
+            if (!string.IsNullOrWhiteSpace(codigoProducto)) query["codigoProducto"] = WebUtility.UrlEncode(codigoProducto.Trim());
+            if (!string.IsNullOrWhiteSpace(descripcion)) query["descripcion"] = WebUtility.UrlEncode(descripcion.Trim());
+            if (clasificado != null) query["clasificado"] = clasificado;
+            if (pasivo != null) query["pasivo"] = pasivo;
+            if (linea != null) query["linea"] = WebUtility.UrlEncode(linea);
+            var stringJoin = string.Join("&", query.Select(x => $"{x.Key}={x.Value}"));
+
+            var response = await HttpClient.GetAsync($"{REQUEST_URI_BASE}/orden/excel?{stringJoin}");
+            if (response.StatusCode == HttpStatusCode.OK)
+                return await response.Content.ReadAsByteArrayAsync();
+
+            Logger.LogError("ExportarOrdenExcel: {status} {body}", response.StatusCode, await response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        /// <summary>
+        /// Sube el Excel con el orden de impresión. Ok: Data = cantidad de productos actualizados.
+        /// BadRequest: Errors con el detalle por fila.
+        /// </summary>
+        public async ValueTask<Response> ImportarOrdenExcel(ByteArrayRequest req)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{REQUEST_URI_BASE}/orden/importar", req);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<int>());
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "ImportarOrdenExcel");
+                return new(HttpStatusCode.InternalServerError);
+            }
+        }
+
         public async ValueTask<Response> ProcesarArchivo(ByteArrayRequest req)
         {
             try

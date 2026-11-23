@@ -38,19 +38,23 @@
                     }
                 </tr>
             }
-            <tr>
-                <td colspan="2"></td>
-                <td colspan="2" style="text-align: end;">Total: @Detalle.Sum(x => x.Cantidad)</td>
-                <td colspan="1"></td>
-                @if (ShowProbadores)
-                {
-                    <td colspan="1" style="text-align: end;">Total: @Detalle.Sum(x => x.CantidadProbadorAprobada)</td>
-                }
-                @if (ShowObsequios)
-                {
-                    <td colspan="1" style="text-align: end;">Total: @Detalle.Sum(x => x.CantidadObsequioAprobada)</td>
-                }
-            </tr>
+            @* Total general del pedido (no de la hoja): solo en la hoja donde termina el listado de aprobados *@
+            @if (TotalAprobados != null)
+            {
+                <tr style="border-top: 2px solid;">
+                    <td colspan="2"></td>
+                    <td colspan="2" style="text-align: end;"><strong>Total aprobados: @TotalAprobados.Cantidad</strong></td>
+                    <td colspan="1"></td>
+                    @if (ShowProbadores)
+                    {
+                        <td colspan="1" style="text-align: end;"><strong>@TotalAprobados.Probador</strong></td>
+                    }
+                    @if (ShowObsequios)
+                    {
+                        <td colspan="1" style="text-align: end;"><strong>@TotalAprobados.Obsequio</strong></td>
+                    }
+                </tr>
+            }
         </tbody>
     }
 
@@ -88,6 +92,23 @@
                     }
                 </tr>
             }
+            @* Total general de pendientes del pedido: solo en la hoja donde termina ese listado *@
+            @if (TotalPendientes != null)
+            {
+                <tr style="border-top: 2px solid;">
+                    <td colspan="2"></td>
+                    <td colspan="2" style="text-align: end;"><strong>Total pendientes: @TotalPendientes.Cantidad</strong></td>
+                    <td colspan="1"></td>
+                    @if (ShowProbadores)
+                    {
+                        <td colspan="1" style="text-align: end;"><strong>@TotalPendientes.Probador</strong></td>
+                    }
+                    @if (ShowObsequios)
+                    {
+                        <td colspan="1" style="text-align: end;"><strong>@TotalPendientes.Obsequio</strong></td>
+                    }
+                </tr>
+            }
         </tfoot>
     }
 </table>
@@ -96,6 +117,8 @@
     [Parameter] public List<OrdenDetalle> Pendientes { get; set; } = null;
     [Parameter] public bool ShowProbadores { get; set; } = false;
     [Parameter] public bool ShowObsequios { get; set; } = false;
+    [Parameter] public TotalesImpresion TotalAprobados { get; set; }
+    [Parameter] public TotalesImpresion TotalPendientes { get; set; }
 
     int i = 0;
 }

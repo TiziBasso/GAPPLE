@@ -133,9 +133,10 @@
                     <RadzenText TextAlign=TextAlign.Right><strong>TOTAL:</strong></RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
+            @* En Pendientes se edita cuántas unidades del pendiente pasan a aprobadas: el máximo es lo pendiente *@
             <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteF)" TextAlign=TextAlign.Right Title="F" Width="80px" Visible=showF>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaF ShowUpDown=false Min="0" Max="context.CantidadF" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaF ShowUpDown=false Min="0" Max="context.CantidadPendienteF" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadPendienteF)</RadzenText>
@@ -143,7 +144,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadPendienteX)" TextAlign=TextAlign.Right Title="X" Width="80px" Visible=showX>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaX ShowUpDown=false Min="0" Max="context.CantidadX" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadAprobadaX ShowUpDown=false Min="0" Max="context.CantidadPendienteX" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadPendienteX)</RadzenText>
@@ -159,7 +160,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteF)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=showF>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaF ShowUpDown=false Min="0" Max="context.CantidadProbadorF" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaF ShowUpDown=false Min="0" Max="context.CantidadProbadorPendienteF" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorPendienteF)</RadzenText>
@@ -167,7 +168,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadProbadorPendienteX)" TextAlign=TextAlign.Right Title="Probadores" Width="100px" Visible=@(showX && !showF)>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaX ShowUpDown=false Min="0" Max="context.CantidadProbadorX" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadProbadorAprobadaX ShowUpDown=false Min="0" Max="context.CantidadProbadorPendienteX" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadProbadorPendienteX)</RadzenText>
@@ -175,15 +176,15 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadObsequioPendienteF)" TextAlign=TextAlign.Right Title="Obsequios" Width="100px" Visible=showF>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadObsequioAprobadaF ShowUpDown=false Min="0" Max="context.CantidadProbadorF" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadObsequioAprobadaF ShowUpDown=false Min="0" Max="context.CantidadObsequioPendienteF" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadObsequioPendienteF)</RadzenText>
                 </FooterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadObsequioAprobadaX)" TextAlign=TextAlign.Right Title="Obsequios" Width="100px" Visible=@(showX && !showF)>
+            <RadzenDataGridColumn Property="@nameof(OrdenExpedicionDetalle.CantidadObsequioPendienteX)" TextAlign=TextAlign.Right Title="Obsequios" Width="100px" Visible=@(showX && !showF)>
                 <EditTemplate>
-                    <RadzenNumeric @bind-Value=lineaEdit.CantidadObsequioAprobadaX ShowUpDown=false Min="0" Max="context.CantidadObsequioX" />
+                    <RadzenNumeric @bind-Value=lineaEdit.CantidadObsequioAprobadaX ShowUpDown=false Min="0" Max="context.CantidadObsequioPendienteX" />
                 </EditTemplate>
                 <FooterTemplate>
                     <RadzenText TextAlign=TextAlign.Right>@orden.Detalle.Sum(x => x.CantidadObsequioPendienteX)</RadzenText>
@@ -303,19 +304,26 @@ else
         await gridDown.EditRow(linea);
     }
 
+    // En la grilla de Pendientes lo que se edita es cuántas unidades del pendiente pasan a aprobadas
+    // (EditDownRow propone todo el pendiente). Se suman a lo ya aprobado: antes se pisaba lo aprobado
+    // y una línea aprobada en parte perdía unidades (ej. 10 pedidas, 6 aprobadas: guardar 4 dejaba 4 aprobadas).
     private async Task SaveDownRow(OrdenExpedicionDetalle linea)
     {
         linea.HuboCambios = true;
-        linea.CantidadAprobadaF = lineaEdit.CantidadAprobadaF;
-        linea.CantidadAprobadaX = lineaEdit.CantidadAprobadaX;
-        linea.CantidadProbadorAprobadaF = lineaEdit.CantidadProbadorAprobadaF;
-        linea.CantidadProbadorAprobadaX = lineaEdit.CantidadProbadorAprobadaX;
-        linea.CantidadObsequioAprobadaF = lineaEdit.CantidadObsequioAprobadaF;
-        linea.CantidadObsequioAprobadaX = lineaEdit.CantidadObsequioAprobadaX;
+        linea.CantidadAprobadaF = SumarAprobado(linea.CantidadAprobadaF, lineaEdit.CantidadAprobadaF, linea.CantidadF);
+        linea.CantidadAprobadaX = SumarAprobado(linea.CantidadAprobadaX, lineaEdit.CantidadAprobadaX, linea.CantidadX);
+        linea.CantidadProbadorAprobadaF = SumarAprobado(linea.CantidadProbadorAprobadaF, lineaEdit.CantidadProbadorAprobadaF, linea.CantidadProbadorF);
+        linea.CantidadProbadorAprobadaX = SumarAprobado(linea.CantidadProbadorAprobadaX, lineaEdit.CantidadProbadorAprobadaX, linea.CantidadProbadorX);
+        linea.CantidadObsequioAprobadaF = SumarAprobado(linea.CantidadObsequioAprobadaF, lineaEdit.CantidadObsequioAprobadaF, linea.CantidadObsequioF);
+        linea.CantidadObsequioAprobadaX = SumarAprobado(linea.CantidadObsequioAprobadaX, lineaEdit.CantidadObsequioAprobadaX, linea.CantidadObsequioX);
         editMode = false;
         await gridDown.UpdateRow(linea);
         await gridDown.Reload();
     }
+
+    /// <summary>Aprobado + lo que se pasa del pendiente, sin superar lo pedido.</summary>
+    private static int SumarAprobado(int aprobado, int aAprobar, int pedido) =>
+        Math.Clamp(aprobado + Math.Max(aAprobar, 0), 0, Math.Max(pedido, 0));
 
     private async Task SaveUpRow(OrdenExpedicionDetalle linea)
     {

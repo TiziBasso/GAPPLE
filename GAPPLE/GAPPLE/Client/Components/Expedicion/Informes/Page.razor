@@ -24,51 +24,17 @@
             </span>
         </div>
         <div style="margin-top: 10px;height: 25cm;">
-            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente" />
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente"
+                      TotalAprobados="TotalAprobados" TotalPendientes="TotalPendientes" />
         </div>
     }
-    else
+    else if (Detalle.Any() || ShowPendiente)
     {
-        @if (Detalle.Any())
-        {
-            <div style="margin-top: 10px;height: 28cm;">
-                <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente" />
-            </div>
-        }
-        else
-        {
-            @if (ShowPendiente)
-            {
-                @* Mismo tamaño que PageData.razor (13.3pt ≈ 12pt impreso) *@
-                <table class="exp-tabla">
-                    <colgroup><col style="width:6%" /><col style="width:14%" /><col style="width:44%" /><col style="width:12%" /><col style="width:12%" /><col style="width:12%" /></colgroup>
-                    <tfoot style="font-style: italic;">
-                        <tr>
-                            <th colspan="6" style="border: 1px solid black;border-right: none;border-left: none;">PENDIENTES</th>
-                        </tr>
-                        <tr>
-                            <th style="border:1px solid;border-right: none; padding: 5px 2px;">#</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px 2px;">ID</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px 2px;">Producto</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px 2px;">Cantidad</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px 2px;">Probador</th>
-                            <th style="border:1px solid;border-right: none;padding: 5px 2px;">Obsequio</th>
-                        </tr>
-                        @foreach (var item in Pendiente)
-                        {
-                            <tr style="border-bottom:1px solid; margin-bottom:5px; margin-top:5px; line-height:1.25;">
-                                <td style="text-align: end;padding:1px;">@item.NumLinea</td>
-                                <td style="text-align: center;padding:1px;">@item.CodProducto</td>
-                                <td style="padding:1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@item.DescripcionProducto</td>
-                                <td style="text-align: end;padding:1px;">@(item.CantidadPendiente != 0 ? item.CantidadPendiente : "")</td>
-                                <td style="text-align: end;padding:1px;">@(item.CantidadProbadorPendiente != 0 ? item.CantidadProbadorPendiente : "")</td>
-                                <td style="text-align: end;padding:1px;">@(item.CantidadObsequioPendiente != 0 ? item.CantidadObsequioPendiente : "")</td>
-                            </tr>
-                        }
-                    </tfoot>
-                </table>
-            }
-        }
+        @* Las hojas que solo tienen pendientes también usan PageData (no dibuja la cabecera de aprobados si no hay filas) *@
+        <div style="margin-top: 10px;height: 28cm;">
+            <PageData Detalle="Detalle" ShowF=ShowF ShowX=ShowX ShowPF=ShowPF ShowPX=ShowPX ShowOF=ShowOF ShowOX=ShowOX ShowPendientes="ShowPendiente" Pendiente="Pendiente"
+                      TotalAprobados="TotalAprobados" TotalPendientes="TotalPendientes" />
+        </div>
     }
     <div style="width: 100%;margin-top: 10px;">
         <span style="text-align: end;width: 100%;display: block;">Página @PageNum de @CantPages</span>
@@ -84,6 +50,10 @@
     [Parameter, EditorRequired] public List<OrdenExpedicionDetalle> Detalle { get; set; }
     [Parameter, EditorRequired] public List<OrdenExpedicionDetalle> Pendiente { get; set; }
     [Parameter] public bool ShowPendiente { get; set; }
+    /// <summary>Total general de aprobados: solo llega en la hoja donde termina ese listado.</summary>
+    [Parameter] public TotalesImpresion TotalAprobados { get; set; }
+    /// <summary>Total general de pendientes: solo llega en la hoja donde termina ese listado.</summary>
+    [Parameter] public TotalesImpresion TotalPendientes { get; set; }
     [Parameter] public bool ShowX { get; set; }
     [Parameter] public bool ShowF { get; set; }
     [Parameter] public bool ShowPF { get; set; }
