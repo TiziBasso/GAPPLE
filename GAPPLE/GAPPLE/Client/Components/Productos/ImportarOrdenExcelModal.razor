@@ -65,6 +65,12 @@
 </RadzenStack>
 
 @code {
+    /// <summary>
+    /// Recibe la cantidad de productos actualizados. Se usa un callback en lugar del resultado de OpenAsync porque
+    /// al cerrar el diálogo de "Procesando..." el DialogService completa la tarea del modal con null.
+    /// </summary>
+    [Parameter] public EventCallback<int> Callback { get; set; }
+
     IBrowserFile file;
     bool isLoading;
 
@@ -88,7 +94,7 @@
         isLoading = false;
 
         if (response.IsOk)
-            DialogService.Close((int)response.Data);
+            await Callback.InvokeAsync((int)response.Data);
         else if (response.Errors != null && response.Errors.Count > 0)
             RadzenDialogService.ShowAlert(response.Errors);
         else
