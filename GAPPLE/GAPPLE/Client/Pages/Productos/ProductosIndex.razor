@@ -58,7 +58,8 @@
                             AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
                             ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
                             Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
-                            Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())" />
+                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
+                            FilterPlaceholder="Buscar lista..." Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())" />
         </RadzenStack>
 
         <RadzenButton Click="FillProductos" IsBusy=isLoading Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" />
@@ -356,17 +357,20 @@ else
 
     private async Task ImportarOrden()
     {
-        object resultado = await DialogService.OpenAsync<ImportarOrdenExcelModal>("Importar orden de impresión", null,
+        await DialogService.OpenAsync<ImportarOrdenExcelModal>("Importar orden de impresión",
+            new() { { "Callback", EventCallback.Factory.Create<int>(this, OrdenImportado) } },
             new() { ShowClose = false, CloseDialogOnEsc = false, CloseDialogOnOverlayClick = false, Width = "36rem", Height = "fit-content" });
+    }
 
-        if (resultado is int actualizados)
-        {
-            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title,
-                actualizados == 0 ? "El archivo no tenía cambios de orden" : $"Se actualizó el orden de {actualizados} producto(s)");
+    private async Task OrdenImportado(int actualizados)
+    {
+        DialogService.Close();
 
-            if (actualizados > 0 && productos.Any())
-                await FillProductos();
-        }
+        NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title,
+            actualizados == 0 ? "El archivo no tenía cambios de orden" : $"Se actualizó el orden de {actualizados} producto(s)");
+
+        if (actualizados > 0 && productos.Any())
+            await FillProductos();
     }
 
     private void NuevoProducto()

@@ -529,6 +529,12 @@ namespace GAPPLE.Server.Controllers
                     .GroupBy(x => x.CodigoProducto!.Trim(), StringComparer.OrdinalIgnoreCase)
                     .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
+                // Excel guarda los códigos numéricos como número y pierde los 0 de adelante (0656091 -> 656091).
+                // Igual que la carga de pedidos por Excel, si no hay coincidencia exacta se busca ignorando esos ceros.
+                var productosSinCeros = productos.Values
+                    .GroupBy(x => SinCerosIzquierda(x.CodigoProducto!.Trim()), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
                 HashSet<string> codigosLeidos = new(StringComparer.OrdinalIgnoreCase);
                 List<Producto> cambios = new();
 
@@ -542,14 +548,24 @@ namespace GAPPLE.Server.Controllers
                         ModelState.AddModelError(fila, "La columna código está vacía");
                         continue;
                     }
-                    if (!codigosLeidos.Add(codigo))
-                    {
-                        ModelState.AddModelError(fila, $"El código {codigo} está repetido en el archivo");
-                        continue;
-                    }
                     if (!productos.TryGetValue(codigo, out var actual))
                     {
-                        ModelState.AddModelError(fila, $"El código {codigo} no se encontró");
+                        if (!productosSinCeros.TryGetValue(SinCerosIzquierda(codigo), out var candidatos))
+                        {
+                            ModelState.AddModelError(fila, $"El código {codigo} no se encontró");
+                            continue;
+                        }
+                        if (candidatos.Count > 1)
+                        {
+                            ModelState.AddModelError(fila, $"El código {codigo} coincide con varios productos ({string.Join(", ", candidatos.Select(x => x.CodigoProducto))}), ingréselo completo");
+                            continue;
+                        }
+                        actual = candidatos[0];
+                    }
+                    // Se controla sobre el código real para detectar también "0656091" y "656091" en el mismo archivo.
+                    if (!codigosLeidos.Add(actual.CodigoProducto!.Trim()))
+                    {
+                        ModelState.AddModelError(fila, $"El código {codigo} está repetido en el archivo");
                         continue;
                     }
 
@@ -612,6 +628,12 @@ namespace GAPPLE.Server.Controllers
 
         private static string? BuscarColumna(DataTable dt, params string[] nombres) =>
             nombres.FirstOrDefault(n => dt.Columns.Contains(n));
+
+        private static string SinCerosIzquierda(string codigo)
+        {
+            string sinCeros = codigo.TrimStart('0');
+            return sinCeros.Length == 0 ? "0" : sinCeros;
+        }
 
         /// <summary>Acepta "5" y también "5.0"/"5,0" (Excel puede guardar los enteros como decimales).</summary>
         private static bool TryParseEntero(string valor, out int resultado)
