@@ -66,6 +66,18 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<List<ArticulosPorCliente>>(uri);
         }
 
+        public async ValueTask<Response> GetListaPrecios(int idCliente)
+        {
+            var response = await HttpClient.GetAsync($"{URI_BASE}/{idCliente}/listaprecios?idUsuario={SesionDTO.IdUsuario}");
+
+            if (response.StatusCode == HttpStatusCode.OK)
+                return new(response.StatusCode, await response.Content.ReadAsByteArrayAsync());
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                return new(response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            return new(response.StatusCode);
+        }
+
         public async ValueTask<List<SucursalesPorCliente>> GetSucursalesPorCliente(string codCliente)
         {
             string uri = $"{URI_BASE}/sucursales";

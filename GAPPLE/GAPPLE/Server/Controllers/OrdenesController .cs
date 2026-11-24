@@ -446,17 +446,54 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
+        /// <summary>
+        /// SCRUM-130: un acuerdo activo y vigente del cliente (de la linea del pedido, o sin linea) solo aplica
+        /// si el importe del pedido alcanza su monto a alcanzar. Los acuerdos sin monto aplican siempre.
+        /// </summary>
+        private void EvaluarAcuerdos(OrdenDTO pedido, decimal importePedido)
+        {
+            var acuerdos = new AcuerdosController(Configuration)
+                .ObtenerAcuerdos(new() { CodCliente = pedido.CodigoCliente, IdEstado = AcuerdosEstadoEnum.Activo })
+                .Where(x => x.CodigoCliente == pedido.CodigoCliente) // el filtro por codigo es LIKE
+                .SelectMany(x => x.Acuerdos)
+                .Where(a => a.Vigente && (string.IsNullOrEmpty(a.Linea) || a.Linea == pedido.Linea))
+                .ToList();
+
+            if (!acuerdos.Any())
+                return;
+
+            var ar = new System.Globalization.CultureInfo("es-AR");
+            var alcanzados = acuerdos.Where(a => a.MontoAAlcanzar == null || importePedido >= a.MontoAAlcanzar).ToList();
+            var noAlcanzados = acuerdos.Except(alcanzados).ToList();
+
+            pedido.TieneAcuerdoActivo = alcanzados.Any();
+
+            var lineas = new List<string>();
+            if (alcanzados.Any())
+                lineas.Add("El pedido alcanza el monto del acuerdo, revisar si corresponde ingresarle un monto:");
+            lineas.AddRange(alcanzados.Select(a => a.MontoAAlcanzar == null
+                ? $"• {a.Condicion} (sin monto a alcanzar)"
+                : $"• {a.Condicion}: pedido $ {importePedido.ToString("N2", ar)} / monto a alcanzar $ {a.MontoAAlcanzar.Value.ToString("N2", ar)}"));
+            if (noAlcanzados.Any())
+                lineas.Add("No alcanza el monto (no corresponde aplicar el acuerdo):");
+            lineas.AddRange(noAlcanzados.Select(a =>
+                $"• {a.Condicion}: pedido $ {importePedido.ToString("N2", ar)} / monto a alcanzar $ {a.MontoAAlcanzar!.Value.ToString("N2", ar)}"));
+
+            pedido.MensajeAcuerdo = string.Join("\n", lineas);
+        }
+
         [HttpPut("aprobacion/{idUsuario:int}")]
         public IActionResult PutPedidoAprobacion(int idUsuario, [FromBody] OrdenDTO pedido)
         {
             SqlTransaction trans = null;
             try
             {
+                IEnumerable<Orden> pedidos;
                 using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                 {
 
                     DA_Ordenes daO = new(cnn.ConnectionString);
-                    var pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
+                    pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
                     var pedidosPendientes = pedidos.Where(x => x.IdEstado == 1).ToList();
                     bool aprueba = pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas;
 
@@ -485,7 +522,10 @@ namespace GAPPLE.Server.Controllers
                     trans.Commit();
                     cnn.Close();
                 }
-                pedido.TieneAcuerdoActivo = new AcuerdosController(Configuration).ObtenerAcuerdos(new() { CodCliente = pedido.CodigoCliente, IdEstado = AcuerdosEstadoEnum.Activo }).Any(x => x.Acuerdos.Any(y => y.Vigente));
+                // Importe de la orden completa (pedido F y X), sin los cancelados
+                decimal importePedido = pedidos.Where(x => x.IdEstado != 2 && x.CodigoOrden.Substring(2) == pedido.CodigoOrden.Substring(2))
+                                               .Sum(x => x.ImporteTotal ?? 0);
+                EvaluarAcuerdos(pedido, importePedido);
                 return Ok(pedido);
             }
             catch (Exception ex)
@@ -920,6 +960,7 @@ namespace GAPPLE.Server.Controllers
                     if (row["FechaEntrega"] != DBNull.Value) orden.FechaEntrega = DateTime.Parse(row["FechaEntrega"].ToString());
                     if (row["ObservacionesZentra"] != DBNull.Value) orden.ObservacionesZentra = row["ObservacionesZentra"].ToString();
                     orden.CantidadProbadores = LeerEntero(row, "CantidadProbadores");
+                    orden.Armado = EstaArmada(row);
                     ordenes.Add(orden);
                 }
             }
@@ -936,6 +977,35 @@ namespace GAPPLE.Server.Controllers
             if (!row.Table.Columns.Contains(columna)) return 0;
             if (row[columna] == DBNull.Value) return 0;
             return int.TryParse(row[columna].ToString(), out int valor) ? valor : 0;
+        }
+
+        /// <summary>
+        /// SCRUM-149: false si el SP todavia no devuelve la columna Armado.
+        /// </summary>
+        private static bool EstaArmada(DataRow row) =>
+            row.Table.Columns.Contains("Armado") && row["Armado"] != DBNull.Value && Convert.ToBoolean(row["Armado"]);
+
+        private static bool EstaImpresa(DataRow row) =>
+            row["Impreso"] != DBNull.Value && Convert.ToBoolean(row["Impreso"]);
+
+        /// <summary>
+        /// Verifica que la orden siga aprobada en la base con los mismos pedidos que tiene el cliente.
+        /// prc_get_PedidosCabeceraExpedicion solo devuelve pedidos aprobados, así que si se revirtió la orden
+        /// no vuelve nada, y si se revirtió solo el pedido F o el X cambian los IdPedidos. En ambos casos se
+        /// rechaza (agrega el error al ModelState) para no operar sobre un pedido que ya no está aprobado.
+        /// </summary>
+        private bool ValidarEstadoExpedicion(OrdenExpedicion orden, DataTable dtCab, out DataRow? cab)
+        {
+            cab = dtCab.Rows.Count > 0 ? dtCab.Rows[0] : null;
+            static HashSet<string> Ids(string? ids) =>
+                (ids ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+
+            if (cab == null || !Ids(cab["IdPedidos"].ToString()).SetEquals(Ids(orden.IdPedidos)))
+            {
+                ModelState.AddModelError("error", $"La orden {orden.Orden} cambió de estado. Refresque la pantalla.");
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -1091,6 +1161,19 @@ namespace GAPPLE.Server.Controllers
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
                 foreach (var orden in ordenes)
                 {
+                    // SCRUM-149: solo se despachan ordenes aprobadas y armadas. Se valida contra la base, no contra
+                    // lo que manda el cliente, que puede tener la grilla desactualizada.
+                    using (DataTable dtCab = daO.ObtenerOrdenExpediciones(orden.Orden))
+                    {
+                        if (!ValidarEstadoExpedicion(orden, dtCab, out DataRow? cab))
+                            continue;
+                        if (!EstaArmada(cab!))
+                        {
+                            ModelState.AddModelError("error", $"La orden {orden.Orden} no está armada");
+                            continue;
+                        }
+                    }
+
                     var detalle = daO.ObtenerOrdenDetalleExpedicion(orden.Orden);
                     if (detalle.AsEnumerable().Any(x => int.Parse(x["CantidadAprobadaF"].ToString()) != 0 ||
                                                         int.Parse(x["CantidadAprobadaX"].ToString()) != 0 ||
@@ -1133,15 +1216,83 @@ namespace GAPPLE.Server.Controllers
             }
         }
 
-        [HttpGet("expedicionImprimir/{nombreUsuario}")]
-        public OrdenExpedicion GetOrdenExpedicionImprimir(string idOrden, string nombreUsuario)
+        /// <summary>
+        /// SCRUM-149: marca (o desmarca) como armados todos los pedidos (F y X) de las ordenes recibidas.
+        /// </summary>
+        [HttpPost("armado/{nombreUsuario}")]
+        public IActionResult PostOrdenesArmado(List<OrdenExpedicion> ordenes, string nombreUsuario, bool armado = true)
         {
-            DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
-            OrdenExpedicion orden = GetOrdenExpedicion(idOrden);
-            var a = JsonConvert.SerializeObject(orden);
-            foreach (var idPedido in orden.IdPedidos.Split(","))
-                daO.PersistirPedidoImpresion(idPedido, nombreUsuario);
-            return orden;
+            SqlTransaction? trans = null;
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+
+                // Solo ordenes que en la base siguen aprobadas con los mismos pedidos (y, para marcar, impresas)
+                var validas = new List<OrdenExpedicion>();
+                foreach (var orden in ordenes)
+                {
+                    using DataTable dtCab = daO.ObtenerOrdenExpediciones(orden.Orden);
+                    if (!ValidarEstadoExpedicion(orden, dtCab, out DataRow? cab))
+                        continue;
+                    if (armado && !EstaImpresa(cab!))
+                    {
+                        ModelState.AddModelError("error", $"La orden {orden.Orden} no está impresa. Refresque la pantalla.");
+                        continue;
+                    }
+                    validas.Add(orden);
+                }
+
+                if (validas.Any())
+                {
+                    using SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                    cnn.Open();
+                    trans = cnn.BeginTransaction();
+                    foreach (var orden in validas)
+                        foreach (var id in orden.IdPedidos.Split(","))
+                            daO.PersistirPedidoArmado(id.Trim(), armado, nombreUsuario, trans);
+                    trans.Commit();
+                }
+
+                if (ModelState.ErrorCount == 0)
+                    return Ok();
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                if (trans != null && trans.Connection != null) trans.Rollback();
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("expedicionImprimir/{nombreUsuario}")]
+        public IActionResult GetOrdenExpedicionImprimir(string idOrden, string nombreUsuario, [FromQuery] string? idPedidos = null)
+        {
+            try
+            {
+                DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+
+                // Solo se imprime (y marca como impresa) si la orden sigue aprobada con los mismos pedidos que ve el cliente
+                using (DataTable dtCab = daO.ObtenerOrdenExpediciones(idOrden))
+                {
+                    var esperada = new OrdenExpedicion { Orden = idOrden, IdPedidos = idPedidos };
+                    if (idPedidos == null && dtCab.Rows.Count == 0)
+                        ModelState.AddModelError("error", $"La orden {idOrden} cambió de estado. Refresque la pantalla.");
+                    else if (idPedidos != null)
+                        ValidarEstadoExpedicion(esperada, dtCab, out _);
+                    if (ModelState.ErrorCount > 0)
+                        return BadRequest(ModelState);
+                }
+
+                OrdenExpedicion orden = GetOrdenExpedicion(idOrden);
+                foreach (var idPedido in orden.IdPedidos.Split(","))
+                    daO.PersistirPedidoImpresion(idPedido.Trim(), nombreUsuario);
+                return Ok(orden);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("cantidadesproductos")]

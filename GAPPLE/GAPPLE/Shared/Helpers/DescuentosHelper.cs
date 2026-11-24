@@ -10,5 +10,10 @@ namespace GAPPLE.Shared.Helpers
         /// producto principal y no se factura, por eso entra bonificado al 99,99%.
         /// </summary>
         public const decimal Complemento = 99.99m;
+
+        /// <summary>
+        /// Alicuota de IVA que se suma al total de las notas de credito tipo "Factura".
+        /// </summary>
+        public const decimal IVA = 21m;
     }
 }

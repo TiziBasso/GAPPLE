@@ -1,5 +1,7 @@
 ﻿namespace GAPPLE.Shared.Model
 {
+    public enum ExpedicionEstado { Aprobado, Impreso, Armado }
+
     public class OrdenExpedicion
     {
         public string IdPedidos { get; set; }
@@ -39,6 +41,15 @@
         public int Articulos { get; set; }
 
         public bool Impreso { get; set; }
+
+        public bool Armado { get; set; }
+
+        /// <summary>
+        /// Solapa de expedicion en la que se ve la orden: Aprobados -> Impresos -> Armados.
+        /// </summary>
+        public ExpedicionEstado EstadoExpedicion => Armado ? ExpedicionEstado.Armado
+                                                   : Impreso ? ExpedicionEstado.Impreso
+                                                   : ExpedicionEstado.Aprobado;
 
         /// <summary>
         /// Cantidad total de unidades marcadas como probador en la orden.

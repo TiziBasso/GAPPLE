@@ -47,6 +47,18 @@
             </RadzenStack>
         </RadzenStack>
 
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="5px" Style="width:100%" class="rz-mb-4">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="width:50%">
+                <RadzenLabel Text="Monto a alcanzar:" Component="montoAAlcanzar" />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5px">
+                    <span style="font-weight:600;">$</span>
+                    <RadzenNumeric TValue="decimal?" @bind-Value="Acuerdo.MontoAAlcanzar" Name="montoAAlcanzar" Min="0" ShowUpDown="false"
+                                   Format="N2" TextAlign="TextAlign.Right" Placeholder="0,00" Style="width:100%" />
+                </RadzenStack>
+                <ValidationMessage For="@(() => Acuerdo.MontoAAlcanzar)" />
+            </RadzenStack>
+        </RadzenStack>
+
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceAround">
             <RadzenButton Icon="cancel" Text="Cancelar" ButtonStyle="ButtonStyle.Danger" Click="Cancelar" />
             <RadzenButton Icon="save" Text="Guardar" ButtonStyle="ButtonStyle.Success" ButtonType="ButtonType.Submit" />
@@ -116,6 +128,9 @@ else
 
         if (Acuerdo.FechaDesde > Acuerdo.FechaHasta)
             messageStore?.Add(() => Acuerdo.FechaDesde, "La fecha desde no puede ser mayor a la fecha hasta");
+
+        if (Acuerdo.MontoAAlcanzar < 0)
+            messageStore?.Add(() => Acuerdo.MontoAAlcanzar, "El monto a alcanzar no puede ser negativo");
 
     }
 

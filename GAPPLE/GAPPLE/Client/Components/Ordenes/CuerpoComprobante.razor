@@ -2,6 +2,7 @@
 @using GAPPLE.Client.Components.Productos
 
 @inject ProductosService ProductosService
+@inject ClientesService ClientesService
 @inject RadzenDialogService RadzenDialogService
 @inject IJSFunction JSFunction
 @inject IJSFunctionRadzen JSFunctionRadzen
@@ -138,6 +139,8 @@
     [Parameter] public EventCallback Render { get; set; }
 
     Dictionary<int, decimal> preciosAgrupadosPorInterno = new();
+    // Bonificaciones por articulo definidas en Tango para el cliente del comprobante
+    List<ArticulosPorCliente> articulosPorCliente = [];
 
     ComprobanteDetalle Linea { get; set; }
 
@@ -152,6 +155,9 @@
     protected override async Task OnInitializedAsync()
     {
         //idTipoListaPreciosAux = Comprobante.IdListaPrecio;
+
+        if (!string.IsNullOrEmpty(Comprobante.CodCliente))
+            articulosPorCliente = await ClientesService.GetArticulosPorCliente(Comprobante.CodCliente) ?? [];
 
         if (Lineas.Any())
             SetTotales();
@@ -418,6 +424,7 @@
         linea.CodProducto = producto.CodigoProducto;
         linea.DescripcionProducto = producto.Descripcion;
         linea.Precio = producto.Precio;
+        linea.Descuento = articulosPorCliente.Find(x => x.CodProducto == producto.CodigoProducto)?.Descuento ?? 0;
     }
 
     private void SetTotales()

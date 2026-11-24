@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using GAPPLE.Server.Data;
+using GAPPLE.Server.Helpers;
+using GAPPLE.Shared.Helpers;
 using GAPPLE.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -69,6 +71,83 @@ namespace GAPPLE.Server.Controllers
                 lst.Add(c);
             }
             return lst;
+        }
+
+        /// <summary>
+        /// Descarga en Excel la lista de precios vigente del cliente, con los mismos datos que se ven en la carga de pedidos
+        /// (linea, familia, codigo, sinonimo, descripcion, precio y bonificacion del cliente por articulo).
+        /// Se valida en el server que el usuario tenga el permiso y que el cliente este en su cartera
+        /// (prc_get_Clientes ya filtra por los vendedores del usuario).
+        /// </summary>
+        [HttpGet("{idCliente:int}/listaprecios")]
+        public IActionResult GetListaPrecios(int idCliente, int idUsuario)
+        {
+            if (!TienePermiso(idUsuario, Permisos.Menu.Clientes, Permisos.DescargarListaPrecios))
+                return StatusCode(StatusCodes.Status403Forbidden);
+
+            DA_Clientes daC = new(Configuration.GetConnectionString("DefaultConnection"));
+            DataTable dtCliente = daC.ObtenerClientes(idCliente, null, null, null, null, idUsuario);
+            if (dtCliente.Rows.Count == 0)
+                return StatusCode(StatusCodes.Status403Forbidden);
+
+            var cliente = dtCliente.Rows[0];
+            string codCliente = cliente["CodigoCliente"].ToString()!;
+            string codLista = cliente["IdListaDePrecio"].ToString()!;
+            if (string.IsNullOrWhiteSpace(codLista))
+                return BadRequest("El cliente no tiene una lista de precios asignada");
+
+            var bonificaciones = new Dictionary<string, decimal>();
+            foreach (DataRow row in daC.GetArticulosPorCliente(codCliente).Rows)
+                bonificaciones[row["CodProducto"].ToString()!] = decimal.Parse(row["Bonificacion"].ToString()!);
+
+            DataTable dt = new();
+            dt.Columns.Add("Línea", typeof(string));
+            dt.Columns.Add("Familia", typeof(string));
+            dt.Columns.Add("Código", typeof(string));
+            dt.Columns.Add("Sinónimo", typeof(string));
+            dt.Columns.Add("Descripción", typeof(string));
+            dt.Columns.Add("Precio lista", typeof(decimal));
+            dt.Columns.Add("% Bonif. cliente", typeof(decimal));
+            dt.Columns.Add("Precio c/bonif.", typeof(decimal));
+
+            DA_Producto daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            foreach (DataRow rowLinea in daP.GetLineas().Rows)
+            {
+                string linea = rowLinea["Linea"].ToString()!;
+                var procesados = new HashSet<string>();
+                foreach (DataRow row in daP.GetProductosParaOfertas(linea, codLista).Rows)
+                {
+                    string codProducto = row["CodigoProducto"].ToString()!;
+                    // El SP repite el producto por cada complemento y trae productos sin precio en la lista
+                    if (row["Precio"] == DBNull.Value || !procesados.Add(codProducto))
+                        continue;
+
+                    decimal precio = decimal.Parse(row["Precio"].ToString()!);
+                    decimal bonif = bonificaciones.GetValueOrDefault(codProducto);
+                    string descripcion = row["Descripcion"].ToString()!;
+                    if (descripcion.EndsWith($"({codProducto})"))
+                        descripcion = descripcion[..^(codProducto.Length + 2)];
+
+                    dt.Rows.Add(linea, row["Familia"].ToString(), codProducto, row["Sinonimo"].ToString(), descripcion,
+                                precio, bonif, Math.Round(precio * (1 - bonif / 100), 2));
+                }
+            }
+
+            var file = new Export().ToExcel(dt);
+            file.FileDownloadName = $"ListaPrecios_{codCliente}_{codLista}.xlsx";
+            return file;
+        }
+
+        private bool TienePermiso(int idUsuario, string nombrePagina, string permiso)
+        {
+            DA_Parametro daP = new(Configuration.GetConnectionString("DefaultConnection"));
+            DataTable dtPagina = daP.ObtenerPermisos(idUsuario, null, null, null, nombrePagina);
+            if (dtPagina.Rows.Count == 0)
+                return false;
+
+            int idPagina = (int)dtPagina.Rows[0]["IdPermiso"];
+            return daP.ObtenerPermisos(idUsuario, 'P', null, idPagina, null).Rows.Cast<DataRow>()
+                      .Any(r => (r["HRef"] != DBNull.Value ? r["HRef"].ToString() : r["Nombre"].ToString()) == permiso);
         }
 
         [HttpGet("sucursales")]
