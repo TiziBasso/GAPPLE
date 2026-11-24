@@ -179,7 +179,9 @@
 
                     <RadzenDataGridColumn Title="Vencimiento" Width="145px">
                         <Template Context="d">
-                            <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="MM/yyyy"
+                            @* SCRUM-120: solo mes/año, igual que el filtro de Ofertas; se guarda como dia 1 del mes *@
+                            <RadzenDatePicker @bind-Value="d.Vencimiento" DateFormat="MM/yyyy" ShowDays="false"
+                                              CurrentDateChanged="@(args => d.Vencimiento = new DateTime(args.Year, args.Month, 1))"
                                               Style="width:100%" Disabled="isLoading" />
                         </Template>
                     </RadzenDataGridColumn>

@@ -503,7 +503,7 @@ else
             }
 
             RadzenDialogService.OpenBusyWithLoader("Guardando...");
-            comprobante.ImporteTotal = sumarIVA ? ConIVA(neto) : neto;
+            comprobante.ImporteTotal = sumarIVA ? DescuentosHelper.ConIVA(neto) : neto;
             var response = tipoOperacion == TipoOperacionEnum.Edicion
                             ? await ComprobantesService.PutNotaCredito(comprobante)
                             : await ComprobantesService.PostNotaCredito(comprobante);
@@ -533,15 +533,13 @@ else
         }
     }
 
-    private static decimal ConIVA(decimal neto) => Math.Round(neto * (1 + DescuentosHelper.IVA / 100), 2);
-
     /// <summary>
     /// No se guarda si la NC tiene IVA: se deduce comparando el total guardado con el neto de las lineas.
     /// </summary>
     private static bool TieneIVASumado(ComprobanteCabecera nc)
     {
         decimal neto = nc.Detalle.Sum(x => x.PrecioTotal);
-        return neto != 0 && Math.Abs(nc.ImporteTotal - ConIVA(neto)) < Math.Abs(nc.ImporteTotal - neto);
+        return neto != 0 && Math.Abs(nc.ImporteTotal - DescuentosHelper.ConIVA(neto)) < Math.Abs(nc.ImporteTotal - neto);
     }
 
     /// <summary>
@@ -550,7 +548,7 @@ else
     private async Task<bool?> ConfirmarIVA(decimal neto)
     {
         var ar = new System.Globalization.CultureInfo("es-AR");
-        string mensaje = $"Neto: $ {neto.ToString("N2", ar)} — Total con IVA {DescuentosHelper.IVA}%: $ {ConIVA(neto).ToString("N2", ar)}. ";
+        string mensaje = $"Neto: $ {neto.ToString("N2", ar)} — Total con IVA {DescuentosHelper.IVA}%: $ {DescuentosHelper.ConIVA(neto).ToString("N2", ar)}. ";
         mensaje += teniaIVA
             ? "Esta NC ya tenía el IVA sumado. ¿Mantener el IVA en el total?"
             : "¿Desea sumar el IVA al total?";

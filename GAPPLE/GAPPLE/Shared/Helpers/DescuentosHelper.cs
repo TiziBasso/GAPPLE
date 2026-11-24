@@ -15,5 +15,10 @@ namespace GAPPLE.Shared.Helpers
         /// Alicuota de IVA que se suma al total de las notas de credito tipo "Factura".
         /// </summary>
         public const decimal IVA = 21m;
+
+        /// <summary>
+        /// Neto mas IVA, redondeado a 2 decimales: es el total que se guarda en una NC Factura con IVA.
+        /// </summary>
+        public static decimal ConIVA(decimal neto) => Math.Round(neto * (1 + IVA / 100), 2);
     }
 }

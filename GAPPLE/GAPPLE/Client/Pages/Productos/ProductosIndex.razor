@@ -114,8 +114,6 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
             @* Id_STA es int: el operador Contains no aplica sobre enteros y la grilla tiraba excepción al filtrar (SCRUM-156) *@
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Id_STA))" Title="Cód. Tango" FilterOperator="FilterOperator.Equals"
                                   FilterValue="@codTangoFilter" TextAlign="TextAlign.Right" Width="150px" Groupable="false" Resizable="false">
@@ -162,7 +160,7 @@ else
     IList<Producto> selectedProduct;
 
     //Variables para filtros sobre la grilla
-    string? codigoInternoFilter, descripcionFilter, observacionesFilter, lineasFilter;
+    string? codigoInternoFilter, descripcionFilter, lineasFilter;
     int? codTangoFilter;
     bool isLoading, showPage, cargandoPrecios;
 

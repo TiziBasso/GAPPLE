@@ -112,13 +112,36 @@
             <Template Context="data">
                 $@data.PrecioConDescuento.ToString("N2", new CultureInfo("es-AR"))
             </Template>
+            @* En NC Factura se muestra el desglose con IVA mientras se cargan productos: las etiquetas van
+               en esta columna y los importes en la de Total, alineados fila a fila *@
+            <FooterTemplate>
+                @if (MostrarIVA)
+                {
+                    <div style="white-space:nowrap">Neto:</div>
+                    <div style="white-space:nowrap">IVA @(DescuentosHelper.IVA)%:</div>
+                    <div style="white-space:nowrap"><strong>Total c/IVA:</strong></div>
+                }
+            </FooterTemplate>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Property="@nameof(ComprobanteDetalle.PrecioTotal)" Title="Total" TextAlign="TextAlign.Right" Width="130px">
             <Template Context="data">
                 $@data.PrecioTotal.ToString("N2", new CultureInfo("es-AR"))
             </Template>
             <FooterTemplate>
-                $@Lineas.Sum(x => x.PrecioTotal).ToString("N2", new CultureInfo("es-AR"))
+                @{
+                    var neto = Lineas.Sum(x => x.PrecioTotal);
+                }
+                @if (MostrarIVA)
+                {
+                    var totalConIVA = DescuentosHelper.ConIVA(neto);
+                    <div>$@neto.ToString("N2", new CultureInfo("es-AR"))</div>
+                    <div>$@((totalConIVA - neto).ToString("N2", new CultureInfo("es-AR")))</div>
+                    <div><strong>$@totalConIVA.ToString("N2", new CultureInfo("es-AR"))</strong></div>
+                }
+                else
+                {
+                    @:$@neto.ToString("N2", new CultureInfo("es-AR"))
+                }
             </FooterTemplate>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TextAlign="TextAlign.Center" Sortable=false Filterable=false Width="35px">
@@ -150,6 +173,9 @@
 
     bool isLoading;
     int totalLineas, totalUnidades;
+
+    /// <summary>El IVA solo aplica a las NC tipo Factura (ver DescuentosHelper.IVA).</summary>
+    bool MostrarIVA => Comprobante?.Factura == true;
     //int? idTipoListaPreciosAux;
 
     protected override async Task OnInitializedAsync()
