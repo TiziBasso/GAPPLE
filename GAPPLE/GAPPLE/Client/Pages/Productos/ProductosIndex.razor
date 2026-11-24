@@ -55,7 +55,6 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Precios de lista:" Component="listas" />
             <RadzenDropDown TValue="IEnumerable<string>" Data=@listasDePrecio @bind-Value=@listasSeleccionadas Name="listas" Multiple="true" AllowClear="true"
-                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
                             ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
                             Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
                             AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
