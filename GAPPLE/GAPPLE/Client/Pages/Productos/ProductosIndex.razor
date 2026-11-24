@@ -55,6 +55,7 @@
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Precios de lista:" Component="listas" />
             <RadzenDropDown TValue="IEnumerable<string>" Data=@listasDePrecio @bind-Value=@listasSeleccionadas Name="listas" Multiple="true" AllowClear="true"
+                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
                             ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
                             Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
                             Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())" />
@@ -71,7 +72,7 @@
                       Click="ImportarOrden" Disabled="@isLoading" title="Actualiza el Orden / Orden depósito de los productos desde un Excel" />
         @if (cargandoPrecios)
         {
-            <RadzenText TextStyle="TextStyle.Caption" Style="align-self:center">Cargando precios...</RadzenText>
+            <RadzenText TextStyle="TextStyle.Caption" Style="align-self:center">@($"Cargando precios... (faltan {listasPendientes} lista{(listasPendientes == 1 ? "" : "s")})")</RadzenText>
         }
     </RadzenStack>
 
@@ -164,13 +165,20 @@ else
     string? codigoInternoFilter, descripcionFilter, observacionesFilter, lineasFilter;
     int? codTangoFilter;
     bool isLoading, showPage, cargandoPrecios;
+    int listasPendientes;
 
     // Filtro por marca (en el maestro la marca es la "Linea" del producto)
     List<string> lineas = new();
 
     // Columnas de precio: una por cada lista seleccionada. Los precios se cachean por lista.
     List<ListaDePrecios> listasDePrecio = new();
-    IEnumerable<string> listasSeleccionadas = Enumerable.Empty<string>();
+    // El botón "limpiar" del dropdown múltiple asigna null: se normaliza a vacío para no romper ListasVisibles/CargarPrecios
+    IEnumerable<string> _listasSeleccionadas = Enumerable.Empty<string>();
+    IEnumerable<string> listasSeleccionadas
+    {
+        get => _listasSeleccionadas;
+        set => _listasSeleccionadas = value ?? Enumerable.Empty<string>();
+    }
     Dictionary<string, Dictionary<string, decimal>> preciosPorLista = new();
     static readonly CultureInfo culturaAR = new("es-AR");
 
@@ -187,7 +195,12 @@ else
 
         lineas = (await ProductosService.GetLineas() ?? new()).Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x).ToList();
         listasDePrecio = (await OrdenesService.GetListasDePrecio() ?? new()).OrderBy(x => x.Descripcion).ToList();
-        listasSeleccionadas = listasDePrecio.Select(x => x.CodigoTango).ToList();
+        // Algunas listas vienen de Tango sin nombre (ej. 691): se muestran con su código para poder identificarlas
+        foreach (var lista in listasDePrecio.Where(x => string.IsNullOrWhiteSpace(x.Descripcion)))
+            lista.Descripcion = $"Lista {lista.CodigoTango} (sin nombre)";
+        // No se preselecciona ninguna lista: en Tango no hay forma confiable de saber cuáles están vigentes
+        // (todas figuran habilitadas y sin fecha hasta). El usuario elige con el buscador del dropdown.
+        listasSeleccionadas = Enumerable.Empty<string>();
 
         if (this.ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.ProductosIndex && this.ParametrosDeConsulta.Parametros.Any())
         {
@@ -279,17 +292,46 @@ else
         if (!faltantes.Any()) return;
 
         cargandoPrecios = true;
+        listasPendientes = faltantes.Count;
         StateHasChanged();
-        foreach (var codLista in faltantes)
+        try
         {
-            var precios = await ProductosService.GetPreciosLista(codLista, cancellationToken);
-            if (precios != null)
-                preciosPorLista[codLista] = precios;
-            else
-                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title,
-                    $"No se pudieron obtener los precios de la lista {listasDePrecio.FirstOrDefault(x => x.CodigoTango == codLista)?.Descripcion ?? codLista}");
+            // Las listas se piden en paralelo y cada una se muestra apenas llega
+            await Task.WhenAll(faltantes.Select(CargarPreciosLista));
         }
-        cargandoPrecios = false;
+        finally
+        {
+            // Siempre se apaga el indicador, aunque algún pedido falle o se cancele
+            cargandoPrecios = false;
+            listasPendientes = 0;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarPreciosLista(string codLista)
+    {
+        Dictionary<string, decimal>? precios = null;
+        try
+        {
+            precios = await ProductosService.GetPreciosLista(codLista, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // se salió de la página
+        }
+        catch (Exception)
+        {
+            precios = null;
+        }
+
+        if (precios != null)
+            preciosPorLista[codLista] = precios;
+        else
+            NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title,
+                $"No se pudieron obtener los precios de la lista {listasDePrecio.FirstOrDefault(x => x.CodigoTango == codLista)?.Descripcion ?? codLista}");
+
+        listasPendientes--;
+        StateHasChanged();
     }
 
     private string FormatearPrecio(string codLista, string? codigoProducto)
