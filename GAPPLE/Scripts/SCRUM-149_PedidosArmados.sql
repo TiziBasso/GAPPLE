@@ -51,7 +51,6 @@ AS
 BEGIN
     IF @pIdEstado = 3
     BEGIN
-    select top 10 * from PedidosCabecera
         UPDATE PedidosCabecera
         SET
             EdicionUsuario = @pEdicionUsuario,
@@ -67,7 +66,7 @@ BEGIN
             CANT_STOCK,
             ROW_NUMBER() OVER (PARTITION BY COD_ARTICU ORDER BY ID_STA19 DESC) AS rn
         FROM Independiente.dbo.STA19
-        where COD_DEPOSI = '01'
+        where COD_DEPOSI = 'PT'--se cambio el 01 por PT
         )
         UPDATE pd
         SET pd.CantidadAprobada =

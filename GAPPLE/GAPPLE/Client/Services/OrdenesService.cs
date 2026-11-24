@@ -237,9 +237,24 @@ namespace GAPPLE.Client.Services
             return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicion?idOrden={idOrden}");
         }
 
-        public async ValueTask<OrdenExpedicion> GetOrdenExpedicionImprimir(string idOrden)
+        /// <summary>Data = OrdenExpedicion si está OK; Errors si la orden cambió de estado.</summary>
+        public async ValueTask<Response> GetOrdenExpedicionImprimir(OrdenExpedicion orden)
         {
-            return await HttpClient.GetFromJsonAsync<OrdenExpedicion>($"{URI_BASE}/expedicionImprimir/{SesionDTO.Nombre}?idOrden={idOrden}");
+            try
+            {
+                var response = await HttpClient.GetAsync($"{URI_BASE}/expedicionImprimir/{SesionDTO.Nombre}?idOrden={WebUtility.UrlEncode(orden.Orden)}&idPedidos={WebUtility.UrlEncode(orden.IdPedidos)}");
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode, (object)(await response.Content.ReadFromJsonAsync<OrdenExpedicion>())!);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "GetOrdenExpedicionImprimir");
+                return new(HttpStatusCode.InternalServerError);
+            }
         }
 
         public async ValueTask<Response> PostExpedicionDetalle(OrdenExpedicion orden)
@@ -287,6 +302,8 @@ namespace GAPPLE.Client.Services
                 var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/armado/{SesionDTO.Nombre}?armado={armado}", ordenes);
                 if (response.StatusCode == HttpStatusCode.OK)
                     return new(response.StatusCode);
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    return new(response.StatusCode, await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>());
                 else
                     throw new Exception(await response.Content.ReadAsStringAsync());
             }

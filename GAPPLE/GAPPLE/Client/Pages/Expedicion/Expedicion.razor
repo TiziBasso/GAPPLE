@@ -24,7 +24,7 @@
     </RadzenStack>
 
     <RadzenDataGrid @ref=grid TItem="OrdenExpedicion" Data="expedicionesEstado" @bind-Value=selected SelectionMode=DataGridSelectionMode.Multiple IsLoading=isLoading
-                    AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize=true Density=Density.Compact
+                    AllowFiltering="true" FilterMode="FilterMode.Simple" AllowSorting="true" AllowColumnResize=true Density=Density.Compact AllowVirtualization=true
                     EmptyText="" Style="height:60vh" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" ColumnWidth="80px">
         <HeaderTemplate>
             <RadzenButton Size="ButtonSize.Small" Text="Imprimir seleccionados" Icon="print" Click="Imprimir" ButtonStyle="ButtonStyle.Info" Variant="Variant.Outlined" Disabled=@(!selected.Any()) />
@@ -131,6 +131,7 @@ else
     bool showPage, isLoading, showPrint;
     List<OrdenExpedicion> expediciones = new();
     List<OrdenExpedicion>? expedicionesPrint = null;
+    List<string> erroresImpresion = new();
     RadzenDataGrid<OrdenExpedicion> grid;
     IList<OrdenExpedicion> selected = new List<OrdenExpedicion>();
 
@@ -138,16 +139,26 @@ else
     bool? probadoresFilter;
 
     ExpedicionEstado estadoSeleccionado = ExpedicionEstado.Aprobado;
-    List<OrdenExpedicion> expedicionesEstado => expediciones.Where(x => x.EstadoExpedicion == estadoSeleccionado).ToList();
+    // Se recalculan solo cuando cambian los datos o la solapa (no en cada render): si la grilla recibe
+    // una lista nueva en cada render, re-procesa y redibuja todas las filas al seleccionar.
+    List<OrdenExpedicion> expedicionesEstado = new();
+    Dictionary<ExpedicionEstado, int> conteos = new();
+    int conProbadores;
 
-    int conProbadores => expedicionesEstado.Count(x => x.TieneProbadores);
+    int Contar(ExpedicionEstado estado) => conteos.GetValueOrDefault(estado);
 
-    int Contar(ExpedicionEstado estado) => expediciones.Count(x => x.EstadoExpedicion == estado);
+    private void ActualizarEstado()
+    {
+        expedicionesEstado = expediciones.Where(x => x.EstadoExpedicion == estadoSeleccionado).ToList();
+        conteos = expediciones.GroupBy(x => x.EstadoExpedicion).ToDictionary(g => g.Key, g => g.Count());
+        conProbadores = expedicionesEstado.Count(x => x.TieneProbadores);
+    }
 
     private async Task CambiarEstado(ExpedicionEstado estado)
     {
         estadoSeleccionado = estado;
         selected = new List<OrdenExpedicion>();
+        ActualizarEstado();
         await grid.Reload();
     }
 
@@ -165,8 +176,16 @@ else
             foreach (var item in selected)
                 item.Armado = armado;
             selected = new List<OrdenExpedicion>();
+            ActualizarEstado();
             RadzenDialogService.NotifySuccess();
             await grid.Reload();
+        }
+        else if (response.Errors != null && response.Errors.Any())
+        {
+            // Algunas ordenes cambiaron de estado: se recarga todo para mostrar la situación real
+            RadzenDialogService.ShowAlert(response.Errors["error"]);
+            selected = new List<OrdenExpedicion>();
+            await FillOrdenes();
         }
         else
             RadzenDialogService.NotifyInternalServerError();
@@ -184,6 +203,7 @@ else
     {
         isLoading = true;
         expediciones = await OrdenesService.GetOrdenesExpediciones();
+        ActualizarEstado();
         isLoading = false;
     }
 
@@ -208,12 +228,35 @@ else
     {
         RadzenDialogService.OpenBusyWithLoader("Imprimiendo...");
         expedicionesPrint = new();
+        erroresImpresion = new();
         foreach (var item in selected)
         {
-            var aux = await OrdenesService.GetOrdenExpedicionImprimir(item.Orden);
-            expedicionesPrint.Add(aux);
+            var response = await OrdenesService.GetOrdenExpedicionImprimir(item);
+            if (response.IsOk)
+                expedicionesPrint.Add((OrdenExpedicion)response.Data);
+            else if (response.Errors != null && response.Errors.TryGetValue("error", out var errores))
+                erroresImpresion.AddRange(errores);
+            else
+                erroresImpresion.Add($"No se pudo imprimir la orden {item.Orden}.");
         }
-        showPrint = true;
+
+        if (expedicionesPrint.Any())
+            showPrint = true; // Print() se dispara al renderizar la última orden
+        else
+        {
+            expedicionesPrint = null;
+            RadzenDialogService.CloseDialog();
+            await MostrarErroresImpresion();
+        }
+    }
+
+    /// <summary>Algunas ordenes cambiaron de estado (o fallaron): se avisa y se recarga todo desde la base.</summary>
+    private async Task MostrarErroresImpresion()
+    {
+        RadzenDialogService.ShowAlert(erroresImpresion);
+        erroresImpresion = new();
+        selected = new List<OrdenExpedicion>();
+        await FillOrdenes();
     }
 
     private async Task Limpiar()
@@ -225,13 +268,19 @@ else
     {
         await JSFunction.Imprimir(id);
         showPrint = false;
+        var impresas = expedicionesPrint!.Select(x => x.Orden).ToHashSet();
         expedicionesPrint = null;
-        foreach (var item in selected)
-        {
-            item.Impreso = true;
-        }
-        selected = new List<OrdenExpedicion>();
         RadzenDialogService.CloseDialog();
+        if (erroresImpresion.Any())
+            await MostrarErroresImpresion();
+        else
+        {
+            foreach (var item in selected.Where(x => impresas.Contains(x.Orden)))
+                item.Impreso = true;
+            selected = new List<OrdenExpedicion>();
+            ActualizarEstado();
+        }
+        StateHasChanged();
     }
 
     private async Task Despachar()

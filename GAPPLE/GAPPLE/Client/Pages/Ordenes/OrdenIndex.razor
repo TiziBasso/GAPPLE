@@ -459,6 +459,10 @@ else
             {
                 order.IdEstado = 1;
                 order.DescripcionEstado = estados.First(x => x.Id == (int)PedidosEstadoEnum.Pendiente).Descripcion;
+                // prc_upd_RevertirOrden limpia las aprobaciones en la base: se reflejan acá para que el modal abra vacío
+                order.AprobadoFinanzas = false;
+                order.AprobadoVentas = false;
+                order.AprobadoContaduria = false;
 
                 await grid.Reload();
             }
