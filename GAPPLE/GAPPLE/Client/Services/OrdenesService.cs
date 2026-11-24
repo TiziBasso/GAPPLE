@@ -171,6 +171,7 @@ namespace GAPPLE.Client.Services
                     pedido.IdEstado = r.IdEstado;
                     pedido.DescripcionEstado = r.DescripcionEstado;
                     pedido.AcuerdoActivo = r.TieneAcuerdoActivo;
+                    pedido.MensajeAcuerdo = r.MensajeAcuerdo;
                     return new(response.StatusCode);
                 }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -275,6 +276,23 @@ namespace GAPPLE.Client.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "DespacharOrden");
+                return new(HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async ValueTask<Response> MarcarArmado(List<OrdenExpedicion> ordenes, bool armado)
+        {
+            try
+            {
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/armado/{SesionDTO.Nombre}?armado={armado}", ordenes);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return new(response.StatusCode);
+                else
+                    throw new Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "MarcarArmado");
                 return new(HttpStatusCode.InternalServerError);
             }
         }

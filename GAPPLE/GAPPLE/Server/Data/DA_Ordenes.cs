@@ -555,6 +555,18 @@ namespace GAPPLE.Server.Data
 
         #endregion
 
+        public void PersistirPedidoArmado(string idPedido, bool armado, string nombreUsuario, SqlTransaction transaction)
+        {
+            SqlCommand cmd = transaction.Connection.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_PedidosCabecera";
+            cmd.Parameters.AddWithValue("@pIdPedido", idPedido);
+            cmd.Parameters.AddWithValue("@pArmado", armado);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", nombreUsuario);
+            cmd.ExecuteNonQuery();
+        }
+
         public void PersistirPedidoImpresion(string idPedido, string nombreUsuario, bool impreso = true, SqlTransaction? transaction = null)
         {
             SqlConnection cnn = transaction?.Connection ?? new(ConnectionString);

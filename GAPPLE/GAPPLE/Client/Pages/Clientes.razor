@@ -1,10 +1,12 @@
-﻿@page "/clientes"
+@page "/clientes"
 
 @using GAPPLE.Client.Components.Cliente
 
 @inject SeguridadService SeguridadService
 @inject ClientesService ClientesService
 @inject DialogService DialogService
+@inject RadzenDialogService RadzenDialogService
+@inject IJSFunction JSFunction
 
 @if (showForm)
 {
@@ -20,11 +22,16 @@
             <RadzenDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
             <RadzenDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" TextAlign="TextAlign.Left" Width="200px" />
             <RadzenDataGridColumn Property="@nameof(Cliente.Observaciones)" Title="Nota" TextAlign="TextAlign.Left" Width="400px" Filterable="false" />
-            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="40px" Filterable="false">
+            <RadzenDataGridColumn TextAlign="TextAlign.Center" Width="@(permisoDescargarListaPrecios ? "60px" : "40px")" Filterable="false">
                 <Template>
                     <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                                   Click="@(() => Ver(context))" @onclick:stopPropagation="true" />
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true" title="Editar cliente" Click="@(() => Editar(context))" />
+                    @if (permisoDescargarListaPrecios)
+                    {
+                        <RadzenButton Icon="request_quote" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" @onclick:stopPropagation="true"
+                                      title="Descargar lista de precios" Click="@(() => DescargarListaPrecios(context))" />
+                    }
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -42,13 +49,29 @@ else
     RadzenDataGrid<Cliente> grilla;
     RadzenDropDown<Opcion> dropdown;
     bool? opcion;
-    bool showForm, isBusy;
+    bool showForm, isBusy, permisoDescargarListaPrecios;
 
     protected override async Task OnInitializedAsync()
     {
         await SeguridadService.ValidatePageAccess();
+        var permisos = await SeguridadService.GetPermisos(GAPPLE.Shared.Helpers.Permisos.Menu.Clientes);
+        permisoDescargarListaPrecios = permisos.Contains(GAPPLE.Shared.Helpers.Permisos.DescargarListaPrecios);
         clientes = await ClientesService.GetClientes();
         showForm = true;
+    }
+
+    async Task DescargarListaPrecios(Cliente cliente)
+    {
+        RadzenDialogService.OpenBusy("Generando lista de precios...");
+        var response = await ClientesService.GetListaPrecios((int)cliente.IdCliente!);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+            await JSFunction.DownloadFile(response.DataBytes, $"ListaPrecios_{cliente.CodigoCliente}_{cliente.CodListaPrecioDefault}.xlsx");
+        else if (response.IsBadRequest)
+            await RadzenDialogService.ShowAlertAsync(response.Message, MensajesHelper.Title);
+        else
+            await RadzenDialogService.ShowAlertAsync("No se pudo descargar la lista de precios. Verifique que el cliente pertenezca a su cartera.", MensajesHelper.Title);
     }
 
     async Task AgregarCliente()

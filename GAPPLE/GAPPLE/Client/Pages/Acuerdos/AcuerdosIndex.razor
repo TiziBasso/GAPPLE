@@ -86,6 +86,15 @@
                         </Template>
                     </RadzenDataGridColumn>
 
+                    <RadzenDataGridColumn Property="@nameof(Acuerdo.MontoAAlcanzar)" Title="Monto a alcanzar" Filterable="false" Width="110px" Groupable="false" TextAlign="TextAlign.Right">
+                        <Template>
+                            @if (context.MontoAAlcanzar != null)
+                            {
+                                <span>$@context.MontoAAlcanzar.Value.ToString("N2")</span>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+
                     <RadzenDataGridColumn Property="@nameof(Acuerdo.TotalCargado)" Title="Total" Filterable="false" Width="70px" Groupable="false">
                         <Template>
                             <span>$@context.TotalCargado.ToString("N2")</span>
