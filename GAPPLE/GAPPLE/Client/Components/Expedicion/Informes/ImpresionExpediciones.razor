@@ -17,7 +17,9 @@
                   Detalle="pagina.Detalle" ShowF=@(Orden.Detalle.Any(x=>x.CantidadF > 0)) ShowX=@(Orden.Detalle.Any(x=>x.CantidadX > 0))
                   ShowPF=@(Orden.Detalle.Any(x=>x.CantidadProbadorF > 0)) ShowPX=@(Orden.Detalle.Any(x=>x.CantidadProbadorX > 0))
                   ShowOF=@(Orden.Detalle.Any(x=>x.CantidadObsequioF > 0)) ShowOX=@(Orden.Detalle.Any(x=>x.CantidadObsequioX > 0))
-                  ShowPendiente="pagina.ShowPendientes" Pendiente="pagina.Pendientes" />
+                  ShowPendiente="pagina.ShowPendientes" Pendiente="pagina.Pendientes"
+                  TotalAprobados="@(pagina.MostrarTotalAprobados ? totalAprobados : null)"
+                  TotalPendientes="@(pagina.MostrarTotalPendientes ? totalPendientes : null)" />
         }
     </div>
 }
@@ -32,13 +34,17 @@
         public List<OrdenExpedicionDetalle> Detalle { get; set; } = new();
         public List<OrdenExpedicionDetalle> Pendientes { get; set; } = new();
         public bool ShowPendientes { get; set; }
+        // El total general de cada listado se imprime una sola vez, debajo de su última fila
+        public bool MostrarTotalAprobados { get; set; }
+        public bool MostrarTotalPendientes { get; set; }
     }
 
     List<Pagina> paginas = new();
+    TotalesImpresion totalAprobados = new(), totalPendientes = new();
 
     bool showModal;
     const int lineasXPag0 = 36, lineasXPagN = 40;
-    // Fila "Total" al pie del detalle y las 2 filas de encabezado de PENDIENTES
+    // Fila de total general (aprobados / pendientes) y las 2 filas de encabezado de PENDIENTES
     const int lineasTotal = 1, lineasEncabezadoPendientes = 2;
 
     protected override void OnInitialized()
@@ -94,6 +100,20 @@
             })
             .ToList();
 
+        // Totales del pedido completo (no de cada hoja): SCRUM-168 aprobados, SCRUM-166 pendientes
+        totalAprobados = new()
+        {
+            Cantidad = aprobados.Sum(x => x.CantidadAprobada),
+            Probador = aprobados.Sum(x => x.CantidadProbadorAprobada),
+            Obsequio = aprobados.Sum(x => x.CantidadObsequioAprobada)
+        };
+        totalPendientes = new()
+        {
+            Cantidad = pendientes.Sum(x => x.CantidadPendiente),
+            Probador = pendientes.Sum(x => x.CantidadProbadorPendiente),
+            Obsequio = pendientes.Sum(x => x.CantidadObsequioPendiente)
+        };
+
         paginas = Paginar(aprobados, pendientes);
         showModal = true;
     }
@@ -101,6 +121,7 @@
     // Reparte las filas en páginas consumiendo cada fila una sola vez:
     // primero los aprobados y, cuando se terminan, los pendientes en el espacio que queda.
     // Así no se repiten SKUs ni quedan páginas vacías.
+    // El total general de cada listado ocupa una línea y va en la misma hoja que su última fila.
     private static List<Pagina> Paginar(List<OrdenExpedicionDetalle> aprobados, List<OrdenExpedicionDetalle> pendientes)
     {
         var result = new List<Pagina>();
@@ -113,16 +134,29 @@
 
             if (iAprobado < aprobados.Count)
             {
-                pagina.Detalle = aprobados.Skip(iAprobado).Take(capacidad - lineasTotal).ToList();
-                iAprobado += pagina.Detalle.Count;
-                capacidad -= pagina.Detalle.Count + lineasTotal;
+                int tomar = FilasQueEntran(aprobados.Count - iAprobado, capacidad);
+                pagina.Detalle = aprobados.Skip(iAprobado).Take(tomar).ToList();
+                iAprobado += tomar;
+                capacidad -= tomar;
+
+                if (iAprobado == aprobados.Count)
+                {
+                    pagina.MostrarTotalAprobados = true;
+                    capacidad -= lineasTotal;
+                }
             }
 
-            if (iAprobado >= aprobados.Count && iPendiente < pendientes.Count && capacidad > lineasEncabezadoPendientes)
+            int disponible = capacidad - lineasEncabezadoPendientes;
+            if (iAprobado >= aprobados.Count && iPendiente < pendientes.Count && disponible > 0)
             {
-                pagina.Pendientes = pendientes.Skip(iPendiente).Take(capacidad - lineasEncabezadoPendientes).ToList();
-                iPendiente += pagina.Pendientes.Count;
-                pagina.ShowPendientes = true;
+                int tomar = FilasQueEntran(pendientes.Count - iPendiente, disponible);
+                if (tomar > 0)
+                {
+                    pagina.Pendientes = pendientes.Skip(iPendiente).Take(tomar).ToList();
+                    iPendiente += tomar;
+                    pagina.ShowPendientes = true;
+                    pagina.MostrarTotalPendientes = iPendiente == pendientes.Count;
+                }
             }
 
             result.Add(pagina);
@@ -131,4 +165,9 @@
 
         return result;
     }
+
+    // Si las filas restantes entran junto con la línea del total, van todas.
+    // Si no, se llena la hoja, pero sin consumir la última fila: así el total nunca queda solo en una hoja aparte.
+    private static int FilasQueEntran(int restantes, int capacidad) =>
+        restantes + lineasTotal <= capacidad ? restantes : Math.Min(restantes - 1, capacidad);
 }

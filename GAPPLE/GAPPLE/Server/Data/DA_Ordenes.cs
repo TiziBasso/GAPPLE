@@ -483,6 +483,78 @@ namespace GAPPLE.Server.Data
             if (obsequioAprobada != null) cmd.Parameters.AddWithValue("@pObsequioAprobada", obsequioAprobada);
             cmd.ExecuteNonQuery();
         }
+        #region Ajustes de Expedición (SCRUM-167)
+
+        private static bool ajustesExpedicionDisponibles;
+
+        /// <summary>
+        /// Indica si la base ya tiene aplicado Scripts/SQL/SCRUM-167_PedidosExpedicionAjustes.sql.
+        /// Mientras no esté aplicado, la API omite la persistencia de ajustes y funciona como antes.
+        /// Solo se cachea el resultado positivo, así no hace falta reiniciar la API después de aplicar el script.
+        /// </summary>
+        public bool AjustesExpedicionDisponibles()
+        {
+            if (ajustesExpedicionDisponibles) return true;
+
+            using SqlConnection cnn = new(ConnectionString);
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"SELECT CASE WHEN OBJECT_ID(N'dbo.prc_ins_PedidosExpedicionAjuste', N'P') IS NOT NULL
+                                             AND OBJECT_ID(N'dbo.prc_get_PedidosExpedicionAjustes', N'P') IS NOT NULL
+                                             AND OBJECT_ID(N'dbo.prc_del_PedidosExpedicionAjustes', N'P') IS NOT NULL
+                                            THEN 1 ELSE 0 END";
+            cnn.Open();
+            ajustesExpedicionDisponibles = Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+            return ajustesExpedicionDisponibles;
+        }
+
+        public void GuardarAjusteExpedicion(string codOrden, string codProducto, int cantidad, int probador, int obsequios,
+                                            int cantidadAprobada, int probadorAprobada, int obsequiosAprobados, string? usuario,
+                                            SqlTransaction transaction)
+        {
+            SqlCommand cmd = transaction.Connection.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_ins_PedidosExpedicionAjuste";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            cmd.Parameters.AddWithValue("@pCodProducto", codProducto);
+            cmd.Parameters.AddWithValue("@pCantidad", cantidad);
+            cmd.Parameters.AddWithValue("@pCantidadProbador", probador);
+            cmd.Parameters.AddWithValue("@pCantidadObsequios", obsequios);
+            cmd.Parameters.AddWithValue("@pCantidadAprobada", cantidadAprobada);
+            cmd.Parameters.AddWithValue("@pCantidadProbadorAprobada", probadorAprobada);
+            cmd.Parameters.AddWithValue("@pCantidadObsequiosAprobados", obsequiosAprobados);
+            cmd.Parameters.AddWithValue("@pEdicionUsuario", (object?)usuario ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+
+        public DataTable ObtenerAjustesExpedicion(string codOrden)
+        {
+            DataTable dt = new();
+            using SqlConnection cnn = new(ConnectionString);
+            using SqlCommand cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_get_PedidosExpedicionAjustes";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            using SqlDataAdapter da = new(cmd);
+            da.Fill(dt);
+            return dt;
+        }
+
+        /// <summary>Borra los ajustes de la orden, o solo el de un producto si se indica.</summary>
+        public void EliminarAjusteExpedicion(string codOrden, string? codProducto, SqlTransaction transaction)
+        {
+            SqlCommand cmd = transaction.Connection.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_del_PedidosExpedicionAjustes";
+            cmd.Parameters.AddWithValue("@pCodigoOrden", codOrden);
+            cmd.Parameters.AddWithValue("@pCodProducto", (object?)codProducto ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+
+        #endregion
+
         public void PersistirPedidoArmado(string idPedido, bool armado, string nombreUsuario, SqlTransaction transaction)
         {
             SqlCommand cmd = transaction.Connection.CreateCommand();

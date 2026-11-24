@@ -206,11 +206,13 @@ namespace GAPPLE.Client.Services
             }
         }
 
-        public async ValueTask<Response> RevertirOrden(string id)
+        public async ValueTask<Response> RevertirOrden(string id, string? codigoOrden = null)
         {
             try
             {
-                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}", id);
+                // codigoOrden permite al servidor conservar los ajustes de Expedición (SCRUM-167)
+                string query = string.IsNullOrEmpty(codigoOrden) ? string.Empty : $"?codigoOrden={WebUtility.UrlEncode(codigoOrden)}";
+                var response = await HttpClient.PutAsJsonAsync($"{URI_BASE}/revertirorden/{id}/{SesionDTO.Nombre}{query}", id);
                 if (response.StatusCode == HttpStatusCode.OK)
                     return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -244,7 +246,7 @@ namespace GAPPLE.Client.Services
         {
             try
             {
-                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/expediciondetalle", orden);
+                var response = await HttpClient.PostAsJsonAsync($"{URI_BASE}/expediciondetalle?nombreUsuario={WebUtility.UrlEncode(SesionDTO.Nombre)}", orden);
                 if (response.StatusCode == HttpStatusCode.OK)
                     return new(response.StatusCode);
                 else if (response.StatusCode == HttpStatusCode.BadRequest)

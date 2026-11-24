@@ -494,19 +494,28 @@ namespace GAPPLE.Server.Controllers
 
                     DA_Ordenes daO = new(cnn.ConnectionString);
                     pedidos = GetOrdenes(null, null, null, "%" + pedido.CodigoOrden.Substring(2) + "%", null, null, null, null, null, null, idUsuario).AsEnumerable();
-                    var idPedidos = pedidos.Where(x => x.IdEstado == 1).Select(x => x.Id);
+                    var pedidosPendientes = pedidos.Where(x => x.IdEstado == 1).ToList();
+                    bool aprueba = pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas;
+
+                    // SCRUM-167: ajustes hechos en Expedición antes de una reversión. Se leen antes de abrir
+                    // la transacción (usan conexiones propias) y se re-aplican después de pasar a APROBADO,
+                    // para que el recálculo de pendientes de la aprobación no los pise.
+                    var ajustes = aprueba
+                        ? pedidosPendientes.ToDictionary(x => x.Id, x => ObtenerAjustesExpedicion(daO, x.CodigoOrden))
+                        : new Dictionary<int, AjustesExpedicionOrden>();
 
                     cnn.Open();
                     trans = cnn.BeginTransaction();
-                    foreach (var id in idPedidos)
+                    foreach (var p in pedidosPendientes)
                     {
-                        daO.PersistirPedidoAprobacion(id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, pedido.Usuario, trans);
+                        daO.PersistirPedidoAprobacion(p.Id, pedido.AprobadoFinanzas, pedido.AprobadoVentas, pedido.AprobadoContaduria, pedido.Usuario, trans);
 
-                        if (pedido.AprobadoContaduria && pedido.AprobadoFinanzas && pedido.AprobadoVentas)
+                        if (aprueba)
                         {
                             pedido.IdEstado = 3;
                             pedido.DescripcionEstado = "APROBADO";
-                            daO.PersistirPedidoEstado(id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
+                            daO.PersistirPedidoEstado(p.Id.ToString(), (int)pedido.IdEstado, pedido.Usuario, trans);
+                            AplicarAjustesExpedicion(daO, p.CodigoOrden, ajustes[p.Id], trans);
                         }
                     }
 
@@ -1055,12 +1064,25 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPost("expediciondetalle")]
-        public IActionResult PostExpedicionDetalle(OrdenExpedicion orden)
+        public IActionResult PostExpedicionDetalle(OrdenExpedicion orden, [FromQuery] string? nombreUsuario = null)
         {
             SqlTransaction? trans = null;
             try
             {
                 DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
+
+                // SCRUM-167: además de actualizar PedidosDetalle se guarda una copia de cómo quedó la orden
+                // en Expedición (todas las líneas, no solo las modificadas) para poder restaurarla si el pedido
+                // se revierte a Pendiente y se vuelve a aprobar. Las cantidades pedidas se leen antes de abrir
+                // la transacción porque usan conexiones propias.
+                var letras = new[] { "F", "X" }.Where(l => orden.LetrasOrden?.Contains(l) == true).ToList();
+                var pedidasPorOrden = new Dictionary<string, Dictionary<string, (int Cantidad, int Probador, int Obsequio)>>();
+                if (orden.Detalle.Any(x => x.HuboCambios) && daO.AjustesExpedicionDisponibles())
+                {
+                    foreach (var letra in letras)
+                        pedidasPorOrden[letra] = LeerCantidadesPedidas(daO, $"{letra}-{orden.Orden}");
+                }
+
                 using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                 {
                     cnn.Open();
@@ -1073,6 +1095,24 @@ namespace GAPPLE.Server.Controllers
 
                         if (orden.LetrasOrden.Contains("X"))
                             daO.UpdatePedidoDetalle("X-" + orden.Orden, linea.CodProducto, linea.CantidadAprobadaX, linea.CantidadProbadorAprobadaX, linea.CantidadObsequioAprobadaX, trans);
+                    }
+
+                    foreach (var (letra, pedidas) in pedidasPorOrden)
+                    {
+                        bool esF = letra == "F";
+                        foreach (var linea in orden.Detalle)
+                        {
+                            // Solo las líneas que existen en esa orden (F o X)
+                            if (linea.CodProducto == null || !pedidas.TryGetValue(linea.CodProducto.Trim(), out var pedida))
+                                continue;
+
+                            daO.GuardarAjusteExpedicion($"{letra}-{orden.Orden}", linea.CodProducto,
+                                pedida.Cantidad, pedida.Probador, pedida.Obsequio,
+                                esF ? linea.CantidadAprobadaF : linea.CantidadAprobadaX,
+                                esF ? linea.CantidadProbadorAprobadaF : linea.CantidadProbadorAprobadaX,
+                                esF ? linea.CantidadObsequioAprobadaF : linea.CantidadObsequioAprobadaX,
+                                nombreUsuario, trans);
+                        }
                     }
                     trans.Commit();
                     cnn.Close();
@@ -1208,14 +1248,28 @@ namespace GAPPLE.Server.Controllers
         }
 
         [HttpPut("revertirorden/{idOrden}/{nombreUsuario}")]
-        public IActionResult RevertirOrden(string idOrden, string nombreUsuario)
+        public IActionResult RevertirOrden(string idOrden, string nombreUsuario, [FromQuery] string? codigoOrden = null)
         {
             DA_Ordenes daO = new(Configuration.GetConnectionString("DefaultConnection"));
             try
             {
+                // SCRUM-167: los ajustes de Expedición se leen antes de revertir y se vuelven a aplicar después,
+                // por si la reversión resetea las cantidades aprobadas.
+                codigoOrden ??= BuscarCodigoOrden(daO, idOrden);
+                var ajustes = codigoOrden != null ? ObtenerAjustesExpedicion(daO, codigoOrden) : AjustesExpedicionOrden.Ninguno;
+
                 daO.RevertirOrden(idOrden, nombreUsuario);
                 // Al revertir, la impresion previa deja de ser valida: al re-aprobar hay que volver a imprimir.
                 daO.PersistirPedidoImpresion(idOrden, nombreUsuario, false);
+
+                if (codigoOrden != null && ajustes.HayCambios)
+                {
+                    using SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection"));
+                    cnn.Open();
+                    using SqlTransaction trans = cnn.BeginTransaction();
+                    AplicarAjustesExpedicion(daO, codigoOrden, ajustes, trans);
+                    trans.Commit();
+                }
                 return Ok();
             }
             catch (Exception ex)
@@ -1223,6 +1277,96 @@ namespace GAPPLE.Server.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        /// <summary>Código de orden (F-xxx / X-xxx) a partir del IdPedido. Null si no se puede resolver.</summary>
+        private static string? BuscarCodigoOrden(DA_Ordenes daO, string idOrden)
+        {
+            if (!int.TryParse(idOrden, out int idPedido)) return null;
+            try
+            {
+                using DataTable dt = daO.ObtenerOrden(null, idPedido);
+                return dt.Rows.Count > 0 ? dt.Rows[0]["CodigoOrden"].ToString() : null;
+            }
+            catch
+            {
+                // No debe impedir la reversión: en el peor caso no se re-aplican los ajustes
+                return null;
+            }
+        }
+
+        #region Ajustes de Expedición (SCRUM-167)
+
+        /// <summary>Cantidades aprobadas que se definieron en Expedición para una línea de la orden.</summary>
+        private sealed record AjusteExpedicion(string CodProducto, int CantidadAprobada, int ProbadorAprobada, int ObsequioAprobado);
+
+        /// <summary>
+        /// Ajustes de una orden: los vigentes se re-aplican; los obsoletos (la línea ya no existe o se
+        /// editaron sus cantidades pedidas) se borran.
+        /// </summary>
+        private sealed record AjustesExpedicionOrden(List<AjusteExpedicion> Vigentes, List<string> Obsoletos)
+        {
+            public static AjustesExpedicionOrden Ninguno => new(new(), new());
+            public bool HayCambios => Vigentes.Count > 0 || Obsoletos.Count > 0;
+        }
+
+        /// <summary>Cantidades pedidas por producto de una orden (F-xxx / X-xxx), según prc_get_PedidosDetalle.</summary>
+        private static Dictionary<string, (int Cantidad, int Probador, int Obsequio)> LeerCantidadesPedidas(DA_Ordenes daO, string codigoOrden)
+        {
+            Dictionary<string, (int Cantidad, int Probador, int Obsequio)> pedidas = new(StringComparer.OrdinalIgnoreCase);
+            using DataTable dt = daO.ObtenerOrdenDetalle(codigoOrden);
+            foreach (DataRow dr in dt.Rows)
+            {
+                string codProducto = dr["CodProducto"].ToString()!.Trim();
+                pedidas.TryGetValue(codProducto, out var acumulado);
+                pedidas[codProducto] = (acumulado.Cantidad + LeerEntero(dr, "Cantidad"),
+                                        acumulado.Probador + LeerEntero(dr, "CantidadProbador"),
+                                        acumulado.Obsequio + LeerEntero(dr, "CantidadObsequios"));
+            }
+            return pedidas;
+        }
+
+        /// <summary>
+        /// Lee los ajustes guardados de la orden y los separa en vigentes / obsoletos comparando con las
+        /// cantidades pedidas actuales. Usa conexiones propias: llamarlo ANTES de abrir la transacción.
+        /// </summary>
+        private static AjustesExpedicionOrden ObtenerAjustesExpedicion(DA_Ordenes daO, string codigoOrden)
+        {
+            if (string.IsNullOrEmpty(codigoOrden) || !daO.AjustesExpedicionDisponibles())
+                return AjustesExpedicionOrden.Ninguno;
+
+            using DataTable dtAjustes = daO.ObtenerAjustesExpedicion(codigoOrden);
+            if (dtAjustes.Rows.Count == 0)
+                return AjustesExpedicionOrden.Ninguno;
+
+            var pedidas = LeerCantidadesPedidas(daO, codigoOrden);
+            var resultado = AjustesExpedicionOrden.Ninguno;
+            foreach (DataRow a in dtAjustes.Rows)
+            {
+                string codProducto = a["CodProducto"].ToString()!;
+                bool vigente = pedidas.TryGetValue(codProducto.Trim(), out var pedida)
+                               && pedida.Cantidad == LeerEntero(a, "Cantidad")
+                               && pedida.Probador == LeerEntero(a, "CantidadProbador")
+                               && pedida.Obsequio == LeerEntero(a, "CantidadObsequios");
+                if (vigente)
+                    resultado.Vigentes.Add(new(codProducto, LeerEntero(a, "CantidadAprobada"),
+                                               LeerEntero(a, "CantidadProbadorAprobada"), LeerEntero(a, "CantidadObsequiosAprobados")));
+                else
+                    resultado.Obsoletos.Add(codProducto);
+            }
+            return resultado;
+        }
+
+        /// <summary>Re-aplica sobre PedidosDetalle los ajustes vigentes y borra los obsoletos.</summary>
+        private static void AplicarAjustesExpedicion(DA_Ordenes daO, string codigoOrden, AjustesExpedicionOrden ajustes, SqlTransaction trans)
+        {
+            foreach (var a in ajustes.Vigentes)
+                daO.UpdatePedidoDetalle(codigoOrden, a.CodProducto, a.CantidadAprobada, a.ProbadorAprobada, a.ObsequioAprobado, trans);
+
+            foreach (var codProducto in ajustes.Obsoletos)
+                daO.EliminarAjusteExpedicion(codigoOrden, codProducto, trans);
+        }
+
+        #endregion
 
         [HttpGet("indicadores")]
         public Indicadores GetIndicadores(int idUsuario)
@@ -1282,6 +1426,9 @@ namespace GAPPLE.Server.Controllers
                     using (SqlConnection cnn = new(Configuration.GetConnectionString("DefaultConnection")))
                     {
                         DA_Ordenes daO = new(cnn.ConnectionString);
+                        // SCRUM-167: leídos antes de abrir la transacción (usan conexiones propias)
+                        var ajustes = ObtenerAjustesExpedicion(daO, aux.CodigoOrden);
+
                         cnn.Open();
                         trans = cnn.BeginTransaction();
                         daO.PersistirPedidoEstado(aux.Id.ToString(), (int)aux.IdEstado, orden.Usuario, trans);
@@ -1291,6 +1438,8 @@ namespace GAPPLE.Server.Controllers
                         {
                             daO.UpdatePedidoDetalle(aux.CodigoOrden, linea.CodProducto, linea.Cantidad, linea.CantidadProbador, linea.CantidadObsequio, trans);
                         }
+                        // Las líneas ajustadas en Expedición conservan ese ajuste en lugar de volver al total pedido
+                        AplicarAjustesExpedicion(daO, aux.CodigoOrden, ajustes, trans);
                         trans.Commit();
                         cnn.Close();
                     }

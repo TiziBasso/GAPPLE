@@ -5,7 +5,9 @@
         {
             GetData(i);
             <Page Pedido=Pedido PageNum="i + 1" CantPages="cantPages" ShouldPrint=@(ShouldPrint) Imprimir="Imprimir"
-                  Detalle="detalle" ShowProbadores=showProbadores ShowObsequios="showObsequios" />
+                  Detalle="detalle" ShowProbadores=showProbadores ShowObsequios="showObsequios"
+                  TotalAprobados="@(i == paginaTotalAprobados ? totalAprobados : null)"
+                  TotalPendientes="@(i == paginaTotalPendientes ? totalPendientes : null)" />
         }
     </div>
 }
@@ -22,6 +24,10 @@
 
     bool showModal, showProbadores, showObsequios;
     int cantPages = 0, lineasXPag = 47;
+
+    // Totales generales del pedido: se imprimen una sola vez, en la hoja donde termina cada listado (-1 = no se imprime)
+    TotalesImpresion totalAprobados = new(), totalPendientes = new();
+    int paginaTotalAprobados = -1, paginaTotalPendientes = -1;
 
     protected override void OnInitialized()
     {
@@ -69,8 +75,26 @@
             );
         }
 
+        int cantAprobados = Detalle?.Count ?? 0, cantPendientes = Pendientes?.Count ?? 0;
+
+        totalAprobados = new()
+        {
+            Cantidad = Detalle?.Sum(x => x.CantidadAprobada) ?? 0,
+            Probador = Detalle?.Sum(x => x.CantidadProbadorAprobada) ?? 0,
+            Obsequio = Detalle?.Sum(x => x.CantidadObsequioAprobada) ?? 0
+        };
+        totalPendientes = new()
+        {
+            Cantidad = Pendientes?.Sum(x => x.CantidadPendiente) ?? 0,
+            Probador = Pendientes?.Sum(x => x.CantidadProbadorPendiente) ?? 0,
+            Obsequio = Pendientes?.Sum(x => x.CantidadObsequioPendiente) ?? 0
+        };
+        // detalleCompleto = aprobados y después pendientes, paginado de a lineasXPag filas
+        if (cantAprobados > 0) paginaTotalAprobados = (cantAprobados - 1) / lineasXPag;
+        if (cantPendientes > 0) paginaTotalPendientes = (cantAprobados + cantPendientes - 1) / lineasXPag;
+
         int sumLineas = detalleCompleto.Count + 1;
-        if (Pendientes != null && Pendientes.Any()) sumLineas++;
+        if (cantPendientes > 0) sumLineas++;
 
         bool anyDetalleProb = Detalle?.Any(x => x.CantidadProbador > 0) ?? false;
         bool anyPendienteProb = Pendientes?.Any(x => x.CantidadProbador > 0) ?? false;

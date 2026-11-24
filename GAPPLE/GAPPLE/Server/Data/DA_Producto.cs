@@ -88,6 +88,23 @@ namespace GAPPLE.Server.Data
             cnn.Close();
         }
 
+        /// <summary>
+        /// Igual que <see cref="EditarProducto(string, bool, int, int?)"/> pero dentro de una transacción,
+        /// para actualizaciones masivas (importación del orden de impresión desde Excel).
+        /// </summary>
+        public void EditarProducto(string idProducto, bool pasivo, int orden, int? ordenDeposito, SqlTransaction transaction)
+        {
+            SqlCommand cmd = transaction.Connection!.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "prc_upd_Producto";
+            cmd.Parameters.AddWithValue("@pIdProducto", idProducto);
+            cmd.Parameters.AddWithValue("@pPasivo", pasivo);
+            cmd.Parameters.AddWithValue("@pOrden", orden);
+            cmd.Parameters.AddWithValue("@pOrdenDeposito", (object?)ordenDeposito ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+
         public DataTable GetProductosComplementos()
         {
             DataTable dt = new();

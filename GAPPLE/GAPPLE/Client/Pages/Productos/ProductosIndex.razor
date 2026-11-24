@@ -1,9 +1,13 @@
 ﻿@page "/productos"
 
 @using System.Threading
+@using System.Globalization
+@using GAPPLE.Client.Components.Productos
 @implements IDisposable
 
 @inject ProductosService ProductosService
+@inject OrdenesService OrdenesService
+@inject IJSFunction JSFunction
 @inject SeguridadService SeguridadService
 @inject ParametrosDeConsulta ParametrosDeConsulta
 @inject NavigationManager navigationManager
@@ -42,12 +46,33 @@
                             Disabled="@isLoading" Style="width: 8rem;" />
         </RadzenStack>
 
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Marca:" Component="marca" />
+            <RadzenDropDown Data=@lineas @bind-Value=@marca Name="marca" Placeholder="Todas" AllowClear="true" AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Disabled="@isLoading" Style="width: 12rem;" />
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenLabel Text="Precios de lista:" Component="listas" />
+            <RadzenDropDown TValue="IEnumerable<string>" Data=@listasDePrecio @bind-Value=@listasSeleccionadas Name="listas" Multiple="true" AllowClear="true"
+                            ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
+                            Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
+                            Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())" />
+        </RadzenStack>
+
         <RadzenButton Click="FillProductos" IsBusy=isLoading Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" />
     </RadzenStack>
 
     <RadzenStack Orientation=Orientation.Horizontal Gap="10px" class="rz-mb-1">
         @* <RadzenButton Text="Agregar producto" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size=ButtonSize.Small Click="NuevoProducto" Disabled="@(isLoading || !listPermisos.Contains("alta"))" /> *@
-        @* <RadzenButton Text="Exportar a Excel" Icon="grid_on" Click="Export" Size="ButtonSize.Small" Disabled="@(!productos.Any() || isLoading)" /> *@
+        <RadzenButton Text="Exportar orden de impresión" Icon="download" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                      Click="ExportarOrden" Disabled="@isLoading" title="Descarga en Excel el Orden / Orden depósito de los productos que cumplen los filtros de búsqueda" />
+        <RadzenButton Text="Importar orden de impresión" Icon="upload" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                      Click="ImportarOrden" Disabled="@isLoading" title="Actualiza el Orden / Orden depósito de los productos desde un Excel" />
+        @if (cargandoPrecios)
+        {
+            <RadzenText TextStyle="TextStyle.Caption" Style="align-self:center">Cargando precios...</RadzenText>
+        }
     </RadzenStack>
 
     <RadzenDataGrid @ref="@refGrid" Data="productos" AllowSorting="true" AllowFiltering="true" Density="Density.Compact"
@@ -86,14 +111,28 @@
                     <RadzenNumeric TValue="int?" @bind-Value="producto.OrdenDeposito" Change="@(() => Change(producto))" ShowUpDown=false TextAlign="TextAlign.Right" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Clasificacion))" Title="Clasificación" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Observaciones))" Title="Observaciones" FilterOperator="FilterOperator.Contains"
                                   Width="300px" Groupable="false" Resizable="false" />
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Id_STA))" Title="Cód. Tango" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
+            @* Id_STA es int: el operador Contains no aplica sobre enteros y la grilla tiraba excepción al filtrar (SCRUM-156) *@
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Id_STA))" Title="Cód. Tango" FilterOperator="FilterOperator.Equals"
+                                  FilterValue="@codTangoFilter" TextAlign="TextAlign.Right" Width="150px" Groupable="false" Resizable="false">
+                <FilterTemplate>
+                    <RadzenNumeric TValue="int?" @bind-Value=codTangoFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
+                </FilterTemplate>
+            </RadzenDataGridColumn>
+            @* Una columna de precio vigente por cada lista seleccionada (SCRUM-158). Van al final porque la
+               grilla agrega al final las columnas que se crean dinámicamente al cambiar la selección. *@
+            @foreach (var lista in ListasVisibles)
+            {
+                <RadzenDataGridColumn TItem="Producto" @key="lista.CodigoTango" Title="@($"Precio {lista.Descripcion}")" TextAlign="TextAlign.Right"
+                                      Width="160px" Filterable="false" Sortable="false" Groupable="false">
+                    <Template Context="producto">
+                        @FormatearPrecio(lista.CodigoTango, producto.CodigoProducto)
+                    </Template>
+                </RadzenDataGridColumn>
+            }
             @* <RadzenDataGridColumn TItem="Producto" Filterable="false" Sortable="false" Groupable="false" Resizable="false" TextAlign="TextAlign.Center" Width="35px"
                                   Frozen="true" FrozenPosition="FrozenColumnPosition.Left">
                 <Template Context="producto">
@@ -123,7 +162,20 @@ else
 
     //Variables para filtros sobre la grilla
     string? codigoInternoFilter, descripcionFilter, observacionesFilter, lineasFilter;
-    bool isLoading, showPage;
+    int? codTangoFilter;
+    bool isLoading, showPage, cargandoPrecios;
+
+    // Filtro por marca (en el maestro la marca es la "Linea" del producto)
+    List<string> lineas = new();
+
+    // Columnas de precio: una por cada lista seleccionada. Los precios se cachean por lista.
+    List<ListaDePrecios> listasDePrecio = new();
+    IEnumerable<string> listasSeleccionadas = Enumerable.Empty<string>();
+    Dictionary<string, Dictionary<string, decimal>> preciosPorLista = new();
+    static readonly CultureInfo culturaAR = new("es-AR");
+
+    IEnumerable<ListaDePrecios> ListasVisibles =>
+        listasDePrecio.Where(x => listasSeleccionadas.Contains(x.CodigoTango));
 
     //List<string> listPermisos = new();
     Dictionary<string, object> parametros = new();
@@ -132,6 +184,10 @@ else
     {
         await SeguridadService.ValidatePageAccess();
         //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
+
+        lineas = (await ProductosService.GetLineas() ?? new()).Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x).ToList();
+        listasDePrecio = (await OrdenesService.GetListasDePrecio() ?? new()).OrderBy(x => x.Descripcion).ToList();
+        listasSeleccionadas = listasDePrecio.Select(x => x.CodigoTango).ToList();
 
         if (this.ParametrosDeConsulta.Page == ParametrosDeConsulta.Pages.ProductosIndex && this.ParametrosDeConsulta.Parametros.Any())
         {
@@ -143,6 +199,9 @@ else
 
             if (ParametrosDeConsulta.Parametros.ContainsKey("clasificacion"))
                 clasificacion = (bool)ParametrosDeConsulta.Parametros["clasificacion"];
+
+            if (ParametrosDeConsulta.Parametros.ContainsKey("marca"))
+                marca = ParametrosDeConsulta.Parametros["marca"].ToString();
 
             await FillProductos();
         }
@@ -192,8 +251,9 @@ else
         if (!string.IsNullOrWhiteSpace(codigoProducto)) parametros.Add("codigo", codigoProducto);
         if (!string.IsNullOrWhiteSpace(descripcion)) parametros.Add("descripcion", descripcion.Trim());
         if (clasificacion != null) parametros.Add("clasificacion", clasificacion);
+        if (!string.IsNullOrWhiteSpace(marca)) parametros.Add("marca", marca);
 
-        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, pasivo, null, cancellationToken);
+        productos = await ProductosService.GetProductos(codigoProducto, descripcion, clasificacion, pasivo, string.IsNullOrWhiteSpace(marca) ? null : marca, cancellationToken);
 
         isLoading = false;
 
@@ -202,6 +262,68 @@ else
             NotificationService.Notify(summary: "La búsqueda no ha devuelto resultados");
             if (render > 2)
                 await refCodigoInterno.FocusAsync();
+        }
+        else
+            await CargarPrecios();
+    }
+
+    /// <summary>
+    /// Trae (una sola vez por lista) los precios vigentes de las listas seleccionadas que todavía no están en memoria.
+    /// Solo se consulta si ya hay productos en la grilla.
+    /// </summary>
+    private async Task CargarPrecios()
+    {
+        if (!productos.Any()) return;
+
+        var faltantes = listasSeleccionadas.Where(x => !preciosPorLista.ContainsKey(x)).ToList();
+        if (!faltantes.Any()) return;
+
+        cargandoPrecios = true;
+        StateHasChanged();
+        foreach (var codLista in faltantes)
+        {
+            var precios = await ProductosService.GetPreciosLista(codLista, cancellationToken);
+            if (precios != null)
+                preciosPorLista[codLista] = precios;
+            else
+                NotificationService.Notify(NotificationSeverity.Error, MensajesHelper.Title,
+                    $"No se pudieron obtener los precios de la lista {listasDePrecio.FirstOrDefault(x => x.CodigoTango == codLista)?.Descripcion ?? codLista}");
+        }
+        cargandoPrecios = false;
+    }
+
+    private string FormatearPrecio(string codLista, string? codigoProducto)
+    {
+        if (codigoProducto == null || !preciosPorLista.TryGetValue(codLista, out var precios))
+            return string.Empty;
+
+        return precios.TryGetValue(codigoProducto.Trim(), out decimal precio) ? $"$ {precio.ToString("N2", culturaAR)}" : "-";
+    }
+
+    private async Task ExportarOrden()
+    {
+        RadzenDialogService.OpenBusyWithLoader("Exportando...");
+        var archivo = await ProductosService.ExportarOrdenExcel(codigoProducto, descripcion, clasificacion, pasivo, string.IsNullOrWhiteSpace(marca) ? null : marca);
+        RadzenDialogService.CloseDialog();
+
+        if (archivo == null)
+            RadzenDialogService.NotifyInternalServerError();
+        else
+            await JSFunction.DownloadFile(archivo, $"OrdenImpresion_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
+    }
+
+    private async Task ImportarOrden()
+    {
+        object resultado = await DialogService.OpenAsync<ImportarOrdenExcelModal>("Importar orden de impresión", null,
+            new() { ShowClose = false, CloseDialogOnEsc = false, CloseDialogOnOverlayClick = false, Width = "36rem", Height = "fit-content" });
+
+        if (resultado is int actualizados)
+        {
+            NotificationService.Notify(NotificationSeverity.Success, MensajesHelper.Title,
+                actualizados == 0 ? "El archivo no tenía cambios de orden" : $"Se actualizó el orden de {actualizados} producto(s)");
+
+            if (actualizados > 0 && productos.Any())
+                await FillProductos();
         }
     }
 
