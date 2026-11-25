@@ -1,0 +1,36 @@
+@* Grilla con los artículos de una lista de precios cargada desde Excel. *@
+
+@using System.Globalization
+
+<RadzenDataGrid Data="Items" IsLoading="IsLoading" AllowFiltering="true" AllowSorting="true" AllowVirtualization="true" Density="Density.Compact"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple" AllowColumnResize="true"
+                EmptyText="La lista no tiene artículos" ShowEmptyMessage="true" Style="@($"height: {Height};")">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.Familia)" Title="Familia" Width="190px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.SKU)" Title="SKU" TextAlign="TextAlign.Right" Width="110px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.Descripcion)" Title="Descripción" MinWidth="220px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.Tono)" Title="Tono" Width="70px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.EAN)" Title="EAN" Width="135px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.Contenido)" Title="Contenido" Width="130px" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.UnidadesPorCaja)" Title="Unid x caja" TextAlign="TextAlign.Right" Width="95px" Filterable="false" />
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.CostoNetoSinIva)" Title="Costo neto s/IVA" TextAlign="TextAlign.Right" Width="135px" Filterable="false">
+            <Template Context="p">@Moneda(p.CostoNetoSinIva)</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.CostoNetoConIva)" Title="Costo neto c/IVA" TextAlign="TextAlign.Right" Width="135px" Filterable="false">
+            <Template Context="p"><strong>@Moneda(p.CostoNetoConIva)</strong></Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ListaPrecioImportadaItem.PrecioSugeridoPublico)" Title="Pr. sugerido público" TextAlign="TextAlign.Right" Width="150px" Filterable="false">
+            <Template Context="p">@Moneda(p.PrecioSugeridoPublico)</Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    static readonly CultureInfo culturaAR = new("es-AR");
+
+    [Parameter] public IEnumerable<ListaPrecioImportadaItem> Items { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string Height { get; set; } = "45vh";
+
+    static string Moneda(decimal? valor) => valor == null ? "-" : $"$ {valor.Value.ToString("N2", culturaAR)}";
+}

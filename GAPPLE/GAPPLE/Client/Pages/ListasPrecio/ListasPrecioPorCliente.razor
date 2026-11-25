@@ -1,0 +1,362 @@
+@page "/clientes/listas-precio"
+
+@using GAPPLE.Client.Components.ListasPrecio
+
+@inject SeguridadService SeguridadService
+@inject ClientesService ClientesService
+@inject VendedoresPorClienteService VendedoresPorClienteService
+@inject ListasPrecioService ListasPrecioService
+@inject RadzenDialogService RadzenDialogService
+@inject IJSFunction JSFunction
+
+@if (showForm)
+{
+    <RadzenText Text="Listas de precios" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+
+    <RadzenTabs SelectedIndex="tabIndex" SelectedIndexChanged="@(i => tabIndex = i)">
+        <Tabs>
+            <RadzenTabsItem Text="Listas cargadas">
+                @if (subiendo)
+                {
+                    <SubirListaPrecio Listas="listas" ListaDestino="listaDestino" OnGuardado="ListaGuardada" OnCancelar="CerrarSubida" />
+                }
+                else
+                {
+                    <RadzenDataGrid @ref="gridListas" Data="listas" AllowFiltering="true" AllowSorting="true" Density="Density.Compact"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple"
+                                    EmptyText="Todavía no hay listas cargadas" ShowEmptyMessage="true" Style="height: 70vh;">
+                        <HeaderTemplate>
+                            <RadzenButton Icon="upload_file" Text="Subir lista desde Excel" ButtonStyle="ButtonStyle.Secondary" Click="@(() => AbrirSubida(null))" />
+                        </HeaderTemplate>
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.Nombre)" Title="Lista" />
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.VigenciaDesde)" Title="Vigente desde" Width="120px" Filterable="false">
+                                <Template Context="l">@l.VigenciaDesde?.ToString("dd/MM/yyyy")</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.CantidadArticulos)" Title="Artículos" TextAlign="TextAlign.Right" Width="95px" Filterable="false" />
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.CantidadClientes)" Title="Clientes" TextAlign="TextAlign.Right" Width="90px" Filterable="false" />
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.NombreArchivo)" Title="Archivo" />
+                            <RadzenDataGridColumn Property="@nameof(ListaPrecioImportada.FechaActualizacion)" Title="Última actualización" Width="200px" Filterable="false">
+                                <Template Context="l">@l.FechaActualizacion?.ToString("dd/MM/yyyy HH:mm") @l.UsuarioActualizacion</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Width="140px" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                                <Template Context="l">
+                                    <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  title="Ver precios" Click="@(() => VerPrecios(l))" />
+                                    <RadzenButton Icon="upload" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  title="Actualizar precios con un Excel nuevo" Click="@(() => AbrirSubida(l))" />
+                                    <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  title="Descargar el Excel original" Click="@(() => Descargar(l))" />
+                                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  title="Eliminar lista" Click="@(() => Eliminar(l))" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Asignación por cliente">
+                @if (!listas.Any())
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
+                        Todavía no hay listas de precios cargadas. Subí la primera en la pestaña «Listas cargadas».
+                    </RadzenAlert>
+                }
+                else
+                {
+                    <RadzenRow Gap="1rem" class="rz-mb-3">
+                        <RadzenColumn Size="12" SizeMD="6" SizeLG="5">
+                            <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+                                <RadzenLabel Text="Cliente:" />
+                                <RadzenDropDownDataGrid Data="clientes" @bind-Value="clienteSeleccionado" AllowSorting="false"
+                                                        AllowFiltering="true" AllowVirtualization="true" Density="Density.Compact"
+                                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                        TextProperty="@nameof(Cliente.RazonSocial)" Disabled="cargando"
+                                                        Change="OnClienteChange" Style="width:100%">
+                                    <Columns>
+                                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.CodigoCliente)" Title="Código" Width="5rem" />
+                                        <RadzenDropDownDataGridColumn Property="@nameof(Cliente.RazonSocial)" Title="Razón Social" />
+                                    </Columns>
+                                </RadzenDropDownDataGrid>
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    @if (cargando)
+                    {
+                        <Loader />
+                    }
+                    else if (clienteSeleccionado != null && !filas.Any())
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="El cliente no tiene vendedores asignados">
+                            Las listas de precios se asignan por vendedor. Primero asigná los vendedores del cliente en
+                            <RadzenLink Path="clientes/vendedores" Text="Asignación de vendedores por cliente" />.
+                        </RadzenAlert>
+                    }
+                    else if (clienteSeleccionado != null)
+                    {
+                        <RadzenCard>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Text="Listas de precios por vendedor" class="rz-mb-0" />
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2" Style="display:block">
+                                Los administradores aparecen en todos los clientes, aunque no estén en la asignación de vendedores.
+                            </RadzenText>
+
+                            @foreach (var fila in filas)
+                            {
+                                <RadzenRow AlignItems="AlignItems.Center" Gap="1rem" class="rz-py-2" Style="border-top: var(--rz-border-base-200);" @key="fila.IdUsuario">
+                                    <RadzenColumn Size="12" SizeMD="4">
+                                        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                                            <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0"><strong>@fila.ApellidoYNombre</strong></RadzenText>
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">@fila.NombreUsuario</RadzenText>
+                                                @if (fila.EsAdministrador)
+                                                {
+                                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Administrador" />
+                                                }
+                                                @if (EsPendiente(fila))
+                                                {
+                                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Pendiente de guardar" />
+                                                }
+                                            </RadzenStack>
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="8">
+                                        <RadzenDropDown TValue="IEnumerable<int>" Data="listas" @bind-Value="fila.IdListas" Multiple="true" Chips="true"
+                                                        ValueProperty="@nameof(ListaPrecioImportada.IdListaPrecio)" TextProperty="@nameof(ListaPrecioImportada.Nombre)"
+                                                        AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                        FilterOperator="StringFilterOperator.Contains" FilterPlaceholder="Buscar lista..."
+                                                        Placeholder="Sin listas asignadas" Style="width:100%">
+                                            <Template Context="lista">
+                                                @(((ListaPrecioImportada)lista).Nombre)
+                                                @if (((ListaPrecioImportada)lista).VigenciaDesde is DateTime desde)
+                                                {
+                                                    <span class="rz-text-caption"> (vigente desde @desde.ToString("dd/MM/yyyy"))</span>
+                                                }
+                                            </Template>
+                                        </RadzenDropDown>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            }
+
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+                                <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Click="Cancelar" Disabled="@(!HayCambios)" />
+                                <RadzenButton Icon="save" ButtonStyle="ButtonStyle.Success" Text="Guardar" Click="Guardar" Disabled="@(!HayCambios)" />
+                            </RadzenStack>
+                        </RadzenCard>
+                    }
+                }
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showForm;
+    int tabIndex;
+    List<ListaPrecioImportada> listas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        clientes = await ClientesService.GetClientes() ?? new();
+        listas = await ListasPrecioService.GetListas();
+        // Mismo criterio que /clientes/vendedores: los administradores son vendedores de todos los clientes
+        administradores = (await SeguridadService.GetUsuarios(null, null, null, false, false) ?? new())
+            .Where(u => u.Perfil == PERFIL_ADMINISTRADOR)
+            .OrderBy(u => u.ApellidoYNombre)
+            .ToList();
+        showForm = true;
+    }
+
+    // ---------- Listas cargadas ----------
+
+    RadzenDataGrid<ListaPrecioImportada> gridListas;
+    bool subiendo;
+    ListaPrecioImportada listaDestino;
+
+    void AbrirSubida(ListaPrecioImportada destino)
+    {
+        listaDestino = destino;
+        subiendo = true;
+    }
+
+    void CerrarSubida()
+    {
+        subiendo = false;
+        listaDestino = null;
+    }
+
+    async Task ListaGuardada(int idListaPrecio)
+    {
+        CerrarSubida();
+        await RecargarListas();
+    }
+
+    async Task RecargarListas()
+    {
+        listas = await ListasPrecioService.GetListas();
+        if (gridListas != null)
+            await gridListas.Reload();
+    }
+
+    async Task VerPrecios(ListaPrecioImportada lista)
+    {
+        string titulo = lista.VigenciaDesde is DateTime desde ? $"{lista.Nombre} · vigente desde {desde:dd/MM/yyyy}" : lista.Nombre;
+        await RadzenDialogService.OpenAsync(lista.Nombre,
+            ds => @<ListaPrecioDetalle IdListaPrecio="lista.IdListaPrecio" Titulo="@titulo" Height="62vh" />,
+            new DialogOptions { Width = "92vw", Height = "84vh", Resizable = true });
+    }
+
+    async Task Descargar(ListaPrecioImportada lista)
+    {
+        RadzenDialogService.OpenBusy("Descargando...");
+        var response = await ListasPrecioService.GetArchivo(lista.IdListaPrecio);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+            await JSFunction.DownloadFile(response.DataBytes, response.Message ?? $"{lista.Nombre}.xlsx");
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    async Task Eliminar(ListaPrecioImportada lista)
+    {
+        string mensaje = lista.CantidadClientes > 0
+            ? $"La lista «{lista.Nombre}» está asignada a {lista.CantidadClientes} clientes: los vendedores dejarán de verla. ¿Eliminarla?"
+            : $"¿Eliminar la lista «{lista.Nombre}»?";
+        if (await RadzenDialogService.Confirm(mensaje, "Eliminar lista de precios", RadzenDialogService.ConfirmOptions("Eliminar", "Cancelar")) != true)
+            return;
+
+        RadzenDialogService.OpenBusyWithLoader("Eliminando...");
+        bool ok = await ListasPrecioService.Eliminar(lista.IdListaPrecio);
+        RadzenDialogService.CloseDialog();
+
+        if (!ok)
+        {
+            RadzenDialogService.NotifyInternalServerError();
+            return;
+        }
+
+        RadzenDialogService.NotifyDelete(lista.Nombre);
+        await RecargarListas();
+        // Las asignaciones de esa lista se borraron: se refresca el cliente abierto en la otra pestaña
+        if (clienteSeleccionado != null)
+            await CargarAsignaciones();
+    }
+
+    // ---------- Asignación por cliente ----------
+
+    const int PERFIL_ADMINISTRADOR = 1;
+    List<Usuario> administradores = new();
+    List<Cliente> clientes = new();
+    Cliente clienteSeleccionado;
+    bool cargando;
+    List<FilaVendedor> filas = new();
+    // Listas guardadas por vendedor, para detectar cambios y para cancelar
+    Dictionary<int, HashSet<int>> originales = new();
+
+    bool HayCambios => filas.Any(EsPendiente);
+
+    bool EsPendiente(FilaVendedor fila) =>
+        !fila.IdListas.ToHashSet().SetEquals(originales.GetValueOrDefault(fila.IdUsuario) ?? new HashSet<int>());
+
+    async Task OnClienteChange(object value) => await CargarAsignaciones();
+
+    async Task CargarAsignaciones()
+    {
+        filas = new();
+        originales = new();
+        if (clienteSeleccionado?.IdCliente == null)
+            return;
+
+        cargando = true;
+        int idCliente = clienteSeleccionado.IdCliente.Value;
+        var vendedoresTask = VendedoresPorClienteService.GetVendedoresPorCliente(idCliente).AsTask();
+        var asignadasTask = ListasPrecioService.GetPorCliente(idCliente).AsTask();
+        await Task.WhenAll(vendedoresTask, asignadasTask);
+
+        // Solo se muestran los administradores y los vendedores asignados hoy al cliente;
+        // lo guardado para vendedores ya desasignados se descarta al guardar
+        originales = asignadasTask.Result
+            .GroupBy(x => x.IdUsuario)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.IdListaPrecio).ToHashSet());
+
+        var idsAdministradores = administradores.Select(a => a.IdUsuario).ToHashSet();
+        var filasAdministradores = administradores
+            .Select(a => NuevaFila(a.IdUsuario, a.ApellidoYNombre, a.NombreUsuario, esAdministrador: true));
+        var filasVendedores = (vendedoresTask.Result ?? new())
+            .Where(v => !idsAdministradores.Contains(v.IdUsuario))
+            .OrderBy(v => v.ApellidoYNombre)
+            .Select(v => NuevaFila(v.IdUsuario, v.ApellidoYNombre, v.NombreUsuario, esAdministrador: false));
+
+        filas = filasAdministradores.Concat(filasVendedores).ToList();
+
+        cargando = false;
+    }
+
+    FilaVendedor NuevaFila(int idUsuario, string apellidoYNombre, string nombreUsuario, bool esAdministrador) => new()
+    {
+        IdUsuario = idUsuario,
+        ApellidoYNombre = apellidoYNombre,
+        NombreUsuario = nombreUsuario,
+        EsAdministrador = esAdministrador,
+        IdListas = originales.GetValueOrDefault(idUsuario)?.ToList() ?? new List<int>()
+    };
+
+    async Task Cancelar()
+    {
+        if (!HayCambios || await RadzenDialogService.CancelOperation())
+        {
+            foreach (var fila in filas)
+                fila.IdListas = originales.GetValueOrDefault(fila.IdUsuario)?.ToList() ?? new List<int>();
+        }
+    }
+
+    async Task Guardar()
+    {
+        if (clienteSeleccionado?.IdCliente == null)
+            return;
+
+        if (!await RadzenDialogService.ConfirmOperation())
+            return;
+
+        var vendedores = filas
+            .Where(f => f.IdListas.Any())
+            .Select(f => new ListasPrecioVendedor { IdUsuario = f.IdUsuario, IdListas = f.IdListas.ToList() })
+            .ToList();
+
+        RadzenDialogService.OpenBusyWithLoader("Guardando...");
+        var ok = await ListasPrecioService.PostPorCliente(clienteSeleccionado.IdCliente.Value, vendedores);
+        RadzenDialogService.CloseDialog();
+
+        if (ok)
+        {
+            await CargarAsignaciones();
+            listas = await ListasPrecioService.GetListas(); // cambia la cantidad de clientes por lista
+            RadzenDialogService.NotifySuccess();
+        }
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    class FilaVendedor
+    {
+        public int IdUsuario { get; set; }
+        public string ApellidoYNombre { get; set; }
+        public string NombreUsuario { get; set; }
+        public bool EsAdministrador { get; set; }
+
+        // El botón "limpiar" del dropdown múltiple asigna null: se normaliza a vacío
+        IEnumerable<int> _idListas = Enumerable.Empty<int>();
+        public IEnumerable<int> IdListas
+        {
+            get => _idListas;
+            set => _idListas = value ?? Enumerable.Empty<int>();
+        }
+    }
+}

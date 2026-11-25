@@ -1,0 +1,179 @@
+@* Sube el Excel de una lista de precios: lo lee en el server, muestra lo que se va a guardar y lo guarda.
+   Si ya existe una lista con el mismo nombre (o se eligió "Actualizar" en una lista) se reemplazan sus precios.
+   Va dentro de la página y no en un modal: CustomFileInput abre y cierra un diálogo de "Cargando", y dentro de un modal
+   eso completa antes de tiempo la tarea del modal. *@
+
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject ListasPrecioService ListasPrecioService
+@inject RadzenDialogService RadzenDialogService
+
+<RadzenCard class="rz-mb-3">
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-1">
+        @(ListaDestino == null ? "Subir lista de precios" : $"Actualizar precios de «{ListaDestino.Nombre}»")
+    </RadzenText>
+    <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-3" Style="display:block">
+        Subí el Excel tal como se manda a los vendedores: el título "Lista ... vigente a partir de dd/mm/aaaa" y la fila de encabezados
+        SKU, DESCRIPCION, EAN, CONTENIDO, Unid x caja, Costo Neto S/IVA, Costo Neto C/IVA y Pr. Sugerido Público.
+        Las filas con un solo texto (ej. "SHAMPOO Y ACONDICIONADORES") se toman como familia.
+    </RadzenText>
+
+    <CustomFileInput OnCargaArchivo="ArchivoSeleccionado" @bind-NombreArchivo="nombreArchivo" MaxSize="10485760" />
+
+    @if (errores.Any())
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="No se puede guardar" class="rz-mt-3">
+            <ul class="rz-m-0">
+                @foreach (var error in errores)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </RadzenAlert>
+    }
+
+    @if (previa != null)
+    {
+        <RadzenRow Gap="1rem" AlignItems="AlignItems.End" class="rz-mt-3">
+            <RadzenColumn Size="12" SizeMD="5">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+                    <RadzenLabel Text="Nombre de la lista:" Component="nombreLista" />
+                    <RadzenTextBox Name="nombreLista" @bind-Value="nombre" MaxLength="150" Style="width:100%" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="4px">
+                    <RadzenLabel Text="Vigente desde:" Component="vigencia" />
+                    <RadzenDatePicker Name="vigencia" TValue="DateTime?" @bind-Value="vigencia" DateFormat="dd/MM/yyyy" AllowClear="true" Style="width:100%" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">
+                    <strong>@previa.Items.Count</strong> artículos en <strong>@previa.CantidadFamilias</strong> familias
+                </RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+
+        @if (Destino != null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-3">
+                Se van a reemplazar los precios de la lista «@Destino.Nombre» (@Destino.CantidadArticulos artículos, asignada a @Destino.CantidadClientes clientes)
+                por los de este archivo. Las asignaciones a clientes y vendedores se mantienen.
+            </RadzenAlert>
+        }
+        else
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-3">
+                Se va a crear una lista nueva. Después asignala a los clientes en la pestaña «Asignación por cliente».
+            </RadzenAlert>
+        }
+
+        @if (previa.Advertencias.Any())
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="Revisá estas filas" class="rz-mt-2">
+                <ul class="rz-m-0">
+                    @foreach (var advertencia in previa.Advertencias)
+                    {
+                        <li>@advertencia</li>
+                    }
+                </ul>
+            </RadzenAlert>
+        }
+
+        <div class="rz-mt-3">
+            <ListaPrecioItemsGrid Items="previa.Items" Height="35vh" />
+        </div>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-3">
+        <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Text="Cancelar" Click="Cancelar" Disabled="guardando" />
+        <RadzenButton Icon="save" ButtonStyle="ButtonStyle.Success" Text="Guardar" Click="Guardar" IsBusy="guardando"
+                      Disabled="@(previa == null || string.IsNullOrWhiteSpace(nombre))" />
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    /// <summary>Listas ya cargadas: si el nombre coincide con una, se reemplazan sus precios.</summary>
+    [Parameter] public List<ListaPrecioImportada> Listas { get; set; } = new();
+    /// <summary>Lista a actualizar cuando se eligió "Actualizar" sobre una lista existente.</summary>
+    [Parameter] public ListaPrecioImportada ListaDestino { get; set; }
+    /// <summary>Recibe el id de la lista guardada.</summary>
+    [Parameter] public EventCallback<int> OnGuardado { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    string nombreArchivo, nombre;
+    byte[] archivo;
+    DateTime? vigencia;
+    ListaPrecioPrevisualizacion previa;
+    List<string> errores = new();
+    bool guardando;
+
+    ListaPrecioImportada Destino => ListaDestino
+        ?? Listas?.FirstOrDefault(x => string.Equals(x.Nombre?.Trim(), nombre?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    // Corre dentro del diálogo "Cargando archivo..." de CustomFileInput: no abrir otros diálogos acá
+    async Task ArchivoSeleccionado(InputFileChangeEventArgs e)
+    {
+        errores = new();
+        previa = null;
+        archivo = null;
+
+        using var stream = e.File.OpenReadStream(maxAllowedSize: e.File.Size + 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        archivo = ms.ToArray();
+        nombreArchivo = e.File.Name;
+
+        var response = await ListasPrecioService.Previsualizar(nombreArchivo, archivo);
+        if (response.IsOk)
+        {
+            previa = (ListaPrecioPrevisualizacion)response.Data;
+            nombre = ListaDestino?.Nombre ?? previa.Nombre;
+            vigencia = previa.VigenciaDesde;
+        }
+        else if (response.IsBadRequest && response.Errors != null)
+            errores = response.Errors.SelectMany(x => x.Value).ToList();
+        else
+            errores = new() { "Ocurrió un error inesperado al leer el archivo. Por favor contacte a sistemas." };
+    }
+
+    async Task Guardar()
+    {
+        if (previa == null || archivo == null || string.IsNullOrWhiteSpace(nombre))
+            return;
+
+        var destino = Destino;
+        if (destino != null)
+        {
+            var confirma = await RadzenDialogService.Confirm(
+                $"Se van a reemplazar los precios de «{destino.Nombre}» (asignada a {destino.CantidadClientes} clientes). ¿Continuar?",
+                "Actualizar lista de precios", RadzenDialogService.ConfirmOptions("Reemplazar", "Cancelar"));
+            if (confirma != true)
+                return;
+        }
+
+        guardando = true;
+        errores = new();
+        var response = await ListasPrecioService.Guardar(new ListaPrecioArchivoRequest
+        {
+            IdListaPrecio = destino?.IdListaPrecio,
+            Nombre = nombre.Trim(),
+            VigenciaDesde = vigencia,
+            NombreArchivo = nombreArchivo,
+            Archivo = archivo
+        });
+        guardando = false;
+
+        if (response.IsOk)
+        {
+            RadzenDialogService.NotifySuccess();
+            await OnGuardado.InvokeAsync((int)response.Data);
+        }
+        else if (response.IsBadRequest && response.Errors != null)
+            errores = response.Errors.SelectMany(x => x.Value).ToList();
+        else
+            RadzenDialogService.NotifyInternalServerError();
+    }
+
+    async Task Cancelar() => await OnCancelar.InvokeAsync();
+}

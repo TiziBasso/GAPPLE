@@ -1,0 +1,103 @@
+@page "/listas-precio/mis-listas"
+
+@using GAPPLE.Client.Components.ListasPrecio
+
+@inject SeguridadService SeguridadService
+@inject ListasPrecioService ListasPrecioService
+@inject RadzenDialogService RadzenDialogService
+@inject IJSFunction JSFunction
+@inject SesionDTO SesionDTO
+
+@if (showForm)
+{
+    <RadzenText Text="Mis listas de precios" TextStyle="TextStyle.DisplayH4" TextAlign="TextAlign.Center" />
+
+    @if (esAdministrador)
+    {
+        <RadzenText TextStyle="TextStyle.Caption" TextAlign="TextAlign.Center" class="rz-mb-2" Style="display:block">
+            Como administrador ves las listas de precios de todos los vendedores, también las que todavía no están asignadas a ningún cliente.
+        </RadzenText>
+    }
+
+    <RadzenDataGrid Data="asignaciones" AllowFiltering="true" AllowSorting="true" AllowVirtualization="true" Density="Density.Compact"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Simple"
+                    SelectionMode="DataGridSelectionMode.Single" RowSelect="@((ListaPrecioClienteVendedor item) => seleccionada = item)"
+                    EmptyText="No tenés listas de precios asignadas" ShowEmptyMessage="true" Style="height: 32vh;">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(ListaPrecioClienteVendedor.CodigoCliente)" Title="Código" TextAlign="TextAlign.Right" Width="90px" />
+            <RadzenDataGridColumn Property="@nameof(ListaPrecioClienteVendedor.RazonSocial)" Title="Cliente">
+                <Template Context="item">
+                    @if (item.IdCliente == 0)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Sin clientes asignados" />
+                    }
+                    else
+                    {
+                        @item.RazonSocial
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            @if (esAdministrador)
+            {
+                <RadzenDataGridColumn Property="@nameof(ListaPrecioClienteVendedor.ApellidoYNombre)" Title="Vendedor" />
+            }
+            <RadzenDataGridColumn Property="@nameof(ListaPrecioClienteVendedor.NombreLista)" Title="Lista de precios" />
+            <RadzenDataGridColumn Property="@nameof(ListaPrecioClienteVendedor.VigenciaDesde)" Title="Vigente desde" Width="120px" Filterable="false">
+                <Template Context="item">@item.VigenciaDesde?.ToString("dd/MM/yyyy")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="50px" Filterable="false" Sortable="false" TextAlign="TextAlign.Center">
+                <Template Context="item">
+                    <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  title="Descargar Excel" Click="@(() => Descargar(item))" @onclick:stopPropagation="true" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    @if (seleccionada != null)
+    {
+        <div class="rz-mt-3">
+            <ListaPrecioDetalle IdListaPrecio="seleccionada.IdListaPrecio" Titulo="@Titulo(seleccionada)" Height="42vh" />
+        </div>
+    }
+    else if (asignaciones.Any())
+    {
+        <RadzenText TextStyle="TextStyle.Body2" TextAlign="TextAlign.Center" class="rz-mt-4" Style="display:block">Seleccioná una lista para ver sus precios.</RadzenText>
+    }
+}
+else
+{
+    <Loader />
+}
+
+@code {
+    bool showForm, esAdministrador;
+    List<ListaPrecioClienteVendedor> asignaciones = new();
+    ListaPrecioClienteVendedor seleccionada;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SeguridadService.ValidatePageAccess();
+        esAdministrador = SesionDTO.Rol == "1";
+        asignaciones = await ListasPrecioService.GetMisListas();
+        showForm = true;
+    }
+
+    static string Titulo(ListaPrecioClienteVendedor item)
+    {
+        string titulo = item.IdCliente == 0 ? item.NombreLista : $"{item.RazonSocial} · {item.NombreLista}";
+        return item.VigenciaDesde is DateTime desde ? $"{titulo} (vigente desde {desde:dd/MM/yyyy})" : titulo;
+    }
+
+    async Task Descargar(ListaPrecioClienteVendedor item)
+    {
+        RadzenDialogService.OpenBusy("Descargando...");
+        var response = await ListasPrecioService.GetArchivo(item.IdListaPrecio);
+        RadzenDialogService.CloseDialog();
+
+        if (response.IsOk)
+            await JSFunction.DownloadFile(response.DataBytes, response.Message ?? $"{item.NombreLista}.xlsx");
+        else
+            await RadzenDialogService.ShowAlertAsync("No se pudo descargar la lista de precios. Verifique que el cliente siga asignado a su cartera.", MensajesHelper.Title);
+    }
+}

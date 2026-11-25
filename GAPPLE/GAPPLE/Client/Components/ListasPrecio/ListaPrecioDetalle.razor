@@ -1,0 +1,68 @@
+@* Precios de una lista cargada desde Excel, con la descarga del Excel original.
+   El server valida que el usuario pueda ver la lista (asignada a alguno de sus clientes, o administrador). *@
+
+@inject ListasPrecioService ListasPrecioService
+@inject RadzenDialogService RadzenDialogService
+@inject IJSFunction JSFunction
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" class="rz-mb-1">
+    <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@Titulo</RadzenText>
+    <RadzenButton Icon="download" Text="Descargar Excel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Variant="Variant.Outlined"
+                  title="Descarga el Excel tal como se subió" Click="Descargar" IsBusy="descargando" Disabled="@(error != null)" />
+</RadzenStack>
+
+@if (error != null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">@error</RadzenAlert>
+}
+else
+{
+    <ListaPrecioItemsGrid Items="items" IsLoading="cargando" Height="@Height" />
+}
+
+@code {
+    [Parameter, EditorRequired] public int IdListaPrecio { get; set; }
+    [Parameter] public string Titulo { get; set; }
+    [Parameter] public string Height { get; set; } = "45vh";
+
+    List<ListaPrecioImportadaItem> items = new();
+    bool cargando, descargando;
+    string error;
+    int idCargado = -1, version;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IdListaPrecio == idCargado)
+            return;
+
+        idCargado = IdListaPrecio;
+        int miVersion = ++version;
+        cargando = true;
+        error = null;
+        items = new();
+
+        var resultado = await ListasPrecioService.GetItems(IdListaPrecio);
+
+        // Si mientras cargaba se eligió otra lista, esta respuesta ya no se muestra
+        if (miVersion != version)
+            return;
+
+        cargando = false;
+        if (resultado == null)
+            error = "No se pudieron obtener los precios: la lista ya no está asignada a sus clientes o fue eliminada.";
+        else
+            items = resultado;
+    }
+
+    async Task Descargar()
+    {
+        descargando = true;
+        var response = await ListasPrecioService.GetArchivo(IdListaPrecio);
+        descargando = false;
+
+        if (response.IsOk)
+            await JSFunction.DownloadFile(response.DataBytes, response.Message ?? $"{Titulo}.xlsx");
+        else
+            RadzenDialogService.Notify(NotificationSeverity.Error, "No se pudo descargar la lista de precios");
+    }
+}
