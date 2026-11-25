@@ -54,11 +54,20 @@
 
         <RadzenStack Orientation="Orientation.Vertical">
             <RadzenLabel Text="Precios de lista:" Component="listas" />
-            <RadzenDropDown TValue="IEnumerable<string>" Data=@listasDePrecio @bind-Value=@listasSeleccionadas Name="listas" Multiple="true" AllowClear="true"
-                            ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
-                            Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
-                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
-                            FilterPlaceholder="Buscar lista..." Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())" />
+            @* Grilla con número y descripción; el buscador filtra por las dos columnas *@
+            <RadzenDropDownDataGrid TValue="IEnumerable<string>" Data=@listasDePrecio @bind-Value=@listasSeleccionadas Name="listas" Multiple="true" AllowClear="true"
+                                    ValueProperty=@nameof(ListaDePrecios.CodigoTango) TextProperty=@nameof(ListaDePrecios.Descripcion)
+                                    Placeholder="Ninguna" MaxSelectedLabels="2" SelectedItemsText="listas seleccionadas"
+                                    AllowFiltering="true" AllowFilteringByAllStringColumns="true" AllowSorting="false"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterOperator="StringFilterOperator.Contains"
+                                    SearchTextPlaceholder="Buscar por número o descripción..." EmptyText="No hay listas que coincidan"
+                                    AllowVirtualization="true" Density="Density.Compact" PopupStyle="width: 28rem;"
+                                    Disabled="@(isLoading || cargandoPrecios)" Style="width: 16rem;" Change="@(_ => CargarPrecios())">
+                <Columns>
+                    <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.CodigoTango)" Title="Nro." Width="5rem" TextAlign="TextAlign.Right" />
+                    <RadzenDropDownDataGridColumn Property="@nameof(ListaDePrecios.Descripcion)" Title="Descripción" />
+                </Columns>
+            </RadzenDropDownDataGrid>
         </RadzenStack>
 
         <RadzenButton Click="FillProductos" IsBusy=isLoading Icon="search" Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Secondary" />
@@ -80,7 +89,10 @@
                     IsLoading="@isLoading" AllowColumnResize="true" FilterMode="FilterMode.Simple"
                     FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive LogicalFilterOperator="LogicalFilterOperator.Or"
                     SelectionMode="DataGridSelectionMode.Single" @bind-Value="selectedProduct" AllowVirtualization=true
-                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args) => RowExpand(args))" Style="height: 65vh;" EmptyText="">
+                    ExpandMode="DataGridExpandMode.Single" RowExpand="@((Producto args) => RowExpand(args))" EmptyText=""
+                    Style="height: 65vh; --rz-input-height: 1.625rem; --rz-input-padding-block: 0.125rem;">
+        @* Las variables --rz-input-* achican los campos editables de Orden / Orden depósito (y los filtros), que eran
+           los que hacían alta cada fila. Solo afectan a esta grilla. *@
         <Columns>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.CodigoProducto))" Title="Código" TextAlign="TextAlign.Right"
                                   Width="90px" FilterValue="@codigoInternoFilter" Groupable="false" Resizable="false">
@@ -94,29 +106,29 @@
                     <input type="text" @bind-value="@descripcionFilter" @bind-value:event="oninput" class="rz-textbox" style="width: 100%" />
                 </FilterTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Pasivo))" Title="Pasivo" TextAlign="TextAlign.Center" Width="75px"
+            <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Pasivo))" Title="Pasivo" TextAlign="TextAlign.Center" Width="65px"
                                   Filterable="false" Sortable="false" Groupable="false" Resizable="false">
                 <Template Context="producto">
                     <RadzenCheckBox @bind-Value=@producto.Pasivo TValue="bool" Change="@(() => Change(producto))" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Orden))" Title="Orden" FilterOperator="FilterOperator.Contains"
-                                  Width="150px" Filterable=false Groupable="false" Resizable="false">
+                                  Width="85px" Filterable=false Groupable="false" Resizable="false">
                 <Template Context="producto">
                     <RadzenNumeric TValue="int" @bind-Value="producto.Orden" Change="@(() => Change(producto))" ShowUpDown=false TextAlign="TextAlign.Right" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.OrdenDeposito))" Title="Orden depósito" FilterOperator="FilterOperator.Contains"
-                                  Width="150px" Filterable=false Groupable="false" Resizable="false">
+                                  Width="115px" Filterable=false Groupable="false" Resizable="false">
                 <Template Context="producto">
                     <RadzenNumeric TValue="int?" @bind-Value="producto.OrdenDeposito" Change="@(() => Change(producto))" ShowUpDown=false TextAlign="TextAlign.Right" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Linea))" Title="Linea" FilterOperator="FilterOperator.Contains"
-                                  Width="300px" Groupable="false" Resizable="false" />
+                                  Width="140px" Groupable="false" />
             @* Id_STA es int: el operador Contains no aplica sobre enteros y la grilla tiraba excepción al filtrar (SCRUM-156) *@
             <RadzenDataGridColumn TItem="Producto" Property="@(nameof(Producto.Id_STA))" Title="Cód. Tango" FilterOperator="FilterOperator.Equals"
-                                  FilterValue="@codTangoFilter" TextAlign="TextAlign.Right" Width="150px" Groupable="false" Resizable="false">
+                                  FilterValue="@codTangoFilter" TextAlign="TextAlign.Right" Width="100px" Groupable="false" Resizable="false">
                 <FilterTemplate>
                     <RadzenNumeric TValue="int?" @bind-Value=codTangoFilter Style="width:100%" ShowUpDown=false Min="0" TextAlign="TextAlign.Right" />
                 </FilterTemplate>
@@ -126,7 +138,7 @@
             @foreach (var lista in ListasVisibles)
             {
                 <RadzenDataGridColumn TItem="Producto" @key="lista.CodigoTango" Title="@($"Precio {lista.Descripcion}")" TextAlign="TextAlign.Right"
-                                      Width="160px" Filterable="false" Sortable="false" Groupable="false">
+                                      Width="140px" Filterable="false" Sortable="false" Groupable="false">
                     <Template Context="producto">
                         @FormatearPrecio(lista.CodigoTango, producto.CodigoProducto)
                     </Template>
@@ -192,7 +204,11 @@ else
         //listPermisos = await SeguridadService.GetPermisos("maestroProductos");
 
         lineas = (await ProductosService.GetLineas() ?? new()).Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x).ToList();
-        listasDePrecio = (await OrdenesService.GetListasDePrecio() ?? new()).OrderBy(x => x.Descripcion).ToList();
+        // Ordenadas por número de lista (el código de Tango es texto: se ordena por su valor numérico)
+        listasDePrecio = (await OrdenesService.GetListasDePrecio() ?? new())
+            .OrderBy(x => int.TryParse(x.CodigoTango, out int nro) ? nro : int.MaxValue)
+            .ThenBy(x => x.CodigoTango)
+            .ToList();
         // Algunas listas vienen de Tango sin nombre (ej. 691): se muestran con su código para poder identificarlas
         foreach (var lista in listasDePrecio.Where(x => string.IsNullOrWhiteSpace(x.Descripcion)))
             lista.Descripcion = $"Lista {lista.CodigoTango} (sin nombre)";

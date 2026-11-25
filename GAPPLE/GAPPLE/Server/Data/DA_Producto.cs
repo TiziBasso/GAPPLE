@@ -38,6 +38,22 @@ namespace GAPPLE.Server.Data
             return dt;
         }
 
+        /// <summary>
+        /// Orden asignado a cada producto en el maestro de productos (columna Orden, no OrdenDeposito), por codigo.
+        /// </summary>
+        public Dictionary<string, int> ObtenerOrdenPorCodigo()
+        {
+            Dictionary<string, int> orden = new(StringComparer.OrdinalIgnoreCase);
+            using DataTable dt = ObtenerProductos(null, null, null, null, null);
+            foreach (DataRow row in dt.Rows)
+            {
+                string codigo = row["CodigoProducto"].ToString().Trim();
+                if (codigo.Length > 0 && row["Orden"] != DBNull.Value)
+                    orden.TryAdd(codigo, Convert.ToInt32(row["Orden"]));
+            }
+            return orden;
+        }
+
         public DataTable GetLineas()
         {
             SqlConnection cnn;

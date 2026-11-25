@@ -20,6 +20,9 @@ namespace GAPPLE.Server.Controllers
         // GET api/stock?codigo=...&descripcion=...&marca=...
         // Devuelve una fila por producto con los saldos de los depositos 01 y 6 ya
         // pivoteados. La pantalla trae todo el dataset y filtra en memoria.
+        // Viene ordenado por el Orden del maestro de productos (no el de deposito) y despues por codigo,
+        // el mismo criterio que la carga de pedidos. Los codigos que no estan en el maestro van al final,
+        // en el orden en que los devuelve el SP.
         [HttpGet]
         public IActionResult GetStock(string? codigo = null, string? descripcion = null, string? marca = null)
         {
@@ -27,6 +30,7 @@ namespace GAPPLE.Server.Controllers
             {
                 DA_Stock da = new(DefaultConnection);
                 List<StockConsolidado> lista = [];
+                var ordenPorCodigo = new DA_Producto(DefaultConnection).ObtenerOrdenPorCodigo();
 
                 using DataTable dt = da.ObtenerStock(codigo, descripcion, marca);
 
@@ -45,7 +49,16 @@ namespace GAPPLE.Server.Controllers
                     });
                 }
 
-                return Ok(lista);
+                // OrderBy es estable: los que no estan en el maestro quedan con la misma clave y conservan el orden del SP
+                var ordenados = lista
+                    .Select(x => (Item: x, Orden: x.Codigo != null && ordenPorCodigo.TryGetValue(x.Codigo, out int orden) ? orden : (int?)null))
+                    .OrderBy(x => x.Orden == null)
+                    .ThenBy(x => x.Orden ?? 0)
+                    .ThenBy(x => x.Orden == null ? string.Empty : x.Item.Codigo, StringComparer.OrdinalIgnoreCase)
+                    .Select(x => x.Item)
+                    .ToList();
+
+                return Ok(ordenados);
             }
             catch (Exception ex)
             {
